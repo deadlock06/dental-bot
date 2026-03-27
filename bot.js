@@ -1,6 +1,6 @@
 const { getPatient, insertPatient, savePatient, saveAppointment, getAppointment, updateAppointment } = require('./db');
 const { sendMessage } = require('./whatsapp');
-const { detectIntent } = require('./ai');
+const { detectIntent, extractDate, extractTimeSlot } = require('./ai');
 
 // ─────────────────────────────────────────────
 // Static strings
@@ -9,11 +9,11 @@ const { detectIntent } = require('./ai');
 const LANG_SELECT = '🌐 Please choose your language / اختر لغتك:\n1️⃣ English\n2️⃣ العربية';
 
 function menuEN(clinicName) {
-  return `Welcome to ${clinicName}! 🦷✨\nI'm your AI dental assistant, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment\n2️⃣ My appointment\n3️⃣ Reschedule\n4️⃣ Cancel appointment\n5️⃣ Our services\n6️⃣ Prices 💰\n7️⃣ Location 📍\n8️⃣ Leave a review ⭐\n9️⃣ Talk to staff 👩‍⚕️\n\nJust tap a number or tell me what you need 😊`;
+  return `Welcome to ${clinicName}! 🦷✨\nI'm your AI dental assistant, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment\n2️⃣ My appointment\n3️⃣ Reschedule\n4️⃣ Cancel appointment\n5️⃣ Our services\n6️⃣ Meet Our Doctors 👨‍⚕️\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍⚕️\n\nJust tap a number or tell me what you need 😊`;
 }
 
 function menuAR(clinicName) {
-  return `أهلاً وسهلاً بك في ${clinicName}! 🦷✨\nأنا مساعدك الذكي، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد\n2️⃣ موعدي الحالي\n3️⃣ إعادة جدولة\n4️⃣ إلغاء الموعد\n5️⃣ خدماتنا\n6️⃣ الأسعار 💰\n7️⃣ الموقع 📍\n8️⃣ تقييم العيادة ⭐\n9️⃣ التحدث مع الفريق 👩‍⚕️\n\nاضغط على رقم أو أخبرني بما تحتاج 😊`;
+  return `أهلاً وسهلاً بك في ${clinicName}! 🦷✨\nأنا مساعدك الذكي، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد\n2️⃣ موعدي الحالي\n3️⃣ إعادة جدولة\n4️⃣ إلغاء الموعد\n5️⃣ خدماتنا\n6️⃣ تعرف على أطبائنا 👨‍⚕️\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️\n\nاضغط على رقم أو أخبرني بما تحتاج 😊`;
 }
 
 // ─────────────────────────────────────────────
@@ -22,14 +22,14 @@ function menuAR(clinicName) {
 async function handleMessage(phone, text, clinic) {
   const msg = text.trim();
 
-  // Fallback clinic if none found in DB yet
   const cl = clinic || {
     name: 'Our Clinic',
     location: 'Please contact us for our address.',
     maps_link: 'https://maps.google.com',
     review_link: 'https://g.page/r/your-review-link',
     staff_phone: null,
-    plan: 'basic'
+    plan: 'basic',
+    doctors: []
   };
 
   // ── Branch 1: Brand new patient
@@ -59,11 +59,10 @@ async function handleMessage(phone, text, clinic) {
   const step = patient.flow_step || 0;
   const fd = patient.flow_data || {};
 
-  // Run through AI intent detection with full context
   const ai = await detectIntent(msg, flow, step);
   const { intent, extracted_value } = ai;
 
-  // Handle language change at any point
+  // Language change
   if (intent === 'change_language') {
     const newLang = ai.detected_language === 'ar' ? 'ar' : 'en';
     await savePatient(phone, { ...patient, language: newLang, current_flow: null, flow_step: 0, flow_data: {} });
@@ -73,8 +72,7 @@ async function handleMessage(phone, text, clinic) {
   // Active flow routing
   if (flow === 'booking') {
     if (intent !== 'continue_flow' && intent !== 'unknown') {
-      // Interrupt: answer their question, then offer to continue
-      const interruptReply = await getIntentReply(phone, intent, lang, ar, cl);
+      const interruptReply = await getIntentReply(intent, ar, cl);
       if (interruptReply) {
         await sendMessage(phone, interruptReply);
         return sendMessage(phone, ar
@@ -94,29 +92,32 @@ async function handleMessage(phone, text, clinic) {
     return handleCancelFlow(phone, msg, lang, ar, step, fd, patient, cl);
   }
 
-  // No active flow — route by intent
   return routeIntent(phone, intent, lang, ar, msg, patient, cl);
 }
 
 // ─────────────────────────────────────────────
-// Return a text reply for an intent (for interrupt handling)
+// Return a text reply for an intent (interrupt handling during booking)
 // ─────────────────────────────────────────────
-async function getIntentReply(phone, intent, lang, ar, cl) {
+async function getIntentReply(intent, ar, cl) {
   switch (intent) {
-    case 'greeting': return ar ? menuAR(cl.name) : menuEN(cl.name);
-    case 'services': return servicesMsg(ar);
-    case 'prices': return pricesMsg(ar);
-    case 'location': return locationMsg(ar, cl);
-    case 'reviews': return reviewMsg(ar, cl);
-    case 'human': return staffMsg(ar);
-    default: return null;
+    case 'services':  return servicesMsg(ar);
+    case 'doctors':   return doctorsMsg(ar, cl);
+    case 'prices':    return pricesMsg(ar);
+    case 'location':  return locationMsg(ar, cl);
+    case 'reviews':   return reviewMsg(ar, cl);
+    case 'human':     return staffMsg(ar);
+    default:          return null;
   }
 }
 
 // ─────────────────────────────────────────────
-// BOOKING FLOW — 7 steps
+// BOOKING FLOW — steps 1-8
 // ─────────────────────────────────────────────
+
 const EXIT_RE = /^(menu|main menu|back|go back|start over|cancel|stop|exit|quit|قائمة|قائمة رئيسية|رجوع|ارجع|إلغاء|توقف|خروج|من البداية)$/i;
+
+const EN_SLOTS = ['9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
+const AR_SLOTS = ['9:00 صباحاً', '10:00 صباحاً', '11:00 صباحاً', '1:00 مساءً', '2:00 مساءً', '3:00 مساءً', '4:00 مساءً', '5:00 مساءً'];
 
 async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, fd, patient, cl) {
   const val = (extractedValue !== null && extractedValue !== undefined) ? String(extractedValue) : rawMsg;
@@ -139,8 +140,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
 
   // Step 2 — Confirm phone
   if (step === 2) {
-    const wantsChange = val === '2' || /^(no|change|لا|تغيير)$/i.test(val);
-    if (wantsChange) {
+    if (val === '2' || /^(no|change|لا|تغيير)$/i.test(val)) {
       await savePatient(phone, { ...patient, flow_step: 21, flow_data: fd });
       return sendMessage(phone, ar ? 'من فضلك أدخل رقم هاتفك:' : 'Please enter your phone number:');
     }
@@ -149,23 +149,21 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     return sendMessage(phone, treatmentMenuMsg(ar));
   }
 
-  // Step 21 — Custom phone
+  // Step 21 — Custom phone entry
   if (step === 21) {
     fd.phone = val;
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
     return sendMessage(phone, treatmentMenuMsg(ar));
   }
 
-  // Step 3 — Treatment
+  // Step 3 — Treatment type
   if (step === 3) {
-    const treatments = ['', 'Cleaning & Polishing', 'Fillings', 'Braces & Orthodontics', 'Teeth Whitening', 'Extraction', 'Dental Implants', 'Root Canal', 'Other'];
+    const treatments   = ['', 'Cleaning & Polishing', 'Fillings', 'Braces & Orthodontics', 'Teeth Whitening', 'Extraction', 'Dental Implants', 'Root Canal', 'Other'];
     const treatmentsAr = ['', 'تنظيف وتلميع', 'حشوات', 'تقويم الأسنان', 'تبييض الأسنان', 'خلع', 'زراعة أسنان', 'علاج العصب', 'أخرى'];
     const num = parseInt(rawMsg);
-    if (extractedValue && isNaN(num)) {
-      fd.treatment = extractedValue;
-    } else {
-      fd.treatment = ar ? (treatmentsAr[num] || rawMsg) : (treatments[num] || rawMsg);
-    }
+    fd.treatment = (extractedValue && isNaN(num))
+      ? extractedValue
+      : (ar ? (treatmentsAr[num] || rawMsg) : (treatments[num] || rawMsg));
     await savePatient(phone, { ...patient, flow_step: 4, flow_data: fd });
     return sendMessage(phone, ar
       ? 'هل لديك ملاحظات أو وصف للمشكلة؟ (اختياري)\nاكتب ملاحظتك أو أرسل *0* للتخطي'
@@ -173,7 +171,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     );
   }
 
-  // Step 4 — Notes
+  // Step 4 — Notes (optional)
   if (step === 4) {
     fd.description = (val === '0' || /^(skip|no|nothing|لا|تخطي)$/i.test(val)) ? '' : val;
     await savePatient(phone, { ...patient, flow_step: 5, flow_data: fd });
@@ -183,50 +181,72 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     );
   }
 
-  // Step 5 — Date
+  // Step 5 — Date (AI-parsed)
   if (step === 5) {
-    fd.preferred_date = val;
+    fd.preferred_date = await extractDate(rawMsg);
     await savePatient(phone, { ...patient, flow_step: 6, flow_data: fd });
     return sendMessage(phone, timeSlotMsg(ar));
   }
 
-  // Step 6 — Time slot
+  // Step 6 — Time slot (number or natural language)
   if (step === 6) {
-    const slots = ['', '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
-    const slotsAr = ['', '9:00 صباحاً', '10:00 صباحاً', '11:00 صباحاً', '1:00 مساءً', '2:00 مساءً', '3:00 مساءً', '4:00 مساءً', '5:00 مساءً'];
     const num = parseInt(rawMsg);
-    if (extractedValue && isNaN(num)) {
-      fd.time_slot = extractedValue;
+    if (num >= 1 && num <= 8) {
+      fd.time_slot = ar ? AR_SLOTS[num - 1] : EN_SLOTS[num - 1];
+    } else if (extractedValue && EN_SLOTS.includes(String(extractedValue))) {
+      fd.time_slot = String(extractedValue);
     } else {
-      fd.time_slot = ar ? (slotsAr[num] || val) : (slots[num] || val);
+      // Natural language time — match to closest slot
+      const matched = await extractTimeSlot(rawMsg, EN_SLOTS);
+      fd.time_slot = matched || val;
     }
 
-    const summary = ar
-      ? `✅ ملخص الحجز:\n\n👤 الاسم: ${fd.name}\n📱 الهاتف: ${fd.phone || phone}\n🦷 العلاج: ${fd.treatment}\n📝 الملاحظات: ${fd.description || 'لا يوجد'}\n📅 التاريخ: ${fd.preferred_date}\n⏰ الوقت: ${fd.time_slot}\n🏥 العيادة: ${cl.name}\n\nهل تؤكد الحجز؟\n1️⃣ نعم، أؤكد ✅\n2️⃣ لا، العودة`
-      : `✅ Booking Summary:\n\n👤 Name: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n🦷 Treatment: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${fd.time_slot}\n🏥 Clinic: ${cl.name}\n\nConfirm your booking?\n1️⃣ Yes, confirm ✅\n2️⃣ No, go back`;
-
-    await savePatient(phone, { ...patient, flow_step: 7, flow_data: fd });
-    return sendMessage(phone, summary);
+    // Show doctor selection if clinic has doctors, else go straight to summary
+    const doctors = cl.doctors || [];
+    if (doctors.length > 0) {
+      await savePatient(phone, { ...patient, flow_step: 7, flow_data: fd });
+      return sendMessage(phone, doctorSelectionMsg(ar, doctors));
+    } else {
+      await savePatient(phone, { ...patient, flow_step: 8, flow_data: fd });
+      return sendMessage(phone, bookingSummaryMsg(ar, fd, phone, cl));
+    }
   }
 
-  // Step 7 — Confirm
+  // Step 7 — Doctor selection (optional)
   if (step === 7) {
+    const doctors = cl.doctors || [];
+    const num = parseInt(rawMsg);
+    if (rawMsg.trim() === '0' || /^(skip|any|no preference|لا يهم|تخطي|أي طبيب)$/i.test(rawMsg.trim())) {
+      fd.doctor_name = null;
+    } else if (num >= 1 && num <= doctors.length) {
+      const doc = doctors[num - 1];
+      fd.doctor_name = ar ? (doc.name_ar || doc.name) : doc.name;
+    } else {
+      fd.doctor_name = extractedValue ? String(extractedValue) : rawMsg;
+    }
+    await savePatient(phone, { ...patient, flow_step: 8, flow_data: fd });
+    return sendMessage(phone, bookingSummaryMsg(ar, fd, phone, cl));
+  }
+
+  // Step 8 — Booking confirmation
+  if (step === 8) {
     const confirmed = val === '1' || /^(yes|confirm|نعم|أؤكد)$/i.test(val);
     if (confirmed) {
-      const appt = await saveAppointment({
-        phone: fd.phone || phone,
-        clinic_id: cl.id || null,
-        name: fd.name,
-        treatment: fd.treatment,
-        description: fd.description,
+      await saveAppointment({
+        phone:          fd.phone || phone,
+        clinic_id:      cl.id || null,
+        name:           fd.name,
+        treatment:      fd.treatment,
+        description:    fd.description,
         preferred_date: fd.preferred_date,
-        time_slot: fd.time_slot
+        time_slot:      fd.time_slot,
+        doctor_name:    fd.doctor_name || null
       });
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-      // Staff notification
       if (cl.staff_phone) {
+        const doctorLine = fd.doctor_name ? `\n👨‍⚕️ Doctor: ${fd.doctor_name}` : '';
         await sendMessage(cl.staff_phone,
-          `🦷 New Booking Alert!\n━━━━━━━━━━━━━━\n👤 Patient: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n🔧 Treatment: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${fd.time_slot}\n━━━━━━━━━━━━━━\nBooked via WhatsApp AI ✅`
+          `🦷 New Booking Alert!\n━━━━━━━━━━━━━━\n👤 Patient: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n🔧 Treatment: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}${doctorLine}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${fd.time_slot}\n━━━━━━━━━━━━━━\nBooked via WhatsApp AI ✅`
         );
       }
       return sendMessage(phone, ar
@@ -249,25 +269,27 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
 async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, step, fd, patient, cl) {
   const val = (extractedValue !== null && extractedValue !== undefined) ? String(extractedValue) : rawMsg;
 
-  // Step 1 — Ask new date
+  // Step 1 — New date (AI-parsed)
   if (step === 1) {
-    fd.new_date = val;
+    fd.new_date = await extractDate(rawMsg);
     await savePatient(phone, { ...patient, flow_step: 2, flow_data: fd });
     return sendMessage(phone, timeSlotMsg(ar));
   }
 
   // Step 2 — New time slot
   if (step === 2) {
-    const slots = ['', '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
-    const slotsAr = ['', '9:00 صباحاً', '10:00 صباحاً', '11:00 صباحاً', '1:00 مساءً', '2:00 مساءً', '3:00 مساءً', '4:00 مساءً', '5:00 مساءً'];
     const num = parseInt(rawMsg);
-    fd.new_slot = ar ? (slotsAr[num] || val) : (slots[num] || val);
-
-    const summary = ar
-      ? `✅ الموعد الجديد:\n📅 ${fd.new_date} الساعة ⏰ ${fd.new_slot}\n\nهل تؤكد؟\n1️⃣ نعم\n2️⃣ لا`
-      : `✅ New appointment:\n📅 ${fd.new_date} at ⏰ ${fd.new_slot}\n\nConfirm?\n1️⃣ Yes\n2️⃣ No`;
+    if (num >= 1 && num <= 8) {
+      fd.new_slot = ar ? AR_SLOTS[num - 1] : EN_SLOTS[num - 1];
+    } else {
+      const matched = await extractTimeSlot(rawMsg, EN_SLOTS);
+      fd.new_slot = matched || val;
+    }
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
-    return sendMessage(phone, summary);
+    return sendMessage(phone, ar
+      ? `✅ الموعد الجديد:\n📅 ${fd.new_date} الساعة ⏰ ${fd.new_slot}\n\nهل تؤكد؟\n1️⃣ نعم\n2️⃣ لا`
+      : `✅ New appointment:\n📅 ${fd.new_date} at ⏰ ${fd.new_slot}\n\nConfirm?\n1️⃣ Yes\n2️⃣ No`
+    );
   }
 
   // Step 3 — Confirm reschedule
@@ -275,10 +297,10 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
     const confirmed = val === '1' || /^(yes|نعم)$/i.test(val);
     if (confirmed && fd.appointment_id) {
       await updateAppointment(fd.appointment_id, {
-        preferred_date: fd.new_date,
-        time_slot: fd.new_slot,
+        preferred_date:   fd.new_date,
+        time_slot:        fd.new_slot,
         reminder_sent_24h: false,
-        reminder_sent_1h: false
+        reminder_sent_1h:  false
       });
       if (cl.staff_phone) {
         await sendMessage(cl.staff_phone,
@@ -303,7 +325,6 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
 async function handleCancelFlow(phone, rawMsg, lang, ar, step, fd, patient, cl) {
   const val = rawMsg.trim();
 
-  // Step 1 — Confirm cancellation
   if (step === 1) {
     const confirmed = val === '1' || /^(yes|نعم)$/i.test(val);
     if (confirmed && fd.appointment_id) {
@@ -332,7 +353,15 @@ async function handleCancelFlow(phone, rawMsg, lang, ar, step, fd, patient, cl) 
 // Route intent (main menu, no active flow)
 // ─────────────────────────────────────────────
 async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
-  switch (intent) {
+  // Explicit menu number mapping — reliable regardless of AI interpretation
+  const numMap = {
+    '1': 'booking', '2': 'my_appointment', '3': 'reschedule',
+    '4': 'cancel',  '5': 'services',       '6': 'doctors',
+    '7': 'prices',  '8': 'location',       '9': 'reviews', '10': 'human'
+  };
+  const resolvedIntent = numMap[rawMsg.trim()] || intent;
+
+  switch (resolvedIntent) {
     case 'greeting':
       return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
 
@@ -390,6 +419,9 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
     case 'services':
       return sendMessage(phone, servicesMsg(ar));
 
+    case 'doctors':
+      return sendMessage(phone, doctorsMsg(ar, cl));
+
     case 'prices':
       return sendMessage(phone, pricesMsg(ar));
 
@@ -408,8 +440,43 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
 }
 
 // ─────────────────────────────────────────────
-// Static message builders
+// Message builders
 // ─────────────────────────────────────────────
+
+function bookingSummaryMsg(ar, fd, phone, cl) {
+  const doctorLine = fd.doctor_name
+    ? (ar ? `\n👨‍⚕️ الطبيب: ${fd.doctor_name}` : `\n👨‍⚕️ Doctor: ${fd.doctor_name}`)
+    : '';
+  return ar
+    ? `✅ ملخص الحجز:\n\n👤 الاسم: ${fd.name}\n📱 الهاتف: ${fd.phone || phone}\n🦷 العلاج: ${fd.treatment}\n📝 الملاحظات: ${fd.description || 'لا يوجد'}${doctorLine}\n📅 التاريخ: ${fd.preferred_date}\n⏰ الوقت: ${fd.time_slot}\n🏥 العيادة: ${cl.name}\n\nهل تؤكد الحجز؟\n1️⃣ نعم، أؤكد ✅\n2️⃣ لا، العودة`
+    : `✅ Booking Summary:\n\n👤 Name: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n🦷 Treatment: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}${doctorLine}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${fd.time_slot}\n🏥 Clinic: ${cl.name}\n\nConfirm your booking?\n1️⃣ Yes, confirm ✅\n2️⃣ No, go back`;
+}
+
+function doctorSelectionMsg(ar, doctors) {
+  const lines = doctors.map((doc, i) => ar
+    ? `${i + 1}️⃣ د. ${doc.name_ar || doc.name}\n🎓 الدرجة: ${doc.degree_ar || doc.degree}\n⭐ التخصص: ${doc.specialization_ar || doc.specialization}\n📅 متاح: ${doc.available_ar || doc.available}`
+    : `${i + 1}️⃣ Dr. ${doc.name}\n🎓 Degree: ${doc.degree}\n⭐ Specialization: ${doc.specialization}\n📅 Available: ${doc.available}`
+  );
+  return ar
+    ? `👨‍⚕️ فريقنا الطبي:\n\n${lines.join('\n\n')}\n\nاضغط رقم للحجز مع طبيب محدد\nأو اضغط *0* للمتابعة بدون تحديد`
+    : `👨‍⚕️ Our Dental Team:\n\n${lines.join('\n\n')}\n\nReply with a number to book with a specific doctor\nOr press *0* to continue without preference`;
+}
+
+function doctorsMsg(ar, cl) {
+  const doctors = cl.doctors || [];
+  if (!doctors.length) {
+    return ar
+      ? 'سيتم إضافة معلومات الأطباء قريباً.\n1️⃣ حجز موعد\n2️⃣ العودة للقائمة'
+      : 'Doctor information will be available soon.\n1️⃣ Book appointment\n2️⃣ Back to menu';
+  }
+  const lines = doctors.map((doc, i) => ar
+    ? `${i + 1}️⃣ د. ${doc.name_ar || doc.name}\n🎓 الدرجة: ${doc.degree_ar || doc.degree}\n⭐ التخصص: ${doc.specialization_ar || doc.specialization}\n📅 متاح: ${doc.available_ar || doc.available}`
+    : `${i + 1}️⃣ Dr. ${doc.name}\n🎓 Degree: ${doc.degree}\n⭐ Specialization: ${doc.specialization}\n📅 Available: ${doc.available}`
+  );
+  return ar
+    ? `👨‍⚕️ فريقنا الطبي:\n\n${lines.join('\n\n')}\n\nاضغط رقم للحجز مع طبيب محدد\nأو اضغط 0 للعودة للقائمة`
+    : `👨‍⚕️ Our Dental Team:\n\n${lines.join('\n\n')}\n\nReply with a number to book with a specific doctor\nOr press 0 to go back to menu`;
+}
 
 function treatmentMenuMsg(ar) {
   return ar

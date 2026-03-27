@@ -118,6 +118,7 @@ async function saveAppointment(data) {
         description: data.description || '',
         preferred_date: data.preferred_date,
         time_slot: data.time_slot,
+        doctor_name: data.doctor_name || null,
         status: 'confirmed',
         reminder_sent_24h: false,
         reminder_sent_1h: false,

@@ -66,15 +66,13 @@ app.post('/webhook', async (req, res) => {
     if (message.type === 'text') {
       messageText = message.text.body;
     } else if (message.type === 'audio') {
-      // Voice note — only for Pro plan clinics
-      if (clinic && clinic.plan === 'pro') {
-        const mediaId = message.audio?.id;
-        if (mediaId) {
-          messageText = await transcribeAudio(mediaId);
-          console.log(`[Audio] Transcribed: "${messageText}"`);
-        }
+      // Voice note — transcribe for all clinics
+      const mediaId = message.audio?.id;
+      if (mediaId) {
+        messageText = await transcribeAudio(mediaId);
+        console.log(`[Audio] Transcribed: "${messageText}"`);
       }
-      if (!messageText) return; // Skip audio on basic plan
+      if (!messageText) return; // Skip if transcription failed
     } else {
       return; // Skip other message types (images, etc.)
     }
