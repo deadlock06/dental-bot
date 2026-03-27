@@ -62,11 +62,10 @@ async function handleMessage(phone, text, clinic) {
   const ai = await detectIntent(msg, flow, step);
   const { intent, extracted_value } = ai;
 
-  // Language change
-  if (intent === 'change_language') {
-    const newLang = ai.detected_language === 'ar' ? 'ar' : 'en';
-    await savePatient(phone, { ...patient, language: newLang, current_flow: null, flow_step: 0, flow_data: {} });
-    return sendMessage(phone, newLang === 'ar' ? menuAR(cl.name) : menuEN(cl.name));
+  // Language change — show picker so patient explicitly chooses
+  if (intent === 'change_language' || /^(change language|language|لغة|تغيير اللغة|change lang)$/i.test(msg)) {
+    await savePatient(phone, { ...patient, language: null, current_flow: null, flow_step: 0, flow_data: {} });
+    return sendMessage(phone, LANG_SELECT);
   }
 
   // Active flow routing
@@ -122,8 +121,8 @@ const AR_SLOTS = ['9:00 صباحاً', '10:00 صباحاً', '11:00 صباحاً
 async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, fd, patient, cl) {
   const val = (extractedValue !== null && extractedValue !== undefined) ? String(extractedValue) : rawMsg;
 
-  // Exit keywords — cancel flow and show menu
-  if (EXIT_RE.test(rawMsg.trim())) {
+  // Exit keywords — only during data-entry steps, not on binary confirm steps
+  if (step <= 6 && EXIT_RE.test(rawMsg.trim())) {
     await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
     return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
   }
@@ -228,9 +227,10 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     return sendMessage(phone, bookingSummaryMsg(ar, fd, phone, cl));
   }
 
-  // Step 8 — Booking confirmation
+  // Step 8 — Booking confirmation (use rawMsg directly — AI extraction unreliable here)
   if (step === 8) {
-    const confirmed = val === '1' || /^(yes|confirm|نعم|أؤكد)$/i.test(val);
+    const raw8 = rawMsg.trim();
+    const confirmed = raw8 === '1' || /^(yes|confirm|نعم|أؤكد)$/i.test(raw8);
     if (confirmed) {
       await saveAppointment({
         phone:          fd.phone || phone,

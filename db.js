@@ -41,7 +41,7 @@ async function insertPatient(phone) {
     const res = await axios.post(
       `${SUPABASE_URL}/rest/v1/patients`,
       payload,
-      { headers: { ...headers, Prefer: 'return=representation' } }
+      { headers: { ...headers, Prefer: 'return=representation,resolution=merge-duplicates' } }
     );
     console.log('[insertPatient] POST status:', res.status);
     return res.data[0] || null;
