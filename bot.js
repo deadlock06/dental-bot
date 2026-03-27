@@ -200,7 +200,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
 
   // Step 4 — Notes (optional)
   if (step === 4) {
-    fd.description = (val === '0' || /^(skip|no|nothing|لا|تخطي)$/i.test(val)) ? '' : val;
+    fd.description = (rawMsg.trim() === '0' || /^(skip|no|nothing|لا|تخطي)$/i.test(rawMsg.trim())) ? '' : rawMsg.trim();
     await savePatient(phone, { ...patient, flow_step: 5, flow_data: fd });
     return sendMessage(phone, ar
       ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين\n• 20 أبريل\n• أي تاريخ محدد'
