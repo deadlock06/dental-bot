@@ -10,6 +10,10 @@ const headers = {
   Prefer: 'resolution=merge-duplicates'
 };
 
+// ─────────────────────────────────────────────
+// Patients
+// ─────────────────────────────────────────────
+
 async function getPatient(phone) {
   try {
     const res = await axios.get(
@@ -23,7 +27,6 @@ async function getPatient(phone) {
   }
 }
 
-// Insert a brand-new patient row (pure POST — never PATCH)
 async function insertPatient(phone) {
   const payload = {
     phone,
@@ -45,12 +48,10 @@ async function insertPatient(phone) {
   } catch (err) {
     console.error('[insertPatient] ERROR status:', err.response?.status);
     console.error('[insertPatient] ERROR body:', JSON.stringify(err.response?.data));
-    console.error('[insertPatient] ERROR message:', err.message);
     return null;
   }
 }
 
-// Update an existing patient row (pure PATCH)
 async function savePatient(phone, data) {
   const payload = {
     phone,
@@ -67,45 +68,111 @@ async function savePatient(phone, data) {
       payload,
       { headers: { ...headers, Prefer: 'return=representation' } }
     );
-    console.log('[savePatient] PATCH status:', patch.status, 'rows affected:', patch.data?.length);
+    console.log('[savePatient] PATCH status:', patch.status, 'rows:', patch.data?.length);
   } catch (err) {
-    console.error('[savePatient] ERROR status:', err.response?.status);
-    console.error('[savePatient] ERROR body:', JSON.stringify(err.response?.data));
-    console.error('[savePatient] ERROR message:', err.message);
+    console.error('[savePatient] ERROR:', err.response?.status, JSON.stringify(err.response?.data));
   }
 }
 
-// Delete a patient row by phone (for test cleanup)
 async function deletePatient(phone) {
   try {
-    const res = await axios.delete(
+    await axios.delete(
       `${SUPABASE_URL}/rest/v1/patients?phone=eq.${encodeURIComponent(phone)}`,
       { headers }
     );
-    console.log('[deletePatient] Deleted rows for:', phone, 'status:', res.status);
   } catch (err) {
     console.error('[deletePatient] ERROR:', err.message);
   }
 }
 
+// ─────────────────────────────────────────────
+// Clinics
+// ─────────────────────────────────────────────
+
+async function getClinic(whatsappNumber) {
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/clinics?whatsapp_number=eq.${encodeURIComponent(whatsappNumber)}&select=*`,
+      { headers }
+    );
+    return res.data[0] || null;
+  } catch (err) {
+    console.error('getClinic error:', err.message);
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────
+// Appointments
+// ─────────────────────────────────────────────
+
 async function saveAppointment(data) {
   try {
-    await axios.post(
+    const res = await axios.post(
       `${SUPABASE_URL}/rest/v1/appointments`,
       {
         phone: data.phone,
+        clinic_id: data.clinic_id || null,
         name: data.name,
         treatment: data.treatment,
         description: data.description || '',
         preferred_date: data.preferred_date,
         time_slot: data.time_slot,
-        status: 'pending'
+        status: 'confirmed',
+        reminder_sent_24h: false,
+        reminder_sent_1h: false,
+        follow_up_sent: false
       },
-      { headers }
+      { headers: { ...headers, Prefer: 'return=representation' } }
     );
+    return res.data[0] || null;
   } catch (err) {
-    console.error('saveAppointment error:', err.message);
+    console.error('saveAppointment error:', err.response?.data || err.message);
+    return null;
   }
 }
 
-module.exports = { getPatient, insertPatient, savePatient, saveAppointment, deletePatient };
+async function getAppointment(phone) {
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/appointments?phone=eq.${encodeURIComponent(phone)}&status=in.(confirmed,pending)&order=created_at.desc&limit=1&select=*`,
+      { headers }
+    );
+    return res.data[0] || null;
+  } catch (err) {
+    console.error('getAppointment error:', err.message);
+    return null;
+  }
+}
+
+async function updateAppointment(id, fields) {
+  try {
+    await axios.patch(
+      `${SUPABASE_URL}/rest/v1/appointments?id=eq.${id}`,
+      fields,
+      { headers }
+    );
+  } catch (err) {
+    console.error('updateAppointment error:', err.response?.data || err.message);
+  }
+}
+
+// Get appointments for reminder processing
+async function getAppointmentsForReminder(filterFn) {
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/appointments?status=eq.confirmed&select=*`,
+      { headers }
+    );
+    return (res.data || []).filter(filterFn);
+  } catch (err) {
+    console.error('getAppointmentsForReminder error:', err.message);
+    return [];
+  }
+}
+
+module.exports = {
+  getPatient, insertPatient, savePatient, deletePatient,
+  getClinic,
+  saveAppointment, getAppointment, updateAppointment, getAppointmentsForReminder
+};
