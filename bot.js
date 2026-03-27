@@ -116,8 +116,16 @@ async function getIntentReply(phone, intent, lang, ar, cl) {
 // ─────────────────────────────────────────────
 // BOOKING FLOW — 7 steps
 // ─────────────────────────────────────────────
+const EXIT_RE = /^(menu|main menu|back|go back|start over|cancel|stop|exit|quit|قائمة|قائمة رئيسية|رجوع|ارجع|إلغاء|توقف|خروج|من البداية)$/i;
+
 async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, fd, patient, cl) {
   const val = (extractedValue !== null && extractedValue !== undefined) ? String(extractedValue) : rawMsg;
+
+  // Exit keywords — cancel flow and show menu
+  if (EXIT_RE.test(rawMsg.trim())) {
+    await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
+    return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+  }
 
   // Step 1 — Name
   if (step === 1) {
@@ -227,7 +235,10 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       );
     } else {
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+      return sendMessage(phone, ar
+        ? 'حسناً، تم إلغاء الحجز. أرسل أي رسالة للعودة للقائمة.'
+        : 'OK, booking cancelled. Send any message to return to the menu.'
+      );
     }
   }
 }
