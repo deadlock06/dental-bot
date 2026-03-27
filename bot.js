@@ -231,6 +231,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
   if (step === 8) {
     const raw8 = rawMsg.trim();
     const confirmed = raw8 === '1' || /^(yes|confirm|نعم|أؤكد)$/i.test(raw8);
+    const denied    = raw8 === '2' || /^(no|back|لا|العودة)$/i.test(raw8);
+
     if (confirmed) {
       await saveAppointment({
         phone:          fd.phone || phone,
@@ -253,12 +255,15 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         ? `🎉 تم تأكيد موعدك بنجاح!\nنراك في ${fd.preferred_date} الساعة ${fd.time_slot}.\nسنرسل لك تذكيراً قبل موعدك.\nشكراً لك! 😊🦷`
         : `🎉 Your appointment is confirmed!\nWe'll see you on ${fd.preferred_date} at ${fd.time_slot}.\nWe'll send you a reminder before your appointment.\nThank you! 😊🦷`
       );
-    } else {
+    } else if (denied) {
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
       return sendMessage(phone, ar
         ? 'حسناً، تم إلغاء الحجز. أرسل أي رسالة للعودة للقائمة.'
         : 'OK, booking cancelled. Send any message to return to the menu.'
       );
+    } else {
+      // Unrecognised input — re-show summary
+      return sendMessage(phone, bookingSummaryMsg(ar, fd, phone, cl));
     }
   }
 }
@@ -376,7 +381,7 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
       const appt = await getAppointment(phone);
       if (!appt) {
         return sendMessage(phone, ar
-          ? 'ليس لديك مواعيد قادمة.\nهل تريد حجز موعد؟\n1️⃣ حجز موعد\n2️⃣ العودة للقائمة'
+          ? 'ليس لديك أي مواعيد قادمة.\nهل تريد حجز موعد؟\n1️⃣ حجز موعد\n2️⃣ العودة للقائمة'
           : 'You don\'t have any upcoming appointments.\nWould you like to book one?\n1️⃣ Book appointment\n2️⃣ Back to menu'
         );
       }
@@ -516,7 +521,7 @@ function reviewMsg(ar, cl) {
 
 function staffMsg(ar) {
   return ar
-    ? '👩‍⚕️ جاري تحويلك إلى فريقنا الآن...\nالرجاء الانتظار لحظة 🙏\nسيرد عليك فريقنا قريباً خلال ساعات العمل.\n\nأوقات العمل: الأحد-الخميس 9ص-9م، الجمعة 4م-9م، السبت 9ص-6م'
+    ? '👩‍⚕️ جاري تحويلك إلى فريقنا الآن...\nالرجاء الانتظار لحظة 🙏\nسيرد عليك فريقنا قريباً.\n\nأوقات العمل: الأحد-الخميس 9ص-9م، الجمعة 4م-9م، السبت 9ص-6م'
     : '👩‍⚕️ Connecting you with our team now...\nPlease hold on for a moment 🙏\nOur staff will respond shortly during working hours.\n\nWorking hours: Sun-Thu 9AM-9PM, Fri 4PM-9PM, Sat 9AM-6PM';
 }
 

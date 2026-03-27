@@ -3,6 +3,10 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
+// Global error handlers — prevent crashes
+process.on('uncaughtException',  (err) => console.error('[CRASH] uncaughtException:', err));
+process.on('unhandledRejection', (err) => console.error('[CRASH] unhandledRejection:', err));
+
 // Localtunnel bypass middleware
 app.use((req, res, next) => {
   res.setHeader('bypass-tunnel-reminder', 'true');
@@ -15,7 +19,7 @@ app.get('/', (req, res) => {
 });
 
 const { handleMessage } = require('./bot');
-const { getClinic, getAppointmentsForReminder, updateAppointment } = require('./db');
+const { getClinic, getClinicById, getPatient, getAppointmentsForReminder, updateAppointment } = require('./db');
 const { sendMessage } = require('./whatsapp');
 const { transcribeAudio } = require('./audio');
 
@@ -23,8 +27,8 @@ const { transcribeAudio } = require('./audio');
 // Meta webhook verification
 // ─────────────────────────────────────────────
 app.get('/webhook', (req, res) => {
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
+  const mode      = req.query['hub.mode'];
+  const token     = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
   if (mode === 'subscribe' && (token === process.env.VERIFY_TOKEN || token === 'dental123')) {
@@ -41,10 +45,10 @@ app.post('/webhook', async (req, res) => {
   res.sendStatus(200); // Always respond immediately to Meta
 
   try {
-    const body = req.body;
-    const entry = body?.entry?.[0];
+    const body   = req.body;
+    const entry  = body?.entry?.[0];
     const change = entry?.changes?.[0];
-    const value = change?.value;
+    const value  = change?.value;
 
     // Skip status updates
     if (value?.statuses) return;
@@ -53,12 +57,8 @@ app.post('/webhook', async (req, res) => {
     if (!message) return;
 
     const patientPhone = message.from;
-
-    // Get the bot's WhatsApp number (the number that received the message)
     const botPhone = value?.metadata?.phone_number_id || process.env.WHATSAPP_PHONE_ID;
 
-    // Look up clinic by bot's WhatsApp phone number ID
-    // clinics.whatsapp_number stores the PHONE_NUMBER_ID (not the display number)
     const clinic = await getClinic(botPhone);
 
     let messageText = null;
@@ -66,15 +66,14 @@ app.post('/webhook', async (req, res) => {
     if (message.type === 'text') {
       messageText = message.text.body;
     } else if (message.type === 'audio') {
-      // Voice note — transcribe for all clinics
       const mediaId = message.audio?.id;
       if (mediaId) {
         messageText = await transcribeAudio(mediaId);
-        console.log(`[Audio] Transcribed: "${messageText}"`);
+        console.log(`[Audio][${patientPhone}] Transcribed: "${messageText}"`);
       }
-      if (!messageText) return; // Skip if transcription failed
+      if (!messageText) return;
     } else {
-      return; // Skip other message types (images, etc.)
+      return;
     }
 
     if (!messageText) return;
@@ -82,43 +81,68 @@ app.post('/webhook', async (req, res) => {
     await handleMessage(patientPhone, messageText, clinic);
 
   } catch (err) {
-    console.error('Webhook error:', err.message);
+    console.error('[Webhook] Error:', err.message);
   }
 });
 
 // ─────────────────────────────────────────────
 // POST /send-reminders — called by cron every 30 min
 // ─────────────────────────────────────────────
+
+// Parse a stored preferred_date string to YYYY-MM-DD for comparison.
+// Stored format examples: "April 20, 2026" | "Monday April 21, 2026" | "April 18"
+function parseDateToISO(dateStr) {
+  if (!dateStr) return null;
+  try {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      // If no year was stored (e.g. "April 18"), new Date assumes current year — that's fine
+      return d.toISOString().split('T')[0];
+    }
+  } catch (e) { /* fall through */ }
+  return null;
+}
+
 app.post('/send-reminders', async (req, res) => {
   res.sendStatus(200);
 
   try {
-    const now = new Date();
-
-    // Normalise a date string to YYYY-MM-DD
-    function toDateStr(d) {
-      return d.toISOString().split('T')[0];
-    }
-
-    const todayStr = toDateStr(now);
-    const tomorrowStr = toDateStr(new Date(now.getTime() + 86400000));
-    const yesterdayStr = toDateStr(new Date(now.getTime() - 86400000));
+    const now          = new Date();
+    const todayISO     = now.toISOString().split('T')[0];
+    const tomorrowISO  = new Date(now.getTime() + 86400000).toISOString().split('T')[0];
+    const yesterdayISO = new Date(now.getTime() - 86400000).toISOString().split('T')[0];
 
     const all = await getAppointmentsForReminder(() => true);
     console.log(`[Reminders] Processing ${all.length} appointments`);
 
     for (const appt of all) {
-      // 24h reminder
-      if (appt.preferred_date === tomorrowStr && !appt.reminder_sent_24h) {
-        const msg24en = `🔔 Appointment Reminder!\nHi ${appt.name}, you have an appointment tomorrow:\n📅 ${appt.preferred_date} at ⏰ ${appt.time_slot}\n🦷 Treatment: ${appt.treatment}\n\nWe'll see you then! If you need to reschedule, reply with 'reschedule' 😊`;
-        const msg24ar = `🔔 تذكير بالموعد!\nمرحباً ${appt.name}، لديك موعد غداً:\n📅 ${appt.preferred_date} الساعة ⏰ ${appt.time_slot}\n🦷 العلاج: ${appt.treatment}\n\nنراك قريباً! إذا أردت إعادة الجدولة، أرسل 'إعادة جدولة' 😊`;
-        await sendMessage(appt.phone, msg24en); // Default English; extend with patient lang if needed
-        await updateAppointment(appt.id, { reminder_sent_24h: true });
-        console.log(`[Reminders] 24h sent to ${appt.phone}`);
+      const apptDateISO = parseDateToISO(appt.preferred_date);
+      if (!apptDateISO) {
+        console.log(`[Reminders] Skipping appt ${appt.id} — unparseable date: "${appt.preferred_date}"`);
+        continue;
       }
 
-      // 1h reminder — check time slot is within ~1 hour
-      if (appt.preferred_date === todayStr && !appt.reminder_sent_1h) {
+      // Fetch patient language (best-effort — default English on failure)
+      const patient = await getPatient(appt.phone);
+      const ar = patient?.language === 'ar';
+
+      // Fetch clinic for review link (best-effort)
+      const clinic = appt.clinic_id ? await getClinicById(appt.clinic_id) : null;
+      const reviewLink = clinic?.review_link || 'https://g.page/r/your-review-link';
+      const clinicName = clinic?.name || 'our clinic';
+
+      // ── 24h reminder
+      if (apptDateISO === tomorrowISO && !appt.reminder_sent_24h) {
+        const msg = ar
+          ? `🔔 تذكير بالموعد!\nمرحباً ${appt.name}، لديك موعد غداً:\n📅 ${appt.preferred_date} الساعة ⏰ ${appt.time_slot}\n🏥 ${clinicName}\n🦷 العلاج: ${appt.treatment}\n\nنراك قريباً! إذا أردت إعادة الجدولة، أرسل 'إعادة جدولة' 😊`
+          : `🔔 Appointment Reminder!\nHi ${appt.name}, you have an appointment tomorrow:\n📅 ${appt.preferred_date} at ⏰ ${appt.time_slot}\n🏥 ${clinicName}\n🦷 Treatment: ${appt.treatment}\n\nSee you then! Reply 'reschedule' if you need to change it 😊`;
+        await sendMessage(appt.phone, msg);
+        await updateAppointment(appt.id, { reminder_sent_24h: true });
+        console.log(`[Reminders] 24h sent to ${appt.phone} (${ar ? 'AR' : 'EN'})`);
+      }
+
+      // ── 1h reminder
+      if (apptDateISO === todayISO && !appt.reminder_sent_1h) {
         const slotMatch = appt.time_slot?.match(/(\d+):(\d+)\s*(AM|PM)/i);
         if (slotMatch) {
           let h = parseInt(slotMatch[1]);
@@ -126,26 +150,28 @@ app.post('/send-reminders', async (req, res) => {
           const ampm = slotMatch[3].toUpperCase();
           if (ampm === 'PM' && h !== 12) h += 12;
           if (ampm === 'AM' && h === 12) h = 0;
-          const slotMs = new Date(now);
-          slotMs.setHours(h, m, 0, 0);
-          const diffMin = (slotMs - now) / 60000;
+          const slotTime = new Date(now);
+          slotTime.setHours(h, m, 0, 0);
+          const diffMin = (slotTime - now) / 60000;
           if (diffMin >= 30 && diffMin <= 90) {
-            const msg1h = `⏰ Your appointment is in 1 hour!\n📅 Today at ${appt.time_slot}\nWe're looking forward to seeing you! 🦷`;
-            await sendMessage(appt.phone, msg1h);
+            const msg = ar
+              ? `⏰ موعدك بعد ساعة واحدة!\n📅 اليوم الساعة ${appt.time_slot}\n🏥 ${clinicName}\nنتطلع لرؤيتك! 🦷`
+              : `⏰ Your appointment is in 1 hour!\n📅 Today at ${appt.time_slot}\n🏥 ${clinicName}\nWe're looking forward to seeing you! 🦷`;
+            await sendMessage(appt.phone, msg);
             await updateAppointment(appt.id, { reminder_sent_1h: true });
-            console.log(`[Reminders] 1h sent to ${appt.phone}`);
+            console.log(`[Reminders] 1h sent to ${appt.phone} (${ar ? 'AR' : 'EN'})`);
           }
         }
       }
 
-      // Follow-up (day after, status=completed or date=yesterday)
-      if (appt.preferred_date === yesterdayStr && !appt.follow_up_sent) {
-        // Mark completed + send follow-up
-        const reviewLink = 'https://g.page/r/your-review-link'; // Overridden by clinic if available
-        const msgFu = `😊 Hi ${appt.name}! How was your visit with us?\nWe hope everything went well!\nIf you have any concerns, feel free to message us.\nWe'd love to hear your feedback:\n⭐ ${reviewLink}`;
-        await sendMessage(appt.phone, msgFu);
+      // ── Follow-up (day after appointment)
+      if (apptDateISO === yesterdayISO && !appt.follow_up_sent) {
+        const msg = ar
+          ? `😊 مرحباً ${appt.name}! كيف كانت زيارتك لنا؟\nنأمل أن كل شيء سار بشكل رائع!\nيسعدنا سماع رأيك:\n⭐ ${reviewLink}\n\nلا تتردد في مراسلتنا في أي وقت 🦷`
+          : `😊 Hi ${appt.name}! How was your visit with us?\nWe hope everything went well!\nWe'd love to hear your feedback:\n⭐ ${reviewLink}\n\nFeel free to message us anytime 🦷`;
+        await sendMessage(appt.phone, msg);
         await updateAppointment(appt.id, { follow_up_sent: true, status: 'completed' });
-        console.log(`[Reminders] Follow-up sent to ${appt.phone}`);
+        console.log(`[Reminders] Follow-up sent to ${appt.phone} (${ar ? 'AR' : 'EN'})`);
       }
     }
   } catch (err) {
@@ -162,13 +188,12 @@ try {
     console.log('[Cron] Running reminders...');
     try {
       const http = require('http');
-      const options = {
+      http.request({
         hostname: 'localhost',
         port: process.env.PORT || 3000,
         path: '/send-reminders',
         method: 'POST'
-      };
-      http.request(options).end();
+      }).end();
     } catch (e) {
       console.error('[Cron] Error triggering reminders:', e.message);
     }

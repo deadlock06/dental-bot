@@ -89,6 +89,19 @@ async function deletePatient(phone) {
 // Clinics
 // ─────────────────────────────────────────────
 
+async function getClinicById(id) {
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/clinics?id=eq.${encodeURIComponent(id)}&select=*`,
+      { headers }
+    );
+    return res.data[0] || null;
+  } catch (err) {
+    console.error('getClinicById error:', err.message);
+    return null;
+  }
+}
+
 async function getClinic(whatsappNumber) {
   try {
     const res = await axios.get(
@@ -174,6 +187,6 @@ async function getAppointmentsForReminder(filterFn) {
 
 module.exports = {
   getPatient, insertPatient, savePatient, deletePatient,
-  getClinic,
+  getClinic, getClinicById,
   saveAppointment, getAppointment, updateAppointment, getAppointmentsForReminder
 };
