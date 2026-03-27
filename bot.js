@@ -84,10 +84,38 @@ async function handleMessage(phone, text, clinic) {
   }
 
   if (flow === 'reschedule') {
+    if (intent !== 'continue_flow' && intent !== 'unknown') {
+      const interruptReply = await getIntentReply(intent, ar, cl);
+      if (interruptReply) {
+        // Off-topic question mid-reschedule — answer and offer to continue
+        await sendMessage(phone, interruptReply);
+        return sendMessage(phone, ar
+          ? 'بالمناسبة، كنت في منتصف إعادة جدولة موعدك. هل تريد المتابعة؟\n1️⃣ نعم، أكمل\n2️⃣ لا، ابدأ من جديد'
+          : 'By the way, you were in the middle of rescheduling. Would you like to continue?\n1️⃣ Yes, continue\n2️⃣ No, start over'
+        );
+      }
+      // Navigation intent (greeting, booking, menu options) — stale flow, clear and route
+      const clearedPatient = { ...patient, current_flow: null, flow_step: 0, flow_data: {} };
+      await savePatient(phone, clearedPatient);
+      return routeIntent(phone, intent, lang, ar, msg, clearedPatient, cl);
+    }
     return handleRescheduleFlow(phone, msg, extracted_value, lang, ar, step, fd, patient, cl);
   }
 
   if (flow === 'cancel') {
+    if (intent !== 'continue_flow' && intent !== 'unknown') {
+      const interruptReply = await getIntentReply(intent, ar, cl);
+      if (interruptReply) {
+        await sendMessage(phone, interruptReply);
+        return sendMessage(phone, ar
+          ? 'بالمناسبة، كنت في منتصف إلغاء موعدك. هل تريد المتابعة؟\n1️⃣ نعم، أكمل\n2️⃣ لا، ابدأ من جديد'
+          : 'By the way, you were in the middle of cancelling. Would you like to continue?\n1️⃣ Yes, continue\n2️⃣ No, start over'
+        );
+      }
+      const clearedPatient = { ...patient, current_flow: null, flow_step: 0, flow_data: {} };
+      await savePatient(phone, clearedPatient);
+      return routeIntent(phone, intent, lang, ar, msg, clearedPatient, cl);
+    }
     return handleCancelFlow(phone, msg, lang, ar, step, fd, patient, cl);
   }
 
