@@ -35,22 +35,31 @@ app.get('/webhook', (req, res) => {
 // Incoming WhatsApp messages
 // ─────────────────────────────────────────────
 app.post('/webhook', async (req, res) => {
-  res.sendStatus(200); // Always respond immediately to Twilio
+  // Send empty 200 — res.sendStatus(200) sends "OK" as body which Twilio forwards as a message
+  res.status(200).end();
 
   try {
     const body = req.body;
+    console.log('[Webhook] Raw body:', JSON.stringify(body));
 
     // Twilio sends: body.Body (text), body.From (whatsapp:+<phone>)
     const messageText = body?.Body;
     const fromRaw     = body?.From; // e.g. "whatsapp:+966572914855"
 
-    if (!messageText || !fromRaw) return;
+    console.log(`[Webhook] messageText="${messageText}" fromRaw="${fromRaw}"`);
+
+    if (!messageText || !fromRaw) {
+      console.log('[Webhook] Missing Body or From — ignoring');
+      return;
+    }
 
     // Strip "whatsapp:+" prefix to get plain digits
     const patientPhone = fromRaw.replace(/^whatsapp:\+/, '');
+    console.log(`[Webhook] patientPhone="${patientPhone}"`);
 
     const botPhone = process.env.WHATSAPP_PHONE_ID;
     const clinic   = await getClinic(botPhone);
+    console.log(`[Webhook] botPhone="${botPhone}" clinic=${clinic ? clinic.name : 'NOT FOUND'}`);
 
     await handleMessage(patientPhone, messageText, clinic);
 
