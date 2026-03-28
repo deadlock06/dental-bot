@@ -121,6 +121,7 @@ function keywordFallback(text) {
 }
 
 async function extractDate(text) {
+  console.log(`[AI] extractDate called with: "${text}"`);
   try {
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     const res = await axios.post(

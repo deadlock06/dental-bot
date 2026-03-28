@@ -223,8 +223,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
   // Step 5 — Date (AI-parsed)
   if (step === 5) {
     const parsed = await extractDate(rawMsg);
-    // If returned unchanged, AI couldn't parse it — re-ask
-    if (parsed === rawMsg || parsed === rawMsg.trim()) {
+    // Only re-ask if result is empty/null — accept anything non-empty
+    if (!parsed || !parsed.trim()) {
       return sendMessage(phone, ar
         ? "لم أفهم التاريخ 😊 ممكن تقول مثلاً 'الاثنين الجاي' أو '20 أبريل'؟"
         : "I didn't quite get that date 😊 Could you say it like 'April 20' or 'next Monday'?"
@@ -331,7 +331,7 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
   // Step 1 — New date (AI-parsed)
   if (step === 1) {
     const parsed = await extractDate(rawMsg);
-    if (parsed === rawMsg || parsed === rawMsg.trim()) {
+    if (!parsed || !parsed.trim()) {
       return sendMessage(phone, ar
         ? "لم أفهم التاريخ 😊 ممكن تقول مثلاً 'الاثنين الجاي' أو '20 أبريل'؟"
         : "I didn't quite get that date 😊 Could you say it like 'April 20' or 'next Monday'?"
