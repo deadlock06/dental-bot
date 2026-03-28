@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: false })); // Twilio sends URL-encoded bodies
 
 // Global error handlers — prevent crashes
 process.on('uncaughtException',  (err) => console.error('[CRASH] uncaughtException:', err));
@@ -24,59 +25,32 @@ const { sendMessage } = require('./whatsapp');
 const { transcribeAudio } = require('./audio');
 
 // ─────────────────────────────────────────────
-// Meta webhook verification
+// Twilio webhook verification (simple 200 OK)
 // ─────────────────────────────────────────────
 app.get('/webhook', (req, res) => {
-  const mode      = req.query['hub.mode'];
-  const token     = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
-
-  if (mode === 'subscribe' && (token === process.env.VERIFY_TOKEN || token === 'dental123')) {
-    console.log('Webhook verified');
-    return res.status(200).send(challenge);
-  }
-  res.sendStatus(403);
+  res.sendStatus(200);
 });
 
 // ─────────────────────────────────────────────
 // Incoming WhatsApp messages
 // ─────────────────────────────────────────────
 app.post('/webhook', async (req, res) => {
-  res.sendStatus(200); // Always respond immediately to Meta
+  res.sendStatus(200); // Always respond immediately to Twilio
 
   try {
-    const body   = req.body;
-    const entry  = body?.entry?.[0];
-    const change = entry?.changes?.[0];
-    const value  = change?.value;
+    const body = req.body;
 
-    // Skip status updates
-    if (value?.statuses) return;
+    // Twilio sends: body.Body (text), body.From (whatsapp:+<phone>)
+    const messageText = body?.Body;
+    const fromRaw     = body?.From; // e.g. "whatsapp:+966572914855"
 
-    const message = value?.messages?.[0];
-    if (!message) return;
+    if (!messageText || !fromRaw) return;
 
-    const patientPhone = message.from;
-    const botPhone = value?.metadata?.phone_number_id || process.env.WHATSAPP_PHONE_ID;
+    // Strip "whatsapp:+" prefix to get plain digits
+    const patientPhone = fromRaw.replace(/^whatsapp:\+/, '');
 
-    const clinic = await getClinic(botPhone);
-
-    let messageText = null;
-
-    if (message.type === 'text') {
-      messageText = message.text.body;
-    } else if (message.type === 'audio') {
-      const mediaId = message.audio?.id;
-      if (mediaId) {
-        messageText = await transcribeAudio(mediaId);
-        console.log(`[Audio][${patientPhone}] Transcribed: "${messageText}"`);
-      }
-      if (!messageText) return;
-    } else {
-      return;
-    }
-
-    if (!messageText) return;
+    const botPhone = process.env.WHATSAPP_PHONE_ID;
+    const clinic   = await getClinic(botPhone);
 
     await handleMessage(patientPhone, messageText, clinic);
 

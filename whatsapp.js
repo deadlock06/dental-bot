@@ -1,27 +1,19 @@
-const axios = require('axios');
+const twilio = require('twilio');
 
-const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
-const PHONE_ID = process.env.WHATSAPP_PHONE_ID;
+const TWILIO_ACCOUNT_SID  = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN   = process.env.TWILIO_AUTH_TOKEN;
+const TWILIO_WHATSAPP_FROM = process.env.TWILIO_WHATSAPP_FROM;
 
 async function sendMessage(to, text) {
   try {
-    await axios.post(
-      `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`,
-      {
-        messaging_product: 'whatsapp',
-        to,
-        type: 'text',
-        text: { body: text }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+    await client.messages.create({
+      from: TWILIO_WHATSAPP_FROM,
+      to:   `whatsapp:+${to}`,
+      body: text
+    });
   } catch (err) {
-    console.error('sendMessage error:', err.response?.data || err.message);
+    console.error('sendMessage error:', err.message);
   }
 }
 
