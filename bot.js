@@ -139,13 +139,23 @@ async function getIntentReply(intent, ar, cl) {
 // BOOKING FLOW — steps 1-8
 // ─────────────────────────────────────────────
 
-const EXIT_RE = /^(menu|main menu|back|go back|start over|cancel|stop|exit|quit|قائمة|قائمة رئيسية|رجوع|ارجع|إلغاء|توقف|خروج|من البداية)$/i;
+const EXIT_RE = /^(0|menu|main menu|back|go back|start over|cancel|stop|exit|quit|قائمة|قائمة رئيسية|رجوع|ارجع|إلغاء|توقف|خروج|من البداية)$/i;
 
 const EN_SLOTS = ['9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
 const AR_SLOTS = ['9:00 صباحاً', '10:00 صباحاً', '11:00 صباحاً', '1:00 مساءً', '2:00 مساءً', '3:00 مساءً', '4:00 مساءً', '5:00 مساءً'];
 
 async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, fd, patient, cl) {
   const val = (extractedValue !== null && extractedValue !== undefined) ? String(extractedValue) : rawMsg;
+
+  // Step 4 special case: "0" means skip notes — handle BEFORE EXIT_RE check
+  if (step === 4 && rawMsg.trim() === '0') {
+    fd.description = '';
+    await savePatient(phone, { ...patient, flow_step: 5, flow_data: fd });
+    return sendMessage(phone, ar
+      ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين الجاي\n• 20 أبريل\n• أي تاريخ محدد\n\n0️⃣ القائمة الرئيسية'
+      : 'When would you like your appointment? 📅\nYou can say:\n• Tomorrow\n• Next Monday\n• April 20\n• Any specific date\n\n0️⃣ Main menu'
+    );
+  }
 
   // Exit keywords — only during data-entry steps, not on binary confirm steps
   if (step <= 6 && EXIT_RE.test(rawMsg.trim())) {
@@ -157,13 +167,13 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
   if (step === 1) {
     // Clean: strip common prefixes, capitalize each word
     let name = val.trim();
-    name = name.replace(/^(my name is|i'm|i am|call me|اسمي|أنا|انا)\s+/i, '').trim();
+    name = name.replace(/^(my name is|i'm|i am|call me|اسمي|أنا|انا|يقولون لي)\s+/i, '').trim();
     name = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
     fd.name = name;
     await savePatient(phone, { ...patient, flow_step: 2, flow_data: fd });
     return sendMessage(phone, ar
-      ? `شكراً ${fd.name}! 😊\nرقم واتساب الخاص بك: *${phone}*\nهل هذا صحيح؟\n1️⃣ نعم، هذا صحيح\n2️⃣ لا، أريد رقماً آخر`
-      : `Thanks ${fd.name}! 😊\nYour WhatsApp number is: *${phone}*\nIs this correct?\n1️⃣ Yes, that's correct\n2️⃣ No, use a different number`
+      ? `شكراً ${fd.name}! 😊\nرقم واتساب الخاص بك: *${phone}*\nهل هذا صحيح؟\n1️⃣ نعم، هذا صحيح\n2️⃣ لا، أريد رقماً آخر\n\n0️⃣ القائمة الرئيسية`
+      : `Thanks ${fd.name}! 😊\nYour WhatsApp number is: *${phone}*\nIs this correct?\n1️⃣ Yes, that's correct\n2️⃣ No, use a different number\n\n0️⃣ Main menu`
     );
   }
 
@@ -205,8 +215,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     }
     await savePatient(phone, { ...patient, flow_step: 4, flow_data: fd });
     return sendMessage(phone, ar
-      ? 'هل لديك ملاحظات أو وصف للمشكلة؟ (اختياري)\nاكتب ملاحظتك أو أرسل *0* للتخطي'
-      : 'Do you have any notes or description of your issue? (optional)\nType your note or send *0* to skip'
+      ? 'هل لديك ملاحظات أو وصف للمشكلة؟ (اختياري)\nاكتب ملاحظتك أو أرسل *skip* للتخطي\n\n0️⃣ القائمة الرئيسية'
+      : 'Do you have any notes or description of your issue? (optional)\nType your note or send *skip* to continue\n\n0️⃣ Main menu'
     );
   }
 
@@ -215,8 +225,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     fd.description = (rawMsg.trim() === '0' || /^(skip|no|nothing|لا|تخطي)$/i.test(rawMsg.trim())) ? '' : rawMsg.trim();
     await savePatient(phone, { ...patient, flow_step: 5, flow_data: fd });
     return sendMessage(phone, ar
-      ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين الجاي\n• 20 أبريل\n• أي تاريخ محدد'
-      : 'When would you like your appointment? 📅\nYou can say:\n• Tomorrow\n• Next Monday\n• April 20\n• Any specific date'
+      ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين الجاي\n• 20 أبريل\n• أي تاريخ محدد\n\n0️⃣ القائمة الرئيسية'
+      : 'When would you like your appointment? 📅\nYou can say:\n• Tomorrow\n• Next Monday\n• April 20\n• Any specific date\n\n0️⃣ Main menu'
     );
   }
 
@@ -228,8 +238,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     if (dateInput.length < 2) {
       await savePatient(phone, { ...patient, flow_step: 5, flow_data: fd });
       return sendMessage(phone, ar
-        ? 'يرجى إدخال تاريخ مثل: غداً، الاثنين، أو 20 أبريل 😊'
-        : 'Please enter a date like: tomorrow, Monday, or April 20 😊'
+        ? 'يرجى إدخال تاريخ مثل: غداً، الاثنين، أو 20 أبريل 😊\n\n0️⃣ القائمة الرئيسية'
+        : 'Please enter a date like: tomorrow, Monday, or April 20 😊\n\n0️⃣ Main menu'
       );
     }
 
@@ -262,8 +272,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       if (!matched) {
         // Time not in schedule — re-show time menu, stay on step 6
         return sendMessage(phone, ar
-          ? 'هذا الوقت غير متاح في جدولنا 😊 يرجى الاختيار من الأوقات المتاحة:\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً'
-          : "That time isn't in our schedule 😊 Please choose from the available slots:\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM"
+          ? 'هذا الوقت غير متاح في جدولنا 😊 يرجى الاختيار من الأوقات المتاحة:\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً\n\n0️⃣ القائمة الرئيسية'
+          : "That time isn't in our schedule 😊 Please choose from the available slots:\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM\n\n0️⃣ Main menu"
         );
       }
       fd.time_slot = matched;
@@ -321,8 +331,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         );
       }
       return sendMessage(phone, ar
-        ? `🎉 تم تأكيد موعدك بنجاح!\nنراك في ${fd.preferred_date} الساعة ${fd.time_slot}.\nسنرسل لك تذكيراً قبل موعدك.\nشكراً لك! 😊🦷`
-        : `🎉 Your appointment is confirmed!\nWe'll see you on ${fd.preferred_date} at ${fd.time_slot}.\nWe'll send you a reminder before your appointment.\nThank you! 😊🦷`
+        ? `🎉 *تم تأكيد موعدك!*\n\n📅 ${fd.preferred_date}\n⏰ ${fd.time_slot}\n🏥 ${cl.name}\n🦷 ${fd.treatment}\n\nسنرسل لك تذكيراً قبل موعدك. نراك قريباً! 😊`
+        : `🎉 *Appointment Confirmed!*\n\n📅 ${fd.preferred_date}\n⏰ ${fd.time_slot}\n🏥 ${cl.name}\n🦷 ${fd.treatment}\n\nWe'll send you a reminder before your appointment. See you then! 😊`
       );
     } else if (denied) {
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
@@ -355,6 +365,7 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
       );
     }
 
+
     let parsedDate = dateInput;
     try {
       const extracted = await extractDate(dateInput);
@@ -380,8 +391,8 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
       const matched = await extractTimeSlot(rawMsg, EN_SLOTS);
       if (!matched) {
         return sendMessage(phone, ar
-          ? 'هذا الوقت غير متاح في جدولنا 😊 يرجى الاختيار من الأوقات المتاحة:\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً'
-          : "That time isn't in our schedule 😊 Please choose from the available slots:\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM"
+          ? 'هذا الوقت غير متاح في جدولنا 😊 يرجى الاختيار من الأوقات المتاحة:\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً\n\n0️⃣ القائمة الرئيسية'
+          : "That time isn't in our schedule 😊 Please choose from the available slots:\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM\n\n0️⃣ Main menu"
         );
       }
       fd.new_slot = matched;
@@ -456,6 +467,7 @@ async function handleCancelFlow(phone, rawMsg, lang, ar, step, fd, patient, cl) 
 async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
   // Explicit menu number mapping — reliable regardless of AI interpretation
   const numMap = {
+    '0': 'greeting',
     '1': 'booking', '2': 'my_appointment', '3': 'reschedule',
     '4': 'cancel',  '5': 'services',       '6': 'doctors',
     '7': 'prices',  '8': 'location',       '9': 'reviews', '10': 'human'
@@ -469,8 +481,8 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
     case 'booking':
       await savePatient(phone, { ...patient, current_flow: 'booking', flow_step: 1, flow_data: {} });
       return sendMessage(phone, ar
-        ? 'رائع! لنبدأ الحجز 😊\nما اسمك الكريم؟'
-        : "Great! Let's book your appointment 😊\nWhat's your full name?"
+        ? 'رائع! لنبدأ الحجز 😊\nما اسمك الكريم؟\n\n0️⃣ القائمة الرئيسية'
+        : "Great! Let's book your appointment 😊\nWhat's your full name?\n\n0️⃣ Main menu"
       );
 
     case 'my_appointment': {
@@ -583,32 +595,32 @@ function doctorsMsg(ar, cl) {
 
 function treatmentMenuMsg(ar) {
   return ar
-    ? 'ما نوع العلاج الذي تحتاجه؟\n\n1️⃣ تنظيف وتلميع 🦷\n2️⃣ حشوات\n3️⃣ تقويم الأسنان 📐\n4️⃣ تبييض الأسنان ⚪\n5️⃣ خلع\n6️⃣ زراعة أسنان 🔬\n7️⃣ علاج العصب 🏥\n8️⃣ أخرى / غير متأكد'
-    : 'What type of treatment do you need?\n\n1️⃣ Cleaning & Polishing 🦷\n2️⃣ Fillings\n3️⃣ Braces & Orthodontics 📐\n4️⃣ Teeth Whitening ⚪\n5️⃣ Extraction\n6️⃣ Dental Implants 🔬\n7️⃣ Root Canal 🏥\n8️⃣ Other / Not sure';
+    ? 'ما نوع العلاج الذي تحتاجه؟\n\n1️⃣ تنظيف وتلميع 🦷\n2️⃣ حشوات\n3️⃣ تقويم الأسنان 📐\n4️⃣ تبييض الأسنان ⚪\n5️⃣ خلع\n6️⃣ زراعة أسنان 🔬\n7️⃣ علاج العصب 🏥\n8️⃣ أخرى / غير متأكد\n\n0️⃣ القائمة الرئيسية'
+    : 'What type of treatment do you need?\n\n1️⃣ Cleaning & Polishing 🦷\n2️⃣ Fillings\n3️⃣ Braces & Orthodontics 📐\n4️⃣ Teeth Whitening ⚪\n5️⃣ Extraction\n6️⃣ Dental Implants 🔬\n7️⃣ Root Canal 🏥\n8️⃣ Other / Not sure\n\n0️⃣ Main menu';
 }
 
 function timeSlotMsg(ar) {
   return ar
-    ? 'اختر الوقت المناسب: ⏰\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً'
-    : 'Choose your preferred time: ⏰\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM';
+    ? 'اختر الوقت المناسب: ⏰\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً\n\n0️⃣ القائمة الرئيسية'
+    : 'Choose your preferred time: ⏰\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM\n\n0️⃣ Main menu';
 }
 
 function servicesMsg(ar) {
   return ar
-    ? '🦷 خدماتنا:\n\n✨ تنظيف وتلميع الأسنان\n🔧 الحشوات والترميم\n📐 تقويم الأسنان\n⚪ تبييض الأسنان\n🔬 زراعة الأسنان\n❌ خلع الأسنان\n🏥 علاج العصب\n👶 طب أسنان الأطفال\n🦷 القشور والتيجان\n😁 ابتسامة هوليوود\n\nهل أنت مستعد للحجز؟\n1️⃣ حجز موعد\n2️⃣ مشاهدة الأسعار\n3️⃣ العودة للقائمة'
-    : '🦷 Our Services:\n\n✨ Cleaning & Polishing\n🔧 Fillings & Restorations\n📐 Braces & Orthodontics\n⚪ Teeth Whitening\n🔬 Dental Implants\n❌ Extractions\n🏥 Root Canal Treatment\n👶 Pediatric Dentistry\n🦷 Veneers & Crowns\n😁 Smile Makeover\n\nReady to book?\n1️⃣ Book appointment\n2️⃣ See prices\n3️⃣ Back to menu';
+    ? '🦷 خدماتنا:\n\n✨ تنظيف وتلميع الأسنان\n🔧 الحشوات والترميم\n📐 تقويم الأسنان\n⚪ تبييض الأسنان\n🔬 زراعة الأسنان\n❌ خلع الأسنان\n🏥 علاج العصب\n👶 طب أسنان الأطفال\n🦷 القشور والتيجان\n😁 ابتسامة هوليوود\n\n1️⃣ حجز موعد | 7️⃣ مشاهدة الأسعار | 0️⃣ القائمة الرئيسية'
+    : '🦷 Our Services:\n\n✨ Cleaning & Polishing\n🔧 Fillings & Restorations\n📐 Braces & Orthodontics\n⚪ Teeth Whitening\n🔬 Dental Implants\n❌ Extractions\n🏥 Root Canal Treatment\n👶 Pediatric Dentistry\n🦷 Veneers & Crowns\n😁 Smile Makeover\n\n1️⃣ Book appointment | 7️⃣ See prices | 0️⃣ Main menu';
 }
 
 function pricesMsg(ar) {
   return ar
-    ? '💰 أسعارنا التقريبية:\n\n✨ تنظيف: 150-250 ريال\n🔧 حشوة: 200-400 ريال\n⚪ تبييض: 800-1,500 ريال\n📐 تقويم: 3,000-8,000 ريال\n🔬 زراعة: 3,500-6,000 ريال\n🏥 علاج عصب: 800-1,500 ريال\n🦷 قشرة: 800-1,200 ريال للسن\n\n📌 الأسعار النهائية تُحدد بعد الفحص.\n1️⃣ حجز موعد\n2️⃣ العودة للقائمة'
-    : '💰 Our Approximate Prices:\n\n✨ Cleaning: 150-250 SAR\n🔧 Filling: 200-400 SAR\n⚪ Whitening: 800-1,500 SAR\n📐 Braces: 3,000-8,000 SAR\n🔬 Implant: 3,500-6,000 SAR\n🏥 Root Canal: 800-1,500 SAR\n🦷 Veneer: 800-1,200 SAR per tooth\n\n📌 Final prices confirmed after examination.\n1️⃣ Book appointment\n2️⃣ Back to menu';
+    ? '💰 أسعارنا التقريبية:\n\n✨ تنظيف: 150-250 ريال\n🔧 حشوة: 200-400 ريال\n⚪ تبييض: 800-1,500 ريال\n📐 تقويم: 3,000-8,000 ريال\n🔬 زراعة: 3,500-6,000 ريال\n🏥 علاج عصب: 800-1,500 ريال\n🦷 قشرة: 800-1,200 ريال للسن\n\n📌 الأسعار النهائية تُحدد بعد الفحص.\n\n1️⃣ حجز موعد | 0️⃣ القائمة الرئيسية'
+    : '💰 Our Approximate Prices:\n\n✨ Cleaning: 150-250 SAR\n🔧 Filling: 200-400 SAR\n⚪ Whitening: 800-1,500 SAR\n📐 Braces: 3,000-8,000 SAR\n🔬 Implant: 3,500-6,000 SAR\n🏥 Root Canal: 800-1,500 SAR\n🦷 Veneer: 800-1,200 SAR per tooth\n\n📌 Final prices confirmed after examination.\n\n1️⃣ Book appointment | 0️⃣ Main menu';
 }
 
 function locationMsg(ar, cl) {
   return ar
-    ? `📍 موقعنا:\n${cl.location || 'تواصل معنا للعنوان'}\n\n🗺️ خرائط Google: ${cl.maps_link || 'https://maps.google.com'}\n\n🕐 أوقات العمل:\nالأحد - الخميس: 9:00 صباحاً - 9:00 مساءً\nالجمعة: 4:00 مساءً - 9:00 مساءً\nالسبت: 9:00 صباحاً - 6:00 مساءً\n\n1️⃣ حجز موعد\n2️⃣ العودة للقائمة`
-    : `📍 Our Location:\n${cl.location || 'Contact us for our address.'}\n\n🗺️ Google Maps: ${cl.maps_link || 'https://maps.google.com'}\n\n🕐 Working Hours:\nSunday - Thursday: 9:00 AM - 9:00 PM\nFriday: 4:00 PM - 9:00 PM\nSaturday: 9:00 AM - 6:00 PM\n\n1️⃣ Book appointment\n2️⃣ Back to menu`;
+    ? `📍 *موقع ${cl.name}*\n\n*العنوان:*\n${cl.location || 'تواصل معنا للعنوان'}\n\n🗺️ خرائط Google: ${cl.maps_link || 'https://maps.google.com'}\n\n*🕐 أوقات العمل:*\n*الأحد – الخميس:* 9:00 صباحاً – 9:00 مساءً\n*الجمعة:* 4:00 مساءً – 9:00 مساءً\n*السبت:* 9:00 صباحاً – 6:00 مساءً\n\n1️⃣ حجز موعد | 0️⃣ القائمة الرئيسية`
+    : `📍 *${cl.name} Location*\n\n*Address:*\n${cl.location || 'Contact us for our address.'}\n\n🗺️ Google Maps: ${cl.maps_link || 'https://maps.google.com'}\n\n*🕐 Working Hours:*\n*Sun–Thu:* 9:00 AM – 9:00 PM\n*Fri:* 4:00 PM – 9:00 PM\n*Sat:* 9:00 AM – 6:00 PM\n\n1️⃣ Book appointment | 0️⃣ Main menu`;
 }
 
 function reviewMsg(ar, cl) {
