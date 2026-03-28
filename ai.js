@@ -1,6 +1,7 @@
 const axios = require('axios');
 
 const OPENAI_KEY = process.env.OPENAI_KEY;
+console.log('[AI] OPENAI_KEY loaded:', !!OPENAI_KEY);
 
 const SYSTEM_PROMPT = `You are a world-class bilingual AI receptionist for a premium dental clinic in Saudi Arabia. You understand Arabic (Gulf/Saudi dialect) and English perfectly.
 

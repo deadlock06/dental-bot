@@ -222,15 +222,30 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
 
   // Step 5 — Date (AI-parsed)
   if (step === 5) {
-    const parsed = await extractDate(rawMsg);
-    // Only re-ask if result is empty/null — accept anything non-empty
-    if (!parsed || !parsed.trim()) {
+    const dateInput = rawMsg.trim();
+
+    // Reject only truly empty or single-char input
+    if (dateInput.length < 2) {
+      await savePatient(phone, { ...patient, flow_step: 5, flow_data: fd });
       return sendMessage(phone, ar
-        ? "لم أفهم التاريخ 😊 ممكن تقول مثلاً 'الاثنين الجاي' أو '20 أبريل'؟"
-        : "I didn't quite get that date 😊 Could you say it like 'April 20' or 'next Monday'?"
+        ? 'يرجى إدخال تاريخ مثل: غداً، الاثنين، أو 20 أبريل 😊'
+        : 'Please enter a date like: tomorrow, Monday, or April 20 😊'
       );
     }
-    fd.preferred_date = parsed;
+
+    // Try AI extraction — ALWAYS fall back to raw input on any failure
+    let parsedDate = dateInput;
+    try {
+      const extracted = await extractDate(dateInput);
+      if (extracted && extracted.length > 2 && extracted !== 'null') {
+        parsedDate = extracted;
+      }
+    } catch (e) {
+      console.error('[Step5] extractDate error:', e.message);
+    }
+
+    console.log(`[Step5] date input="${dateInput}" parsed="${parsedDate}"`);
+    fd.preferred_date = parsedDate;
     await savePatient(phone, { ...patient, flow_step: 6, flow_data: fd });
     return sendMessage(phone, timeSlotMsg(ar));
   }
@@ -245,10 +260,10 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     } else {
       const matched = await extractTimeSlot(rawMsg, EN_SLOTS);
       if (!matched) {
-        // Time not available — re-show time menu
+        // Time not in schedule — re-show time menu, stay on step 6
         return sendMessage(phone, ar
-          ? 'هذا الوقت غير متاح 😊 يرجى الاختيار من الأوقات المتاحة:\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً'
-          : "That time isn't available 😊 Please choose from our available slots:\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM"
+          ? 'هذا الوقت غير متاح في جدولنا 😊 يرجى الاختيار من الأوقات المتاحة:\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً'
+          : "That time isn't in our schedule 😊 Please choose from the available slots:\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM"
         );
       }
       fd.time_slot = matched;
@@ -330,14 +345,28 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
 
   // Step 1 — New date (AI-parsed)
   if (step === 1) {
-    const parsed = await extractDate(rawMsg);
-    if (!parsed || !parsed.trim()) {
+    const dateInput = rawMsg.trim();
+
+    if (dateInput.length < 2) {
+      await savePatient(phone, { ...patient, flow_step: 1, flow_data: fd });
       return sendMessage(phone, ar
-        ? "لم أفهم التاريخ 😊 ممكن تقول مثلاً 'الاثنين الجاي' أو '20 أبريل'؟"
-        : "I didn't quite get that date 😊 Could you say it like 'April 20' or 'next Monday'?"
+        ? 'يرجى إدخال تاريخ مثل: غداً، الاثنين، أو 20 أبريل 😊'
+        : 'Please enter a date like: tomorrow, Monday, or April 20 😊'
       );
     }
-    fd.new_date = parsed;
+
+    let parsedDate = dateInput;
+    try {
+      const extracted = await extractDate(dateInput);
+      if (extracted && extracted.length > 2 && extracted !== 'null') {
+        parsedDate = extracted;
+      }
+    } catch (e) {
+      console.error('[RescheduleStep1] extractDate error:', e.message);
+    }
+
+    console.log(`[RescheduleStep1] date input="${dateInput}" parsed="${parsedDate}"`);
+    fd.new_date = parsedDate;
     await savePatient(phone, { ...patient, flow_step: 2, flow_data: fd });
     return sendMessage(phone, timeSlotMsg(ar));
   }
@@ -351,8 +380,8 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
       const matched = await extractTimeSlot(rawMsg, EN_SLOTS);
       if (!matched) {
         return sendMessage(phone, ar
-          ? 'هذا الوقت غير متاح 😊 يرجى الاختيار من الأوقات المتاحة:\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً'
-          : "That time isn't available 😊 Please choose from our available slots:\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM"
+          ? 'هذا الوقت غير متاح في جدولنا 😊 يرجى الاختيار من الأوقات المتاحة:\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً'
+          : "That time isn't in our schedule 😊 Please choose from the available slots:\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM"
         );
       }
       fd.new_slot = matched;
