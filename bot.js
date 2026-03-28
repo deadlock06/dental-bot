@@ -75,8 +75,8 @@ async function handleMessage(phone, text, clinic) {
       if (interruptReply) {
         await sendMessage(phone, interruptReply);
         return sendMessage(phone, ar
-          ? 'بالمناسبة، كنت في منتصف حجز موعد. هل تريد المتابعة؟\n1️⃣ نعم، أكمل\n2️⃣ لا، ابدأ من جديد'
-          : 'By the way, you were in the middle of booking. Would you like to continue?\n1️⃣ Yes, continue\n2️⃣ No, start over'
+          ? 'بالمناسبة، كنت في منتصف حجز موعد 😊\nهل تريد المتابعة؟\n1️⃣ نعم، أكمل الحجز\n2️⃣ لا، ابدأ من جديد'
+          : 'By the way, you were in the middle of booking 😊\nWould you like to continue?\n1️⃣ Yes, continue booking\n2️⃣ No, start over'
         );
       }
     }
@@ -87,14 +87,12 @@ async function handleMessage(phone, text, clinic) {
     if (intent !== 'continue_flow' && intent !== 'unknown') {
       const interruptReply = await getIntentReply(intent, ar, cl);
       if (interruptReply) {
-        // Off-topic question mid-reschedule — answer and offer to continue
         await sendMessage(phone, interruptReply);
         return sendMessage(phone, ar
-          ? 'بالمناسبة، كنت في منتصف إعادة جدولة موعدك. هل تريد المتابعة؟\n1️⃣ نعم، أكمل\n2️⃣ لا، ابدأ من جديد'
-          : 'By the way, you were in the middle of rescheduling. Would you like to continue?\n1️⃣ Yes, continue\n2️⃣ No, start over'
+          ? 'بالمناسبة، كنت في منتصف إعادة جدولة موعدك 😊\nهل تريد المتابعة؟\n1️⃣ نعم، أكمل\n2️⃣ لا، ابدأ من جديد'
+          : 'By the way, you were in the middle of rescheduling 😊\nWould you like to continue?\n1️⃣ Yes, continue\n2️⃣ No, start over'
         );
       }
-      // Navigation intent (greeting, booking, menu options) — stale flow, clear and route
       const clearedPatient = { ...patient, current_flow: null, flow_step: 0, flow_data: {} };
       await savePatient(phone, clearedPatient);
       return routeIntent(phone, intent, lang, ar, msg, clearedPatient, cl);
@@ -108,8 +106,8 @@ async function handleMessage(phone, text, clinic) {
       if (interruptReply) {
         await sendMessage(phone, interruptReply);
         return sendMessage(phone, ar
-          ? 'بالمناسبة، كنت في منتصف إلغاء موعدك. هل تريد المتابعة؟\n1️⃣ نعم، أكمل\n2️⃣ لا، ابدأ من جديد'
-          : 'By the way, you were in the middle of cancelling. Would you like to continue?\n1️⃣ Yes, continue\n2️⃣ No, start over'
+          ? 'بالمناسبة، كنت في منتصف إلغاء موعدك 😊\nهل تريد المتابعة؟\n1️⃣ نعم، أكمل\n2️⃣ لا، ابدأ من جديد'
+          : 'By the way, you were in the middle of cancelling 😊\nWould you like to continue?\n1️⃣ Yes, continue\n2️⃣ No, start over'
         );
       }
       const clearedPatient = { ...patient, current_flow: null, flow_step: 0, flow_data: {} };
@@ -123,7 +121,7 @@ async function handleMessage(phone, text, clinic) {
 }
 
 // ─────────────────────────────────────────────
-// Return a text reply for an intent (interrupt handling during booking)
+// Return a text reply for an intent (interrupt handling during flows)
 // ─────────────────────────────────────────────
 async function getIntentReply(intent, ar, cl) {
   switch (intent) {
@@ -157,11 +155,15 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
 
   // Step 1 — Name
   if (step === 1) {
-    fd.name = val;
+    // Clean: strip common prefixes, capitalize each word
+    let name = val.trim();
+    name = name.replace(/^(my name is|i'm|i am|call me|اسمي|أنا|انا)\s+/i, '').trim();
+    name = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    fd.name = name;
     await savePatient(phone, { ...patient, flow_step: 2, flow_data: fd });
     return sendMessage(phone, ar
-      ? `شكراً ${fd.name} 😊\nرقم واتساب الخاص بك: *${phone}*\nهل هذا صحيح؟\n1️⃣ نعم، هذا صحيح\n2️⃣ لا، أريد رقماً آخر`
-      : `Thanks ${fd.name} 😊\nYour WhatsApp number is: *${phone}*\nIs this correct?\n1️⃣ Yes, that's correct\n2️⃣ No, use a different number`
+      ? `شكراً ${fd.name}! 😊\nرقم واتساب الخاص بك: *${phone}*\nهل هذا صحيح؟\n1️⃣ نعم، هذا صحيح\n2️⃣ لا، أريد رقماً آخر`
+      : `Thanks ${fd.name}! 😊\nYour WhatsApp number is: *${phone}*\nIs this correct?\n1️⃣ Yes, that's correct\n2️⃣ No, use a different number`
     );
   }
 
@@ -188,9 +190,19 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     const treatments   = ['', 'Cleaning & Polishing', 'Fillings', 'Braces & Orthodontics', 'Teeth Whitening', 'Extraction', 'Dental Implants', 'Root Canal', 'Other'];
     const treatmentsAr = ['', 'تنظيف وتلميع', 'حشوات', 'تقويم الأسنان', 'تبييض الأسنان', 'خلع', 'زراعة أسنان', 'علاج العصب', 'أخرى'];
     const num = parseInt(rawMsg);
-    fd.treatment = (extractedValue && isNaN(num))
-      ? extractedValue
-      : (ar ? (treatmentsAr[num] || rawMsg) : (treatments[num] || rawMsg));
+    if (!isNaN(num) && num >= 1 && num <= 8) {
+      // Number selection
+      fd.treatment = ar ? treatmentsAr[num] : treatments[num];
+    } else if (extractedValue && treatments.includes(String(extractedValue))) {
+      // AI mapped to exact treatment name
+      fd.treatment = String(extractedValue);
+    } else if (extractedValue && extractedValue !== null) {
+      // AI extracted something — use it
+      fd.treatment = String(extractedValue);
+    } else {
+      // Free text fallback
+      fd.treatment = rawMsg;
+    }
     await savePatient(phone, { ...patient, flow_step: 4, flow_data: fd });
     return sendMessage(phone, ar
       ? 'هل لديك ملاحظات أو وصف للمشكلة؟ (اختياري)\nاكتب ملاحظتك أو أرسل *0* للتخطي'
@@ -203,14 +215,22 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     fd.description = (rawMsg.trim() === '0' || /^(skip|no|nothing|لا|تخطي)$/i.test(rawMsg.trim())) ? '' : rawMsg.trim();
     await savePatient(phone, { ...patient, flow_step: 5, flow_data: fd });
     return sendMessage(phone, ar
-      ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين\n• 20 أبريل\n• أي تاريخ محدد'
-      : 'When would you like your appointment? 📅\nYou can say:\n• Tomorrow\n• Monday\n• April 20\n• Any specific date'
+      ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين الجاي\n• 20 أبريل\n• أي تاريخ محدد'
+      : 'When would you like your appointment? 📅\nYou can say:\n• Tomorrow\n• Next Monday\n• April 20\n• Any specific date'
     );
   }
 
   // Step 5 — Date (AI-parsed)
   if (step === 5) {
-    fd.preferred_date = await extractDate(rawMsg);
+    const parsed = await extractDate(rawMsg);
+    // If returned unchanged, AI couldn't parse it — re-ask
+    if (parsed === rawMsg || parsed === rawMsg.trim()) {
+      return sendMessage(phone, ar
+        ? "لم أفهم التاريخ 😊 ممكن تقول مثلاً 'الاثنين الجاي' أو '20 أبريل'؟"
+        : "I didn't quite get that date 😊 Could you say it like 'April 20' or 'next Monday'?"
+      );
+    }
+    fd.preferred_date = parsed;
     await savePatient(phone, { ...patient, flow_step: 6, flow_data: fd });
     return sendMessage(phone, timeSlotMsg(ar));
   }
@@ -223,9 +243,15 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     } else if (extractedValue && EN_SLOTS.includes(String(extractedValue))) {
       fd.time_slot = String(extractedValue);
     } else {
-      // Natural language time — match to closest slot
       const matched = await extractTimeSlot(rawMsg, EN_SLOTS);
-      fd.time_slot = matched || val;
+      if (!matched) {
+        // Time not available — re-show time menu
+        return sendMessage(phone, ar
+          ? 'هذا الوقت غير متاح 😊 يرجى الاختيار من الأوقات المتاحة:\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً'
+          : "That time isn't available 😊 Please choose from our available slots:\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM"
+        );
+      }
+      fd.time_slot = matched;
     }
 
     // Show doctor selection if clinic has doctors, else go straight to summary
@@ -258,8 +284,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
   // Step 8 — Booking confirmation (use rawMsg directly — AI extraction unreliable here)
   if (step === 8) {
     const raw8 = rawMsg.trim();
-    const confirmed = raw8 === '1' || /^(yes|confirm|نعم|أؤكد)$/i.test(raw8);
-    const denied    = raw8 === '2' || /^(no|back|لا|العودة)$/i.test(raw8);
+    const confirmed = raw8 === '1' || /^(yes|confirm|نعم|أؤكد|تمام|ايوه|موافق|صح|يلا)$/i.test(raw8);
+    const denied    = raw8 === '2' || /^(no|back|لا|لأ|العودة|رجوع)$/i.test(raw8);
 
     if (confirmed) {
       await saveAppointment({
@@ -304,7 +330,14 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
 
   // Step 1 — New date (AI-parsed)
   if (step === 1) {
-    fd.new_date = await extractDate(rawMsg);
+    const parsed = await extractDate(rawMsg);
+    if (parsed === rawMsg || parsed === rawMsg.trim()) {
+      return sendMessage(phone, ar
+        ? "لم أفهم التاريخ 😊 ممكن تقول مثلاً 'الاثنين الجاي' أو '20 أبريل'؟"
+        : "I didn't quite get that date 😊 Could you say it like 'April 20' or 'next Monday'?"
+      );
+    }
+    fd.new_date = parsed;
     await savePatient(phone, { ...patient, flow_step: 2, flow_data: fd });
     return sendMessage(phone, timeSlotMsg(ar));
   }
@@ -316,7 +349,13 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
       fd.new_slot = ar ? AR_SLOTS[num - 1] : EN_SLOTS[num - 1];
     } else {
       const matched = await extractTimeSlot(rawMsg, EN_SLOTS);
-      fd.new_slot = matched || val;
+      if (!matched) {
+        return sendMessage(phone, ar
+          ? 'هذا الوقت غير متاح 😊 يرجى الاختيار من الأوقات المتاحة:\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً'
+          : "That time isn't available 😊 Please choose from our available slots:\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM"
+        );
+      }
+      fd.new_slot = matched;
     }
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
     return sendMessage(phone, ar
@@ -327,11 +366,11 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
 
   // Step 3 — Confirm reschedule
   if (step === 3) {
-    const confirmed = val === '1' || /^(yes|نعم)$/i.test(val);
+    const confirmed = val === '1' || /^(yes|نعم|تمام|ايوه|موافق)$/i.test(val);
     if (confirmed && fd.appointment_id) {
       await updateAppointment(fd.appointment_id, {
-        preferred_date:   fd.new_date,
-        time_slot:        fd.new_slot,
+        preferred_date:    fd.new_date,
+        time_slot:         fd.new_slot,
         reminder_sent_24h: false,
         reminder_sent_1h:  false
       });
@@ -359,7 +398,7 @@ async function handleCancelFlow(phone, rawMsg, lang, ar, step, fd, patient, cl) 
   const val = rawMsg.trim();
 
   if (step === 1) {
-    const confirmed = val === '1' || /^(yes|نعم)$/i.test(val);
+    const confirmed = val === '1' || /^(yes|نعم|تمام|ايوه|موافق)$/i.test(val);
     if (confirmed && fd.appointment_id) {
       await updateAppointment(fd.appointment_id, { status: 'cancelled' });
       if (cl.staff_phone) {
@@ -402,7 +441,7 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
       await savePatient(phone, { ...patient, current_flow: 'booking', flow_step: 1, flow_data: {} });
       return sendMessage(phone, ar
         ? 'رائع! لنبدأ الحجز 😊\nما اسمك الكريم؟'
-        : 'Great! Let\'s book your appointment 😊\nWhat\'s your full name?'
+        : "Great! Let's book your appointment 😊\nWhat's your full name?"
       );
 
     case 'my_appointment': {
@@ -410,7 +449,7 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
       if (!appt) {
         return sendMessage(phone, ar
           ? 'ليس لديك أي مواعيد قادمة.\nهل تريد حجز موعد؟\n1️⃣ حجز موعد\n2️⃣ العودة للقائمة'
-          : 'You don\'t have any upcoming appointments.\nWould you like to book one?\n1️⃣ Book appointment\n2️⃣ Back to menu'
+          : "You don't have any upcoming appointments.\nWould you like to book one?\n1️⃣ Book appointment\n2️⃣ Back to menu"
         );
       }
       return sendMessage(phone, ar
@@ -468,7 +507,10 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
       return sendMessage(phone, staffMsg(ar));
 
     default:
-      return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+      return sendMessage(phone, ar
+        ? `لم أفهم تماماً 😊 إليك ما يمكنني مساعدتك به:\n\n${menuAR(cl.name)}`
+        : `I'm not sure I understood that 😊 Here's what I can help you with:\n\n${menuEN(cl.name)}`
+      );
   }
 }
 
@@ -477,12 +519,11 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
 // ─────────────────────────────────────────────
 
 function bookingSummaryMsg(ar, fd, phone, cl) {
-  const doctorLine = fd.doctor_name
-    ? (ar ? `\n👨‍⚕️ الطبيب: ${fd.doctor_name}` : `\n👨‍⚕️ Doctor: ${fd.doctor_name}`)
-    : '';
+  const doctor = fd.doctor_name || (ar ? 'بدون تفضيل' : 'No preference');
+  const notes  = fd.description || (ar ? 'لا يوجد' : 'None');
   return ar
-    ? `✅ ملخص الحجز:\n\n👤 الاسم: ${fd.name}\n📱 الهاتف: ${fd.phone || phone}\n🦷 العلاج: ${fd.treatment}\n📝 الملاحظات: ${fd.description || 'لا يوجد'}${doctorLine}\n📅 التاريخ: ${fd.preferred_date}\n⏰ الوقت: ${fd.time_slot}\n🏥 العيادة: ${cl.name}\n\nهل تؤكد الحجز؟\n1️⃣ نعم، أؤكد ✅\n2️⃣ لا، العودة`
-    : `✅ Booking Summary:\n\n👤 Name: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n🦷 Treatment: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}${doctorLine}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${fd.time_slot}\n🏥 Clinic: ${cl.name}\n\nConfirm your booking?\n1️⃣ Yes, confirm ✅\n2️⃣ No, go back`;
+    ? `✅ *ملخص الحجز*\n\n👤 *الاسم:* ${fd.name}\n📱 *الهاتف:* ${fd.phone || phone}\n🦷 *العلاج:* ${fd.treatment}\n📝 *الملاحظات:* ${notes}\n👨‍⚕️ *الطبيب:* ${doctor}\n📅 *التاريخ:* ${fd.preferred_date}\n⏰ *الوقت:* ${fd.time_slot}\n🏥 *العيادة:* ${cl.name}\n\nهل كل شيء صحيح؟\n1️⃣ نعم، أؤكد الحجز ✅\n2️⃣ لا، أريد تغيير شيء`
+    : `✅ *Booking Summary*\n\n👤 *Name:* ${fd.name}\n📱 *Phone:* ${fd.phone || phone}\n🦷 *Treatment:* ${fd.treatment}\n📝 *Notes:* ${notes}\n👨‍⚕️ *Doctor:* ${doctor}\n📅 *Date:* ${fd.preferred_date}\n⏰ *Time:* ${fd.time_slot}\n🏥 *Clinic:* ${cl.name}\n\nDoes everything look correct?\n1️⃣ Yes, confirm booking ✅\n2️⃣ No, make changes`;
 }
 
 function doctorSelectionMsg(ar, doctors) {
