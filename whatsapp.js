@@ -1,13 +1,14 @@
-const ACCOUNT_SID = 'AC5fa90b9314dbb55c6d2b15ed31da8c06';
-const AUTH_TOKEN  = '61f9cfd0d97a3a95dc1d425746ba57e7';
-const FROM        = 'whatsapp:+14155238886';
+const twilio = require('twilio');
 
 async function sendMessage(to, text) {
   try {
-    const twilio = require('twilio');
-    const client = twilio(ACCOUNT_SID, AUTH_TOKEN);
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken  = process.env.TWILIO_AUTH_TOKEN;
+    const from       = process.env.TWILIO_WHATSAPP_FROM;
+
+    const client = twilio(accountSid, authToken);
     await client.messages.create({
-      from: FROM,
+      from: from,
       to:   `whatsapp:+${to}`,
       body: text
     });
