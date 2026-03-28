@@ -68,9 +68,17 @@ async function handleMessage(phone, text, clinic) {
     return sendMessage(phone, LANG_SELECT);
   }
 
+  // Greeting always clears any stale flow and shows menu
+  if (intent === 'greeting') {
+    await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
+    return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+  }
+
   // Active flow routing
   if (flow === 'booking') {
-    if (intent !== 'continue_flow' && intent !== 'unknown') {
+    // Numbers are always flow inputs — never treat as menu selections mid-flow
+    const isNumber = /^\d+$/.test(msg.trim());
+    if (!isNumber && intent !== 'continue_flow' && intent !== 'unknown') {
       const interruptReply = await getIntentReply(intent, ar, cl);
       if (interruptReply) {
         await sendMessage(phone, interruptReply);
@@ -147,9 +155,10 @@ const AR_SLOTS = ['9:00 صباحاً', '10:00 صباحاً', '11:00 صباحاً
 async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, fd, patient, cl) {
   const val = (extractedValue !== null && extractedValue !== undefined) ? String(extractedValue) : rawMsg;
 
-  // Step 4 special case: "0" means skip notes — handle BEFORE EXIT_RE check
-  if (step === 4 && rawMsg.trim() === '0') {
-    fd.description = '';
+  // Step 4 — Notes (optional): handle BEFORE EXIT_RE so "0" skips instead of exiting
+  if (step === 4) {
+    const isSkip = rawMsg.trim() === '0' || /^(skip|no|nothing|لا|تخطي)$/i.test(rawMsg.trim());
+    fd.description = isSkip ? '' : rawMsg.trim();
     await savePatient(phone, { ...patient, flow_step: 5, flow_data: fd });
     return sendMessage(phone, ar
       ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين الجاي\n• 20 أبريل\n• أي تاريخ محدد\n\n0️⃣ القائمة الرئيسية'
@@ -220,16 +229,6 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     );
   }
 
-  // Step 4 — Notes (optional)
-  if (step === 4) {
-    fd.description = (rawMsg.trim() === '0' || /^(skip|no|nothing|لا|تخطي)$/i.test(rawMsg.trim())) ? '' : rawMsg.trim();
-    await savePatient(phone, { ...patient, flow_step: 5, flow_data: fd });
-    return sendMessage(phone, ar
-      ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين الجاي\n• 20 أبريل\n• أي تاريخ محدد\n\n0️⃣ القائمة الرئيسية'
-      : 'When would you like your appointment? 📅\nYou can say:\n• Tomorrow\n• Next Monday\n• April 20\n• Any specific date\n\n0️⃣ Main menu'
-    );
-  }
-
   // Step 5 — Date (AI-parsed)
   if (step === 5) {
     const dateInput = rawMsg.trim();
@@ -264,6 +263,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
   if (step === 6) {
     const num = parseInt(rawMsg);
     if (num >= 1 && num <= 8) {
+      console.log('[Step6] num:', num, 'slot:', EN_SLOTS[num - 1]);
       fd.time_slot = ar ? AR_SLOTS[num - 1] : EN_SLOTS[num - 1];
     } else if (extractedValue && EN_SLOTS.includes(String(extractedValue))) {
       fd.time_slot = String(extractedValue);
@@ -336,10 +336,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       );
     } else if (denied) {
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMessage(phone, ar
-        ? 'حسناً، تم إلغاء الحجز. أرسل أي رسالة للعودة للقائمة.'
-        : 'OK, booking cancelled. Send any message to return to the menu.'
-      );
+      return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
     } else {
       // Unrecognised input — re-show summary
       return sendMessage(phone, bookingSummaryMsg(ar, fd, phone, cl));
@@ -351,6 +348,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
 // RESCHEDULE FLOW
 // ─────────────────────────────────────────────
 async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, step, fd, patient, cl) {
+  console.log('[Reschedule] step:', step, 'fd:', JSON.stringify(fd));
+  try {
   const val = (extractedValue !== null && extractedValue !== undefined) ? String(extractedValue) : rawMsg;
 
   // Step 1 — New date (AI-parsed)
@@ -428,6 +427,11 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
       return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
     }
+  }
+  } catch (err) {
+    console.error('[Reschedule] Error:', err.message);
+    await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
+    return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
   }
 }
 
