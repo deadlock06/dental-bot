@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config(); // must be first — loads env vars before any module reads them
 const express = require('express');
 const app = express();
 app.use(express.json());
