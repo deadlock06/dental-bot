@@ -9,11 +9,11 @@ const { detectIntent, extractDate, extractTimeSlot } = require('./ai');
 const LANG_SELECT = '🌐 Please choose your language / اختر لغتك:\n1️⃣ English\n2️⃣ العربية';
 
 function menuEN(clinicName) {
-  return `Welcome to ${clinicName}! 🦷✨\nI'm your AI dental assistant, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment\n2️⃣ My appointment\n3️⃣ Reschedule\n4️⃣ Cancel appointment\n5️⃣ Our services\n6️⃣ Meet Our Doctors 👨‍⚕️\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍⚕️\n\nJust tap a number or tell me what you need 😊`;
+  return `Welcome to ${clinicName}! 🦷✨\nI'm your AI dental assistant, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment\n2️⃣ My appointment\n3️⃣ Reschedule\n4️⃣ Cancel appointment\n5️⃣ Our services\n6️⃣ Meet Our Doctors 👨‍⚕️\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍⚕️ (type 10)\n\nJust tap a number or tell me what you need 😊`;
 }
 
 function menuAR(clinicName) {
-  return `أهلاً وسهلاً بك في ${clinicName}! 🦷✨\nأنا مساعدك الذكي، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد\n2️⃣ موعدي الحالي\n3️⃣ إعادة جدولة\n4️⃣ إلغاء الموعد\n5️⃣ خدماتنا\n6️⃣ تعرف على أطبائنا 👨‍⚕️\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️\n\nاضغط على رقم أو أخبرني بما تحتاج 😊`;
+  return `أهلاً وسهلاً بك في ${clinicName}! 🦷✨\nأنا مساعدك الذكي، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد\n2️⃣ موعدي الحالي\n3️⃣ إعادة جدولة\n4️⃣ إلغاء الموعد\n5️⃣ خدماتنا\n6️⃣ تعرف على أطبائنا 👨‍⚕️\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️ (اكتب 10)\n\nاضغط على رقم أو أخبرني بما تحتاج 😊`;
 }
 
 // ─────────────────────────────────────────────
@@ -538,7 +538,7 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
     '0': 'greeting',
     '1': 'booking', '2': 'my_appointment', '3': 'reschedule',
     '4': 'cancel',  '5': 'services',       '6': 'doctors',
-    '7': 'prices',  '8': 'location',       '9': 'reviews', '10': 'human'
+    '7': 'prices',  '8': 'location',       '9': 'reviews', '10': 'human', '🔟': 'human'
   };
   const resolvedIntent = numMap[rawMsg.trim()] || intent;
 

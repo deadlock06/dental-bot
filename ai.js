@@ -131,7 +131,41 @@ async function detectIntent(messageText, currentFlow = null, currentStep = 0) {
 function keywordFallback(text) {
   const t = text.toLowerCase().trim();
   
-  // English keywords
+  // ── Exact menu option text (copy-paste from menu) — checked first
+  if (t === 'book appointment' || t === 'book an appointment')
+    return { intent: 'booking',        detected_language: 'en', extracted_value: null, confidence: 'low' };
+  if (t === 'my appointment')
+    return { intent: 'my_appointment', detected_language: 'en', extracted_value: null, confidence: 'low' };
+  if (t === 'our services')
+    return { intent: 'services',       detected_language: 'en', extracted_value: null, confidence: 'low' };
+  if (t === 'meet our doctors' || t === 'meet the doctors')
+    return { intent: 'doctors',        detected_language: 'en', extracted_value: null, confidence: 'low' };
+  if (t === 'leave a review' || t === 'leave review')
+    return { intent: 'reviews',        detected_language: 'en', extracted_value: null, confidence: 'low' };
+  if (t === 'talk to staff' || t === 'talk to someone')
+    return { intent: 'human',          detected_language: 'en', extracted_value: null, confidence: 'low' };
+  if (t === 'حجز موعد')
+    return { intent: 'booking',        detected_language: 'ar', extracted_value: null, confidence: 'low' };
+  if (t === 'موعدي الحالي')
+    return { intent: 'my_appointment', detected_language: 'ar', extracted_value: null, confidence: 'low' };
+  if (t === 'إعادة جدولة')
+    return { intent: 'reschedule',     detected_language: 'ar', extracted_value: null, confidence: 'low' };
+  if (t === 'إلغاء الموعد')
+    return { intent: 'cancel',         detected_language: 'ar', extracted_value: null, confidence: 'low' };
+  if (t === 'خدماتنا')
+    return { intent: 'services',       detected_language: 'ar', extracted_value: null, confidence: 'low' };
+  if (t === 'تعرف على أطبائنا')
+    return { intent: 'doctors',        detected_language: 'ar', extracted_value: null, confidence: 'low' };
+  if (t === 'الأسعار')
+    return { intent: 'prices',         detected_language: 'ar', extracted_value: null, confidence: 'low' };
+  if (t === 'الموقع')
+    return { intent: 'location',       detected_language: 'ar', extracted_value: null, confidence: 'low' };
+  if (t === 'تقييم العيادة')
+    return { intent: 'reviews',        detected_language: 'ar', extracted_value: null, confidence: 'low' };
+  if (t === 'التحدث مع الفريق')
+    return { intent: 'human',          detected_language: 'ar', extracted_value: null, confidence: 'low' };
+
+  // ── English keywords
   if (/book|appointment|toothache|tooth|pain|hurt|dental|cavity|braces|implant|whiten|clean|fill|root canal|extract|see a doctor|need help/.test(t))
     return { intent: 'booking', detected_language: 'en', extracted_value: null, confidence: 'low' };
   if (/price|cost|how much|fee|charge|expensive|cheap|afford/.test(t))
@@ -168,7 +202,7 @@ function keywordFallback(text) {
     return { intent: 'cancel', detected_language: 'ar', extracted_value: null, confidence: 'low' };
   if (/أغير|إعادة جدولة|غير موعد|أجل/.test(t))
     return { intent: 'reschedule', detected_language: 'ar', extracted_value: null, confidence: 'low' };
-  if (/أكلم أحد|موظف|أتكلم|اتصل/.test(t))
+  if (/أكلم أحد|موظف|أتكلم|اتصل|التحدث مع/.test(t))
     return { intent: 'human', detected_language: 'ar', extracted_value: null, confidence: 'low' };
   if (/خدمات|تسوون|عندكم|تعالجون/.test(t))
     return { intent: 'services', detected_language: 'ar', extracted_value: null, confidence: 'low' };
