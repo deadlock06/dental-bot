@@ -149,6 +149,60 @@ async function getIntentReply(intent, ar, cl) {
 
 const EXIT_RE = /^(0|menu|main menu|back|go back|start over|cancel|stop|exit|quit|قائمة|قائمة رئيسية|رجوع|ارجع|إلغاء|توقف|خروج|من البداية)$/i;
 
+// ─────────────────────────────────────────────
+// Date helpers
+// ─────────────────────────────────────────────
+function calculateRelativeDate(text) {
+  const t = text.toLowerCase().trim();
+  const now = new Date();
+  const fmt = (d) => d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  if (/^(tomorrow|tmrw|غداً|بكرة|غدا)$/i.test(t))
+    return fmt(new Date(now.getTime() + 86400000));
+
+  const afterDaysMatch = t.match(/(?:after|in|بعد|في)\s+(\d+)\s+(?:days?|أيام?|يوم)/i);
+  if (afterDaysMatch)
+    return fmt(new Date(now.getTime() + parseInt(afterDaysMatch[1]) * 86400000));
+
+  if (/next week|الأسبوع الجاي|بعد أسبوع/i.test(t))
+    return fmt(new Date(now.getTime() + 7 * 86400000));
+
+  const weeksMatch = t.match(/in\s+(\d+)\s+weeks?/i);
+  if (weeksMatch)
+    return fmt(new Date(now.getTime() + parseInt(weeksMatch[1]) * 7 * 86400000));
+
+  return null;
+}
+
+// ─────────────────────────────────────────────
+// Treatment mapping
+// ─────────────────────────────────────────────
+function mapTreatment(input) {
+  const s = String(input).trim().toLowerCase();
+  if (/^[1-8]$/.test(s)) {
+    return ['Cleaning & Polishing', 'Fillings', 'Braces & Orthodontics', 'Teeth Whitening', 'Extraction', 'Dental Implants', 'Root Canal', 'Other'][parseInt(s) - 1];
+  }
+  if (/clean|polish|تنظيف|تلميع|جرم/i.test(s))       return 'Cleaning & Polishing';
+  if (/fill|cavity|حشو|تسوس/i.test(s))               return 'Fillings';
+  if (/brace|orthodon|تقويم/i.test(s))               return 'Braces & Orthodontics';
+  if (/whiten|bleach|تبييض/i.test(s))                return 'Teeth Whitening';
+  if (/extract|pull|remov.*tooth|خلع|قلع/i.test(s))  return 'Extraction';
+  if (/implant|زراعة/i.test(s))                      return 'Dental Implants';
+  if (/root canal|nerve|عصب|جذر/i.test(s))           return 'Root Canal';
+  if (/cleaning & polishing|fillings|braces & orthodontics|teeth whitening|extraction|dental implants|root canal|^other$/i.test(s)) return input; // already clean
+  // Arabic menu labels → English
+  if (/تنظيف وتلميع/i.test(s))    return 'Cleaning & Polishing';
+  if (/حشوات/i.test(s))           return 'Fillings';
+  if (/تقويم الأسنان/i.test(s))   return 'Braces & Orthodontics';
+  if (/تبييض الأسنان/i.test(s))   return 'Teeth Whitening';
+  if (/خلع/i.test(s))             return 'Extraction';
+  if (/زراعة أسنان/i.test(s))     return 'Dental Implants';
+  if (/علاج العصب/i.test(s))      return 'Root Canal';
+  if (/أخرى/i.test(s))            return 'Other';
+  // Unknown free text
+  return `Other: ${String(input).trim()}`;
+}
+
 const EN_SLOTS = ['9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
 const AR_SLOTS = ['9:00 صباحاً', '10:00 صباحاً', '11:00 صباحاً', '1:00 مساءً', '2:00 مساءً', '3:00 مساءً', '4:00 مساءً', '5:00 مساءً'];
 
@@ -174,9 +228,25 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
 
   // Step 1 — Name
   if (step === 1) {
+    const rawName = val.trim();
+
+    // Reject: symptom/pain words entered instead of a name
+    if (/يوجع|ألم|وجع|pain|hurt|ache|toothache|cavity|tooth/i.test(rawName)) {
+      return sendMessage(phone, ar
+        ? 'يبدو أن عندك ألم 😊 لنبدأ الحجز — ما اسمك الكريم؟'
+        : "Sounds like you have a dental issue 😊 Let's get you booked — what's your full name?"
+      );
+    }
+    // Reject: too short or a number
+    if (rawName.length < 2 || /^\d+$/.test(rawName)) {
+      return sendMessage(phone, ar
+        ? 'يرجى إدخال اسمك الكريم 😊'
+        : 'Please enter your full name 😊'
+      );
+    }
+
     // Clean: strip common prefixes, capitalize each word
-    let name = val.trim();
-    name = name.replace(/^(my name is|i'm|i am|call me|اسمي|أنا|انا|يقولون لي)\s+/i, '').trim();
+    let name = rawName.replace(/^(my name is|i'm|i am|call me|اسمي|أنا|انا|يقولون لي)\s+/i, '').trim();
     name = name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
     fd.name = name;
     await savePatient(phone, { ...patient, flow_step: 2, flow_data: fd });
@@ -206,22 +276,11 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
 
   // Step 3 — Treatment type
   if (step === 3) {
-    const treatments   = ['', 'Cleaning & Polishing', 'Fillings', 'Braces & Orthodontics', 'Teeth Whitening', 'Extraction', 'Dental Implants', 'Root Canal', 'Other'];
-    const treatmentsAr = ['', 'تنظيف وتلميع', 'حشوات', 'تقويم الأسنان', 'تبييض الأسنان', 'خلع', 'زراعة أسنان', 'علاج العصب', 'أخرى'];
-    const num = parseInt(rawMsg);
-    if (!isNaN(num) && num >= 1 && num <= 8) {
-      // Number selection
-      fd.treatment = ar ? treatmentsAr[num] : treatments[num];
-    } else if (extractedValue && treatments.includes(String(extractedValue))) {
-      // AI mapped to exact treatment name
-      fd.treatment = String(extractedValue);
-    } else if (extractedValue && extractedValue !== null) {
-      // AI extracted something — use it
-      fd.treatment = String(extractedValue);
-    } else {
-      // Free text fallback
-      fd.treatment = rawMsg;
-    }
+    // Always resolve to a clean English category via mapTreatment
+    const source = (!isNaN(parseInt(rawMsg)) && parseInt(rawMsg) >= 1 && parseInt(rawMsg) <= 8)
+      ? rawMsg                          // number input → mapTreatment handles it
+      : (extractedValue || rawMsg);     // AI value or free text
+    fd.treatment = mapTreatment(source);
     await savePatient(phone, { ...patient, flow_step: 4, flow_data: fd });
     return sendMessage(phone, ar
       ? 'هل لديك ملاحظات أو وصف للمشكلة؟ (اختياري)\nاكتب ملاحظتك أو أرسل *skip* للتخطي\n\n0️⃣ القائمة الرئيسية'
@@ -242,16 +301,21 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       );
     }
 
-    // Try AI extraction — ALWAYS fall back to raw input on any failure
-    let parsedDate = dateInput;
-    try {
-      const extracted = await extractDate(dateInput);
-      if (extracted && extracted.length > 2 && extracted !== 'null') {
-        parsedDate = extracted;
+    // 1) Fast local calculation for common relative dates
+    let parsedDate = calculateRelativeDate(dateInput);
+    // 2) AI extraction fallback for everything else
+    if (!parsedDate) {
+      try {
+        const aiDate = await extractDate(dateInput);
+        if (aiDate && aiDate.length > 2 && aiDate !== 'null' && aiDate !== dateInput) {
+          parsedDate = aiDate;
+        }
+      } catch (e) {
+        console.error('[Step5] extractDate error:', e.message);
       }
-    } catch (e) {
-      console.error('[Step5] extractDate error:', e.message);
     }
+    // 3) Last resort — save raw (better than blocking flow)
+    if (!parsedDate) parsedDate = dateInput;
 
     console.log(`[Step5] date input="${dateInput}" parsed="${parsedDate}"`);
     fd.preferred_date = parsedDate;
