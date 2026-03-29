@@ -8,80 +8,121 @@ const SYSTEM_PROMPT = `You are a specialized intent detection agent for a Saudi 
 Your ONLY job is to analyze patient messages and return the correct intent.
 You understand Arabic (Gulf/Saudi dialect), English, and mixed language messages perfectly.
 
-INTENTS AND EXAMPLES:
+LANGUAGE DETECTION:
+Detect language FROM the message text itself — not from the stored patient language.
+Reply in the language of the message, even if the patient has a saved language preference.
+Arabic script = "ar". Latin script = "en". Mixed = use dominant language.
+
+INTENTS AND COMPREHENSIVE EXAMPLES:
 
 booking:
-- "book", "appointment", "I want to come", "I need to see a doctor"
-- "I have a toothache", "my tooth hurts", "tooth pain", "dental emergency"
-- "cavity", "braces", "implant", "whitening", "cleaning", "root canal"
-- "أبغى موعد", "حجز", "سني يوجعني", "أبغى أجي", "عندي ألم"
-- "بدي موعد", "أريد حجز", "حابب أحجز", "أبغى دكتور"
-- "wana book", "i need appointment", "tooth ache"
+EN: book, booking, appointment, schedule, reserve, I want to book, I need an appointment,
+    I have a toothache, my tooth hurts, tooth pain, dental pain, I have a cavity,
+    my filling fell out, I need a filling, I need braces, interested in braces, orthodontics,
+    I want whitening, teeth whitening, bleaching, I need a cleaning, scale and polish,
+    I need an implant, dental implant, missing tooth, root canal, nerve pain,
+    I need to see a dentist, dental help, can I make an appointment, can I book,
+    available slots, want to visit, want to come, emergency dental, dental emergency,
+    gums bleeding, gum pain, broken tooth, chipped tooth, cracked tooth, tooth fell out,
+    extraction, pull my tooth, wisdom tooth pain, wisdom tooth removal,
+    checkup, dental consultation, wanna book, wanna come, need dentist
+AR: أبغى موعد، حابب أحجز، بدي موعد، أريد حجز، سني يوجعني، عندي ألم في السن،
+    ضرسي يوجعني، أبغى أجي، أبغى أزور العيادة، عندي تسوس، محتاج حشوة، حشوتي وقعت،
+    أبغى تقويم، أبغى تبييض، تبييض أسنان، محتاج تنظيف، جرم أسنان،
+    أبغى زراعة، زراعة سن، علاج عصب، ألم شديد في السن، محتاج أشوف دكتور، ممكن أحجز،
+    حالة طارئة، لثتي تنزف، سني انكسر، خلع سن، ضرس العقل يوجعني، كشف، فحص أسنان، استشارة
 
 prices:
-- "price", "cost", "how much", "fee", "charges", "expensive", "cheap"
-- "how much does whitening cost", "what are your prices", "braces cost"
-- "كم", "بكم", "قديش", "الأسعار", "كم تكلف", "غالي", "رخيص"
-- "كم سعر التقويم", "الأسعار كم", "بكم الحشوة"
+EN: price, prices, cost, fee, fees, charges, how much, how much does it cost,
+    how much for braces/whitening/cleaning/implant/filling/root canal,
+    is it expensive, is it affordable, is it cheap, what are your rates,
+    do you have packages, any offers, any discounts, price list, price range,
+    roughly how much, ballpark price, can I afford it, payment plans,
+    treatment fees, what's the price, tell me the price
+AR: كم، بكم، قديش، كم تكلف، كم السعر، الأسعار، أسعاركم، كم سعر التقويم، بكم التبييض،
+    كم سعر الزراعة، كم الحشوة، كم التنظيف، كم علاج العصب،
+    غالي، رخيص، بأسعار مناسبة، عندكم عروض، عندكم خصومات، قائمة الأسعار، تكلفة العلاج
 
 location:
-- "where", "location", "address", "directions", "how to get there"
-- "where are you", "where are you located", "find you", "maps"
-- "وين", "فين", "الموقع", "العنوان", "كيف أوصل", "وين العيادة"
-- "وين أنتم", "الخريطة", "الاتجاهات"
+EN: where, location, address, directions, where are you, where is the clinic,
+    how do I get there, how to reach you, how to find you, what's your address,
+    Google Maps, maps link, share location, which area, which district, near me,
+    closest branch, how far, working hours, opening hours, are you open
+AR: وين، فين، الموقع، العنوان، وين العيادة، وين أنتم، كيف أوصل، كيف أجيكم،
+    عطني العنوان، خرائط جوجل، رابط الموقع، أي حي، قريب مني، كم المسافة، أوقات الدوام، مفتوحين
 
 doctors:
-- "doctors", "dentist", "specialist", "team", "who are your doctors"
-- "meet the team", "which doctor", "who will treat me"
-- "أطباء", "الأطباء", "دكتور", "طبيب", "فريق", "من الدكتور"
-- "شو تخصصاتكم", "من راح يعالجني"
+EN: doctors, doctor, dentist, dentists, specialist, who are your doctors, meet the team,
+    who will treat me, which doctor, female doctor, lady dentist, male doctor,
+    doctor's qualifications, doctor's experience, tell me about your doctors,
+    I want a specific doctor, I prefer a doctor
+AR: الأطباء، دكتور، طبيب، متخصص، من الأطباء، من يعالجني، عندكم دكتورة، عندكم طبيبة،
+    تخصصات الأطباء، عرفني على الأطباء، أبغى دكتور معين، فريق الأطباء، الكادر الطبي
 
 services:
-- "services", "treatments", "what do you offer", "what do you do"
-- "procedures", "what can you treat"
-- "خدمات", "خدماتكم", "شو تسوون", "إيش عندكم", "وش تعالجون"
+EN: services, treatments, what do you offer, what do you do, what treatments do you have,
+    what procedures, what do you specialize in, do you do braces, do you do implants,
+    list of services, available treatments, what can you treat, dental services, oral care
+AR: خدمات، خدماتكم، إيش تسوون، وش تعالجون، عندكم تقويم، عندكم زراعة، عندكم تبييض،
+    قائمة الخدمات، إيش تخصصاتكم، خدمات الأسنان، علاجات الأسنان
 
 my_appointment:
-- "my appointment", "my booking", "when is my appointment"
-- "what did I book", "my visit", "my schedule"
-- "موعدي", "متى موعدي", "شو موعدي", "وش حجزت"
+EN: my appointment, my booking, my visit, when is my appointment, what time is my appointment,
+    what did I book, check my appointment, do I have an appointment, appointment details,
+    remind me of my appointment, is my appointment confirmed
+AR: موعدي، حجزي، زيارتي، متى موعدي، أي وقت موعدي، شو حجزت، إيش موعدي،
+    اطلع موعدي، عندي موعد، موعدي مؤكد، تفاصيل موعدي، ذكرني بموعدي
 
 reschedule:
-- "reschedule", "change appointment", "move appointment"
-- "different time", "postpone", "change my booking"
-- "أغير الموعد", "إعادة جدولة", "غير موعدي", "أجل موعدي"
+EN: reschedule, change appointment, move appointment, change my booking, different time,
+    postpone, push back, move to another day, can't make it at that time,
+    can we change the time, can we change the date, another day please, rebook
+AR: أغير الموعد، إعادة جدولة، غير موعدي، أبغى أغير الموعد، الوقت ما يناسبني،
+    ما أقدر أجي بذاك الوقت، غير الوقت، يوم ثاني، أجل موعدي، يوم آخر، أبغى وقت ثاني
 
 cancel:
-- "cancel", "delete appointment", "I can't make it"
-- "won't come", "remove booking", "cancel my visit"
-- "إلغاء", "ألغي موعدي", "ما راح أجي", "أبغى ألغي"
+EN: cancel, cancellation, cancel my appointment, I can't make it, I won't be able to come,
+    delete my appointment, remove my booking, I don't want the appointment, cancel my visit,
+    I need to cancel, something came up, I can't come, please cancel
+AR: إلغاء، ألغي موعدي، إلغاء الموعد، أبغى ألغي، ما راح أقدر أجي، مو قادر أجي،
+    احذف موعدي، شيل حجزي، ما أبغى الموعد، بطلت أبغاه، صار عندي شغل، ما أقدر أجي
 
 human:
-- "talk to someone", "speak to a person", "human", "real person"
-- "receptionist", "staff", "call me", "I need help from someone"
-- "can I talk to someone", "connect me to staff"
-- "أبغى أكلم أحد", "موظف", "أبغى أتكلم مع أحد", "اتصل فيني"
+EN: talk to someone, speak to someone, human, real person, connect me to staff,
+    I need to talk to a person, receptionist, front desk, customer service,
+    call me, I want a call, phone call, can I speak to a doctor,
+    I need help from a person, not a bot, staff, support, assistance,
+    Talk to staff (exact menu text)
+AR: أبغى أكلم أحد، حابب أكلم أحد، بدي أكلم أحد، وصلني بالموظفين، استقبال،
+    خدمة العملاء، اتصل فيني، أبغى مكالمة، مو روبوت، التحدث مع الفريق، الموظفين
 
 reviews:
-- "review", "rate", "feedback", "google review", "leave review"
-- "تقييم", "أقيم", "رأيي", "أشارك تجربتي"
+EN: review, reviews, rate, rating, feedback, leave a review, write a review, google review,
+    share my experience, tell others, recommend, how do I review, where can I review,
+    I want to give feedback, share feedback
+    تقييم العيادة (exact Arabic menu text)
+AR: تقييم، أقيم، أعطي تقييم، تقييم جوجل، أشارك تجربتي، أوصي بكم، كيف أقيمكم،
+    أبغى أعطي رأيي، تقييم الخدمة
 
 greeting:
-- "hi", "hello", "hey", "good morning", "good evening", "howdy", "yo"
-- "هلا", "السلام عليكم", "مرحبا", "أهلا", "صباح الخير", "مساء الخير"
-- "هلا والله", "كيف الحال", "هاي", "هلو", "يو"
+EN: hi, hello, hey, good morning, good evening, good afternoon, good night,
+    howdy, yo, sup, what's up, greetings, morning, evening, hi there, hello there
+AR: هلا، مرحبا، السلام عليكم، وعليكم السلام، أهلا، صباح الخير، مساء الخير،
+    هلا والله، كيف الحال، هاي، هلو، يو، مساء النور، صباح النور، حياك، هلا فيك، الله يسلمك
 
 RULES:
 1. Return ONLY valid JSON — no extra text, no markdown
-2. If message could be booking (pain, tooth problem, want to come) → always return booking
-3. For price questions about specific treatments → return prices
-4. For ANY location/address/directions question → return location
-5. For ANY staff/human/talk request → return human
-6. Detect language from the message itself — not from context
-7. For mixed language (Arabizi like "ana abga maw3id") → detect as Arabic booking
-8. If genuinely unclear → return unknown (rarely)
-9. extracted_value: extract clean value if patient is mid-flow, null otherwise
-10. confidence: "high" if clear intent, "medium" if probable, "low" if guessing
+2. If message mentions pain, toothache, dental problem, or wanting to come → booking
+3. If message mentions a specific treatment name → booking
+4. For ANY price/cost/how much question → prices
+5. For ANY location/address/directions question → location
+6. For ANY staff/human/talk to someone request → human
+7. Detect language FROM the message itself, not from stored preference
+8. For mixed language (Arabizi like "ana abga maw3id") → Arabic booking
+9. If exact menu text is sent ("Our services", "خدماتنا", etc.) → detect exact intent
+10. If intent is unclear or ambiguous → return "unknown" (never guess randomly)
+11. extracted_value: extract clean value if patient is mid-flow, null otherwise
+12. confidence: "high" if clear, "medium" if probable, "low" if guessing
 
 Return format (ONLY this, nothing else):
 {"intent":"booking","detected_language":"en","extracted_value":null,"confidence":"high"}`;
@@ -130,8 +171,8 @@ async function detectIntent(messageText, currentFlow = null, currentStep = 0) {
 // Keyword fallback when OpenAI is unavailable
 function keywordFallback(text) {
   const t = text.toLowerCase().trim();
-  
-  // ── Exact menu option text (copy-paste from menu) — checked first
+
+  // ── Exact menu option text (copy-paste) — checked first
   if (t === 'book appointment' || t === 'book an appointment')
     return { intent: 'booking',        detected_language: 'en', extracted_value: null, confidence: 'low' };
   if (t === 'my appointment')
@@ -165,54 +206,54 @@ function keywordFallback(text) {
   if (t === 'التحدث مع الفريق')
     return { intent: 'human',          detected_language: 'ar', extracted_value: null, confidence: 'low' };
 
-  // ── English keywords
-  if (/book|appointment|toothache|tooth|pain|hurt|dental|cavity|braces|implant|whiten|clean|fill|root canal|extract|see a doctor|need help/.test(t))
+  // ── English keywords (comprehensive)
+  if (/book|booking|appointment|schedule|reserve|toothache|tooth pain|dental pain|cavity|filling|braces|orthodontic|whiten|cleaning|implant|root canal|need.*dentist|see.*dentist|dental help|make.*appointment|can i book|available slot|want to visit|want to come|emergency dental|dental emergency|gum bleed|gum pain|broken tooth|chipped|cracked tooth|tooth fell|extraction|pull.*tooth|wisdom tooth|checkup|check.up|consultation|wanna book|wanna come/.test(t))
     return { intent: 'booking', detected_language: 'en', extracted_value: null, confidence: 'low' };
-  if (/price|cost|how much|fee|charge|expensive|cheap|afford/.test(t))
+  if (/\bprice|prices|\bcost|\bfee\b|\bfees\b|charges|how much|what.*cost|is it expensive|affordable|is it cheap|\brate\b|\brates\b|packages|\boffer|discount|price list|price range|ballpark|payment plan|treatment fee|tell.*price|roughly how/.test(t))
     return { intent: 'prices', detected_language: 'en', extracted_value: null, confidence: 'low' };
-  if (/where|location|address|located|direction|find you|map/.test(t))
+  if (/\bwhere\b|location|\baddress|direction|where are you|where is the clinic|how.*get there|how to reach|how to find|maps link|share location|which area|which district|near me|closest branch|how far|working hours|opening hours|are you open/.test(t))
     return { intent: 'location', detected_language: 'en', extracted_value: null, confidence: 'low' };
-  if (/doctor|dentist|specialist|team|who are|meet/.test(t))
+  if (/\bdoctor|\bdoctors|dentist|specialist|who are your doctors|meet the team|who will treat|which doctor|female doctor|lady dentist|doctor.*qualif|tell me about your doctors|specific doctor/.test(t))
     return { intent: 'doctors', detected_language: 'en', extracted_value: null, confidence: 'low' };
-  if (/cancel|cancellation|cant make|won't come/.test(t))
-    return { intent: 'cancel', detected_language: 'en', extracted_value: null, confidence: 'low' };
-  if (/reschedule|change appointment|move appointment|postpone/.test(t))
+  if (/reschedule|change.*appointment|move.*appointment|change my booking|different time|different date|postpone|push back|another day|can.t make it at that time|can we change the time|can we change the date|another slot|rebook/.test(t))
     return { intent: 'reschedule', detected_language: 'en', extracted_value: null, confidence: 'low' };
-  if (/talk|speak|human|person|someone|staff|connect|real person/.test(t))
+  if (/\bcancel|cancellation|cancel.*appointment|can.t make it|won.t.*come|delete.*appointment|remove.*booking|don.t want.*appointment|i need to cancel|something came up/.test(t))
+    return { intent: 'cancel', detected_language: 'en', extracted_value: null, confidence: 'low' };
+  if (/talk to someone|speak to someone|\bhuman\b|real person|connect.*staff|need.*talk.*person|receptionist|front desk|customer service|call me|want a call|phone call|speak to a doctor|help from a person|not a bot|\bstaff\b|\bsupport\b|\bassistance/.test(t))
     return { intent: 'human', detected_language: 'en', extracted_value: null, confidence: 'low' };
-  if (/service|treatment|offer|procedure|what do you/.test(t))
+  if (/\bservice|\bservices|\btreatment|\btreatments|what do you offer|what do you do|what treatments|what procedures|specialize in|list of services|available treatments|what can you treat|dental services|oral care/.test(t))
     return { intent: 'services', detected_language: 'en', extracted_value: null, confidence: 'low' };
-  if (/review|rate|feedback|google/.test(t))
+  if (/\breview|\breviews|\brate\b|\brating|\bfeedback|leave.*review|write.*review|google review|share.*experience|recommend|how.*review|give feedback/.test(t))
     return { intent: 'reviews', detected_language: 'en', extracted_value: null, confidence: 'low' };
-  if (/my appointment|my booking|when is|what did i book/.test(t))
+  if (/my appointment|my booking|my visit|when is my appointment|what time.*appointment|what did i book|check.*appointment|do i have.*appointment|appointment details|remind me of my appointment/.test(t))
     return { intent: 'my_appointment', detected_language: 'en', extracted_value: null, confidence: 'low' };
-  if (/^(hi|hello|hey|good morning|good evening|howdy|yo|sup)/.test(t))
+  if (/^(hi|hello|hey|good morning|good evening|good afternoon|good night|howdy|yo|sup|what.s up|greetings|morning|evening|hi there|hello there|hey there)/.test(t))
     return { intent: 'greeting', detected_language: 'en', extracted_value: null, confidence: 'low' };
-  
-  // Arabic keywords
-  if (/أبغى موعد|حجز|يوجع|ألم|أسنان|أجي|دكتور أسنان|بدي موعد|أريد حجز/.test(t))
+
+  // ── Arabic keywords (comprehensive)
+  if (/أبغى موعد|حابب أحجز|بدي موعد|أريد حجز|سني يوجع|ضرسي يوجع|عندي ألم|أبغى أجي|حابب أجي|عندي تسوس|محتاج حشوة|حشوتي وقعت|أبغى تقويم|أبغى تبييض|تبييض أسنان|أسناني صفرا|محتاج تنظيف|جرم أسنان|أبغى زراعة|زراعة سن|علاج عصب|ألم شديد|محتاج أشوف دكتور|أبغى دكتور|ممكن أحجز|حالة طارئة|لثتي تنزف|سني انكسر|خلع سن|ضرس العقل|كشف|فحص أسنان|استشارة|حجز/.test(t))
     return { intent: 'booking', detected_language: 'ar', extracted_value: null, confidence: 'low' };
-  if (/كم|أسعار|بكم|قديش|تكلف|غالي|رخيص/.test(t))
+  if (/كم تكلف|كم السعر|أسعاركم|كم سعر|كم الحشوة|كم التنظيف|كم علاج|غالي|رخيص|بأسعار مناسبة|عندكم عروض|خصومات|قائمة الأسعار|تكلفة العلاج|قولي الأسعار|وضح لي|بكم|قديش|كم/.test(t))
     return { intent: 'prices', detected_language: 'ar', extracted_value: null, confidence: 'low' };
-  if (/وين|فين|موقع|عنوان|أوصل|خريطة/.test(t))
+  if (/وين العيادة|وين أنتم|كيف أوصل|كيف أجيكم|عطني العنوان|خرائط جوجل|رابط الموقع|أي حي|قريب مني|كم المسافة|أوقات الدوام|مفتوحين|متى تفتحون|وين|فين|الموقع|العنوان/.test(t))
     return { intent: 'location', detected_language: 'ar', extracted_value: null, confidence: 'low' };
-  if (/أطباء|دكتور|طبيب|فريق|تخصص/.test(t))
+  if (/من الأطباء|من يعالجني|عندكم دكتورة|عندكم طبيبة|تخصصات الأطباء|عرفني على الأطباء|أبغى دكتور معين|فريق الأطباء|الكادر الطبي|الأطباء|دكتور|طبيب|متخصص/.test(t))
     return { intent: 'doctors', detected_language: 'ar', extracted_value: null, confidence: 'low' };
-  if (/إلغاء|ألغي|ما راح أجي/.test(t))
-    return { intent: 'cancel', detected_language: 'ar', extracted_value: null, confidence: 'low' };
-  if (/أغير|إعادة جدولة|غير موعد|أجل/.test(t))
+  if (/أغير الموعد|أبغى أغير الموعد|حابب أغير|الوقت ما يناسبني|ما أقدر أجي بذاك الوقت|غير الوقت|يوم ثاني|أجل موعدي|يوم آخر|أبغى وقت ثاني|ممكن نغير الوقت|ممكن نغير اليوم|إعادة جدولة/.test(t))
     return { intent: 'reschedule', detected_language: 'ar', extracted_value: null, confidence: 'low' };
-  if (/أكلم أحد|موظف|أتكلم|اتصل|التحدث مع/.test(t))
+  if (/ألغي موعدي|إلغاء الموعد|أبغى ألغي|حابب أألغي|بدي أألغي|ما راح أقدر أجي|مو قادر أجي|احذف موعدي|شيل حجزي|ما أبغى الموعد|بطلت أبغاه|صار عندي شغل|إلغاء/.test(t))
+    return { intent: 'cancel', detected_language: 'ar', extracted_value: null, confidence: 'low' };
+  if (/أبغى أكلم أحد|حابب أكلم أحد|بدي أكلم أحد|وصلني بالموظفين|أتكلم مع موظف|استقبال|خدمة العملاء|اتصل فيني|أبغى مكالمة|مو روبوت|التحدث مع الفريق|الموظفين|محتاج مساعدة بشرية|أكلم أحد|موظف/.test(t))
     return { intent: 'human', detected_language: 'ar', extracted_value: null, confidence: 'low' };
-  if (/خدمات|تسوون|عندكم|تعالجون/.test(t))
+  if (/خدماتكم|إيش تسوون|وش تعالجون|عندكم تقويم|عندكم زراعة|عندكم تبييض|قائمة الخدمات|إيش تخصصاتكم|خدمات الأسنان|علاجات الأسنان|خدمات/.test(t))
     return { intent: 'services', detected_language: 'ar', extracted_value: null, confidence: 'low' };
-  if (/تقييم|أقيم|رأيي/.test(t))
+  if (/أقيم|أعطي تقييم|تقييم جوجل|أشارك تجربتي|أوصي بكم|كيف أقيمكم|أبغى أعطي رأيي|أشارك رأيي|تقييم الخدمة|تقييم/.test(t))
     return { intent: 'reviews', detected_language: 'ar', extracted_value: null, confidence: 'low' };
-  if (/موعدي|متى موعدي|شو موعدي/.test(t))
+  if (/متى موعدي|أي وقت موعدي|شو حجزت|إيش موعدي|اطلع موعدي|عندي موعد|موعدي مؤكد|تفاصيل موعدي|ذكرني بموعدي|حجزي|زيارتي|موعدي/.test(t))
     return { intent: 'my_appointment', detected_language: 'ar', extracted_value: null, confidence: 'low' };
-  if (/هلا|مرحبا|السلام|أهلا|صباح|مساء/.test(t))
+  if (/هلا والله|كيف الحال|مساء النور|صباح النور|حياك|هلا فيك|الله يسلمك|هلا|مرحبا|السلام|أهلا|صباح|مساء/.test(t))
     return { intent: 'greeting', detected_language: 'ar', extracted_value: null, confidence: 'low' };
-  
+
   return { intent: 'unknown', detected_language: 'en', extracted_value: null, confidence: 'low' };
 }
 
@@ -227,7 +268,7 @@ async function extractDate(text) {
         temperature: 0,
         messages: [{
           role: 'user',
-          content: `Today is ${today}. Extract the appointment date from this text and return it as a formatted date string like "Monday, April 20, 2026" (always include the day name). Use today as reference for relative dates: "tomorrow"=next day, "next Monday"=next occurrence of Monday, "in 5 days"=today+5, "بكرة/غداً"=tomorrow, "بعد غد"=today+2, "الاثنين الجاي"=next Monday, "بعد 5 أيام"=today+5, "الأسبوع الجاي"=today+7. Arabic months: يناير=January, فبراير=February, مارس=March, أبريل=April, مايو=May, يونيو=June, يوليو=July, أغسطس=August, سبتمبر=September, أكتوبر=October, نوفمبر=November, ديسمبر=December. Arabic days: الاثنين=Monday, الثلاثاء=Tuesday, الأربعاء=Wednesday, الخميس=Thursday, الجمعة=Friday, السبت=Saturday, الأحد=Sunday. Relative date patterns to calculate precisely: "after 10 days"/"in 10 days"/"10 days later"=today+10, "maybe after 10 days"=today+10 (ignore "maybe"), "next week"=today+7, "in 2 weeks"=today+14, "after a week"=today+7, "after N days"/"in N days"=today+N. Always strip filler words like "maybe", "perhaps", "around", "approximately" before calculating. Always return a specific date like "Monday, April 7, 2026". NEVER return the original text if you can calculate any approximate date from it. If truly no date can be inferred at all, return the original text unchanged. Return ONLY the date string, nothing else. Text: "${text}"`
+          content: `Today is ${today}. Extract the appointment date from this text and return it as a formatted date string like "Monday, April 20, 2026" (always include the day name). Use today as reference for relative dates: "tomorrow"=next day, "next Monday"=next occurrence of Monday, "in 5 days"=today+5, "بكرة/غداً"=tomorrow, "بعد غد"=today+2, "الاثنين الجاي"=next Monday, "بعد 5 أيام"=today+5, "الأسبوع الجاي"=today+7. Arabic months: يناير=January, فبراير=February, مارس=March, أبريل=April, مايو=May, يونيو=June, يوليو=July, أغسطس=August, سبتمبر=September, أكتوبر=October, نوفمبر=November, ديسمبر=December. Arabic days: الاثنين=Monday, الثلاثاء=Tuesday, الأربعاء=Wednesday, الخميس=Thursday, الجمعة=Friday, السبت=Saturday, الأحد=Sunday. Relative date patterns: "after N days"/"in N days"=today+N, "next week"=today+7, "in N weeks"=today+N*7. Always strip filler words. Return a specific date like "Monday, April 7, 2026". If no date can be inferred, return the original text. Return ONLY the date string. Text: "${text}"`
         }]
       },
       { headers: { Authorization: `Bearer ${OPENAI_KEY}`, 'Content-Type': 'application/json' } }
@@ -250,7 +291,7 @@ async function extractTimeSlot(text, slots) {
         temperature: 0,
         messages: [{
           role: 'user',
-          content: `Available time slots: ${slots.join(', ')}. Match this time request to the closest available slot. Rules: morning/الصبح/صباحاً→"9:00 AM", noon/الظهر→"1:00 PM", afternoon/بعد الظهر/العصر→"2:00 PM", evening/المساء/مساء/المغرب/after work→"5:00 PM". If the requested time is completely outside the available slots (e.g. 4am, 6pm, 7pm, 8pm, midnight) return exactly the word null. Otherwise return ONLY the exact slot string from the available list, nothing else. Time request: "${text}"`
+          content: `Available time slots: ${slots.join(', ')}. Match this time request to the closest available slot. Rules: morning/الصبح/صباحاً→"9:00 AM", noon/الظهر→"1:00 PM", afternoon/بعد الظهر/العصر→"2:00 PM", evening/المساء/مساء/المغرب/after work→"5:00 PM". If the requested time is completely outside available slots return exactly the word null. Otherwise return ONLY the exact slot string. Time request: "${text}"`
         }]
       },
       { headers: { Authorization: `Bearer ${OPENAI_KEY}`, 'Content-Type': 'application/json' } }
