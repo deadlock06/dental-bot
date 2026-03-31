@@ -73,6 +73,14 @@ EN: my appointment, my booking, my visit, when is my appointment, what time is m
 AR: موعدي، حجزي، زيارتي، متى موعدي، أي وقت موعدي، شو حجزت، إيش موعدي،
     اطلع موعدي، عندي موعد، موعدي مؤكد، تفاصيل موعدي، ذكرني بموعدي
 
+continue_flow:
+- Patient is mid-flow and their message matches the expected input for that step
+- Examples: entering a name when asked for name, entering a date when asked for date,
+  entering a number to select from a menu, entering a time when asked for time,
+  entering notes/description, confirming with yes/no when asked to confirm
+- Use this when the message is clearly a direct answer to the bot's last question
+- Do NOT use this if the message is a clear intent switch (cancel, reschedule, prices, etc.)
+
 reschedule:
 EN: reschedule, change appointment, move appointment, change my booking, different time,
     postpone, push back, move to another day, can't make it at that time,
@@ -164,12 +172,12 @@ async function detectIntent(messageText, currentFlow = null, currentStep = 0) {
     };
   } catch (err) {
     console.error('[AI] detectIntent error:', err.response?.data || err.message);
-    return keywordFallback(messageText);
+    return keywordFallback(messageText, currentFlow);
   }
 }
 
 // Keyword fallback when OpenAI is unavailable
-function keywordFallback(text) {
+function keywordFallback(text, currentFlow = null) {
   const t = text.toLowerCase().trim();
 
   // ── Exact menu option text (copy-paste) — checked first
@@ -253,6 +261,11 @@ function keywordFallback(text) {
     return { intent: 'my_appointment', detected_language: 'ar', extracted_value: null, confidence: 'low' };
   if (/هلا والله|كيف الحال|مساء النور|صباح النور|حياك|هلا فيك|الله يسلمك|هلا|مرحبا|السلام|أهلا|صباح|مساء/.test(t))
     return { intent: 'greeting', detected_language: 'ar', extracted_value: null, confidence: 'low' };
+
+  // If mid-flow and no keyword matched an intent switch → it's a flow input
+  if (currentFlow) {
+    return { intent: 'continue_flow', detected_language: 'en', extracted_value: null, confidence: 'low' };
+  }
 
   return { intent: 'unknown', detected_language: 'en', extracted_value: null, confidence: 'low' };
 }

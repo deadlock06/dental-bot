@@ -1,5 +1,5 @@
 const { getPatient, insertPatient, savePatient, saveAppointment, getAppointment, updateAppointment } = require('./db');
-const { sendMessage } = require('./whatsapp');
+const { sendMessage, sendMainMenu, sendDoctorMenu, sendTreatmentMenu, sendTimeSlotMenu } = require('./whatsapp');
 const { detectIntent, extractDate, extractTimeSlot } = require('./ai');
 
 // ─────────────────────────────────────────────
@@ -14,6 +14,11 @@ function menuEN(clinicName) {
 
 function menuAR(clinicName) {
   return `أهلاً وسهلاً بك في ${clinicName}! 🦷✨\nأنا مساعدك الذكي، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد\n2️⃣ موعدي الحالي\n3️⃣ إعادة جدولة\n4️⃣ إلغاء الموعد\n5️⃣ خدماتنا\n6️⃣ تعرف على أطبائنا 👨‍⚕️\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️ (اكتب 10)\n\nاضغط على رقم أو أخبرني بما تحتاج 😊`;
+}
+
+// Send interactive main menu with plain-text fallback
+async function sendMenu(phone, ar, cl) {
+  await sendMainMenu(phone, cl.name, ar, ar ? menuAR(cl.name) : menuEN(cl.name));
 }
 
 // ─────────────────────────────────────────────
@@ -43,11 +48,11 @@ async function handleMessage(phone, text, clinic) {
   if (!patient.language) {
     if (msg === '1' || /^english$/i.test(msg)) {
       await savePatient(phone, { language: 'en', current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMessage(phone, menuEN(cl.name));
+      return sendMenu(phone, false, cl);
     }
     if (msg === '2' || /^(arabic|عربي|العربية)$/i.test(msg)) {
       await savePatient(phone, { language: 'ar', current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMessage(phone, menuAR(cl.name));
+      return sendMenu(phone, true, cl);
     }
     return sendMessage(phone, LANG_SELECT);
   }
@@ -71,7 +76,7 @@ async function handleMessage(phone, text, clinic) {
   // Greeting always clears any stale flow and shows menu
   if (intent === 'greeting') {
     await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-    return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+    return sendMenu(phone, ar, cl);
   }
 
   // Active flow routing
@@ -133,13 +138,20 @@ async function handleMessage(phone, text, clinic) {
 // ─────────────────────────────────────────────
 async function getIntentReply(intent, ar, cl) {
   switch (intent) {
-    case 'services':  return servicesMsg(ar);
-    case 'doctors':   return doctorsMsg(ar, cl);
-    case 'prices':    return pricesMsg(ar);
-    case 'location':  return locationMsg(ar, cl);
-    case 'reviews':   return reviewMsg(ar, cl);
-    case 'human':     return staffMsg(ar);
-    default:          return null;
+    case 'services':       return servicesMsg(ar);
+    case 'doctors':        return doctorsMsg(ar, cl);
+    case 'prices':         return pricesMsg(ar);
+    case 'location':       return locationMsg(ar, cl);
+    case 'reviews':        return reviewMsg(ar, cl);
+    case 'human':          return staffMsg(ar);
+    case 'booking':
+    case 'my_appointment':
+    case 'reschedule':
+    case 'cancel':
+      return ar
+        ? 'أنت حالياً في منتصف العملية 😊 أكمل الخطوة الحالية أو اضغط 0 للقائمة الرئيسية'
+        : "You're currently in the middle of a process 😊 Continue the current step or press 0 for main menu";
+    default:               return null;
   }
 }
 
@@ -209,11 +221,25 @@ const AR_SLOTS = ['9:00 صباحاً', '10:00 صباحاً', '11:00 صباحاً
 async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, fd, patient, cl) {
   const val = (extractedValue !== null && extractedValue !== undefined) ? String(extractedValue) : rawMsg;
 
+  // Bug 4 — Step 0 fallback: shouldn't normally happen but guard against corrupt state
+  if (step === 0) {
+    await savePatient(phone, { ...patient, flow_step: 1, flow_data: {} });
+    return sendMessage(phone, ar
+      ? 'رائع! لنبدأ الحجز 😊\nما اسمك الكريم؟\n\n0️⃣ القائمة الرئيسية'
+      : "Great! Let's book your appointment 😊\nWhat's your full name?\n\n0️⃣ Main menu"
+    );
+  }
+
   // Step 4 — Notes (optional): handle BEFORE EXIT_RE so "0" skips instead of exiting
   if (step === 4) {
     const isSkip = rawMsg.trim() === '0' || /^(skip|no|nothing|لا|تخطي)$/i.test(rawMsg.trim());
     fd.description = isSkip ? '' : rawMsg.trim();
     await savePatient(phone, { ...patient, flow_step: 5, flow_data: fd });
+    // Step 5 is now doctor selection — show doctor menu if doctors configured, else date prompt
+    const doctors = cl.doctors || [];
+    if (doctors.length > 0) {
+      return sendDoctorMenu(phone, ar, doctors, doctorSelectionMsg(ar, doctors));
+    }
     return sendMessage(phone, ar
       ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين الجاي\n• 20 أبريل\n• أي تاريخ محدد\n\n0️⃣ القائمة الرئيسية'
       : 'When would you like your appointment? 📅\nYou can say:\n• Tomorrow\n• Next Monday\n• April 20\n• Any specific date\n\n0️⃣ Main menu'
@@ -221,9 +247,9 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
   }
 
   // Exit keywords — only during data-entry steps, not on binary confirm steps
-  if (step <= 6 && EXIT_RE.test(rawMsg.trim())) {
+  if (step <= 7 && EXIT_RE.test(rawMsg.trim())) {
     await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-    return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+    return sendMenu(phone, ar, cl);
   }
 
   // Step 1 — Name
@@ -264,14 +290,14 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     }
     fd.phone = phone;
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
-    return sendMessage(phone, treatmentMenuMsg(ar));
+    return sendTreatmentMenu(phone, ar, treatmentMenuMsg(ar));
   }
 
   // Step 21 — Custom phone entry
   if (step === 21) {
     fd.phone = val;
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
-    return sendMessage(phone, treatmentMenuMsg(ar));
+    return sendTreatmentMenu(phone, ar, treatmentMenuMsg(ar));
   }
 
   // Step 3 — Treatment type
@@ -288,84 +314,220 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     );
   }
 
-  // Step 5 — Date (AI-parsed)
+  // Step 5 — Doctor selection (BEFORE date — doctor schedule determines available days)
   if (step === 5) {
+    const doctors = cl.doctors || [];
+    if (doctors.length === 0) {
+      // No doctors configured — skip straight to date
+      fd.doctor_id   = null;
+      fd.doctor_name = null;
+      await savePatient(phone, { ...patient, flow_step: 6, flow_data: fd });
+      return sendMessage(phone, ar
+        ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين الجاي\n• 20 أبريل\n• أي تاريخ محدد\n\n0️⃣ القائمة الرئيسية'
+        : 'When would you like your appointment? 📅\nYou can say:\n• Tomorrow\n• Next Monday\n• April 20\n• Any specific date\n\n0️⃣ Main menu'
+      );
+    }
+    const num = parseInt(rawMsg);
+    if (rawMsg.trim() === '0' || /^(skip|any|no preference|لا يهم|تخطي|أي طبيب)$/i.test(rawMsg.trim())) {
+      fd.doctor_id   = null;
+      fd.doctor_name = null;
+    } else if (num >= 1 && num <= doctors.length) {
+      const doc = doctors[num - 1];
+      fd.doctor_id   = doc.id || null;
+      fd.doctor_name = ar ? (doc.name_ar || doc.name) : doc.name;
+    } else {
+      // Free-text or unrecognised — re-show doctor menu
+      return sendDoctorMenu(phone, ar, doctors, doctorSelectionMsg(ar, doctors));
+    }
+    await savePatient(phone, { ...patient, flow_step: 6, flow_data: fd });
+    return sendMessage(phone, ar
+      ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين الجاي\n• 20 أبريل\n• أي تاريخ محدد\n\n0️⃣ القائمة الرئيسية'
+      : 'When would you like your appointment? 📅\nYou can say:\n• Tomorrow\n• Next Monday\n• April 20\n• Any specific date\n\n0️⃣ Main menu'
+    );
+  }
+
+  // Step 6 — Date (with doctor schedule validation)
+  if (step === 6) {
     const dateInput = rawMsg.trim();
 
-    // Reject only truly empty or single-char input
+    // Reject empty or single-char
     if (dateInput.length < 2) {
-      await savePatient(phone, { ...patient, flow_step: 5, flow_data: fd });
       return sendMessage(phone, ar
         ? 'يرجى إدخال تاريخ مثل: غداً، الاثنين، أو 20 أبريل 😊\n\n0️⃣ القائمة الرئيسية'
         : 'Please enter a date like: tomorrow, Monday, or April 20 😊\n\n0️⃣ Main menu'
       );
     }
 
-    // 1) Fast local calculation for common relative dates
+    // 1) Fast local relative date calculation
     let parsedDate = calculateRelativeDate(dateInput);
-    // 2) AI extraction fallback for everything else
+    // 2) AI fallback for everything else
     if (!parsedDate) {
       try {
         const aiDate = await extractDate(dateInput);
-        if (aiDate && aiDate.length > 2 && aiDate !== 'null' && aiDate !== dateInput) {
+        if (aiDate && aiDate.length > 2 && aiDate !== 'null') {
           parsedDate = aiDate;
         }
       } catch (e) {
-        console.error('[Step5] extractDate error:', e.message);
+        console.error('[Step6] extractDate error:', e.message);
       }
     }
-    // 3) Last resort — save raw (better than blocking flow)
-    if (!parsedDate) parsedDate = dateInput;
 
-    console.log(`[Step5] date input="${dateInput}" parsed="${parsedDate}"`);
-    fd.preferred_date = parsedDate;
-    await savePatient(phone, { ...patient, flow_step: 6, flow_data: fd });
-    return sendMessage(phone, timeSlotMsg(ar));
-  }
-
-  // Step 6 — Time slot (number or natural language)
-  if (step === 6) {
-    const num = parseInt(rawMsg);
-    if (num >= 1 && num <= 8) {
-      console.log('[Step6] num:', num, 'slot:', EN_SLOTS[num - 1]);
-      fd.time_slot = ar ? AR_SLOTS[num - 1] : EN_SLOTS[num - 1];
-    } else if (extractedValue && EN_SLOTS.includes(String(extractedValue))) {
-      fd.time_slot = String(extractedValue);
-    } else {
-      const matched = await extractTimeSlot(rawMsg, EN_SLOTS);
-      if (!matched) {
-        // Time not in schedule — re-show time menu, stay on step 6
+    // Bug 2 fix — if still no parsed date, check if input looks like a date attempt
+    if (!parsedDate || parsedDate === dateInput) {
+      const looksLikeDate = /\d|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december|tomorrow|tmrw|next|غداً|بكرة|الاثنين|الثلاثاء|الأربعاء|الخميس|الجمعة|السبت|الأحد|يناير|فبراير|مارس|أبريل|مايو|يونيو|يوليو|أغسطس|سبتمبر|أكتوبر|نوفمبر|ديسمبر|الأسبوع/i.test(dateInput);
+      if (!looksLikeDate) {
+        // Looks like a booking phrase or random text — re-ask, don't save garbage
         return sendMessage(phone, ar
-          ? 'هذا الوقت غير متاح في جدولنا 😊 يرجى الاختيار من الأوقات المتاحة:\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً\n\n0️⃣ القائمة الرئيسية'
-          : "That time isn't in our schedule 😊 Please choose from the available slots:\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM\n\n0️⃣ Main menu"
+          ? 'يرجى إدخال تاريخ الموعد 😊 مثال: غداً، 20 أبريل، الاثنين الجاي\n\n0️⃣ القائمة الرئيسية'
+          : 'Please enter a date for your appointment 😊 Example: tomorrow, April 20, next Monday\n\n0️⃣ Main menu'
         );
       }
-      fd.time_slot = matched;
+      // Looks like a date attempt — save as-is
+      if (!parsedDate) parsedDate = dateInput;
     }
 
-    // Show doctor selection if clinic has doctors, else go straight to summary
-    const doctors = cl.doctors || [];
-    if (doctors.length > 0) {
-      await savePatient(phone, { ...patient, flow_step: 7, flow_data: fd });
-      return sendMessage(phone, doctorSelectionMsg(ar, doctors));
-    } else {
-      await savePatient(phone, { ...patient, flow_step: 8, flow_data: fd });
-      return sendMessage(phone, bookingSummaryMsg(ar, fd, phone, cl));
+    console.log(`[Step6] date input="${dateInput}" parsed="${parsedDate}"`);
+
+    // Doctor schedule validation — check if doctor works on the selected day
+    if (fd.doctor_id && cl.id) {
+      try {
+        const { getDoctorSchedule, toDateISO, getDayName } = require('./slots');
+        const isoDate = toDateISO(parsedDate);
+        if (isoDate) {
+          const schedule = await getDoctorSchedule(cl.id, fd.doctor_id);
+          if (schedule && schedule.working_days) {
+            const dayName = getDayName(isoDate);
+            if (!schedule.working_days.includes(dayName)) {
+              const workDays = Array.isArray(schedule.working_days)
+                ? schedule.working_days.join(', ')
+                : schedule.working_days;
+              return sendMessage(phone, ar
+                ? `د. ${fd.doctor_name} غير متاح في هذا اليوم. يعمل في: ${workDays}. يرجى اختيار تاريخ آخر:\n\n0️⃣ القائمة الرئيسية`
+                : `Dr. ${fd.doctor_name} is not available on ${dayName}. They work on: ${workDays}. Please choose another date:\n\n0️⃣ Main menu`
+              );
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[Step6] schedule check error:', e.message);
+        // Non-blocking — proceed if schedule check fails
+      }
     }
+
+    fd.preferred_date = parsedDate;
+    // Store ISO for slot lookups
+    try {
+      const { toDateISO } = require('./slots');
+      fd.preferred_date_iso = toDateISO(parsedDate) || null;
+    } catch (e) { fd.preferred_date_iso = null; }
+
+    await savePatient(phone, { ...patient, flow_step: 7, flow_data: fd });
+    return sendMessage(phone, ar ? '⏳ جاري التحقق من المواعيد المتاحة...' : '⏳ Checking available slots...');
   }
 
-  // Step 7 — Doctor selection (optional)
+  // Step 7 — Dynamic time slots (based on doctor + date)
+  // This step has two sub-phases: showing slots (7a) and receiving selection (7b)
+  // fd.available_slots_shown = true after slots are displayed
   if (step === 7) {
-    const doctors = cl.doctors || [];
-    const num = parseInt(rawMsg);
-    if (rawMsg.trim() === '0' || /^(skip|any|no preference|لا يهم|تخطي|أي طبيب)$/i.test(rawMsg.trim())) {
-      fd.doctor_name = null;
-    } else if (num >= 1 && num <= doctors.length) {
-      const doc = doctors[num - 1];
-      fd.doctor_name = ar ? (doc.name_ar || doc.name) : doc.name;
-    } else {
-      fd.doctor_name = extractedValue ? String(extractedValue) : rawMsg;
+    const { getAvailableSlots } = require('./slots');
+
+    // 7a — Show available slots (first time entering step 7)
+    if (!fd.available_slots_shown) {
+      let slots = [];
+      const isoDate = fd.preferred_date_iso;
+
+      if (fd.doctor_id && isoDate && cl.id) {
+        try {
+          slots = await getAvailableSlots(cl.id, fd.doctor_id, isoDate);
+        } catch (e) {
+          console.error('[Step7] getAvailableSlots error:', e.message);
+        }
+      }
+
+      // No slots for this doctor+date combo
+      if (fd.doctor_id && slots.length === 0) {
+        // Reset to step 6 to re-ask for date
+        await savePatient(phone, { ...patient, flow_step: 6, flow_data: { ...fd, available_slots_shown: false } });
+        return sendMessage(phone, ar
+          ? `لا توجد مواعيد متاحة في ${fd.preferred_date} مع د. ${fd.doctor_name}. يرجى اختيار تاريخ آخر:\n\n0️⃣ القائمة الرئيسية`
+          : `No slots available on ${fd.preferred_date} for Dr. ${fd.doctor_name}. Please choose another date:\n\n0️⃣ Main menu`
+        );
+      }
+
+      // Build numbered slot list
+      let slotLines, slotKeys;
+      if (slots.length > 0) {
+        slotKeys  = slots.map(s => s.slot_time);
+        slotLines = slots.map((s, i) =>
+          ar ? `${i + 1}️⃣ ${s.slot_time_display_ar}` : `${i + 1}️⃣ ${s.slot_time_display}`
+        );
+      } else {
+        // No doctor selected — use generic fixed slots
+        slotKeys  = EN_SLOTS.map((_, i) => String(i + 1));
+        slotLines = ar
+          ? AR_SLOTS.map((s, i) => `${i + 1}️⃣ ${s}`)
+          : EN_SLOTS.map((s, i) => `${i + 1}️⃣ ${s}`);
+      }
+
+      const doctorLabel = fd.doctor_name
+        ? (ar ? `مع د. ${fd.doctor_name}` : `with Dr. ${fd.doctor_name}`)
+        : '';
+      fd.available_slots_shown = true;
+      fd.slot_keys             = slotKeys;
+      await savePatient(phone, { ...patient, flow_step: 7, flow_data: fd });
+
+      const header7 = ar
+        ? `المواعيد المتاحة ${doctorLabel} في ${fd.preferred_date}:`
+        : `Available times ${doctorLabel} on ${fd.preferred_date}:`;
+      const slotMenuItems = slots.length > 0
+        ? slots.map(s => ({ label: ar ? s.slot_time_display_ar : s.slot_time_display }))
+        : (ar ? AR_SLOTS.map(s => ({ label: s })) : EN_SLOTS.map(s => ({ label: s })));
+      const fallback7 = `${header7}\n\n${slotLines.join('\n')}\n\n0️⃣ ${ar ? 'القائمة الرئيسية' : 'Main menu'}`;
+      return sendTimeSlotMenu(phone, ar, slotMenuItems, header7, fallback7);
     }
+
+    // 7b — Patient is selecting a slot
+    const slotKeys = fd.slot_keys || [];
+    const num7 = parseInt(rawMsg.trim());
+
+    if (num7 >= 1 && num7 <= slotKeys.length) {
+      // Doctor-managed slots: store the slot_time key
+      if (fd.doctor_id && fd.preferred_date_iso) {
+        fd.slot_time_key = slotKeys[num7 - 1]; // HH:MM for bookSlot
+        // Build display label from doctor slots (re-fetch or use index)
+        const { getAvailableSlots: gas } = require('./slots');
+        let displayEn = EN_SLOTS[num7 - 1] || slotKeys[num7 - 1];
+        let displayAr = AR_SLOTS[num7 - 1] || slotKeys[num7 - 1];
+        try {
+          const slots2 = await gas(cl.id, fd.doctor_id, fd.preferred_date_iso);
+          if (slots2[num7 - 1]) {
+            displayEn = slots2[num7 - 1].slot_time_display;
+            displayAr = slots2[num7 - 1].slot_time_display_ar;
+          }
+        } catch (e) { /* use fallback labels */ }
+        fd.time_slot = ar ? displayAr : displayEn;
+      } else {
+        // Generic fixed slots
+        fd.time_slot     = ar ? AR_SLOTS[num7 - 1] : EN_SLOTS[num7 - 1];
+        fd.slot_time_key = null;
+      }
+    } else {
+      // Try natural language → extractTimeSlot
+      const matched = await extractTimeSlot(rawMsg, EN_SLOTS);
+      if (!matched) {
+        // Re-show slot list
+        const slotLines2 = (fd.slot_keys || []).map((k, i) => `${i + 1}️⃣ ${k}`);
+        return sendMessage(phone, ar
+          ? `هذا الوقت غير متاح 😊 يرجى الاختيار من المواعيد المتاحة:\n\n${slotLines2.join('\n')}\n\n0️⃣ القائمة الرئيسية`
+          : `That time isn't available 😊 Please choose from the available slots:\n\n${slotLines2.join('\n')}\n\n0️⃣ Main menu`
+        );
+      }
+      // Bug 3 fix: store correct language format
+      const enIndex = EN_SLOTS.indexOf(matched);
+      fd.time_slot     = ar ? (AR_SLOTS[enIndex] || matched) : matched;
+      fd.slot_time_key = null;
+    }
+
     await savePatient(phone, { ...patient, flow_step: 8, flow_data: fd });
     return sendMessage(phone, bookingSummaryMsg(ar, fd, phone, cl));
   }
@@ -377,7 +539,21 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     const denied    = raw8 === '2' || /^(no|back|لا|لأ|العودة|رجوع)$/i.test(raw8);
 
     if (confirmed) {
-      await saveAppointment({
+      // If doctor slot exists → lock it atomically first
+      if (fd.doctor_id && fd.preferred_date_iso && fd.slot_time_key && cl.id) {
+        const { bookSlot } = require('./slots');
+        const result = await bookSlot(cl.id, fd.doctor_id, fd.preferred_date_iso, fd.slot_time_key, phone);
+        if (!result.success && result.reason === 'slot_taken') {
+          // Slot was taken by another patient — reset to step 7 to re-show slots
+          await savePatient(phone, { ...patient, flow_step: 7, flow_data: { ...fd, available_slots_shown: false } });
+          return sendMessage(phone, ar
+            ? `عذراً، تم حجز هذا الموعد للتو من قِبل شخص آخر 😊 إليك المواعيد المتاحة في ${fd.preferred_date}:`
+            : `Sorry, that slot was just taken by another patient 😊 Here are the available slots on ${fd.preferred_date}:`
+          );
+        }
+      }
+
+      const savedAppt = await saveAppointment({
         phone:          fd.phone || phone,
         clinic_id:      cl.id || null,
         name:           fd.name,
@@ -387,6 +563,13 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         time_slot:      fd.time_slot,
         doctor_name:    fd.doctor_name || null
       });
+
+      // Link slot to appointment if both IDs are available
+      if (savedAppt && fd.doctor_id && fd.preferred_date_iso && fd.slot_time_key && cl.id) {
+        const { linkSlotToAppointment } = require('./slots');
+        await linkSlotToAppointment(cl.id, fd.doctor_id, fd.preferred_date_iso, phone, savedAppt.id);
+      }
+
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
       if (cl.staff_phone) {
         const doctorLine = fd.doctor_name ? `\n👨‍⚕️ Doctor: ${fd.doctor_name}` : '';
@@ -400,7 +583,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       );
     } else if (denied) {
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+      return sendMenu(phone, ar, cl);
     } else {
       // Unrecognised input — re-show summary
       return sendMessage(phone, bookingSummaryMsg(ar, fd, phone, cl));
@@ -429,20 +612,28 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
     }
 
 
-    let parsedDate = dateInput;
-    try {
-      const extracted = await extractDate(dateInput);
-      if (extracted && extracted.length > 2 && extracted !== 'null') {
-        parsedDate = extracted;
+    // Bug 5 fix: use local relative-date calculation first, then AI fallback
+    let parsedDate = calculateRelativeDate(dateInput);
+    if (!parsedDate) {
+      try {
+        const extracted = await extractDate(dateInput);
+        if (extracted && extracted.length > 2 && extracted !== 'null') {
+          parsedDate = extracted;
+        }
+      } catch (e) {
+        console.error('[RescheduleStep1] extractDate error:', e.message);
       }
-    } catch (e) {
-      console.error('[RescheduleStep1] extractDate error:', e.message);
     }
+    if (!parsedDate) parsedDate = dateInput;
 
     console.log(`[RescheduleStep1] date input="${dateInput}" parsed="${parsedDate}"`);
     fd.new_date = parsedDate;
     await savePatient(phone, { ...patient, flow_step: 2, flow_data: fd });
-    return sendMessage(phone, timeSlotMsg(ar));
+    return sendTimeSlotMenu(phone, ar,
+      ar ? AR_SLOTS.map(s => ({ label: s })) : EN_SLOTS.map(s => ({ label: s })),
+      null,
+      timeSlotMsg(ar)
+    );
   }
 
   // Step 2 — New time slot
@@ -489,13 +680,13 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
       );
     } else {
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+      return sendMenu(phone, ar, cl);
     }
   }
   } catch (err) {
     console.error('[Reschedule] Error:', err.message);
     await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-    return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+    return sendMenu(phone, ar, cl);
   }
 }
 
@@ -544,7 +735,7 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
 
   switch (resolvedIntent) {
     case 'greeting':
-      return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+      return sendMenu(phone, ar, cl);
 
     case 'booking':
       await savePatient(phone, { ...patient, current_flow: 'booking', flow_step: 1, flow_data: {} });
@@ -616,10 +807,11 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
       return sendMessage(phone, staffMsg(ar));
 
     default:
-      return sendMessage(phone, ar
-        ? `لم أفهم تماماً 😊 إليك ما يمكنني مساعدتك به:\n\n${menuAR(cl.name)}`
-        : `I'm not sure I understood that 😊 Here's what I can help you with:\n\n${menuEN(cl.name)}`
+      await sendMessage(phone, ar
+        ? 'لم أفهم تماماً 😊 إليك ما يمكنني مساعدتك به:'
+        : "I'm not sure I understood that 😊 Here's what I can help you with:"
       );
+      return sendMenu(phone, ar, cl);
   }
 }
 
