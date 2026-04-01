@@ -136,6 +136,7 @@ Return format (ONLY this, nothing else):
 {"intent":"booking","detected_language":"en","extracted_value":null,"confidence":"high"}`;
 
 async function detectIntent(messageText, currentFlow = null, currentStep = 0) {
+  console.log('[AI] Key format check:', process.env.OPENAI_KEY ? `length=${process.env.OPENAI_KEY.length} starts=${process.env.OPENAI_KEY.substring(0,10)}` : 'MISSING');
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const contextMsg = currentFlow
     ? `Today is ${today}.\nCurrent flow: ${currentFlow}, Current step: ${currentStep}\nPatient message: ${messageText}`
