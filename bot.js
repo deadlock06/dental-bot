@@ -496,8 +496,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       fd.doctor_name = null;
       await savePatient(phone, { ...patient, flow_step: 6, flow_data: fd });
       return sendMessage(phone, ar
-        ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين الجاي\n• 20 أبريل\n• أي تاريخ محدد\n\n0️⃣ القائمة الرئيسية'
-        : 'When would you like your appointment? 📅\nYou can say:\n• Tomorrow\n• Next Monday\n• April 20\n• Any specific date\n\n0️⃣ Main menu'
+        ? 'متى تفضل موعدك؟ 📅\n\n💡 اكتب تاريخاً مثل: غداً، 20 أبريل، الاثنين الجاي\n0️⃣ القائمة الرئيسية'
+        : 'When would you like your appointment? 📅\n\n💡 Type a date like: tomorrow, April 20, next Monday\n0️⃣ Main menu'
       );
     }
     const num = parseInt(rawMsg);
@@ -506,13 +506,14 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       fd.doctor_name = null;
     } else if (num >= 1 && num <= doctors.length) {
       const doc = doctors[num - 1];
-      fd.doctor_id   = doc.id || null;
-      fd.doctor_name = ar ? (doc.name_ar || doc.name) : doc.name;
+      fd.doctor_id     = doc.id || null;
+      fd.doctor_name   = doc.name;                    // always English — for DB + staff
+      fd.doctor_name_ar = doc.name_ar || doc.name;   // for patient-facing Arabic
     } else {
       // Free-text or unrecognised — re-show doctor menu
       return sendMessage(phone, doctorSelectionMsg(ar, doctors));
     }
-    // FIX 3 — If doctor selected, fetch working days and suggest next available dates
+    // If doctor selected, fetch working days and suggest next available dates
     if (fd.doctor_id && cl.id) {
       try {
         const { getDoctorSchedule } = require('./slots');
@@ -522,7 +523,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
           if (suggestions.length > 0) {
             fd.suggested_dates = suggestions;
             await savePatient(phone, { ...patient, flow_step: 6, flow_data: fd });
-            const docLabel  = ar ? `د. ${fd.doctor_name}` : `Dr. ${fd.doctor_name}`;
+            const docLabel  = ar ? `د. ${fd.doctor_name_ar || fd.doctor_name}` : `Dr. ${fd.doctor_name}`;
             const dateLines = suggestions.map((d, i) => `${formatSlotNumber(i)} ${ar ? d.displayAR : d.displayEN}`).join('\n');
             return sendMessage(phone, ar
               ? `متى تفضل موعدك؟ 📅\n\n${docLabel} متاح في:\n${dateLines}\n\n💡 اضغط رقماً أو اكتب أي تاريخ آخر\n0️⃣ القائمة الرئيسية`
@@ -546,12 +547,15 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
   if (step === 6) {
     const dateInput = rawMsg.trim();
 
-    // FIX 3 — Handle suggested date number selection (1-N from step 5 doctor suggestions)
+    // Handle suggested date number selection (1-N from step 5 doctor suggestions)
     let parsedDate = null;
-    if (fd.suggested_dates && fd.suggested_dates.length > 0) {
+    let isSuggested = false;
+    const suggestedDates = Array.isArray(fd.suggested_dates) ? fd.suggested_dates : null;
+    if (suggestedDates && suggestedDates.length > 0) {
       const n = parseInt(dateInput);
-      if (!isNaN(n) && n >= 1 && n <= fd.suggested_dates.length) {
-        parsedDate = fd.suggested_dates[n - 1].iso;
+      if (!isNaN(n) && n >= 1 && n <= suggestedDates.length) {
+        parsedDate = suggestedDates[n - 1].iso;
+        isSuggested = true;
       }
     }
 
@@ -596,19 +600,21 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     // Phase 1 — derive ISO (getDateISO guarantees year >= 2026)
     const isoDate = getDateISO(parsedDate);
 
-    // Doctor schedule validation — check if doctor works on the selected day
-    if (fd.doctor_id && cl.id && isoDate) {
+    // Doctor schedule validation — skip if patient picked from pre-validated suggestions
+    if (!isSuggested && fd.doctor_id && cl.id && isoDate) {
       try {
         const { getDoctorSchedule, getDayName } = require('./slots');
         const schedule = await getDoctorSchedule(cl.id, fd.doctor_id);
         if (schedule && schedule.working_days) {
           const dayName = getDayName(isoDate);
           if (!schedule.working_days.includes(dayName)) {
-            const workDays = Array.isArray(schedule.working_days)
-              ? schedule.working_days.join(', ')
-              : schedule.working_days;
+            const DAYS_AR = { Sunday:'الأحد', Monday:'الاثنين', Tuesday:'الثلاثاء', Wednesday:'الأربعاء', Thursday:'الخميس', Friday:'الجمعة', Saturday:'السبت' };
+            const workDays = ar
+              ? (Array.isArray(schedule.working_days) ? schedule.working_days.map(d => DAYS_AR[d] || d).join('، ') : schedule.working_days)
+              : (Array.isArray(schedule.working_days) ? schedule.working_days.join(', ') : schedule.working_days);
+            const docDisplayName = ar ? (fd.doctor_name_ar || fd.doctor_name) : fd.doctor_name;
             return sendMessage(phone, ar
-              ? `د. ${fd.doctor_name} غير متاح في هذا اليوم. يعمل في: ${workDays}. يرجى اختيار تاريخ آخر:\n\n0️⃣ القائمة الرئيسية`
+              ? `د. ${docDisplayName} غير متاح في هذا اليوم. يعمل في: ${workDays}. يرجى اختيار تاريخ آخر:\n\n0️⃣ القائمة الرئيسية`
               : `Dr. ${fd.doctor_name} is not available on ${dayName}. They work on: ${workDays}. Please choose another date:\n\n0️⃣ Main menu`
             );
           }
@@ -634,14 +640,15 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         console.error('[Step6] getAvailableSlots error:', e.message);
       }
       if (slotsForDisplay.length === 0) {
+        const docDisplayName6 = ar ? (fd.doctor_name_ar || fd.doctor_name) : fd.doctor_name;
         return sendMessage(phone, ar
-          ? `لا توجد مواعيد متاحة في ${fd.preferred_date} مع د. ${fd.doctor_name}. يرجى اختيار تاريخ آخر:\n\n0️⃣ القائمة الرئيسية`
+          ? `لا توجد مواعيد متاحة في ${fd.preferred_date} مع د. ${docDisplayName6}. يرجى اختيار تاريخ آخر:\n\n0️⃣ القائمة الرئيسية`
           : `No slots available on ${fd.preferred_date} for Dr. ${fd.doctor_name}. Please choose another date:\n\n0️⃣ Main menu`
         );
       }
     }
 
-    // Build slot list (FIX 2 — formatSlotNumber)
+    // Build slot list
     let slotKeys, slotDisplays, slotLines;
     if (slotsForDisplay.length > 0) {
       slotKeys     = slotsForDisplay.map(s => s.slot_time);
@@ -653,8 +660,9 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       slotLines    = slotDisplays.map((s, i) => `${formatSlotNumber(i)} ${s}`);
     }
 
-    const doctorLabel6 = fd.doctor_name
-      ? (ar ? `مع د. ${fd.doctor_name}` : `with Dr. ${fd.doctor_name}`)
+    const docDisplayName6 = ar ? (fd.doctor_name_ar || fd.doctor_name) : fd.doctor_name;
+    const doctorLabel6 = docDisplayName6
+      ? (ar ? `مع د. ${docDisplayName6}` : `with Dr. ${fd.doctor_name}`)
       : '';
     fd.available_slots_shown = true;
     fd.slot_keys             = slotKeys;
@@ -691,8 +699,9 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       if (fd.doctor_id && slots.length === 0) {
         // Reset to step 6 to re-ask for date
         await savePatient(phone, { ...patient, flow_step: 6, flow_data: { ...fd, available_slots_shown: false } });
+        const docName7a = ar ? (fd.doctor_name_ar || fd.doctor_name) : fd.doctor_name;
         return sendMessage(phone, ar
-          ? `لا توجد مواعيد متاحة في ${fd.preferred_date} مع د. ${fd.doctor_name}. يرجى اختيار تاريخ آخر:\n\n0️⃣ القائمة الرئيسية`
+          ? `لا توجد مواعيد متاحة في ${fd.preferred_date} مع د. ${docName7a}. يرجى اختيار تاريخ آخر:\n\n0️⃣ القائمة الرئيسية`
           : `No slots available on ${fd.preferred_date} for Dr. ${fd.doctor_name}. Please choose another date:\n\n0️⃣ Main menu`
         );
       }
@@ -701,17 +710,18 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       let slotLines, slotKeys, slotDisplays;
       if (slots.length > 0) {
         slotKeys     = slots.map(s => s.slot_time);
-        slotDisplays = slots.map(s => ar ? s.slot_time_display_ar : s.slot_time_display); // BUG 1
+        slotDisplays = slots.map(s => ar ? s.slot_time_display_ar : s.slot_time_display);
         slotLines    = slotDisplays.map((d, i) => `${formatSlotNumber(i)} ${d}`);
       } else {
         // No doctor selected — use generic fixed slots
         slotKeys     = EN_SLOTS.map((_, i) => String(i + 1));
-        slotDisplays = ar ? AR_SLOTS : EN_SLOTS; // BUG 1
+        slotDisplays = ar ? AR_SLOTS : EN_SLOTS;
         slotLines    = slotDisplays.map((s, i) => `${formatSlotNumber(i)} ${s}`);
       }
 
-      const doctorLabel = fd.doctor_name
-        ? (ar ? `مع د. ${fd.doctor_name}` : `with Dr. ${fd.doctor_name}`)
+      const docName7 = ar ? (fd.doctor_name_ar || fd.doctor_name) : fd.doctor_name;
+      const doctorLabel = docName7
+        ? (ar ? `مع د. ${docName7}` : `with Dr. ${fd.doctor_name}`)
         : '';
       fd.available_slots_shown = true;
       fd.slot_keys             = slotKeys;
@@ -758,8 +768,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       }
       // Unrecognised — re-show the duplicate prompt
       return sendMessage(phone, ar
-        ? 'لديك موعد محجوز في هذا اليوم 😊\nهل تريد إعادة جدولة موعدك الحالي؟\n1. نعم، أعد الجدولة\n2. لا، اختر تاريخاً آخر\n\n💡 اضغط 1 أو 2 للمتابعة\n0. القائمة الرئيسية'
-        : 'You already have a booking on this date 😊\nWould you like to reschedule your existing appointment instead?\n1. Yes, reschedule\n2. No, choose a different date\n\n💡 Tap 1 or 2 to continue\n0. Main menu'
+        ? 'لديك موعد محجوز في هذا اليوم 😊\nهل تريد إعادة جدولة موعدك الحالي؟\n1. نعم، أعد الجدولة\n2. لا، اختر تاريخاً آخر\n\n💡 اضغط 1 أو 2 للمتابعة\n0️⃣ القائمة الرئيسية'
+        : 'You already have a booking on this date 😊\nWould you like to reschedule your existing appointment instead?\n1. Yes, reschedule\n2. No, choose a different date\n\n💡 Tap 1 or 2 to continue\n0️⃣ Main menu'
       );
     }
 
@@ -925,9 +935,19 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
           `🦷 New Booking Alert!\n━━━━━━━━━━━━━━\n👤 Patient: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n🔧 Treatment: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}${doctorLine}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${staffTime}\n━━━━━━━━━━━━━━\nBooked via WhatsApp AI ✅`
         );
       }
-      const doctorConfirmLine = fd.doctor_name ? (ar ? `\n👨‍⚕️ الطبيب: ${fd.doctor_name}` : `\n👨‍⚕️ Doctor: ${fd.doctor_name}`) : '';
+      const confirmDocAR = fd.doctor_name_ar || fd.doctor_name;
+      const doctorConfirmLine = fd.doctor_name
+        ? (ar ? `\n👨‍⚕️ الطبيب: ${confirmDocAR}` : `\n👨‍⚕️ Doctor: ${fd.doctor_name}`)
+        : '';
+      const confirmTreatment = ar ? (TREATMENT_MAP_AR[fd.treatment] || fd.treatment) : fd.treatment;
+      const confirmDate      = ar ? toArabicDate(fd.preferred_date) : fd.preferred_date;
+      // Time conversion for Arabic confirmation
+      const CONF_EN = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','12:30 PM','2:00 PM','2:30 PM','3:00 PM','3:30 PM','4:00 PM','4:30 PM'];
+      const CONF_AR = ['9:00 صباحاً','9:30 صباحاً','10:00 صباحاً','10:30 صباحاً','11:00 صباحاً','11:30 صباحاً','12:00 مساءً','12:30 مساءً','2:00 مساءً','2:30 مساءً','3:00 مساءً','3:30 مساءً','4:00 مساءً','4:30 مساءً'];
+      const confTimeIdx = CONF_EN.indexOf(fd.time_slot);
+      const confirmTime = ar && confTimeIdx >= 0 ? CONF_AR[confTimeIdx] : fd.time_slot;
       return sendMessage(phone, ar
-        ? `🎉 *تم تأكيد موعدك!*\n\n📅 ${fd.preferred_date}\n⏰ ${fd.time_slot}\n🏥 ${cl.name}\n🦷 ${fd.treatment}${doctorConfirmLine}\n\nسنرسل لك تذكيراً قبل موعدك. نراك قريباً! 😊\n\n💡 اكتب *help* في أي وقت لرؤية خياراتك\n0️⃣ القائمة الرئيسية`
+        ? `🎉 *تم تأكيد موعدك!*\n\n📅 ${confirmDate}\n⏰ ${confirmTime}\n🏥 ${cl.name}\n🦷 ${confirmTreatment}${doctorConfirmLine}\n\nسنرسل لك تذكيراً قبل موعدك. نراك قريباً! 😊\n\n💡 اكتب *help* في أي وقت لرؤية خياراتك\n0️⃣ القائمة الرئيسية`
         : `🎉 *Appointment Confirmed!*\n\n📅 ${fd.preferred_date}\n⏰ ${fd.time_slot}\n🏥 ${cl.name}\n🦷 ${fd.treatment}${doctorConfirmLine}\n\nWe'll send you a reminder before your appointment. See you then! 😊\n\n💡 Type *help* anytime to see your options\n0️⃣ Main menu`
       );
     } else if (denied) {
@@ -1232,23 +1252,50 @@ function helpMsgAR(cl) {
   return msg;
 }
 
+// Arabic treatment name lookup (BUG 5)
+const TREATMENT_MAP_AR = {
+  'Cleaning & Polishing': 'تنظيف وتلميع',
+  'Fillings':             'حشوات',
+  'Braces & Orthodontics':'تقويم الأسنان',
+  'Teeth Whitening':      'تبييض الأسنان',
+  'Extraction':           'خلع',
+  'Dental Implants':      'زراعة أسنان',
+  'Root Canal':           'علاج العصب',
+  'Other':                'أخرى'
+};
+
+// Convert English date string to Arabic (BUG 6)
+function toArabicDate(dateStr) {
+  if (!dateStr) return dateStr;
+  const MONTHS_AR = { January:'يناير', February:'فبراير', March:'مارس', April:'أبريل', May:'مايو', June:'يونيو', July:'يوليو', August:'أغسطس', September:'سبتمبر', October:'أكتوبر', November:'نوفمبر', December:'ديسمبر' };
+  const DAYS_AR   = { Sunday:'الأحد', Monday:'الاثنين', Tuesday:'الثلاثاء', Wednesday:'الأربعاء', Thursday:'الخميس', Friday:'الجمعة', Saturday:'السبت' };
+  let result = dateStr;
+  Object.entries(DAYS_AR).forEach(([en, ar])   => { result = result.replace(en, ar); });
+  Object.entries(MONTHS_AR).forEach(([en, ar]) => { result = result.replace(en, ar); });
+  return result;
+}
+
 function bookingSummaryMsg(ar, fd, phone, cl) {
-  const doctor = fd.doctor_name || (ar ? 'بدون تفضيل' : 'No preference');
-  const notes  = fd.description || (ar ? 'لا يوجد' : 'None');
-  // FIX 4 — convert time to Arabic format in Arabic mode
+  const doctorDisplay = ar
+    ? ((fd.doctor_name_ar || fd.doctor_name) ? (fd.doctor_name_ar || fd.doctor_name) : 'بدون تفضيل')
+    : (fd.doctor_name || 'No preference');
+  const notes = fd.description || (ar ? 'لا يوجد' : 'None');
+  // Convert time to Arabic format in Arabic mode
   const SUM_EN = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','12:30 PM','2:00 PM','2:30 PM','3:00 PM','3:30 PM','4:00 PM','4:30 PM'];
   const SUM_AR = ['9:00 صباحاً','9:30 صباحاً','10:00 صباحاً','10:30 صباحاً','11:00 صباحاً','11:30 صباحاً','12:00 مساءً','12:30 مساءً','2:00 مساءً','2:30 مساءً','3:00 مساءً','3:30 مساءً','4:00 مساءً','4:30 مساءً'];
   const idx = SUM_EN.indexOf(fd.time_slot);
-  const displayTime = ar && idx >= 0 ? SUM_AR[idx] : fd.time_slot;
+  const displayTime      = ar && idx >= 0 ? SUM_AR[idx] : fd.time_slot;
+  const displayTreatment = ar ? (TREATMENT_MAP_AR[fd.treatment] || fd.treatment) : fd.treatment;
+  const displayDate      = ar ? toArabicDate(fd.preferred_date) : fd.preferred_date;
   return ar
-    ? `✅ *ملخص الحجز*\n\n👤 *الاسم:* ${fd.name}\n📱 *الهاتف:* ${fd.phone || phone}\n🦷 *العلاج:* ${fd.treatment}\n📝 *الملاحظات:* ${notes}\n👨‍⚕️ *الطبيب:* ${doctor}\n📅 *التاريخ:* ${fd.preferred_date}\n⏰ *الوقت:* ${displayTime}\n🏥 *العيادة:* ${cl.name}\n\nهل كل شيء صحيح؟\n1️⃣ نعم، أؤكد الحجز ✅\n2️⃣ لا، أريد تغيير شيء\n\n💡 اضغط 1 للتأكيد أو 2 للعودة`
-    : `✅ *Booking Summary*\n\n👤 *Name:* ${fd.name}\n📱 *Phone:* ${fd.phone || phone}\n🦷 *Treatment:* ${fd.treatment}\n📝 *Notes:* ${notes}\n👨‍⚕️ *Doctor:* ${doctor}\n📅 *Date:* ${fd.preferred_date}\n⏰ *Time:* ${fd.time_slot}\n🏥 *Clinic:* ${cl.name}\n\nDoes everything look correct?\n1️⃣ Yes, confirm booking ✅\n2️⃣ No, make changes\n\n💡 Tap 1 to confirm or 2 to go back`;
+    ? `✅ *ملخص الحجز*\n\n👤 *الاسم:* ${fd.name}\n📱 *الهاتف:* ${fd.phone || phone}\n🦷 *العلاج:* ${displayTreatment}\n📝 *الملاحظات:* ${notes}\n👨‍⚕️ *الطبيب:* ${doctorDisplay}\n📅 *التاريخ:* ${displayDate}\n⏰ *الوقت:* ${displayTime}\n🏥 *العيادة:* ${cl.name}\n\nهل كل شيء صحيح؟\n1️⃣ نعم، أؤكد الحجز ✅\n2️⃣ لا، أريد تغيير شيء\n\n💡 اضغط 1 للتأكيد أو 2 للعودة`
+    : `✅ *Booking Summary*\n\n👤 *Name:* ${fd.name}\n📱 *Phone:* ${fd.phone || phone}\n🦷 *Treatment:* ${fd.treatment}\n📝 *Notes:* ${notes}\n👨‍⚕️ *Doctor:* ${fd.doctor_name || 'No preference'}\n📅 *Date:* ${fd.preferred_date}\n⏰ *Time:* ${fd.time_slot}\n🏥 *Clinic:* ${cl.name}\n\nDoes everything look correct?\n1️⃣ Yes, confirm booking ✅\n2️⃣ No, make changes\n\n💡 Tap 1 to confirm or 2 to go back`;
 }
 
 function doctorSelectionMsg(ar, doctors) {
   const lines = doctors.map((doc, i) => ar
-    ? `${i + 1}️⃣ د. ${doc.name_ar || doc.name}\n🎓 الدرجة: ${doc.degree_ar || doc.degree}\n⭐ التخصص: ${doc.specialization_ar || doc.specialization}\n📅 متاح: ${doc.available_ar || doc.available}`
-    : `${i + 1}️⃣ Dr. ${doc.name}\n🎓 Degree: ${doc.degree}\n⭐ Specialization: ${doc.specialization}\n📅 Available: ${doc.available}`
+    ? `${i + 1}. د. ${doc.name_ar || doc.name}\n🎓 الدرجة: ${doc.degree_ar || doc.degree}\n⭐ التخصص: ${doc.specialization_ar || doc.specialization}\n📅 متاح: ${doc.available_ar || doc.available}`
+    : `${i + 1}. Dr. ${doc.name}\n🎓 Degree: ${doc.degree}\n⭐ Specialization: ${doc.specialization}\n📅 Available: ${doc.available}`
   );
   return ar
     ? `👨‍⚕️ فريقنا الطبي:\n\n${lines.join('\n\n')}\n\n💡 اضغط رقماً للحجز مع طبيب محدد أو اضغط *0* للمتابعة بدون تحديد`
@@ -1263,8 +1310,8 @@ function doctorsMsg(ar, cl) {
       : 'Doctor information will be available soon.\n1️⃣ Book appointment\n2️⃣ Back to menu';
   }
   const lines = doctors.map((doc, i) => ar
-    ? `${i + 1}️⃣ د. ${doc.name_ar || doc.name}\n🎓 الدرجة: ${doc.degree_ar || doc.degree}\n⭐ التخصص: ${doc.specialization_ar || doc.specialization}\n📅 متاح: ${doc.available_ar || doc.available}`
-    : `${i + 1}️⃣ Dr. ${doc.name}\n🎓 Degree: ${doc.degree}\n⭐ Specialization: ${doc.specialization}\n📅 Available: ${doc.available}`
+    ? `${i + 1}. د. ${doc.name_ar || doc.name}\n🎓 الدرجة: ${doc.degree_ar || doc.degree}\n⭐ التخصص: ${doc.specialization_ar || doc.specialization}\n📅 متاح: ${doc.available_ar || doc.available}`
+    : `${i + 1}. Dr. ${doc.name}\n🎓 Degree: ${doc.degree}\n⭐ Specialization: ${doc.specialization}\n📅 Available: ${doc.available}`
   );
   return ar
     ? `👨‍⚕️ فريقنا الطبي:\n\n${lines.join('\n\n')}\n\n💡 اضغط رقماً للحجز مع طبيب محدد أو اضغط 0 للقائمة الرئيسية`
