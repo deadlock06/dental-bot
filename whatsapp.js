@@ -23,10 +23,12 @@ async function sendMessage(to, text) {
 // sections format: [{ title, rows: [{ id, title, description }] }]
 // ─────────────────────────────────────────────
 async function sendInteractiveList(to, header, body, buttonText, sections, fallbackText) {
+  console.log('[WhatsApp] Sending interactive menu to:', to);
   try {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken  = process.env.TWILIO_AUTH_TOKEN;
     const from       = process.env.TWILIO_WHATSAPP_FROM;
+    console.log('[WhatsApp] TWILIO_WHATSAPP_FROM:', from || 'MISSING');
 
     const client = twilio(accountSid, authToken);
 

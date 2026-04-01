@@ -1,5 +1,5 @@
 const { getPatient, insertPatient, savePatient, saveAppointment, getAppointment, updateAppointment } = require('./db');
-const { sendMessage, sendMainMenu, sendDoctorMenu, sendTreatmentMenu, sendTimeSlotMenu } = require('./whatsapp');
+const { sendMessage } = require('./whatsapp');
 const { detectIntent, extractDate, extractTimeSlot } = require('./ai');
 
 // ─────────────────────────────────────────────
@@ -44,11 +44,11 @@ async function handleMessage(phone, text, clinic) {
   if (!patient.language) {
     if (msg === '1' || /^english$/i.test(msg)) {
       await savePatient(phone, { language: 'en', current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMainMenu(phone, cl.name, false, menuEN(cl.name));
+      return sendMessage(phone, menuEN(cl.name));
     }
     if (msg === '2' || /^(arabic|عربي|العربية)$/i.test(msg)) {
       await savePatient(phone, { language: 'ar', current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMainMenu(phone, cl.name, true, menuAR(cl.name));
+      return sendMessage(phone, menuAR(cl.name));
     }
     return sendMessage(phone, LANG_SELECT);
   }
@@ -64,11 +64,11 @@ async function handleMessage(phone, text, clinic) {
   const langSwitch = msg.toLowerCase().trim();
   if (/^(english|switch to english|change to english)$/i.test(langSwitch)) {
     await savePatient(phone, { ...patient, language: 'en', current_flow: null, flow_step: 0 });
-    return sendMainMenu(phone, cl.name, false, menuEN(cl.name));
+    return sendMessage(phone, menuEN(cl.name));
   }
   if (/^(arabic|عربي|عربية|switch to arabic)$/i.test(langSwitch)) {
     await savePatient(phone, { ...patient, language: 'ar', current_flow: null, flow_step: 0 });
-    return sendMainMenu(phone, cl.name, true, menuAR(cl.name));
+    return sendMessage(phone, menuAR(cl.name));
   }
 
   const ai = await detectIntent(msg, flow, step);
@@ -83,7 +83,7 @@ async function handleMessage(phone, text, clinic) {
   // Greeting always clears any stale flow and shows menu
   if (intent === 'greeting') {
     await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-    return sendMainMenu(phone, cl.name, ar, ar ? menuAR(cl.name) : menuEN(cl.name));
+    return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
   }
 
   // FIX 1 — Slot numbers above 9: bypass AI extraction, pass raw number directly
@@ -288,7 +288,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     // Step 5 is now doctor selection — show doctor menu if doctors configured, else date prompt
     const doctors = cl.doctors || [];
     if (doctors.length > 0) {
-      return sendDoctorMenu(phone, ar, doctors, doctorSelectionMsg(ar, doctors));
+      return sendMessage(phone, doctorSelectionMsg(ar, doctors));
     }
     return sendMessage(phone, ar
       ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين الجاي\n• 20 أبريل\n• أي تاريخ محدد\n\n0️⃣ القائمة الرئيسية'
@@ -299,7 +299,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
   // Exit keywords — only during data-entry steps, not on binary confirm steps
   if (step <= 7 && EXIT_RE.test(rawMsg.trim())) {
     await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-    return sendMainMenu(phone, cl.name, ar, ar ? menuAR(cl.name) : menuEN(cl.name));
+    return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
   }
 
   // Step 1 — Name
@@ -340,14 +340,14 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     }
     fd.phone = phone;
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
-    return sendTreatmentMenu(phone, ar, treatmentMenuMsg(ar));
+    return sendMessage(phone, treatmentMenuMsg(ar));
   }
 
   // Step 21 — Custom phone entry
   if (step === 21) {
     fd.phone = val;
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
-    return sendTreatmentMenu(phone, ar, treatmentMenuMsg(ar));
+    return sendMessage(phone, treatmentMenuMsg(ar));
   }
 
   // Step 3 — Treatment type
@@ -387,7 +387,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       fd.doctor_name = ar ? (doc.name_ar || doc.name) : doc.name;
     } else {
       // Free-text or unrecognised — re-show doctor menu
-      return sendDoctorMenu(phone, ar, doctors, doctorSelectionMsg(ar, doctors));
+      return sendMessage(phone, doctorSelectionMsg(ar, doctors));
     }
     await savePatient(phone, { ...patient, flow_step: 6, flow_data: fd });
     return sendMessage(phone, ar
@@ -539,9 +539,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         ? `المواعيد المتاحة ${doctorLabel} في ${fd.preferred_date}:`
         : `Available times ${doctorLabel} on ${fd.preferred_date}:`;
       const instruction7 = ar ? '\nأرسل رقم الموعد المناسب لك ⬆️' : '\nReply with a number to select your preferred time ⬆️';
-      const slotObjects7 = slotDisplays.map(label => ({ label }));
-      const fallback7 = `${header7}\n\n${slotLines.join('\n')}${instruction7}\n\n0️⃣ ${ar ? 'القائمة الرئيسية' : 'Main menu'}`;
-      return sendTimeSlotMenu(phone, ar, slotObjects7, header7, fallback7);
+      return sendMessage(phone, `${header7}\n\n${slotLines.join('\n')}${instruction7}\n\n0️⃣ ${ar ? 'القائمة الرئيسية' : 'Main menu'}`);
     }
 
     // 7b — Patient is selecting a slot
@@ -577,11 +575,10 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         const displays2 = fd.slot_displays || fd.slot_keys || [];
         const slotLines2 = displays2.map((d, i) => `${i + 1}️⃣ ${d}`);
         const instruction2 = ar ? '\nأرسل رقم الموعد المناسب لك ⬆️' : '\nReply with a number to select your preferred time ⬆️';
-        const reShowObjects = displays2.map(label => ({ label }));
-        const reShowFallback = ar
+        return sendMessage(phone, ar
           ? `هذا الوقت غير متاح 😊 يرجى الاختيار من المواعيد المتاحة:\n\n${slotLines2.join('\n')}${instruction2}\n\n0️⃣ القائمة الرئيسية`
-          : `That time isn't available 😊 Please choose from the available slots:\n\n${slotLines2.join('\n')}${instruction2}\n\n0️⃣ Main menu`;
-        return sendTimeSlotMenu(phone, ar, reShowObjects, ar ? '⏰ الأوقات المتاحة' : '⏰ Available Times', reShowFallback);
+          : `That time isn't available 😊 Please choose from the available slots:\n\n${slotLines2.join('\n')}${instruction2}\n\n0️⃣ Main menu`
+        );
       }
       // Bug 3 fix: store correct language format
       const enIndex = EN_SLOTS.indexOf(matched);
@@ -655,7 +652,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       );
     } else if (denied) {
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMainMenu(phone, cl.name, ar, ar ? menuAR(cl.name) : menuEN(cl.name));
+      return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
     } else {
       // Unrecognised input — re-show summary
       return sendMessage(phone, bookingSummaryMsg(ar, fd, phone, cl));
@@ -712,7 +709,7 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
     console.log(`[RescheduleStep1] date input="${dateInput}" parsed="${parsedDate}"`);
     fd.new_date = parsedDate;
     await savePatient(phone, { ...patient, flow_step: 2, flow_data: fd });
-    return sendTimeSlotMenu(phone, ar, (ar ? AR_SLOTS : EN_SLOTS).map(label => ({ label })), ar ? '⏰ اختر الوقت' : '⏰ Choose a Time', timeSlotMsg(ar));
+    return sendMessage(phone, timeSlotMsg(ar));
   }
 
   // Step 2 — New time slot
@@ -723,7 +720,7 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
     } else {
       const matched = await extractTimeSlot(rawMsg, EN_SLOTS);
       if (!matched) {
-        return sendTimeSlotMenu(phone, ar, (ar ? AR_SLOTS : EN_SLOTS).map(label => ({ label })), ar ? '⏰ الأوقات المتاحة' : '⏰ Available Times', ar
+        return sendMessage(phone, ar
           ? 'هذا الوقت غير متاح في جدولنا 😊 يرجى الاختيار من الأوقات المتاحة:\n\n1️⃣ 9:00 صباحاً\n2️⃣ 10:00 صباحاً\n3️⃣ 11:00 صباحاً\n4️⃣ 1:00 مساءً\n5️⃣ 2:00 مساءً\n6️⃣ 3:00 مساءً\n7️⃣ 4:00 مساءً\n8️⃣ 5:00 مساءً\n\n0️⃣ القائمة الرئيسية'
           : "That time isn't in our schedule 😊 Please choose from the available slots:\n\n1️⃣ 9:00 AM\n2️⃣ 10:00 AM\n3️⃣ 11:00 AM\n4️⃣ 1:00 PM\n5️⃣ 2:00 PM\n6️⃣ 3:00 PM\n7️⃣ 4:00 PM\n8️⃣ 5:00 PM\n\n0️⃣ Main menu"
         );
@@ -759,13 +756,13 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
       );
     } else {
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMainMenu(phone, cl.name, ar, ar ? menuAR(cl.name) : menuEN(cl.name));
+      return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
     }
   }
   } catch (err) {
     console.error('[Reschedule] Error:', err.message);
     await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-    return sendMainMenu(phone, cl.name, ar, ar ? menuAR(cl.name) : menuEN(cl.name));
+    return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
   }
 }
 
@@ -814,7 +811,7 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
 
   switch (resolvedIntent) {
     case 'greeting':
-      return sendMainMenu(phone, cl.name, ar, ar ? menuAR(cl.name) : menuEN(cl.name));
+      return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
 
     case 'booking':
       await savePatient(phone, { ...patient, current_flow: 'booking', flow_step: 1, flow_data: {} });
@@ -886,11 +883,10 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
       return sendMessage(phone, staffMsg(ar));
 
     default:
-      await sendMessage(phone, ar
-        ? 'لم أفهم تماماً 😊 إليك ما يمكنني مساعدتك به:'
-        : "I'm not sure I understood that 😊 Here's what I can help you with:"
+      return sendMessage(phone, ar
+        ? `لم أفهم تماماً 😊 إليك ما يمكنني مساعدتك به:\n\n${menuAR(cl.name)}`
+        : `I'm not sure I understood that 😊 Here's what I can help you with:\n\n${menuEN(cl.name)}`
       );
-      return sendMainMenu(phone, cl.name, ar, ar ? menuAR(cl.name) : menuEN(cl.name));
   }
 }
 
