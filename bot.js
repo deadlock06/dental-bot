@@ -2,6 +2,13 @@ const { getPatient, insertPatient, savePatient, saveAppointment, getAppointment,
 const { sendMessage } = require('./whatsapp');
 const { detectIntent, extractDate, extractTimeSlot } = require('./ai');
 
+let calendarLib = null;
+try {
+  calendarLib = require('./calendar');
+} catch (e) {
+  console.log('[Bot] calendar.js not loaded:', e.message);
+}
+
 // ─────────────────────────────────────────────
 // Static strings
 // ─────────────────────────────────────────────
@@ -705,6 +712,27 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         await linkSlotToAppointment(cl.id, fd.doctor_id, fd.preferred_date_iso, phone, savedAppt.id);
       }
 
+      // Phase 3 — Google Calendar event (pro clinics only)
+      if (savedAppt && calendarLib && cl.plan === 'pro' && cl.google_calendar_id && cl.config?.features?.google_calendar !== false && fd.preferred_date_iso) {
+        try {
+          const eventId = await calendarLib.createBookingEvent(cl.google_calendar_id, {
+            name:               fd.name,
+            phone:              fd.phone || phone,
+            treatment:          fd.treatment,
+            description:        fd.description || '',
+            doctor_name:        fd.doctor_name || null,
+            preferred_date_iso: fd.preferred_date_iso,
+            time_slot:          fd.time_slot
+          });
+          if (eventId) {
+            await updateAppointment(savedAppt.id, { calendar_event_id: eventId });
+            console.log('[Booking] Calendar event created:', eventId);
+          }
+        } catch (calErr) {
+          console.error('[Booking] Calendar error (non-blocking):', calErr.message);
+        }
+      }
+
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
       // Phase 4: respect staff_notifications feature flag (default on)
       if (cl.staff_phone && cl.config?.features?.staff_notifications !== false) {
@@ -806,12 +834,26 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
   if (step === 3) {
     const confirmed = val === '1' || /^(yes|نعم|تمام|ايوه|موافق)$/i.test(val);
     if (confirmed && fd.appointment_id) {
+      // Derive ISO for new date to persist and for calendar update
+      const newDateISO = getDateISO(fd.new_date) || null;
       await updateAppointment(fd.appointment_id, {
-        preferred_date:    fd.new_date,
-        time_slot:         fd.new_slot,
-        reminder_sent_24h: false,
-        reminder_sent_1h:  false
+        preferred_date:     fd.new_date,
+        preferred_date_iso: newDateISO,
+        time_slot:          fd.new_slot,
+        reminder_sent_24h:  false,
+        reminder_sent_1h:   false
       });
+      // Phase 3 — update Google Calendar event if exists
+      if (calendarLib && fd.calendar_event_id && cl.google_calendar_id && newDateISO) {
+        try {
+          await calendarLib.updateBookingEvent(cl.google_calendar_id, fd.calendar_event_id, {
+            preferred_date_iso: newDateISO,
+            time_slot:          fd.new_slot
+          });
+        } catch (calErr) {
+          console.error('[Reschedule] Calendar update error (non-blocking):', calErr.message);
+        }
+      }
       if (cl.staff_phone) {
         await sendMessage(cl.staff_phone,
           `🔄 Appointment Rescheduled!\n👤 Patient: ${fd.name}\n📱 Phone: ${phone}\n📅 New Date: ${fd.new_date}\n⏰ New Time: ${fd.new_slot}`
@@ -844,6 +886,14 @@ async function handleCancelFlow(phone, rawMsg, lang, ar, step, fd, patient, cl) 
     const confirmed = val === '1' || /^(yes|نعم|تمام|ايوه|موافق)$/i.test(val);
     if (confirmed && fd.appointment_id) {
       await updateAppointment(fd.appointment_id, { status: 'cancelled' });
+      // Phase 3 — delete Google Calendar event if exists
+      if (calendarLib && fd.calendar_event_id && cl.google_calendar_id) {
+        try {
+          await calendarLib.deleteBookingEvent(cl.google_calendar_id, fd.calendar_event_id);
+        } catch (calErr) {
+          console.error('[Cancel] Calendar delete error (non-blocking):', calErr.message);
+        }
+      }
       if (cl.staff_phone) {
         await sendMessage(cl.staff_phone,
           `❌ Appointment Cancelled!\n👤 Patient: ${fd.name}\n📱 Phone: ${phone}\n📅 Date: ${fd.appt_date}\n⏰ Time: ${fd.appt_slot}`
@@ -917,7 +967,7 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
           : 'You have no upcoming appointments to reschedule.'
         );
       }
-      await savePatient(phone, { ...patient, current_flow: 'reschedule', flow_step: 1, flow_data: { appointment_id: appt.id, name: appt.name } });
+      await savePatient(phone, { ...patient, current_flow: 'reschedule', flow_step: 1, flow_data: { appointment_id: appt.id, name: appt.name, calendar_event_id: appt.calendar_event_id || null } });
       return sendMessage(phone, ar
         ? `موعدك الحالي:\n📅 ${appt.preferred_date} الساعة ⏰ ${appt.time_slot}\n\nما هو التاريخ الجديد المفضل لديك؟`
         : `Your current appointment:\n📅 ${appt.preferred_date} at ⏰ ${appt.time_slot}\n\nWhat's your new preferred date?`
@@ -939,7 +989,7 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
           : 'You have no upcoming appointments to cancel.'
         );
       }
-      await savePatient(phone, { ...patient, current_flow: 'cancel', flow_step: 1, flow_data: { appointment_id: appt.id, name: appt.name, appt_date: appt.preferred_date, appt_slot: appt.time_slot } });
+      await savePatient(phone, { ...patient, current_flow: 'cancel', flow_step: 1, flow_data: { appointment_id: appt.id, name: appt.name, appt_date: appt.preferred_date, appt_slot: appt.time_slot, calendar_event_id: appt.calendar_event_id || null } });
       return sendMessage(phone, ar
         ? `هل أنت متأكد من إلغاء موعدك في ${appt.preferred_date} الساعة ${appt.time_slot}؟\n1️⃣ نعم، ألغِ الموعد\n2️⃣ لا، احتفظ بالموعد`
         : `Are you sure you want to cancel your appointment on ${appt.preferred_date} at ${appt.time_slot}?\n1️⃣ Yes, cancel it\n2️⃣ No, keep it`
