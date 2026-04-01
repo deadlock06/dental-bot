@@ -124,18 +124,20 @@ async function saveAppointment(data) {
     const res = await axios.post(
       `${SUPABASE_URL}/rest/v1/appointments`,
       {
-        phone: data.phone,
-        clinic_id: data.clinic_id || null,
-        name: data.name,
-        treatment: data.treatment,
-        description: data.description || '',
-        preferred_date: data.preferred_date,
-        time_slot: data.time_slot,
-        doctor_name: data.doctor_name || null,
-        status: 'confirmed',
-        reminder_sent_24h: false,
-        reminder_sent_1h: false,
-        follow_up_sent: false
+        phone:               data.phone,
+        clinic_id:           data.clinic_id || null,
+        name:                data.name,
+        treatment:           data.treatment,
+        description:         data.description || '',
+        preferred_date:      data.preferred_date,
+        preferred_date_iso:  data.preferred_date_iso || null,
+        time_slot:           data.time_slot,
+        doctor_id:           data.doctor_id || null,
+        doctor_name:         data.doctor_name || null,
+        status:              'confirmed',
+        reminder_sent_24h:   false,
+        reminder_sent_1h:    false,
+        follow_up_sent:      false
       },
       { headers: { ...headers, Prefer: 'return=representation' } }
     );
@@ -143,6 +145,20 @@ async function saveAppointment(data) {
   } catch (err) {
     console.error('saveAppointment error:', err.response?.data || err.message);
     return null;
+  }
+}
+
+// Returns true if the patient already has a confirmed booking on that ISO date
+async function checkDuplicateBooking(phone, isoDate) {
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/appointments?phone=eq.${encodeURIComponent(phone)}&preferred_date_iso=eq.${isoDate}&status=eq.confirmed&limit=1&select=id`,
+      { headers }
+    );
+    return Array.isArray(res.data) && res.data.length > 0;
+  } catch (err) {
+    console.error('checkDuplicateBooking error:', err.message);
+    return false; // non-blocking
   }
 }
 
@@ -171,7 +187,7 @@ async function updateAppointment(id, fields) {
   }
 }
 
-// Get appointments for reminder processing
+// Get appointments for reminder processing (all confirmed, filter in caller)
 async function getAppointmentsForReminder(filterFn) {
   try {
     const res = await axios.get(
@@ -185,8 +201,62 @@ async function getAppointmentsForReminder(filterFn) {
   }
 }
 
+// ─── Typed reminder queries (use preferred_date_iso when available) ───
+
+// 24h reminder: appointments tomorrow
+async function getAppointmentsDueTomorrow() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowISO = tomorrow.toISOString().split('T')[0];
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/appointments?status=eq.confirmed&reminder_sent_24h=eq.false&preferred_date_iso=eq.${tomorrowISO}&select=*`,
+      { headers }
+    );
+    return res.data || [];
+  } catch (err) {
+    console.error('getAppointmentsDueTomorrow error:', err.message);
+    return [];
+  }
+}
+
+// 1h reminder: appointments today (caller filters by time window)
+async function getAppointmentsDueInOneHour() {
+  const todayISO = new Date().toISOString().split('T')[0];
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/appointments?status=eq.confirmed&reminder_sent_1h=eq.false&preferred_date_iso=eq.${todayISO}&select=*`,
+      { headers }
+    );
+    return res.data || [];
+  } catch (err) {
+    console.error('getAppointmentsDueInOneHour error:', err.message);
+    return [];
+  }
+}
+
+// Follow-up: appointments yesterday
+async function getAppointmentsDueFollowUp() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayISO = yesterday.toISOString().split('T')[0];
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/appointments?status=eq.confirmed&follow_up_sent=eq.false&preferred_date_iso=eq.${yesterdayISO}&select=*`,
+      { headers }
+    );
+    return res.data || [];
+  } catch (err) {
+    console.error('getAppointmentsDueFollowUp error:', err.message);
+    return [];
+  }
+}
+
 module.exports = {
   getPatient, insertPatient, savePatient, deletePatient,
   getClinic, getClinicById,
-  saveAppointment, getAppointment, updateAppointment, getAppointmentsForReminder
+  saveAppointment, getAppointment, updateAppointment,
+  checkDuplicateBooking,
+  getAppointmentsForReminder,
+  getAppointmentsDueTomorrow, getAppointmentsDueInOneHour, getAppointmentsDueFollowUp
 };

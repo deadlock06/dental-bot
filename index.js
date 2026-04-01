@@ -99,7 +99,8 @@ app.post('/send-reminders', async (req, res) => {
     console.log(`[Reminders] Processing ${all.length} appointments`);
 
     for (const appt of all) {
-      const apptDateISO = parseDateToISO(appt.preferred_date);
+      // Phase 2: prefer stored ISO column; fall back to parsing the display string
+      const apptDateISO = appt.preferred_date_iso || parseDateToISO(appt.preferred_date);
       if (!apptDateISO) {
         console.log(`[Reminders] Skipping appt ${appt.id} — unparseable date: "${appt.preferred_date}"`);
         continue;

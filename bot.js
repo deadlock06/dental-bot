@@ -1,4 +1,4 @@
-const { getPatient, insertPatient, savePatient, saveAppointment, getAppointment, updateAppointment } = require('./db');
+const { getPatient, insertPatient, savePatient, saveAppointment, getAppointment, updateAppointment, checkDuplicateBooking } = require('./db');
 const { sendMessage } = require('./whatsapp');
 const { detectIntent, extractDate, extractTimeSlot } = require('./ai');
 
@@ -8,12 +8,31 @@ const { detectIntent, extractDate, extractTimeSlot } = require('./ai');
 
 const LANG_SELECT = '🌐 Please choose your language / اختر لغتك:\n1️⃣ English\n2️⃣ العربية';
 
-function menuEN(clinicName) {
-  return `Welcome to ${clinicName}! 🦷✨\nI'm your AI dental assistant, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment\n2️⃣ My appointment\n3️⃣ Reschedule\n4️⃣ Cancel appointment\n5️⃣ Our services\n6️⃣ Meet Our Doctors 👨‍⚕️\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍⚕️ (type 10)\n\nJust tap a number or tell me what you need 😊`;
+// Accept either a plain clinic name string or a full clinic object (for feature flags + custom messages)
+function menuEN(clinicOrName) {
+  const name = typeof clinicOrName === 'string' ? clinicOrName : (clinicOrName?.name || 'Our Clinic');
+  const cfg  = typeof clinicOrName === 'object' ? clinicOrName?.config : null;
+  const welcome       = cfg?.messages?.welcome_en       || `Welcome to ${name}! 🦷✨`;
+  const showReschedule = cfg?.features?.reschedule       !== false;
+  const showCancel     = cfg?.features?.cancel           !== false;
+  let menu = `${welcome}\nI'm your AI dental assistant, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment\n2️⃣ My appointment\n`;
+  if (showReschedule) menu += `3️⃣ Reschedule\n`;
+  if (showCancel)     menu += `4️⃣ Cancel appointment\n`;
+  menu += `5️⃣ Our services\n6️⃣ Meet Our Doctors 👨‍⚕️\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍⚕️ (type 10)\n\nJust tap a number or tell me what you need 😊`;
+  return menu;
 }
 
-function menuAR(clinicName) {
-  return `أهلاً وسهلاً بك في ${clinicName}! 🦷✨\nأنا مساعدك الذكي، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد\n2️⃣ موعدي الحالي\n3️⃣ إعادة جدولة\n4️⃣ إلغاء الموعد\n5️⃣ خدماتنا\n6️⃣ تعرف على أطبائنا 👨‍⚕️\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️ (اكتب 10)\n\nاضغط على رقم أو أخبرني بما تحتاج 😊`;
+function menuAR(clinicOrName) {
+  const name = typeof clinicOrName === 'string' ? clinicOrName : (clinicOrName?.name || 'عيادتنا');
+  const cfg  = typeof clinicOrName === 'object' ? clinicOrName?.config : null;
+  const welcome       = cfg?.messages?.welcome_ar       || `أهلاً وسهلاً بك في ${name}! 🦷✨`;
+  const showReschedule = cfg?.features?.reschedule       !== false;
+  const showCancel     = cfg?.features?.cancel           !== false;
+  let menu = `${welcome}\nأنا مساعدك الذكي، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد\n2️⃣ موعدي الحالي\n`;
+  if (showReschedule) menu += `3️⃣ إعادة جدولة\n`;
+  if (showCancel)     menu += `4️⃣ إلغاء الموعد\n`;
+  menu += `5️⃣ خدماتنا\n6️⃣ تعرف على أطبائنا 👨‍⚕️\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️ (اكتب 10)\n\nاضغط على رقم أو أخبرني بما تحتاج 😊`;
+  return menu;
 }
 
 
@@ -44,11 +63,11 @@ async function handleMessage(phone, text, clinic) {
   if (!patient.language) {
     if (msg === '1' || /^english$/i.test(msg)) {
       await savePatient(phone, { language: 'en', current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMessage(phone, menuEN(cl.name));
+      return sendMessage(phone, menuEN(cl));
     }
     if (msg === '2' || /^(arabic|عربي|العربية)$/i.test(msg)) {
       await savePatient(phone, { language: 'ar', current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMessage(phone, menuAR(cl.name));
+      return sendMessage(phone, menuAR(cl));
     }
     return sendMessage(phone, LANG_SELECT);
   }
@@ -64,11 +83,11 @@ async function handleMessage(phone, text, clinic) {
   const langSwitch = msg.toLowerCase().trim();
   if (/^(english|switch to english|change to english)$/i.test(langSwitch)) {
     await savePatient(phone, { ...patient, language: 'en', current_flow: null, flow_step: 0 });
-    return sendMessage(phone, menuEN(cl.name));
+    return sendMessage(phone, menuEN(cl));
   }
   if (/^(arabic|عربي|عربية|switch to arabic)$/i.test(langSwitch)) {
     await savePatient(phone, { ...patient, language: 'ar', current_flow: null, flow_step: 0 });
-    return sendMessage(phone, menuAR(cl.name));
+    return sendMessage(phone, menuAR(cl));
   }
 
   const ai = await detectIntent(msg, flow, step);
@@ -83,7 +102,7 @@ async function handleMessage(phone, text, clinic) {
   // Greeting always clears any stale flow and shows menu
   if (intent === 'greeting') {
     await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-    return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+    return sendMessage(phone, ar ? menuAR(cl) : menuEN(cl));
   }
 
   // FIX 1 — Slot numbers above 9: bypass AI extraction, pass raw number directly
@@ -236,6 +255,32 @@ function calculateRelativeDate(text) {
   return null;
 }
 
+// Phase 1 — Robust ISO date from any parsed date string.
+// Always returns YYYY-MM-DD with year >= 2026, or null.
+function getDateISO(parsedDate) {
+  if (!parsedDate) return null;
+  try {
+    // Try direct parse — works when year is already present (e.g. "Wednesday, April 3, 2026")
+    const d = new Date(parsedDate);
+    if (!isNaN(d.getTime()) && d.getFullYear() >= 2026) {
+      return d.toISOString().split('T')[0];
+    }
+    // Year missing or wrong — append 2026 and try again
+    const d2 = new Date(parsedDate + ' 2026');
+    if (!isNaN(d2.getTime())) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (d2 >= today) return d2.toISOString().split('T')[0];
+      // Date with 2026 is already past → use 2027
+      const d3 = new Date(parsedDate + ' 2027');
+      if (!isNaN(d3.getTime())) return d3.toISOString().split('T')[0];
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
 // ─────────────────────────────────────────────
 // Treatment mapping
 // ─────────────────────────────────────────────
@@ -299,7 +344,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
   // Exit keywords — only during data-entry steps, not on binary confirm steps
   if (step <= 7 && EXIT_RE.test(rawMsg.trim())) {
     await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-    return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+    return sendMessage(phone, ar ? menuAR(cl) : menuEN(cl));
   }
 
   // Step 1 — Name
@@ -464,22 +509,13 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       }
     }
 
-    fd.preferred_date     = normalizeDate(parsedDate); // BUG 3 — title-case + year
+    // Phase 1 — always derive ISO first (getDateISO guarantees year >= 2026)
+    const isoDate = getDateISO(parsedDate);
+    fd.preferred_date_iso = isoDate;
+    fd.preferred_date     = isoDate
+      ? new Date(isoDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+      : normalizeDate(parsedDate);
     fd.preferred_date_raw = dateInput;
-    // Store ISO for slot lookups
-    try {
-      const { toDateISO } = require('./slots');
-      let isoDate = toDateISO(parsedDate) || null;
-      // FIX 3 — if year < 2026, correct to current year
-      if (isoDate && new Date(isoDate).getFullYear() < 2026) {
-        const parts = isoDate.split('-');
-        isoDate = `2026-${parts[1]}-${parts[2]}`;
-        fd.preferred_date = new Date(isoDate + 'T00:00:00').toLocaleDateString('en-US', {
-          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-        });
-      }
-      fd.preferred_date_iso = isoDate;
-    } catch (e) { fd.preferred_date_iso = null; }
 
     await savePatient(phone, { ...patient, flow_step: 7, flow_data: fd });
     return sendMessage(phone, ar ? '⏳ جاري التحقق من المواعيد المتاحة...' : '⏳ Checking available slots...');
@@ -586,7 +622,42 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       fd.slot_time_key = null;
     }
 
-    fd.slot_time_raw = rawMsg.trim(); // FIX 3 — preserve raw slot input
+    fd.slot_time_raw = rawMsg.trim();
+
+    // ─── Phase 5: Booking validation rules ──────────────────────────
+    if (fd.preferred_date_iso) {
+      const minHours = cl.config?.booking_rules?.min_advance_hours ?? 1;
+      const maxDays  = cl.config?.booking_rules?.max_advance_days  ?? 30;
+      const slotHHMM = fd.slot_time_key || '09:00';
+      const bookingDT = new Date(`${fd.preferred_date_iso}T${slotHHMM}:00`);
+      const now = new Date();
+      const hoursUntil = (bookingDT - now) / 3600000;
+      const daysUntil  = (bookingDT - now) / 86400000;
+
+      if (hoursUntil < minHours) {
+        return sendMessage(phone, ar
+          ? `يجب الحجز قبل ${minHours} ساعة على الأقل. يرجى اختيار وقت آخر.`
+          : `Bookings must be made at least ${minHours} hour(s) in advance. Please choose another time.`
+        );
+      }
+      if (daysUntil > maxDays) {
+        await savePatient(phone, { ...patient, flow_step: 6, flow_data: { ...fd, available_slots_shown: false } });
+        return sendMessage(phone, ar
+          ? `لا يمكن الحجز أكثر من ${maxDays} يوماً مسبقاً. يرجى اختيار تاريخ أقرب:`
+          : `Cannot book more than ${maxDays} days in advance. Please choose a closer date:`
+        );
+      }
+
+      const isDuplicate = await checkDuplicateBooking(phone, fd.preferred_date_iso);
+      if (isDuplicate) {
+        return sendMessage(phone, ar
+          ? 'لديك موعد محجوز في هذا اليوم بالفعل. هل تريد إعادة الجدولة؟\n3️⃣ إعادة جدولة\n0️⃣ القائمة الرئيسية'
+          : 'You already have a booking on this date. Would you like to reschedule?\n3️⃣ Reschedule\n0️⃣ Main menu'
+        );
+      }
+    }
+    // ────────────────────────────────────────────────────────────────
+
     await savePatient(phone, { ...patient, flow_step: 8, flow_data: fd });
     return sendMessage(phone, bookingSummaryMsg(ar, fd, phone, cl));
   }
@@ -612,20 +683,20 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         }
       }
 
-      // FIX 3 — verify all fields present before saving
       console.log('[Booking] Saving fd:', JSON.stringify(fd));
       const savedAppt = await saveAppointment({
-        phone:             fd.phone || phone,
-        clinic_id:         cl.id || null,
-        name:              fd.name,
-        treatment:         fd.treatment,
-        description:       fd.description,
-        preferred_date:    fd.preferred_date,
+        phone:              fd.phone || phone,
+        clinic_id:          cl.id || null,
+        name:               fd.name,
+        treatment:          fd.treatment,
+        description:        fd.description,
+        preferred_date:     fd.preferred_date,
+        preferred_date_iso: fd.preferred_date_iso || null,
         preferred_date_raw: fd.preferred_date_raw || null,
-        time_slot:         fd.time_slot,
-        slot_time_raw:     fd.slot_time_raw || null,
-        doctor_id:         fd.doctor_id || null,
-        doctor_name:       fd.doctor_name || null
+        time_slot:          fd.time_slot,
+        slot_time_raw:      fd.slot_time_raw || null,
+        doctor_id:          fd.doctor_id || null,
+        doctor_name:        fd.doctor_name || null
       });
 
       // Link slot to appointment if both IDs are available
@@ -635,8 +706,9 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       }
 
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-      if (cl.staff_phone) {
-        // FIX 5 — staff alert always in English regardless of patient language
+      // Phase 4: respect staff_notifications feature flag (default on)
+      if (cl.staff_phone && cl.config?.features?.staff_notifications !== false) {
+        // staff alert always in English regardless of patient language
         const STAFF_AR = ['9:00 صباحاً','9:30 صباحاً','10:00 صباحاً','10:30 صباحاً','11:00 صباحاً','11:30 صباحاً','12:00 مساءً','12:30 مساءً','2:00 مساءً','2:30 مساءً','3:00 مساءً','3:30 مساءً','4:00 مساءً','4:30 مساءً'];
         const STAFF_EN = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','12:30 PM','2:00 PM','2:30 PM','3:00 PM','3:30 PM','4:00 PM','4:30 PM'];
         const arIdx = STAFF_AR.indexOf(fd.time_slot);
@@ -652,7 +724,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       );
     } else if (denied) {
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+      return sendMessage(phone, ar ? menuAR(cl) : menuEN(cl));
     } else {
       // Unrecognised input — re-show summary
       return sendMessage(phone, bookingSummaryMsg(ar, fd, phone, cl));
@@ -694,17 +766,13 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
       }
     }
     if (!parsedDate) parsedDate = dateInput;
-    // FIX 3 — if year < 2026, correct to current year
-    try {
-      const { toDateISO: toISO } = require('./slots');
-      const isoCheck = toISO(parsedDate);
-      if (isoCheck && new Date(isoCheck).getFullYear() < 2026) {
-        const parts = isoCheck.split('-');
-        parsedDate = new Date(`2026-${parts[1]}-${parts[2]}T00:00:00`).toLocaleDateString('en-US', {
-          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-        });
-      }
-    } catch (e) { /* ignore */ }
+    // Phase 1 — normalise year using getDateISO
+    const reschedISO = getDateISO(parsedDate);
+    if (reschedISO) {
+      parsedDate = new Date(reschedISO + 'T00:00:00').toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+    }
 
     console.log(`[RescheduleStep1] date input="${dateInput}" parsed="${parsedDate}"`);
     fd.new_date = parsedDate;
@@ -756,13 +824,13 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
       );
     } else {
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+      return sendMessage(phone, ar ? menuAR(cl) : menuEN(cl));
     }
   }
   } catch (err) {
     console.error('[Reschedule] Error:', err.message);
     await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-    return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+    return sendMessage(phone, ar ? menuAR(cl) : menuEN(cl));
   }
 }
 
@@ -811,7 +879,7 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
 
   switch (resolvedIntent) {
     case 'greeting':
-      return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+      return sendMessage(phone, ar ? menuAR(cl) : menuEN(cl));
 
     case 'booking':
       await savePatient(phone, { ...patient, current_flow: 'booking', flow_step: 1, flow_data: {} });
@@ -835,6 +903,13 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
     }
 
     case 'reschedule': {
+      // Phase 4: feature flag
+      if (cl.config?.features?.reschedule === false) {
+        return sendMessage(phone, ar
+          ? 'خاصية إعادة الجدولة غير متاحة حالياً. يرجى التواصل مع الفريق.'
+          : 'Rescheduling is not available right now. Please contact our staff.'
+        );
+      }
       const appt = await getAppointment(phone);
       if (!appt) {
         return sendMessage(phone, ar
@@ -850,6 +925,13 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
     }
 
     case 'cancel': {
+      // Phase 4: feature flag
+      if (cl.config?.features?.cancel === false) {
+        return sendMessage(phone, ar
+          ? 'خاصية الإلغاء غير متاحة حالياً. يرجى التواصل مع الفريق.'
+          : 'Cancellations are not available right now. Please contact our staff.'
+        );
+      }
       const appt = await getAppointment(phone);
       if (!appt) {
         return sendMessage(phone, ar
@@ -884,8 +966,8 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
 
     default:
       return sendMessage(phone, ar
-        ? `لم أفهم تماماً 😊 إليك ما يمكنني مساعدتك به:\n\n${menuAR(cl.name)}`
-        : `I'm not sure I understood that 😊 Here's what I can help you with:\n\n${menuEN(cl.name)}`
+        ? `لم أفهم تماماً 😊 إليك ما يمكنني مساعدتك به:\n\n${menuAR(cl)}`
+        : `I'm not sure I understood that 😊 Here's what I can help you with:\n\n${menuEN(cl)}`
       );
   }
 }
