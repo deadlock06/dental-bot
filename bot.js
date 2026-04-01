@@ -1150,11 +1150,11 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
     case 'reviews':
       return sendMessage(phone, reviewMsg(ar, cl));
 
-    case 'human':
-      return sendMessage(phone, staffMsg(ar));
-
     case 'help':
       return sendMessage(phone, ar ? helpMsgAR(cl) : helpMsgEN(cl));
+
+    case 'human':
+      return sendMessage(phone, staffMsg(ar));
 
     default:
       return sendMessage(phone, ar

@@ -118,13 +118,19 @@ EN: hi, hello, hey, good morning, good evening, good afternoon, good night,
 AR: هلا، مرحبا، السلام عليكم، وعليكم السلام، أهلا، صباح الخير، مساء الخير،
     هلا والله، كيف الحال، هاي، هلو، يو، مساء النور، صباح النور، حياك، هلا فيك، الله يسلمك
 
+help:
+EN: help, what can you do, options, commands, what are your options, show menu
+AR: مساعدة, خيارات, ماذا تفعل, كيف تساعدني, ايش تسوي
+NOTE: "help" alone → always return intent: help (NOT human)
+
 RULES:
 1. Return ONLY valid JSON — no extra text, no markdown
-2. If message mentions pain, toothache, dental problem, or wanting to come → booking
-3. If message mentions a specific treatment name → booking
-4. For ANY price/cost/how much question → prices
-5. For ANY location/address/directions question → location
-6. For ANY staff/human/talk to someone request → human
+2. If message is exactly "help", "options", "مساعدة", "خيارات" → help (NOT human)
+3. If message mentions pain, toothache, dental problem, or wanting to come → booking
+4. If message mentions a specific treatment name → booking
+5. For ANY price/cost/how much question → prices
+6. For ANY location/address/directions question → location
+7. For ANY staff/human/talk to someone request → human
 7. Detect language FROM the message itself, not from stored preference
 8. For mixed language (Arabizi like "ana abga maw3id") → Arabic booking
 9. If exact menu text is sent ("Our services", "خدماتنا", etc.) → detect exact intent
@@ -180,6 +186,10 @@ async function detectIntent(messageText, currentFlow = null, currentStep = 0) {
 // Keyword fallback when OpenAI is unavailable
 function keywordFallback(text, currentFlow = null) {
   const t = text.toLowerCase().trim();
+
+  // ── HELP — must be first, before human check (word "help" also triggers human regex)
+  if (/^(help|what can you do|options|commands|مساعدة|خيارات|ماذا تفعل|كيف تساعدني)$/i.test(t))
+    return { intent: 'help', detected_language: t.match(/[\u0600-\u06FF]/) ? 'ar' : 'en', extracted_value: null, confidence: 'high' };
 
   // ── Exact menu option text (copy-paste) — checked first
   if (t === 'book appointment' || t === 'book an appointment')
@@ -262,9 +272,6 @@ function keywordFallback(text, currentFlow = null) {
     return { intent: 'my_appointment', detected_language: 'ar', extracted_value: null, confidence: 'low' };
   if (/هلا والله|كيف الحال|مساء النور|صباح النور|حياك|هلا فيك|الله يسلمك|هلا|مرحبا|السلام|أهلا|صباح|مساء/.test(t))
     return { intent: 'greeting', detected_language: 'ar', extracted_value: null, confidence: 'low' };
-
-  if (/^(help|what can you do|options|commands|مساعدة|خيارات|ماذا تفعل)$/i.test(t))
-    return { intent: 'help', detected_language: t.match(/[\u0600-\u06FF]/) ? 'ar' : 'en', extracted_value: null, confidence: 'high' };
 
   // If mid-flow and no keyword matched an intent switch → it's a flow input
   if (currentFlow) {
