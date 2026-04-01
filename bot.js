@@ -179,6 +179,34 @@ const EXIT_RE = /^(0|menu|main menu|back|go back|start over|cancel|stop|exit|qui
 // ─────────────────────────────────────────────
 // Date helpers
 // ─────────────────────────────────────────────
+
+// BUG 2 — resolve "next monday" / bare weekday to actual date
+function getNextWeekday(dayName) {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const target = days.findIndex(d => d.toLowerCase() === dayName.toLowerCase());
+  if (target === -1) return null;
+  const today = new Date();
+  let diff = target - today.getDay();
+  if (diff <= 0) diff += 7;
+  const result = new Date(today.getTime() + diff * 86400000);
+  return result.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+// BUG 3 — normalize raw date strings to readable title-case + year
+function normalizeDate(dateStr) {
+  if (!dateStr) return dateStr;
+  // ISO format (2026-04-04) → readable
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+  }
+  // Already fully formatted (has year as 4-digit number)
+  if (/\b20\d{2}\b/.test(dateStr)) return dateStr;
+  // Looks like "april 4" or "4 april" → title-case and append year
+  return dateStr.replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function calculateRelativeDate(text) {
   const t = text.toLowerCase().trim();
   const now = new Date();
@@ -190,6 +218,12 @@ function calculateRelativeDate(text) {
   const afterDaysMatch = t.match(/(?:after|in|بعد|في)\s+(\d+)\s+(?:days?|أيام?|يوم)/i);
   if (afterDaysMatch)
     return fmt(new Date(now.getTime() + parseInt(afterDaysMatch[1]) * 86400000));
+
+  // BUG 2 — "next monday" / bare weekday name
+  const nextWeekdayMatch = t.match(/next\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i);
+  if (nextWeekdayMatch) return getNextWeekday(nextWeekdayMatch[1]);
+  if (/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/i.test(t))
+    return getNextWeekday(t);
 
   if (/next week|الأسبوع الجاي|بعد أسبوع/i.test(t))
     return fmt(new Date(now.getTime() + 7 * 86400000));
@@ -429,8 +463,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       }
     }
 
-    fd.preferred_date     = parsedDate;
-    fd.preferred_date_raw = dateInput; // FIX 3 — preserve raw input
+    fd.preferred_date     = normalizeDate(parsedDate); // BUG 3 — title-case + year
+    fd.preferred_date_raw = dateInput;
     // Store ISO for slot lookups
     try {
       const { toDateISO } = require('./slots');
@@ -471,18 +505,16 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       }
 
       // Build numbered slot list
-      let slotLines, slotKeys;
+      let slotLines, slotKeys, slotDisplays;
       if (slots.length > 0) {
-        slotKeys  = slots.map(s => s.slot_time);
-        slotLines = slots.map((s, i) =>
-          ar ? `${i + 1}️⃣ ${s.slot_time_display_ar}` : `${i + 1}️⃣ ${s.slot_time_display}`
-        );
+        slotKeys     = slots.map(s => s.slot_time);
+        slotDisplays = slots.map(s => ar ? s.slot_time_display_ar : s.slot_time_display); // BUG 1
+        slotLines    = slotDisplays.map((d, i) => `${i + 1}️⃣ ${d}`);
       } else {
         // No doctor selected — use generic fixed slots
-        slotKeys  = EN_SLOTS.map((_, i) => String(i + 1));
-        slotLines = ar
-          ? AR_SLOTS.map((s, i) => `${i + 1}️⃣ ${s}`)
-          : EN_SLOTS.map((s, i) => `${i + 1}️⃣ ${s}`);
+        slotKeys     = EN_SLOTS.map((_, i) => String(i + 1));
+        slotDisplays = ar ? AR_SLOTS : EN_SLOTS; // BUG 1
+        slotLines    = slotDisplays.map((s, i) => `${i + 1}️⃣ ${s}`);
       }
 
       const doctorLabel = fd.doctor_name
@@ -490,12 +522,14 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         : '';
       fd.available_slots_shown = true;
       fd.slot_keys             = slotKeys;
+      fd.slot_displays         = slotDisplays; // BUG 1 — store formatted labels for fallback
       await savePatient(phone, { ...patient, flow_step: 7, flow_data: fd });
 
       const header7 = ar
         ? `المواعيد المتاحة ${doctorLabel} في ${fd.preferred_date}:`
         : `Available times ${doctorLabel} on ${fd.preferred_date}:`;
-      return sendMessage(phone, `${header7}\n\n${slotLines.join('\n')}\n\n0️⃣ ${ar ? 'القائمة الرئيسية' : 'Main menu'}`);
+      const instruction7 = ar ? '\nأرسل رقم الموعد المناسب لك ⬆️' : '\nReply with a number to select your preferred time ⬆️'; // BUG 4
+      return sendMessage(phone, `${header7}\n\n${slotLines.join('\n')}${instruction7}\n\n0️⃣ ${ar ? 'القائمة الرئيسية' : 'Main menu'}`);
     }
 
     // 7b — Patient is selecting a slot
@@ -527,11 +561,13 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       // Try natural language → extractTimeSlot
       const matched = await extractTimeSlot(rawMsg, EN_SLOTS);
       if (!matched) {
-        // Re-show slot list
-        const slotLines2 = (fd.slot_keys || []).map((k, i) => `${i + 1}️⃣ ${k}`);
+        // Re-show slot list using formatted display labels (BUG 1 — not raw slot_time)
+        const displays2 = fd.slot_displays || fd.slot_keys || [];
+        const slotLines2 = displays2.map((d, i) => `${i + 1}️⃣ ${d}`);
+        const instruction2 = ar ? '\nأرسل رقم الموعد المناسب لك ⬆️' : '\nReply with a number to select your preferred time ⬆️';
         return sendMessage(phone, ar
-          ? `هذا الوقت غير متاح 😊 يرجى الاختيار من المواعيد المتاحة:\n\n${slotLines2.join('\n')}\n\n0️⃣ القائمة الرئيسية`
-          : `That time isn't available 😊 Please choose from the available slots:\n\n${slotLines2.join('\n')}\n\n0️⃣ Main menu`
+          ? `هذا الوقت غير متاح 😊 يرجى الاختيار من المواعيد المتاحة:\n\n${slotLines2.join('\n')}${instruction2}\n\n0️⃣ القائمة الرئيسية`
+          : `That time isn't available 😊 Please choose from the available slots:\n\n${slotLines2.join('\n')}${instruction2}\n\n0️⃣ Main menu`
         );
       }
       // Bug 3 fix: store correct language format
