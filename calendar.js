@@ -4,15 +4,26 @@ const TIMEZONE = 'Asia/Riyadh';
 const DURATION_MINS = 30;
 
 function getCalendarClient() {
-  if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+  const email = process.env.GOOGLE_CLIENT_EMAIL;
+  let privateKey = process.env.GOOGLE_PRIVATE_KEY;
+
+  if (!email || !privateKey) {
     throw new Error('Google Calendar credentials not configured');
   }
-  const auth = new google.auth.JWT(
-    process.env.GOOGLE_CLIENT_EMAIL,
-    null,
-    process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-    ['https://www.googleapis.com/auth/calendar']
-  );
+
+  // Render stores \n as literal backslash-n — convert to real newlines
+  privateKey = privateKey.replace(/\\n/g, '\n').trim();
+
+  console.log('[Calendar] Email:', email.substring(0, 40));
+  console.log('[Calendar] Key starts with:', privateKey.substring(0, 30));
+  console.log('[Calendar] Key has newlines:', privateKey.includes('\n'));
+
+  const auth = new google.auth.JWT({
+    email:  email,
+    key:    privateKey,
+    scopes: ['https://www.googleapis.com/auth/calendar']
+  });
+
   return google.calendar({ version: 'v3', auth });
 }
 
@@ -53,10 +64,6 @@ async function isSlotAvailable(calendarId, dateISO, startTime, durationMins = DU
 
 // Creates a calendar event and returns the event ID (or null on failure)
 async function createBookingEvent(calendarId, appointment) {
-  console.log('[Calendar] GOOGLE_CLIENT_EMAIL:', !!process.env.GOOGLE_CLIENT_EMAIL);
-  console.log('[Calendar] GOOGLE_PRIVATE_KEY:', !!process.env.GOOGLE_PRIVATE_KEY);
-  console.log('[Calendar] GOOGLE_CALENDAR_ID:', !!process.env.GOOGLE_CALENDAR_ID);
-  console.log('[Calendar] Key email starts:', process.env.GOOGLE_CLIENT_EMAIL ? process.env.GOOGLE_CLIENT_EMAIL.substring(0, 20) : 'MISSING');
   try {
     const cal  = getCalendarClient();
     const hhmm = parseSlotToHHMM(appointment.time_slot);
@@ -134,4 +141,15 @@ async function updateBookingEvent(calendarId, eventId, newDetails) {
   }
 }
 
-module.exports = { isSlotAvailable, createBookingEvent, deleteBookingEvent, updateBookingEvent };
+// Startup connectivity test — call once after server starts
+async function testCalendarConnection() {
+  try {
+    const cal = getCalendarClient();
+    await cal.calendars.get({ calendarId: process.env.GOOGLE_CALENDAR_ID });
+    console.log('[Calendar] ✅ Connection successful');
+  } catch (e) {
+    console.error('[Calendar] ❌ Connection failed:', e.message);
+  }
+}
+
+module.exports = { isSlotAvailable, createBookingEvent, deleteBookingEvent, updateBookingEvent, testCalendarConnection };
