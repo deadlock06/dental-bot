@@ -288,6 +288,39 @@ function getDateISO(parsedDate) {
   }
 }
 
+// FIX 2 — Slot number formatting (emoji for 1-9, plain number for 10+)
+function formatSlotNumber(i) {
+  const emojiNums = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣'];
+  if (i < 9) return emojiNums[i];
+  return `${i + 1}.`;
+}
+
+// FIX 3 — Get next N days the doctor works, starting from tomorrow
+function getNextAvailableDays(workingDays, count) {
+  const days     = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const daysAR   = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const monthsEN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthsAR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const result = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const checkDate = new Date(today);
+  checkDate.setDate(checkDate.getDate() + 1); // start from tomorrow
+  let guard = 0;
+  while (result.length < count && guard++ < 60) {
+    const dayName = days[checkDate.getDay()];
+    if (workingDays.includes(dayName)) {
+      result.push({
+        iso:       checkDate.toISOString().split('T')[0],
+        displayEN: `${dayName}, ${monthsEN[checkDate.getMonth()]} ${checkDate.getDate()}`,
+        displayAR: `${daysAR[checkDate.getDay()]}، ${checkDate.getDate()} ${monthsAR[checkDate.getMonth()]}`
+      });
+    }
+    checkDate.setDate(checkDate.getDate() + 1);
+  }
+  return result;
+}
+
 // ─────────────────────────────────────────────
 // Treatment mapping
 // ─────────────────────────────────────────────
@@ -441,6 +474,29 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       // Free-text or unrecognised — re-show doctor menu
       return sendMessage(phone, doctorSelectionMsg(ar, doctors));
     }
+    // FIX 3 — If doctor selected, fetch working days and suggest next available dates
+    if (fd.doctor_id && cl.id) {
+      try {
+        const { getDoctorSchedule } = require('./slots');
+        const schedule = await getDoctorSchedule(cl.id, fd.doctor_id);
+        if (schedule && Array.isArray(schedule.working_days) && schedule.working_days.length > 0) {
+          const suggestions = getNextAvailableDays(schedule.working_days, 4);
+          if (suggestions.length > 0) {
+            fd.suggested_dates = suggestions;
+            await savePatient(phone, { ...patient, flow_step: 6, flow_data: fd });
+            const docLabel  = ar ? `د. ${fd.doctor_name}` : `Dr. ${fd.doctor_name}`;
+            const dateLines = suggestions.map((d, i) => `${formatSlotNumber(i)} ${ar ? d.displayAR : d.displayEN}`).join('\n');
+            return sendMessage(phone, ar
+              ? `متى تفضل موعدك؟ 📅\n\n${docLabel} متاح في:\n${dateLines}\n\nأو اكتب أي تاريخ آخر 😊\n0️⃣ القائمة الرئيسية`
+              : `When would you like your appointment? 📅\n\n${docLabel} is available on:\n${dateLines}\n\nOr type any other date 😊\n0️⃣ Main menu`
+            );
+          }
+        }
+      } catch (e) {
+        console.error('[Step5] getDoctorSchedule error:', e.message);
+      }
+    }
+
     await savePatient(phone, { ...patient, flow_step: 6, flow_data: fd });
     return sendMessage(phone, ar
       ? 'متى تفضل موعدك؟ 📅\nيمكنك قول:\n• غداً\n• الاثنين الجاي\n• 20 أبريل\n• أي تاريخ محدد\n\n0️⃣ القائمة الرئيسية'
@@ -452,80 +508,126 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
   if (step === 6) {
     const dateInput = rawMsg.trim();
 
-    // Reject empty or single-char
-    if (dateInput.length < 2) {
-      return sendMessage(phone, ar
-        ? 'يرجى إدخال تاريخ مثل: غداً، الاثنين، أو 20 أبريل 😊\n\n0️⃣ القائمة الرئيسية'
-        : 'Please enter a date like: tomorrow, Monday, or April 20 😊\n\n0️⃣ Main menu'
-      );
-    }
-
-    // 1) Fast local relative date calculation
-    let parsedDate = calculateRelativeDate(dateInput);
-    // 2) AI fallback for everything else
-    if (!parsedDate) {
-      try {
-        const aiDate = await extractDate(dateInput);
-        if (aiDate && aiDate.length > 2 && aiDate !== 'null') {
-          parsedDate = aiDate;
-        }
-      } catch (e) {
-        console.error('[Step6] extractDate error:', e.message);
+    // FIX 3 — Handle suggested date number selection (1-N from step 5 doctor suggestions)
+    let parsedDate = null;
+    if (fd.suggested_dates && fd.suggested_dates.length > 0) {
+      const n = parseInt(dateInput);
+      if (!isNaN(n) && n >= 1 && n <= fd.suggested_dates.length) {
+        parsedDate = fd.suggested_dates[n - 1].iso;
       }
     }
 
-    // Bug 2 fix — if still no parsed date, check if input looks like a date attempt
-    if (!parsedDate || parsedDate === dateInput) {
-      const looksLikeDate = /\d|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december|tomorrow|tmrw|next|غداً|بكرة|الاثنين|الثلاثاء|الأربعاء|الخميس|الجمعة|السبت|الأحد|يناير|فبراير|مارس|أبريل|مايو|يونيو|يوليو|أغسطس|سبتمبر|أكتوبر|نوفمبر|ديسمبر|الأسبوع/i.test(dateInput);
-      if (!looksLikeDate) {
-        // Looks like a booking phrase or random text — re-ask, don't save garbage
+    if (!parsedDate) {
+      // Reject empty or single-char
+      if (dateInput.length < 2) {
         return sendMessage(phone, ar
-          ? 'يرجى إدخال تاريخ الموعد 😊 مثال: غداً، 20 أبريل، الاثنين الجاي\n\n0️⃣ القائمة الرئيسية'
-          : 'Please enter a date for your appointment 😊 Example: tomorrow, April 20, next Monday\n\n0️⃣ Main menu'
+          ? 'يرجى إدخال تاريخ مثل: غداً، الاثنين، أو 20 أبريل 😊\n\n0️⃣ القائمة الرئيسية'
+          : 'Please enter a date like: tomorrow, Monday, or April 20 😊\n\n0️⃣ Main menu'
         );
       }
-      // Looks like a date attempt — save as-is
-      if (!parsedDate) parsedDate = dateInput;
+
+      // 1) Fast local relative date calculation
+      parsedDate = calculateRelativeDate(dateInput);
+      // 2) AI fallback for everything else
+      if (!parsedDate) {
+        try {
+          const aiDate = await extractDate(dateInput);
+          if (aiDate && aiDate.length > 2 && aiDate !== 'null') {
+            parsedDate = aiDate;
+          }
+        } catch (e) {
+          console.error('[Step6] extractDate error:', e.message);
+        }
+      }
+
+      // Bug 2 fix — if still no parsed date, check if input looks like a date attempt
+      if (!parsedDate || parsedDate === dateInput) {
+        const looksLikeDate = /\d|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december|tomorrow|tmrw|next|غداً|بكرة|الاثنين|الثلاثاء|الأربعاء|الخميس|الجمعة|السبت|الأحد|يناير|فبراير|مارس|أبريل|مايو|يونيو|يوليو|أغسطس|سبتمبر|أكتوبر|نوفمبر|ديسمبر|الأسبوع/i.test(dateInput);
+        if (!looksLikeDate) {
+          return sendMessage(phone, ar
+            ? 'يرجى إدخال تاريخ الموعد 😊 مثال: غداً، 20 أبريل، الاثنين الجاي\n\n0️⃣ القائمة الرئيسية'
+            : 'Please enter a date for your appointment 😊 Example: tomorrow, April 20, next Monday\n\n0️⃣ Main menu'
+          );
+        }
+        if (!parsedDate) parsedDate = dateInput;
+      }
     }
 
     console.log(`[Step6] date input="${dateInput}" parsed="${parsedDate}"`);
 
+    // Phase 1 — derive ISO (getDateISO guarantees year >= 2026)
+    const isoDate = getDateISO(parsedDate);
+
     // Doctor schedule validation — check if doctor works on the selected day
-    if (fd.doctor_id && cl.id) {
+    if (fd.doctor_id && cl.id && isoDate) {
       try {
-        const { getDoctorSchedule, toDateISO, getDayName } = require('./slots');
-        const isoDate = toDateISO(parsedDate);
-        if (isoDate) {
-          const schedule = await getDoctorSchedule(cl.id, fd.doctor_id);
-          if (schedule && schedule.working_days) {
-            const dayName = getDayName(isoDate);
-            if (!schedule.working_days.includes(dayName)) {
-              const workDays = Array.isArray(schedule.working_days)
-                ? schedule.working_days.join(', ')
-                : schedule.working_days;
-              return sendMessage(phone, ar
-                ? `د. ${fd.doctor_name} غير متاح في هذا اليوم. يعمل في: ${workDays}. يرجى اختيار تاريخ آخر:\n\n0️⃣ القائمة الرئيسية`
-                : `Dr. ${fd.doctor_name} is not available on ${dayName}. They work on: ${workDays}. Please choose another date:\n\n0️⃣ Main menu`
-              );
-            }
+        const { getDoctorSchedule, getDayName } = require('./slots');
+        const schedule = await getDoctorSchedule(cl.id, fd.doctor_id);
+        if (schedule && schedule.working_days) {
+          const dayName = getDayName(isoDate);
+          if (!schedule.working_days.includes(dayName)) {
+            const workDays = Array.isArray(schedule.working_days)
+              ? schedule.working_days.join(', ')
+              : schedule.working_days;
+            return sendMessage(phone, ar
+              ? `د. ${fd.doctor_name} غير متاح في هذا اليوم. يعمل في: ${workDays}. يرجى اختيار تاريخ آخر:\n\n0️⃣ القائمة الرئيسية`
+              : `Dr. ${fd.doctor_name} is not available on ${dayName}. They work on: ${workDays}. Please choose another date:\n\n0️⃣ Main menu`
+            );
           }
         }
       } catch (e) {
         console.error('[Step6] schedule check error:', e.message);
-        // Non-blocking — proceed if schedule check fails
       }
     }
 
-    // Phase 1 — always derive ISO first (getDateISO guarantees year >= 2026)
-    const isoDate = getDateISO(parsedDate);
     fd.preferred_date_iso = isoDate;
     fd.preferred_date     = isoDate
       ? new Date(isoDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
       : normalizeDate(parsedDate);
     fd.preferred_date_raw = dateInput;
 
+    // FIX 1 — Fetch slots and show directly (no intermediate "Checking" message)
+    let slotsForDisplay = [];
+    if (fd.doctor_id && isoDate && cl.id) {
+      const { getAvailableSlots } = require('./slots');
+      try {
+        slotsForDisplay = await getAvailableSlots(cl.id, fd.doctor_id, isoDate);
+      } catch (e) {
+        console.error('[Step6] getAvailableSlots error:', e.message);
+      }
+      if (slotsForDisplay.length === 0) {
+        return sendMessage(phone, ar
+          ? `لا توجد مواعيد متاحة في ${fd.preferred_date} مع د. ${fd.doctor_name}. يرجى اختيار تاريخ آخر:\n\n0️⃣ القائمة الرئيسية`
+          : `No slots available on ${fd.preferred_date} for Dr. ${fd.doctor_name}. Please choose another date:\n\n0️⃣ Main menu`
+        );
+      }
+    }
+
+    // Build slot list (FIX 2 — formatSlotNumber)
+    let slotKeys, slotDisplays, slotLines;
+    if (slotsForDisplay.length > 0) {
+      slotKeys     = slotsForDisplay.map(s => s.slot_time);
+      slotDisplays = slotsForDisplay.map(s => ar ? s.slot_time_display_ar : s.slot_time_display);
+      slotLines    = slotDisplays.map((d, i) => `${formatSlotNumber(i)} ${d}`);
+    } else {
+      slotKeys     = EN_SLOTS.map((_, i) => String(i + 1));
+      slotDisplays = ar ? AR_SLOTS : EN_SLOTS;
+      slotLines    = slotDisplays.map((s, i) => `${formatSlotNumber(i)} ${s}`);
+    }
+
+    const doctorLabel6 = fd.doctor_name
+      ? (ar ? `مع د. ${fd.doctor_name}` : `with Dr. ${fd.doctor_name}`)
+      : '';
+    fd.available_slots_shown = true;
+    fd.slot_keys             = slotKeys;
+    fd.slot_displays         = slotDisplays;
     await savePatient(phone, { ...patient, flow_step: 7, flow_data: fd });
-    return sendMessage(phone, ar ? '⏳ جاري التحقق من المواعيد المتاحة...' : '⏳ Checking available slots...');
+
+    const header6      = ar
+      ? `المواعيد المتاحة ${doctorLabel6} في ${fd.preferred_date}:`
+      : `Available times ${doctorLabel6} on ${fd.preferred_date}:`;
+    const instruction6 = ar ? '\nأرسل رقم الموعد المناسب لك ⬆️' : '\nReply with a number to select your preferred time ⬆️';
+    return sendMessage(phone, `${header6}\n\n${slotLines.join('\n')}${instruction6}\n\n0️⃣ ${ar ? 'القائمة الرئيسية' : 'Main menu'}`);
   }
 
   // Step 7 — Dynamic time slots (based on doctor + date)
@@ -562,12 +664,12 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       if (slots.length > 0) {
         slotKeys     = slots.map(s => s.slot_time);
         slotDisplays = slots.map(s => ar ? s.slot_time_display_ar : s.slot_time_display); // BUG 1
-        slotLines    = slotDisplays.map((d, i) => `${i + 1}️⃣ ${d}`);
+        slotLines    = slotDisplays.map((d, i) => `${formatSlotNumber(i)} ${d}`);
       } else {
         // No doctor selected — use generic fixed slots
         slotKeys     = EN_SLOTS.map((_, i) => String(i + 1));
         slotDisplays = ar ? AR_SLOTS : EN_SLOTS; // BUG 1
-        slotLines    = slotDisplays.map((s, i) => `${i + 1}️⃣ ${s}`);
+        slotLines    = slotDisplays.map((s, i) => `${formatSlotNumber(i)} ${s}`);
       }
 
       const doctorLabel = fd.doctor_name
@@ -616,7 +718,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       if (!matched) {
         // Re-show slot list using formatted display labels (BUG 1 — not raw slot_time)
         const displays2 = fd.slot_displays || fd.slot_keys || [];
-        const slotLines2 = displays2.map((d, i) => `${i + 1}️⃣ ${d}`);
+        const slotLines2 = displays2.map((d, i) => `${formatSlotNumber(i)} ${d}`);
         const instruction2 = ar ? '\nأرسل رقم الموعد المناسب لك ⬆️' : '\nReply with a number to select your preferred time ⬆️';
         return sendMessage(phone, ar
           ? `هذا الوقت غير متاح 😊 يرجى الاختيار من المواعيد المتاحة:\n\n${slotLines2.join('\n')}${instruction2}\n\n0️⃣ القائمة الرئيسية`
