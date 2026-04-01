@@ -53,6 +53,10 @@ async function isSlotAvailable(calendarId, dateISO, startTime, durationMins = DU
 
 // Creates a calendar event and returns the event ID (or null on failure)
 async function createBookingEvent(calendarId, appointment) {
+  console.log('[Calendar] GOOGLE_CLIENT_EMAIL:', !!process.env.GOOGLE_CLIENT_EMAIL);
+  console.log('[Calendar] GOOGLE_PRIVATE_KEY:', !!process.env.GOOGLE_PRIVATE_KEY);
+  console.log('[Calendar] GOOGLE_CALENDAR_ID:', !!process.env.GOOGLE_CALENDAR_ID);
+  console.log('[Calendar] Key email starts:', process.env.GOOGLE_CLIENT_EMAIL ? process.env.GOOGLE_CLIENT_EMAIL.substring(0, 20) : 'MISSING');
   try {
     const cal  = getCalendarClient();
     const hhmm = parseSlotToHHMM(appointment.time_slot);
