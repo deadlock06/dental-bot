@@ -263,6 +263,9 @@ function keywordFallback(text, currentFlow = null) {
   if (/هلا والله|كيف الحال|مساء النور|صباح النور|حياك|هلا فيك|الله يسلمك|هلا|مرحبا|السلام|أهلا|صباح|مساء/.test(t))
     return { intent: 'greeting', detected_language: 'ar', extracted_value: null, confidence: 'low' };
 
+  if (/^(help|what can you do|options|commands|مساعدة|خيارات|ماذا تفعل)$/i.test(t))
+    return { intent: 'help', detected_language: t.match(/[\u0600-\u06FF]/) ? 'ar' : 'en', extracted_value: null, confidence: 'high' };
+
   // If mid-flow and no keyword matched an intent switch → it's a flow input
   if (currentFlow) {
     return { intent: 'continue_flow', detected_language: 'en', extracted_value: null, confidence: 'low' };

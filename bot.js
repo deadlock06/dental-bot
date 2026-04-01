@@ -288,10 +288,8 @@ function getDateISO(parsedDate) {
   }
 }
 
-// FIX 2 — Slot number formatting (emoji for 1-9, plain number for 10+)
+// Slot number formatting — plain text for all slots
 function formatSlotNumber(i) {
-  const emojiNums = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣'];
-  if (i < 9) return emojiNums[i];
   return `${i + 1}.`;
 }
 
@@ -688,6 +686,43 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     }
 
     // 7b — Patient is selecting a slot
+
+    // BUG 1 — Handle duplicate-booking response (patient chose 1=reschedule or 2=different date)
+    if (fd.waiting_duplicate_response) {
+      const r = rawMsg.trim();
+      if (r === '1' || /^(yes|نعم|تمام|ايوه|موافق|أعد الجدولة)$/i.test(r)) {
+        if (cl.config?.features?.reschedule === false) {
+          await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
+          return sendMessage(phone, ar
+            ? 'خاصية إعادة الجدولة غير متاحة حالياً. يرجى التواصل مع الفريق.'
+            : 'Rescheduling is not available right now. Please contact our staff.'
+          );
+        }
+        const existingAppt = await getAppointment(phone);
+        if (!existingAppt) {
+          await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
+          return sendMessage(phone, ar ? menuAR(cl) : menuEN(cl));
+        }
+        await savePatient(phone, { ...patient, current_flow: 'reschedule', flow_step: 1, flow_data: { appointment_id: existingAppt.id, name: existingAppt.name, calendar_event_id: existingAppt.calendar_event_id || null } });
+        return sendMessage(phone, ar
+          ? `موعدك الحالي:\n📅 ${existingAppt.preferred_date} الساعة ⏰ ${existingAppt.time_slot}\n\nما هو التاريخ الجديد المفضل لديك؟`
+          : `Your current appointment:\n📅 ${existingAppt.preferred_date} at ⏰ ${existingAppt.time_slot}\n\nWhat's your new preferred date?`
+        );
+      }
+      if (r === '2' || /^(no|لا|لأ)$/i.test(r)) {
+        await savePatient(phone, { ...patient, flow_step: 6, flow_data: { ...fd, waiting_duplicate_response: false, available_slots_shown: false, slot_keys: null, slot_displays: null, preferred_date: null, preferred_date_iso: null } });
+        return sendMessage(phone, ar
+          ? 'يرجى اختيار تاريخ آخر 📅\nيمكنك قول:\n• غداً\n• الاثنين الجاي\n• 20 أبريل\n\n0️⃣ القائمة الرئيسية'
+          : 'Please choose a different date 📅\nYou can say:\n• Tomorrow\n• Next Monday\n• April 20\n\n0️⃣ Main menu'
+        );
+      }
+      // Unrecognised — re-show the duplicate prompt
+      return sendMessage(phone, ar
+        ? 'لديك موعد محجوز في هذا اليوم 😊\nهل تريد إعادة جدولة موعدك الحالي؟\n1. نعم، أعد الجدولة\n2. لا، اختر تاريخاً آخر\n0. القائمة الرئيسية'
+        : 'You already have a booking on this date 😊\nWould you like to reschedule your existing appointment instead?\n1. Yes, reschedule\n2. No, choose a different date\n0. Main menu'
+      );
+    }
+
     const slotKeys = fd.slot_keys || [];
     const num7 = parseInt(rawMsg.trim());
 
@@ -759,9 +794,11 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
 
       const isDuplicate = await checkDuplicateBooking(phone, fd.preferred_date_iso);
       if (isDuplicate) {
+        fd.waiting_duplicate_response = true;
+        await savePatient(phone, { ...patient, flow_step: 7, flow_data: fd });
         return sendMessage(phone, ar
-          ? 'لديك موعد محجوز في هذا اليوم بالفعل. هل تريد إعادة الجدولة؟\n3️⃣ إعادة جدولة\n0️⃣ القائمة الرئيسية'
-          : 'You already have a booking on this date. Would you like to reschedule?\n3️⃣ Reschedule\n0️⃣ Main menu'
+          ? 'لديك موعد محجوز في هذا اليوم 😊\nهل تريد إعادة جدولة موعدك الحالي؟\n1. نعم، أعد الجدولة\n2. لا، اختر تاريخاً آخر\n0. القائمة الرئيسية'
+          : 'You already have a booking on this date 😊\nWould you like to reschedule your existing appointment instead?\n1. Yes, reschedule\n2. No, choose a different date\n0. Main menu'
         );
       }
     }
@@ -1116,6 +1153,9 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
     case 'human':
       return sendMessage(phone, staffMsg(ar));
 
+    case 'help':
+      return sendMessage(phone, ar ? helpMsgAR(cl) : helpMsgEN(cl));
+
     default:
       return sendMessage(phone, ar
         ? `لم أفهم تماماً 😊 إليك ما يمكنني مساعدتك به:\n\n${menuAR(cl)}`
@@ -1127,6 +1167,28 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
 // ─────────────────────────────────────────────
 // Message builders
 // ─────────────────────────────────────────────
+
+function helpMsgEN(cl) {
+  const showReschedule = cl?.config?.features?.reschedule !== false;
+  const showCancel     = cl?.config?.features?.cancel     !== false;
+  let msg = `Here's how I can help you 😊\n\n📱 *Just type a number:*\n1. Book a new appointment\n2. View your current appointment\n`;
+  if (showReschedule) msg += `3. Reschedule your appointment\n`;
+  if (showCancel)     msg += `4. Cancel your appointment\n`;
+  msg += `5. See our services\n6. Meet our doctors\n7. View prices\n8. Get our location\n9. Leave a review\n10. Talk to our staff\n\n`;
+  msg += `💬 *Or just tell me what you need:*\n- 'I have a toothache' → I'll book you in\n- 'How much for braces?' → I'll show prices\n- 'Where are you?' → I'll share location\n- 'Cancel my appointment' → I'll handle it\n\nType 0 anytime to return to main menu 😊`;
+  return msg;
+}
+
+function helpMsgAR(cl) {
+  const showReschedule = cl?.config?.features?.reschedule !== false;
+  const showCancel     = cl?.config?.features?.cancel     !== false;
+  let msg = `إليك كيف يمكنني مساعدتك 😊\n\n📱 *اكتب رقماً فقط:*\n1. حجز موعد جديد\n2. عرض موعدك الحالي\n`;
+  if (showReschedule) msg += `3. إعادة جدولة الموعد\n`;
+  if (showCancel)     msg += `4. إلغاء الموعد\n`;
+  msg += `5. خدماتنا\n6. تعرف على أطبائنا\n7. الأسعار\n8. موقعنا\n9. تقييم العيادة\n10. التحدث مع الفريق\n\n`;
+  msg += `💬 *أو أخبرني بما تحتاج:*\n- 'سني يوجعني' ← سأحجز لك موعداً\n- 'كم سعر التقويم؟' ← سأعرض الأسعار\n- 'وين العيادة؟' ← سأشارك الموقع\n- 'أبغى ألغي موعدي' ← سأتولى الأمر\n\nاكتب 0 في أي وقت للعودة للقائمة الرئيسية 😊`;
+  return msg;
+}
 
 function bookingSummaryMsg(ar, fd, phone, cl) {
   const doctor = fd.doctor_name || (ar ? 'بدون تفضيل' : 'No preference');
