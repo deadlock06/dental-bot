@@ -60,6 +60,17 @@ async function handleMessage(phone, text, clinic) {
   const step = patient.flow_step || 0;
   const fd = patient.flow_data || {};
 
+  // FIX 2 — Language switch mid-conversation (before intent detection)
+  const langSwitch = msg.toLowerCase().trim();
+  if (/^(english|switch to english|change to english)$/i.test(langSwitch)) {
+    await savePatient(phone, { ...patient, language: 'en', current_flow: null, flow_step: 0 });
+    return sendMessage(phone, menuEN(cl.name));
+  }
+  if (/^(arabic|عربي|عربية|switch to arabic)$/i.test(langSwitch)) {
+    await savePatient(phone, { ...patient, language: 'ar', current_flow: null, flow_step: 0 });
+    return sendMessage(phone, menuAR(cl.name));
+  }
+
   const ai = await detectIntent(msg, flow, step);
   const { intent, extracted_value } = ai;
 
@@ -73,6 +84,14 @@ async function handleMessage(phone, text, clinic) {
   if (intent === 'greeting') {
     await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
     return sendMessage(phone, ar ? menuAR(cl.name) : menuEN(cl.name));
+  }
+
+  // FIX 1 — Slot numbers above 9: bypass AI extraction, pass raw number directly
+  if (flow === 'booking' && step === 7) {
+    const num = parseInt(msg.trim());
+    if (!isNaN(num) && num >= 1 && num <= 20) {
+      return handleBookingFlow(phone, msg, msg, lang, ar, step, fd, patient, cl);
+    }
   }
 
   // Active flow routing
@@ -410,7 +429,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       }
     }
 
-    fd.preferred_date = parsedDate;
+    fd.preferred_date     = parsedDate;
+    fd.preferred_date_raw = dateInput; // FIX 3 — preserve raw input
     // Store ISO for slot lookups
     try {
       const { toDateISO } = require('./slots');
@@ -520,6 +540,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       fd.slot_time_key = null;
     }
 
+    fd.slot_time_raw = rawMsg.trim(); // FIX 3 — preserve raw slot input
     await savePatient(phone, { ...patient, flow_step: 8, flow_data: fd });
     return sendMessage(phone, bookingSummaryMsg(ar, fd, phone, cl));
   }
@@ -545,15 +566,20 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         }
       }
 
+      // FIX 3 — verify all fields present before saving
+      console.log('[Booking] Saving fd:', JSON.stringify(fd));
       const savedAppt = await saveAppointment({
-        phone:          fd.phone || phone,
-        clinic_id:      cl.id || null,
-        name:           fd.name,
-        treatment:      fd.treatment,
-        description:    fd.description,
-        preferred_date: fd.preferred_date,
-        time_slot:      fd.time_slot,
-        doctor_name:    fd.doctor_name || null
+        phone:             fd.phone || phone,
+        clinic_id:         cl.id || null,
+        name:              fd.name,
+        treatment:         fd.treatment,
+        description:       fd.description,
+        preferred_date:    fd.preferred_date,
+        preferred_date_raw: fd.preferred_date_raw || null,
+        time_slot:         fd.time_slot,
+        slot_time_raw:     fd.slot_time_raw || null,
+        doctor_id:         fd.doctor_id || null,
+        doctor_name:       fd.doctor_name || null
       });
 
       // Link slot to appointment if both IDs are available
@@ -564,9 +590,14 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
 
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
       if (cl.staff_phone) {
+        // FIX 5 — staff alert always in English regardless of patient language
+        const STAFF_AR = ['9:00 صباحاً','9:30 صباحاً','10:00 صباحاً','10:30 صباحاً','11:00 صباحاً','11:30 صباحاً','12:00 مساءً','12:30 مساءً','2:00 مساءً','2:30 مساءً','3:00 مساءً','3:30 مساءً','4:00 مساءً','4:30 مساءً'];
+        const STAFF_EN = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','12:30 PM','2:00 PM','2:30 PM','3:00 PM','3:30 PM','4:00 PM','4:30 PM'];
+        const arIdx = STAFF_AR.indexOf(fd.time_slot);
+        const staffTime = arIdx >= 0 ? STAFF_EN[arIdx] : fd.time_slot;
         const doctorLine = fd.doctor_name ? `\n👨‍⚕️ Doctor: ${fd.doctor_name}` : '';
         await sendMessage(cl.staff_phone,
-          `🦷 New Booking Alert!\n━━━━━━━━━━━━━━\n👤 Patient: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n🔧 Treatment: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}${doctorLine}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${fd.time_slot}\n━━━━━━━━━━━━━━\nBooked via WhatsApp AI ✅`
+          `🦷 New Booking Alert!\n━━━━━━━━━━━━━━\n👤 Patient: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n🔧 Treatment: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}${doctorLine}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${staffTime}\n━━━━━━━━━━━━━━\nBooked via WhatsApp AI ✅`
         );
       }
       return sendMessage(phone, ar
@@ -809,8 +840,13 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
 function bookingSummaryMsg(ar, fd, phone, cl) {
   const doctor = fd.doctor_name || (ar ? 'بدون تفضيل' : 'No preference');
   const notes  = fd.description || (ar ? 'لا يوجد' : 'None');
+  // FIX 4 — convert time to Arabic format in Arabic mode
+  const SUM_EN = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','12:30 PM','2:00 PM','2:30 PM','3:00 PM','3:30 PM','4:00 PM','4:30 PM'];
+  const SUM_AR = ['9:00 صباحاً','9:30 صباحاً','10:00 صباحاً','10:30 صباحاً','11:00 صباحاً','11:30 صباحاً','12:00 مساءً','12:30 مساءً','2:00 مساءً','2:30 مساءً','3:00 مساءً','3:30 مساءً','4:00 مساءً','4:30 مساءً'];
+  const idx = SUM_EN.indexOf(fd.time_slot);
+  const displayTime = ar && idx >= 0 ? SUM_AR[idx] : fd.time_slot;
   return ar
-    ? `✅ *ملخص الحجز*\n\n👤 *الاسم:* ${fd.name}\n📱 *الهاتف:* ${fd.phone || phone}\n🦷 *العلاج:* ${fd.treatment}\n📝 *الملاحظات:* ${notes}\n👨‍⚕️ *الطبيب:* ${doctor}\n📅 *التاريخ:* ${fd.preferred_date}\n⏰ *الوقت:* ${fd.time_slot}\n🏥 *العيادة:* ${cl.name}\n\nهل كل شيء صحيح؟\n1️⃣ نعم، أؤكد الحجز ✅\n2️⃣ لا، أريد تغيير شيء`
+    ? `✅ *ملخص الحجز*\n\n👤 *الاسم:* ${fd.name}\n📱 *الهاتف:* ${fd.phone || phone}\n🦷 *العلاج:* ${fd.treatment}\n📝 *الملاحظات:* ${notes}\n👨‍⚕️ *الطبيب:* ${doctor}\n📅 *التاريخ:* ${fd.preferred_date}\n⏰ *الوقت:* ${displayTime}\n🏥 *العيادة:* ${cl.name}\n\nهل كل شيء صحيح؟\n1️⃣ نعم، أؤكد الحجز ✅\n2️⃣ لا، أريد تغيير شيء`
     : `✅ *Booking Summary*\n\n👤 *Name:* ${fd.name}\n📱 *Phone:* ${fd.phone || phone}\n🦷 *Treatment:* ${fd.treatment}\n📝 *Notes:* ${notes}\n👨‍⚕️ *Doctor:* ${doctor}\n📅 *Date:* ${fd.preferred_date}\n⏰ *Time:* ${fd.time_slot}\n🏥 *Clinic:* ${cl.name}\n\nDoes everything look correct?\n1️⃣ Yes, confirm booking ✅\n2️⃣ No, make changes`;
 }
 
