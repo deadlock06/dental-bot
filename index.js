@@ -42,20 +42,40 @@ app.post('/webhook', async (req, res) => {
     const body = req.body;
     console.log('[Webhook] Raw body:', JSON.stringify(body));
 
-    // Twilio sends: body.Body (text), body.From (whatsapp:+<phone>)
-    const messageText = body?.Body;
-    const fromRaw     = body?.From; // e.g. "whatsapp:+966572914855"
+    const fromRaw          = body?.From; // e.g. "whatsapp:+966572914855"
+    const numMedia         = parseInt(body?.NumMedia || '0');
+    const mediaUrl         = body?.MediaUrl0;
+    const mediaContentType = body?.MediaContentType0 || '';
+    let   messageText      = body?.Body;
 
-    console.log(`[Webhook] messageText="${messageText}" fromRaw="${fromRaw}"`);
+    console.log(`[Webhook] fromRaw="${fromRaw}" NumMedia=${numMedia} MediaContentType0="${mediaContentType}" MediaUrl0="${mediaUrl}"`);
 
-    if (!messageText || !fromRaw) {
-      console.log('[Webhook] Missing Body or From — ignoring');
+    if (!fromRaw) {
+      console.log('[Webhook] Missing From — ignoring');
+      return;
+    }
+
+    // Voice note: has media and content type is audio
+    if (numMedia > 0 && mediaContentType.startsWith('audio/') && mediaUrl) {
+      console.log('[Voice] Detected voice note — transcribing...');
+      const transcribed = await transcribeAudio(mediaUrl);
+      if (transcribed) {
+        console.log('[Voice] Transcription result:', transcribed);
+        messageText = transcribed;
+      } else {
+        console.log('[Voice] Transcription failed — ignoring message');
+        return;
+      }
+    }
+
+    if (!messageText) {
+      console.log('[Webhook] No text and no audio — ignoring');
       return;
     }
 
     // Strip "whatsapp:+" prefix to get plain digits
     const patientPhone = fromRaw.replace(/^whatsapp:\+/, '');
-    console.log(`[Webhook] patientPhone="${patientPhone}"`);
+    console.log(`[Webhook] patientPhone="${patientPhone}" messageText="${messageText}"`);
 
     const botPhone = process.env.WHATSAPP_PHONE_ID;
     const clinic   = await getClinic(botPhone);

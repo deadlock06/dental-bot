@@ -2,36 +2,28 @@ const axios = require('axios');
 const FormData = require('form-data');
 
 const OPENAI_KEY = process.env.OPENAI_KEY;
-const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
-const PHONE_ID = process.env.WHATSAPP_PHONE_ID;
 
-// Download audio file from WhatsApp media API, then transcribe via OpenAI Whisper
-async function transcribeAudio(mediaId) {
+// Twilio sends MediaUrl0 — a direct HTTPS URL (basic-auth protected with Twilio credentials)
+async function transcribeAudio(mediaUrl) {
   try {
-    // Step 1: Get media URL from WhatsApp
-    const mediaRes = await axios.get(
-      `https://graph.facebook.com/v19.0/${mediaId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${WHATSAPP_TOKEN}`
-        }
-      }
-    );
-    const mediaUrl = mediaRes.data.url;
+    console.log('[Audio] Downloading from Twilio URL:', mediaUrl);
 
-    // Step 2: Download audio bytes
+    // Step 1: Download audio bytes (Twilio requires basic auth)
     const audioRes = await axios.get(mediaUrl, {
       responseType: 'arraybuffer',
-      headers: {
-        Authorization: `Bearer ${WHATSAPP_TOKEN}`
+      auth: {
+        username: process.env.TWILIO_ACCOUNT_SID,
+        password: process.env.TWILIO_AUTH_TOKEN
       }
     });
 
-    // Step 3: Send to OpenAI Whisper
+    console.log('[Audio] Downloaded bytes:', audioRes.data.byteLength);
+
+    // Step 2: Send to OpenAI Whisper
     const form = new FormData();
     form.append('file', Buffer.from(audioRes.data), {
       filename: 'audio.ogg',
-      contentType: 'audio/ogg'
+      contentType: audioRes.headers['content-type'] || 'audio/ogg'
     });
     form.append('model', 'whisper-1');
 
@@ -46,7 +38,9 @@ async function transcribeAudio(mediaId) {
       }
     );
 
-    return whisperRes.data.text || null;
+    const text = whisperRes.data.text || null;
+    console.log('[Audio] Transcription:', text);
+    return text;
   } catch (err) {
     console.error('[Audio] transcribeAudio error:', err.response?.data || err.message);
     return null;
