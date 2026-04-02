@@ -1,33 +1,40 @@
 const { google } = require('googleapis');
-const { JWT } = require('google-auth-library');
 
 const TIMEZONE = 'Asia/Riyadh';
 const DURATION_MINS = 30;
 
 function getCalendarClient() {
-  let privateKey;
+  let credentials;
 
-  if (process.env.GOOGLE_PRIVATE_KEY_BASE64) {
-    privateKey = Buffer.from(process.env.GOOGLE_PRIVATE_KEY_BASE64, 'base64').toString('utf8');
-    console.log('[Calendar] Using base64 decoded key');
-  } else if (process.env.GOOGLE_PRIVATE_KEY) {
-    privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n').trim();
-    console.log('[Calendar] Using direct key');
+  if (process.env.GOOGLE_CREDENTIALS_BASE64) {
+    credentials = JSON.parse(
+      Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64').toString('utf8')
+    );
+    console.log('[Calendar] Using full credentials JSON');
+  } else {
+    const privateKey = process.env.GOOGLE_PRIVATE_KEY_BASE64
+      ? Buffer.from(process.env.GOOGLE_PRIVATE_KEY_BASE64, 'base64').toString('utf8')
+      : process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    credentials = {
+      client_email: process.env.GOOGLE_CLIENT_EMAIL,
+      private_key:  privateKey
+    };
+    console.log('[Calendar] Using separate email/key env vars');
   }
 
-  const email = process.env.GOOGLE_CLIENT_EMAIL;
-  if (!email || !privateKey) throw new Error('Missing credentials');
+  if (!credentials?.client_email || !credentials?.private_key) {
+    throw new Error('Missing credentials');
+  }
 
-  console.log('[Calendar] Email:', email.substring(0, 40));
-  console.log('[Calendar] Key type:', privateKey.includes('RSA') ? 'RSA' : 'PKCS8');
+  console.log('[Calendar] Using credentials for:', credentials.client_email.substring(0, 40));
+  console.log('[Calendar] Key type:', credentials.private_key.includes('RSA') ? 'RSA' : 'PKCS8');
 
-  const client = new JWT({
-    email,
-    key: privateKey,
+  const auth = new google.auth.GoogleAuth({
+    credentials,
     scopes: ['https://www.googleapis.com/auth/calendar'],
   });
 
-  return google.calendar({ version: 'v3', auth: client });
+  return google.calendar({ version: 'v3', auth });
 }
 
 // "9:00 AM" → "09:00:00"
