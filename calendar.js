@@ -4,35 +4,36 @@ const TIMEZONE = 'Asia/Riyadh';
 const DURATION_MINS = 30;
 
 function getCalendarClient() {
-  const email = process.env.GOOGLE_CLIENT_EMAIL;
-  let privateKey;
+  try {
+    const email = process.env.GOOGLE_CLIENT_EMAIL;
+    let privateKey;
 
-  if (process.env.GOOGLE_PRIVATE_KEY_BASE64) {
-    privateKey = Buffer.from(process.env.GOOGLE_PRIVATE_KEY_BASE64, 'base64').toString('utf8');
-    console.log('[Calendar] Using base64 decoded key');
-  } else if (process.env.GOOGLE_PRIVATE_KEY) {
-    privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n').trim();
-    console.log('[Calendar] Using direct key');
+    if (process.env.GOOGLE_PRIVATE_KEY_BASE64) {
+      privateKey = Buffer.from(process.env.GOOGLE_PRIVATE_KEY_BASE64, 'base64').toString('utf8');
+      console.log('[Calendar] Using base64 decoded key');
+    } else if (process.env.GOOGLE_PRIVATE_KEY) {
+      privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n').trim();
+      console.log('[Calendar] Using direct key');
+    }
+
+    if (!email || !privateKey) throw new Error('Missing credentials');
+
+    console.log('[Calendar] Email:', email.substring(0, 40));
+    console.log('[Calendar] Key type:', privateKey.includes('RSA') ? 'RSA' : 'PKCS8');
+    console.log('[Calendar] Key has newlines:', privateKey.includes('\n'));
+
+    const jwtClient = new google.auth.JWT({
+      email:        email,
+      key:          privateKey,
+      keyAlgorithm: 'RS256',
+      scopes:       ['https://www.googleapis.com/auth/calendar']
+    });
+
+    return google.calendar({ version: 'v3', auth: jwtClient });
+  } catch (e) {
+    console.error('[Calendar] getCalendarClient error:', e.message);
+    throw e;
   }
-
-  if (!email || !privateKey) {
-    throw new Error('Google Calendar credentials not configured');
-  }
-
-  console.log('[Calendar] Email:', email.substring(0, 40));
-  console.log('[Calendar] Key type:', privateKey.includes('RSA') ? 'RSA' : 'PKCS8');
-  console.log('[Calendar] Key has newlines:', privateKey.includes('\n'));
-
-  // Use GoogleAuth with credentials object — handles PKCS#8 keys correctly
-  const auth = new google.auth.GoogleAuth({
-    credentials: {
-      client_email: email,
-      private_key:  privateKey
-    },
-    scopes: ['https://www.googleapis.com/auth/calendar']
-  });
-
-  return google.calendar({ version: 'v3', auth });
 }
 
 // "9:00 AM" → "09:00:00"
