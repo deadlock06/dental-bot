@@ -5,14 +5,20 @@ const DURATION_MINS = 30;
 
 function getCalendarClient() {
   const email = process.env.GOOGLE_CLIENT_EMAIL;
-  let privateKey = process.env.GOOGLE_PRIVATE_KEY;
+
+  // Try base64 encoded key first (safe for Render), then fallback to direct key
+  let privateKey;
+  if (process.env.GOOGLE_PRIVATE_KEY_BASE64) {
+    privateKey = Buffer.from(process.env.GOOGLE_PRIVATE_KEY_BASE64, 'base64').toString('utf8');
+    console.log('[Calendar] Using base64 decoded key');
+  } else if (process.env.GOOGLE_PRIVATE_KEY) {
+    privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n').trim();
+    console.log('[Calendar] Using direct key');
+  }
 
   if (!email || !privateKey) {
     throw new Error('Google Calendar credentials not configured');
   }
-
-  // Render stores \n as literal backslash-n — convert to real newlines
-  privateKey = privateKey.replace(/\\n/g, '\n').trim();
 
   console.log('[Calendar] Email:', email.substring(0, 40));
   console.log('[Calendar] Key starts with:', privateKey.substring(0, 30));
