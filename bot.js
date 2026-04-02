@@ -783,7 +783,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         // Build display label from doctor slots (re-fetch or use index)
         const { getAvailableSlots: gas } = require('./slots');
         let displayEn = EN_SLOTS[num7 - 1] || slotKeys[num7 - 1];
-        let displayAr = AR_SLOTS[num7 - 1] || slotKeys[num7 - 1];
+        let displayAr = AR_SLOTS[num7 - 1] || toArabicTime(displayEn);
         try {
           const slots2 = await gas(cl.id, fd.doctor_id, fd.preferred_date_iso);
           if (slots2[num7 - 1]) {
@@ -791,10 +791,12 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
             displayAr = slots2[num7 - 1].slot_time_display_ar;
           }
         } catch (e) { /* use fallback labels */ }
-        fd.time_slot = ar ? displayAr : displayEn;
+        fd.time_slot    = displayEn; // always English — for DB and reminder parsing
+        fd.time_slot_ar = displayAr; // Arabic — for patient-facing display
       } else {
         // Generic fixed slots
-        fd.time_slot     = ar ? AR_SLOTS[num7 - 1] : EN_SLOTS[num7 - 1];
+        fd.time_slot    = EN_SLOTS[num7 - 1]; // always English — for DB and reminder parsing
+        fd.time_slot_ar = AR_SLOTS[num7 - 1]; // Arabic — for patient-facing display
         fd.slot_time_key = null;
       }
     } else {
@@ -810,9 +812,10 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
           : `That time isn't available 😊 Please choose from the available slots:\n\n${slotLines2.join('\n')}${instruction2}\n\n0️⃣ Main menu`
         );
       }
-      // Bug 3 fix: store correct language format
+      // Always store English — convert to Arabic only at display time
       const enIndex = EN_SLOTS.indexOf(matched);
-      fd.time_slot     = ar ? (AR_SLOTS[enIndex] || matched) : matched;
+      fd.time_slot    = matched; // always English
+      fd.time_slot_ar = AR_SLOTS[enIndex] || toArabicTime(matched);
       fd.slot_time_key = null;
     }
 
@@ -926,10 +929,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       // Phase 4: respect staff_notifications feature flag (default on)
       if (cl.staff_phone && cl.config?.features?.staff_notifications !== false) {
         // staff alert always in English regardless of patient language
-        const STAFF_AR = ['9:00 صباحاً','9:30 صباحاً','10:00 صباحاً','10:30 صباحاً','11:00 صباحاً','11:30 صباحاً','12:00 مساءً','12:30 مساءً','2:00 مساءً','2:30 مساءً','3:00 مساءً','3:30 مساءً','4:00 مساءً','4:30 مساءً'];
-        const STAFF_EN = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','12:30 PM','2:00 PM','2:30 PM','3:00 PM','3:30 PM','4:00 PM','4:30 PM'];
-        const arIdx = STAFF_AR.indexOf(fd.time_slot);
-        const staffTime = arIdx >= 0 ? STAFF_EN[arIdx] : fd.time_slot;
+        // fd.time_slot is always English — no conversion needed
+        const staffTime = fd.time_slot;
         const doctorLine = fd.doctor_name ? `\n👨‍⚕️ Doctor: ${fd.doctor_name}` : '';
         await sendMessage(cl.staff_phone,
           `🦷 New Booking Alert!\n━━━━━━━━━━━━━━\n👤 Patient: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n🔧 Treatment: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}${doctorLine}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${staffTime}\n━━━━━━━━━━━━━━\nBooked via WhatsApp AI ✅`
@@ -941,11 +942,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         : '';
       const confirmTreatment = ar ? (TREATMENT_MAP_AR[fd.treatment] || fd.treatment) : fd.treatment;
       const confirmDate      = ar ? toArabicDate(fd.preferred_date) : fd.preferred_date;
-      // Time conversion for Arabic confirmation
-      const CONF_EN = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','12:30 PM','2:00 PM','2:30 PM','3:00 PM','3:30 PM','4:00 PM','4:30 PM'];
-      const CONF_AR = ['9:00 صباحاً','9:30 صباحاً','10:00 صباحاً','10:30 صباحاً','11:00 صباحاً','11:30 صباحاً','12:00 مساءً','12:30 مساءً','2:00 مساءً','2:30 مساءً','3:00 مساءً','3:30 مساءً','4:00 مساءً','4:30 مساءً'];
-      const confTimeIdx = CONF_EN.indexOf(fd.time_slot);
-      const confirmTime = ar && confTimeIdx >= 0 ? CONF_AR[confTimeIdx] : fd.time_slot;
+      // Time display for confirmation — fd.time_slot is always English, convert for Arabic
+      const confirmTime = ar ? (fd.time_slot_ar || toArabicTime(fd.time_slot)) : fd.time_slot;
       return sendMessage(phone, ar
         ? `🎉 *تم تأكيد موعدك!*\n\n📅 ${confirmDate}\n⏰ ${confirmTime}\n🏥 ${cl.name}\n🦷 ${confirmTreatment}${doctorConfirmLine}\n\nسنرسل لك تذكيراً قبل موعدك. نراك قريباً! 😊\n\n💡 اكتب *help* في أي وقت لرؤية خياراتك\n0️⃣ القائمة الرئيسية`
         : `🎉 *Appointment Confirmed!*\n\n📅 ${fd.preferred_date}\n⏰ ${fd.time_slot}\n🏥 ${cl.name}\n🦷 ${fd.treatment}${doctorConfirmLine}\n\nWe'll send you a reminder before your appointment. See you then! 😊\n\n💡 Type *help* anytime to see your options\n0️⃣ Main menu`
@@ -1012,7 +1010,8 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
   if (step === 2) {
     const num = parseInt(rawMsg);
     if (num >= 1 && num <= 8) {
-      fd.new_slot = ar ? AR_SLOTS[num - 1] : EN_SLOTS[num - 1];
+      fd.new_slot    = EN_SLOTS[num - 1]; // always English — for DB and reminder parsing
+      fd.new_slot_ar = AR_SLOTS[num - 1]; // Arabic — for patient-facing display
     } else {
       const matched = await extractTimeSlot(rawMsg, EN_SLOTS);
       if (!matched) {
@@ -1021,11 +1020,14 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
           : "That time isn't in our schedule 😊 Please choose from the available slots:\n\n1. 9:00 AM\n2. 10:00 AM\n3. 11:00 AM\n4. 1:00 PM\n5. 2:00 PM\n6. 3:00 PM\n7. 4:00 PM\n8. 5:00 PM\n\n💡 Tap a number to select your time\n0️⃣ Main menu"
         );
       }
-      fd.new_slot = matched;
+      const enIdx = EN_SLOTS.indexOf(matched);
+      fd.new_slot    = matched;
+      fd.new_slot_ar = AR_SLOTS[enIdx] || toArabicTime(matched);
     }
+    const newSlotDisplay = ar ? (fd.new_slot_ar || toArabicTime(fd.new_slot)) : fd.new_slot;
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
     return sendMessage(phone, ar
-      ? `✅ الموعد الجديد:\n📅 ${fd.new_date} الساعة ⏰ ${fd.new_slot}\n\nهل تؤكد؟\n1️⃣ نعم\n2️⃣ لا\n\n💡 اضغط 1 للتأكيد أو 2 للإلغاء`
+      ? `✅ الموعد الجديد:\n📅 ${fd.new_date} الساعة ⏰ ${newSlotDisplay}\n\nهل تؤكد؟\n1️⃣ نعم\n2️⃣ لا\n\n💡 اضغط 1 للتأكيد أو 2 للإلغاء`
       : `✅ New appointment:\n📅 ${fd.new_date} at ⏰ ${fd.new_slot}\n\nConfirm?\n1️⃣ Yes\n2️⃣ No\n\n💡 Tap 1 to confirm or 2 to cancel`
     );
   }
@@ -1060,8 +1062,9 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
         );
       }
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
+      const reschedSlotDisplay = ar ? (fd.new_slot_ar || toArabicTime(fd.new_slot)) : fd.new_slot;
       return sendMessage(phone, ar
-        ? `✅ تم إعادة جدولة موعدك!\n📅 ${fd.new_date} الساعة ⏰ ${fd.new_slot}\nنراك قريباً! 😊\n\n💡 اكتب *help* في أي وقت\n0️⃣ القائمة الرئيسية`
+        ? `✅ تم إعادة جدولة موعدك!\n📅 ${fd.new_date} الساعة ⏰ ${reschedSlotDisplay}\nنراك قريباً! 😊\n\n💡 اكتب *help* في أي وقت\n0️⃣ القائمة الرئيسية`
         : `✅ Appointment rescheduled!\n📅 ${fd.new_date} at ⏰ ${fd.new_slot}\nWe'll see you then! 😊\n\n💡 Type *help* anytime\n0️⃣ Main menu`
       );
     } else {
@@ -1147,8 +1150,9 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
         );
       }
       await savePatient(phone, { ...patient, current_flow: 'my_appointment', flow_step: 1, flow_data: { appointment_id: appt.id } });
+      const apptTimeDisplay = ar ? toArabicTime(appt.time_slot) : appt.time_slot;
       return sendMessage(phone, ar
-        ? `📋 موعدك القادم:\n\n👤 الاسم: ${appt.name}\n🦷 العلاج: ${appt.treatment}\n📅 التاريخ: ${appt.preferred_date}\n⏰ الوقت: ${appt.time_slot}\n🏥 العيادة: ${cl.name}\n📊 الحالة: مؤكد ✅\n\nهل تريد تغيير شيء؟\n1️⃣ إعادة جدولة\n2️⃣ إلغاء الموعد\n3️⃣ العودة للقائمة\n\n💡 اضغط رقماً للمتابعة`
+        ? `📋 موعدك القادم:\n\n👤 الاسم: ${appt.name}\n🦷 العلاج: ${appt.treatment}\n📅 التاريخ: ${appt.preferred_date}\n⏰ الوقت: ${apptTimeDisplay}\n🏥 العيادة: ${cl.name}\n📊 الحالة: مؤكد ✅\n\nهل تريد تغيير شيء؟\n1️⃣ إعادة جدولة\n2️⃣ إلغاء الموعد\n3️⃣ العودة للقائمة\n\n💡 اضغط رقماً للمتابعة`
         : `📋 Your upcoming appointment:\n\n👤 Name: ${appt.name}\n🦷 Treatment: ${appt.treatment}\n📅 Date: ${appt.preferred_date}\n⏰ Time: ${appt.time_slot}\n🏥 Clinic: ${cl.name}\n📊 Status: Confirmed ✅\n\nNeed to change anything?\n1️⃣ Reschedule\n2️⃣ Cancel\n3️⃣ Back to menu\n\n💡 Tap a number to continue`
       );
     }
@@ -1264,6 +1268,16 @@ const TREATMENT_MAP_AR = {
   'Other':                'أخرى'
 };
 
+// Convert any "H:MM AM/PM" time string to Arabic "H:MM صباحاً/مساءً"
+function toArabicTime(timeStr) {
+  if (!timeStr) return timeStr;
+  if (/صباحاً|مساءً/.test(timeStr)) return timeStr; // already Arabic
+  const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!match) return timeStr;
+  const ampm = match[3].toUpperCase() === 'AM' ? 'صباحاً' : 'مساءً';
+  return `${match[1]}:${match[2]} ${ampm}`;
+}
+
 // Convert English date string to Arabic (BUG 6)
 function toArabicDate(dateStr) {
   if (!dateStr) return dateStr;
@@ -1280,11 +1294,8 @@ function bookingSummaryMsg(ar, fd, phone, cl) {
     ? ((fd.doctor_name_ar || fd.doctor_name) ? (fd.doctor_name_ar || fd.doctor_name) : 'بدون تفضيل')
     : (fd.doctor_name || 'No preference');
   const notes = fd.description || (ar ? 'لا يوجد' : 'None');
-  // Convert time to Arabic format in Arabic mode
-  const SUM_EN = ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','12:30 PM','2:00 PM','2:30 PM','3:00 PM','3:30 PM','4:00 PM','4:30 PM'];
-  const SUM_AR = ['9:00 صباحاً','9:30 صباحاً','10:00 صباحاً','10:30 صباحاً','11:00 صباحاً','11:30 صباحاً','12:00 مساءً','12:30 مساءً','2:00 مساءً','2:30 مساءً','3:00 مساءً','3:30 مساءً','4:00 مساءً','4:30 مساءً'];
-  const idx = SUM_EN.indexOf(fd.time_slot);
-  const displayTime      = ar && idx >= 0 ? SUM_AR[idx] : fd.time_slot;
+  // fd.time_slot is always English; convert to Arabic for display if needed
+  const displayTime      = ar ? (fd.time_slot_ar || toArabicTime(fd.time_slot)) : fd.time_slot;
   const displayTreatment = ar ? (TREATMENT_MAP_AR[fd.treatment] || fd.treatment) : fd.treatment;
   const displayDate      = ar ? toArabicDate(fd.preferred_date) : fd.preferred_date;
   return ar

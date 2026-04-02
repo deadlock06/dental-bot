@@ -144,6 +144,7 @@ async function getAvailableSlots(clinicId, doctorId, isoDate) {
 // Book a slot atomically — returns { success: true } or { success: false, reason }
 // The WHERE status=eq.available ensures only one patient can succeed (race condition safe)
 async function bookSlot(clinicId, doctorId, isoDate, slotTime, patientPhone) {
+  console.log('[Slots] Booking slot:', clinicId, doctorId, isoDate, slotTime);
   try {
     const res = await axios.patch(
       `${SUPABASE_URL}/rest/v1/doctor_slots?clinic_id=eq.${clinicId}&doctor_id=eq.${encodeURIComponent(doctorId)}&slot_date=eq.${isoDate}&slot_time=eq.${encodeURIComponent(slotTime)}&status=eq.available`,
