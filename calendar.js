@@ -3,6 +3,10 @@ const { google } = require('googleapis');
 const TIMEZONE = 'Asia/Riyadh';
 const DURATION_MINS = 30;
 
+function hasCalendarCredentials() {
+  return !!(process.env.GOOGLE_CREDENTIALS_BASE64 || process.env.GOOGLE_CLIENT_EMAIL);
+}
+
 function getCalendarClient() {
   let credentials;
 
@@ -10,7 +14,6 @@ function getCalendarClient() {
     credentials = JSON.parse(
       Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64').toString('utf8')
     );
-    console.log('[Calendar] Using full credentials JSON');
   } else {
     const privateKey = process.env.GOOGLE_PRIVATE_KEY_BASE64
       ? Buffer.from(process.env.GOOGLE_PRIVATE_KEY_BASE64, 'base64').toString('utf8')
@@ -19,15 +22,11 @@ function getCalendarClient() {
       client_email: process.env.GOOGLE_CLIENT_EMAIL,
       private_key:  privateKey
     };
-    console.log('[Calendar] Using separate email/key env vars');
   }
 
   if (!credentials?.client_email || !credentials?.private_key) {
     throw new Error('Missing credentials');
   }
-
-  console.log('[Calendar] Using credentials for:', credentials.client_email.substring(0, 40));
-  console.log('[Calendar] Key type:', credentials.private_key.includes('RSA') ? 'RSA' : 'PKCS8');
 
   const auth = new google.auth.GoogleAuth({
     credentials,
@@ -51,6 +50,7 @@ function parseSlotToHHMM(timeSlot) {
 
 // Returns true if no confirmed event exists in the slot window
 async function isSlotAvailable(calendarId, dateISO, startTime, durationMins = DURATION_MINS) {
+  if (!hasCalendarCredentials()) return true;
   try {
     const cal   = getCalendarClient();
     const hhmm  = parseSlotToHHMM(startTime);
@@ -74,6 +74,10 @@ async function isSlotAvailable(calendarId, dateISO, startTime, durationMins = DU
 
 // Creates a calendar event and returns the event ID (or null on failure)
 async function createBookingEvent(calendarId, appointment) {
+  if (!hasCalendarCredentials()) {
+    console.log('[Calendar] Skipping createBookingEvent — no credentials configured');
+    return null;
+  }
   try {
     const cal  = getCalendarClient();
     const hhmm = parseSlotToHHMM(appointment.time_slot);
@@ -105,7 +109,7 @@ async function createBookingEvent(calendarId, appointment) {
 
 // Deletes a calendar event by ID. Returns true on success.
 async function deleteBookingEvent(calendarId, eventId) {
-  if (!eventId) return false;
+  if (!eventId || !hasCalendarCredentials()) return false;
   try {
     const cal = getCalendarClient();
     await cal.events.delete({ calendarId, eventId });
@@ -124,7 +128,7 @@ async function deleteBookingEvent(calendarId, eventId) {
 
 // Updates date/time of an existing calendar event. Returns true on success.
 async function updateBookingEvent(calendarId, eventId, newDetails) {
-  if (!eventId) return false;
+  if (!eventId || !hasCalendarCredentials()) return false;
   try {
     const cal  = getCalendarClient();
     const hhmm = parseSlotToHHMM(newDetails.time_slot);
