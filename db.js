@@ -105,7 +105,7 @@ async function getClinicById(id) {
 async function getClinic(whatsappNumber) {
   try {
     const res = await axios.get(
-      `${SUPABASE_URL}/rest/v1/clinics?whatsapp_number=eq.${encodeURIComponent(whatsappNumber)}&select=*`,
+      `${SUPABASE_URL}/rest/v1/clinics?whatsapp_number=eq.${encodeURIComponent(whatsappNumber)}&select=*&order=created_at.desc&limit=1`,
       { headers }
     );
     return res.data[0] || null;
