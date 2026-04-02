@@ -5,9 +5,8 @@ const DURATION_MINS = 30;
 
 function getCalendarClient() {
   const email = process.env.GOOGLE_CLIENT_EMAIL;
-
-  // Try base64 encoded key first (safe for Render), then fallback to direct key
   let privateKey;
+
   if (process.env.GOOGLE_PRIVATE_KEY_BASE64) {
     privateKey = Buffer.from(process.env.GOOGLE_PRIVATE_KEY_BASE64, 'base64').toString('utf8');
     console.log('[Calendar] Using base64 decoded key');
@@ -21,12 +20,15 @@ function getCalendarClient() {
   }
 
   console.log('[Calendar] Email:', email.substring(0, 40));
-  console.log('[Calendar] Key starts with:', privateKey.substring(0, 30));
+  console.log('[Calendar] Key type:', privateKey.includes('RSA') ? 'RSA' : 'PKCS8');
   console.log('[Calendar] Key has newlines:', privateKey.includes('\n'));
 
-  const auth = new google.auth.JWT({
-    email:  email,
-    key:    privateKey,
+  // Use GoogleAuth with credentials object — handles PKCS#8 keys correctly
+  const auth = new google.auth.GoogleAuth({
+    credentials: {
+      client_email: email,
+      private_key:  privateKey
+    },
     scopes: ['https://www.googleapis.com/auth/calendar']
   });
 
