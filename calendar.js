@@ -155,7 +155,8 @@ async function updateBookingEvent(calendarId, eventId, newDetails) {
 async function testCalendarConnection() {
   try {
     const cal = getCalendarClient();
-    await cal.calendars.get({ calendarId: process.env.GOOGLE_CALENDAR_ID });
+    const calendarId = process.env.GOOGLE_CALENDAR_ID;
+    await cal.events.list({ calendarId, maxResults: 1, timeMin: new Date().toISOString() });
     console.log('[Calendar] ✅ Connection successful');
   } catch (e) {
     console.error('[Calendar] ❌ Connection failed:', e.message);
