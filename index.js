@@ -22,6 +22,8 @@ app.get('/', (req, res) => {
 const { handleMessage } = require('./bot');
 const { getClinic, getClinicById, getPatient, getAppointmentsForReminder, updateAppointment } = require('./db');
 const { sendMessage } = require('./whatsapp');
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 const { transcribeAudio } = require('./audio');
 
 // ─────────────────────────────────────────────
@@ -184,10 +186,39 @@ app.post('/send-reminders', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
+// Test reminder — every minute (for testing)
+// ─────────────────────────────────────────────
+async function sendTestReminders() {
+  try {
+    const now = new Date();
+    const todayISO = now.toISOString().split('T')[0];
+    const { data: apts } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('preferred_date_iso', todayISO)
+      .eq('status', 'confirmed')
+      .eq('reminder_sent_1h', false);
+
+    if (!apts || apts.length === 0) return;
+
+    for (const apt of apts) {
+      console.log('[TestReminder] Found appointment:', apt.id, apt.time_slot);
+      const msg = `⏰ Test Reminder!\nHi ${apt.name}! Your appointment is today at ${apt.time_slot}\n🏥 ${apt.clinic_id}`;
+      await sendMessage(apt.phone, msg);
+      await supabase.from('appointments').update({ reminder_sent_1h: true }).eq('id', apt.id);
+      console.log('[TestReminder] Sent to:', apt.phone);
+    }
+  } catch (e) {
+    console.error('[TestReminder] Error:', e.message);
+  }
+}
+
+// ─────────────────────────────────────────────
 // Cron — every 30 minutes
 // ─────────────────────────────────────────────
 try {
   const cron = require('node-cron');
+  cron.schedule('* * * * *', sendTestReminders); // Every minute for testing
   cron.schedule('*/30 * * * *', async () => {
     console.log('[Cron] Running reminders...');
     try {

@@ -131,6 +131,7 @@ RULES:
 5. For ANY price/cost/how much question → prices
 6. For ANY location/address/directions question → location
 7. For ANY staff/human/talk to someone request → human
+7a. For ANY insurance/coverage question → human (staff can answer these)
 7. Detect language FROM the message itself, not from stored preference
 8. For mixed language (Arabizi like "ana abga maw3id") → Arabic booking
 9. If exact menu text is sent ("Our services", "خدماتنا", etc.) → detect exact intent
@@ -240,6 +241,8 @@ function keywordFallback(text, currentFlow = null) {
     return { intent: 'cancel', detected_language: 'en', extracted_value: null, confidence: 'low' };
   if (/talk to someone|speak to someone|\bhuman\b|real person|connect.*staff|need.*talk.*person|receptionist|front desk|customer service|call me|want a call|phone call|speak to a doctor|help from a person|not a bot|\bstaff\b|\bsupport\b|\bassistance/.test(t))
     return { intent: 'human', detected_language: 'en', extracted_value: null, confidence: 'low' };
+  if (/insurance|coverage|cover|insur|تأمين|تغطية/.test(t))
+    return { intent: 'human', detected_language: t.match(/[\u0600-\u06FF]/) ? 'ar' : 'en', extracted_value: null, confidence: 'medium' };
   if (/\bservice|\bservices|\btreatment|\btreatments|what do you offer|what do you do|what treatments|what procedures|specialize in|list of services|available treatments|what can you treat|dental services|oral care/.test(t))
     return { intent: 'services', detected_language: 'en', extracted_value: null, confidence: 'low' };
   if (/\breview|\breviews|\brate\b|\brating|\bfeedback|leave.*review|write.*review|google review|share.*experience|recommend|how.*review|give feedback/.test(t))

@@ -18,6 +18,7 @@ const LANG_SELECT = '🌐 Welcome! Please choose your language / اختر لغت
 // Accept either a plain clinic name string or a full clinic object (for feature flags + custom messages)
 function menuEN(clinicOrName) {
   const name = typeof clinicOrName === 'string' ? clinicOrName : (clinicOrName?.name || 'Our Clinic');
+  console.log('[Menu] Clinic name:', name);
   const cfg  = typeof clinicOrName === 'object' ? clinicOrName?.config : null;
   const welcome       = cfg?.messages?.welcome_en       || `Welcome to ${name}! 🦷✨`;
   const showReschedule = cfg?.features?.reschedule       !== false;
@@ -31,6 +32,7 @@ function menuEN(clinicOrName) {
 
 function menuAR(clinicOrName) {
   const name = typeof clinicOrName === 'string' ? clinicOrName : (clinicOrName?.name || 'عيادتنا');
+  console.log('[Menu] Clinic name:', name);
   const cfg  = typeof clinicOrName === 'object' ? clinicOrName?.config : null;
   const welcome       = cfg?.messages?.welcome_ar       || `أهلاً وسهلاً بك في ${name}! 🦷✨`;
   const showReschedule = cfg?.features?.reschedule       !== false;
@@ -85,6 +87,12 @@ async function handleMessage(phone, text, clinic) {
   const flow = patient.current_flow;
   const step = patient.flow_step || 0;
   const fd = patient.flow_data || {};
+
+  // Language selection reset — patient sends "language" or "change language" to re-pick
+  if (/^(language|change language|اللغة|تغيير اللغة)$/i.test(msg.trim())) {
+    await savePatient(phone, { ...patient, language: null, current_flow: null, flow_step: 0 });
+    return sendMessage(phone, LANG_SELECT);
+  }
 
   // FIX 2 — Language switch mid-conversation (before intent detection)
   const langSwitch = msg.toLowerCase().trim();
@@ -1367,8 +1375,8 @@ function reviewMsg(ar, cl) {
 
 function staffMsg(ar) {
   return ar
-    ? '👩‍⚕️ جاري تحويلك إلى فريقنا الآن...\nالرجاء الانتظار لحظة 🙏\nسيرد عليك فريقنا قريباً.\n\nأوقات العمل: الأحد-الخميس 9ص-9م، الجمعة 4م-9م، السبت 9ص-6م\n\n0️⃣ القائمة الرئيسية'
-    : '👩‍⚕️ Connecting you with our team now...\nPlease hold on for a moment 🙏\nOur staff will respond shortly during working hours.\n\nWorking hours: Sun-Thu 9AM-9PM, Fri 4PM-9PM, Sat 9AM-6PM\n\n0️⃣ Main menu';
+    ? '👩‍⚕️ جاري تحويلك إلى فريقنا الآن...\nالرجاء الانتظار لحظة 🙏\nسيرد عليك فريقنا قريباً 😊\n\n0️⃣ القائمة الرئيسية'
+    : '👩‍⚕️ Connecting you with our team now...\nPlease hold on for a moment 🙏\nOur staff will respond to your message shortly 😊\n\n0️⃣ Main menu';
 }
 
 module.exports = { handleMessage };
