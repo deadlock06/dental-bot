@@ -7,6 +7,11 @@ app.use(express.urlencoded({ extended: false })); // Twilio sends URL-encoded bo
 // Global error handlers — prevent crashes
 process.on('uncaughtException',  (err) => console.error('[CRASH] uncaughtException:', err));
 process.on('unhandledRejection', (err) => console.error('[CRASH] unhandledRejection:', err));
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+console.log(`[Boot] 🦷 Dental Bot starting — ${new Date().toISOString()}`);
+console.log('[Boot] Fixes: slot-409, NL-atomic-lock, save-rollback, no-show, cleanup-cron');
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
 
 // Localtunnel bypass middleware
 app.use((req, res, next) => {
@@ -19,12 +24,24 @@ app.get('/', (req, res) => {
   res.send('Dental Bot is running 🦷');
 });
 
+// Full system health check — JSON status of all components
+app.get('/health', async (req, res) => {
+  try {
+    const { healthCheck } = require('./monitor');
+    const status = await healthCheck();
+    const httpCode = status.status === 'healthy' ? 200 : status.status === 'critical' ? 503 : 200;
+    res.status(httpCode).json(status);
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
 const { handleMessage } = require('./bot');
 const { getClinic, getClinicById, getPatient, getAppointmentsForReminder, updateAppointment } = require('./db');
 const { sendMessage } = require('./whatsapp');
-const { createClient } = require('@supabase/supabase-js');
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const axios = require('axios');
 const { transcribeAudio } = require('./audio');
+
 
 // ─────────────────────────────────────────────
 // Twilio webhook verification (simple 200 OK)
@@ -79,14 +96,21 @@ app.post('/webhook', async (req, res) => {
     const patientPhone = fromRaw.replace(/^whatsapp:\+/, '');
     console.log(`[Webhook] patientPhone="${patientPhone}" messageText="${messageText}"`);
 
-    const botPhone = process.env.WHATSAPP_PHONE_ID;
+    const botPhoneRaw = process.env.WHATSAPP_PHONE_ID || '';
+    const botPhone = botPhoneRaw.replace(/^whatsapp:/i, '').replace(/^\+/, '');
     const clinic   = await getClinic(botPhone);
-    console.log(`[Webhook] botPhone="${botPhone}" clinic=${clinic ? clinic.name : 'NOT FOUND'}`);
+    console.log(`[Webhook] botPhone="${botPhone}" (raw="${botPhoneRaw}") clinic=${clinic ? clinic.name : 'NOT FOUND'}`);
+    if (!clinic) console.error(`[Webhook] ⚠️ Clinic not found for botPhone="${botPhone}" — check WHATSAPP_PHONE_ID env var and clinics.whatsapp_number in DB`);
 
     await handleMessage(patientPhone, messageText, clinic);
 
   } catch (err) {
     console.error('[Webhook] Error:', err.message);
+    // Log to monitor
+    try {
+      const { logError } = require('./monitor');
+      logError('webhook', err, { phone: req.body?.From });
+    } catch (_) {}
   }
 });
 
@@ -105,6 +129,7 @@ function parseDateToISO(dateStr) {
       return d.toISOString().split('T')[0];
     }
   } catch (e) { /* fall through */ }
+  console.warn(`[Reminders] ⚠️ parseDateToISO failed for: "${dateStr}" — reminder skipped for this appointment`);
   return null;
 }
 
@@ -179,61 +204,118 @@ app.post('/send-reminders', async (req, res) => {
         await updateAppointment(appt.id, { follow_up_sent: true, status: 'completed' });
         console.log(`[Reminders] Follow-up sent to ${appt.phone} (${ar ? 'AR' : 'EN'})`);
       }
+
+      // ── No-show detection: appointment was today, time has passed 2+ hours, still 'confirmed'
+      if (apptDateISO === todayISO && appt.status === 'confirmed') {
+        const slotMatchNS = appt.time_slot?.match(/(\d+):(\d+)\s*(AM|PM)/i);
+        if (slotMatchNS) {
+          let hNS = parseInt(slotMatchNS[1]);
+          const mNS = parseInt(slotMatchNS[2]);
+          const ampmNS = slotMatchNS[3].toUpperCase();
+          if (ampmNS === 'PM' && hNS !== 12) hNS += 12;
+          if (ampmNS === 'AM' && hNS === 12) hNS = 0;
+          const slotTimeNS = new Date(now);
+          slotTimeNS.setHours(hNS, mNS, 0, 0);
+          const minsOverdue = (now - slotTimeNS) / 60000;
+          if (minsOverdue >= 120) { // 2h past slot time
+            await updateAppointment(appt.id, { status: 'no-show' });
+            console.log(`[Reminders] ⚠️ No-show marked for ${appt.phone} (appt ${appt.id}), ${Math.round(minsOverdue)}min overdue`);
+            // Non-blocking: release the slot if doctor-managed
+            if (appt.doctor_id && apptDateISO && appt.clinic_id) {
+              try {
+                const { releaseSlotByPatient } = require('./slots');
+                await releaseSlotByPatient(appt.clinic_id, appt.doctor_id, apptDateISO, appt.phone);
+                console.log(`[Reminders] Slot released for no-show ${appt.phone}`);
+              } catch (slotErr) {
+                console.error('[Reminders] Slot release error (no-show):', slotErr.message);
+              }
+            }
+          }
+        }
+      }
     }
   } catch (err) {
     console.error('[Reminders] Error:', err.message);
   }
 });
 
+
 // ─────────────────────────────────────────────
-// Test reminder — every minute (for testing)
+// POST /cleanup-slots — releases past booked slots that have no appointment
+// (no-shows, orphaned locks). Called by hourly cron.
 // ─────────────────────────────────────────────
-async function sendTestReminders() {
+app.post('/cleanup-slots', async (req, res) => {
+  res.sendStatus(200);
   try {
-    const now = new Date();
-    const todayISO = now.toISOString().split('T')[0];
-    const { data: apts } = await supabase
-      .from('appointments')
-      .select('*')
-      .eq('preferred_date_iso', todayISO)
-      .eq('status', 'confirmed')
-      .eq('reminder_sent_1h', false);
-
-    if (!apts || apts.length === 0) return;
-
-    for (const apt of apts) {
-      console.log('[TestReminder] Found appointment:', apt.id, apt.time_slot);
-      const msg = `⏰ Test Reminder!\nHi ${apt.name}! Your appointment is today at ${apt.time_slot}\n🏥 ${apt.clinic_id}`;
-      await sendMessage(apt.phone, msg);
-      await supabase.from('appointments').update({ reminder_sent_1h: true }).eq('id', apt.id);
-      console.log('[TestReminder] Sent to:', apt.phone);
+    const todayISO = new Date().toISOString().split('T')[0];
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_KEY = process.env.SUPABASE_KEY;
+    // Release all booked slots from dates BEFORE today — they will never be needed again
+    const cleanupRes = await axios.patch(
+      `${SUPABASE_URL}/rest/v1/doctor_slots?slot_date=lt.${todayISO}&status=eq.booked`,
+      { status: 'available', patient_phone: null, appointment_id: null },
+      {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation'
+        }
+      }
+    );
+    const released = Array.isArray(cleanupRes.data) ? cleanupRes.data.length : 0;
+    if (released > 0) {
+      console.log(`[Cleanup] ✅ Released ${released} past booked slot(s) back to available`);
+    } else {
+      console.log('[Cleanup] No past booked slots to release');
     }
   } catch (e) {
-    console.error('[TestReminder] Error:', e.message);
+    console.error('[Cleanup] /cleanup-slots error:', e.message);
   }
-}
+});
 
 // ─────────────────────────────────────────────
-// Cron — every 30 minutes
+// Cron — every 30 minutes for production reminders
+// (Post-booking 1-min reminder is handled by setTimeout in bot.js)
 // ─────────────────────────────────────────────
 try {
   const cron = require('node-cron');
-  cron.schedule('* * * * *', sendTestReminders); // Every minute for testing
+
+  // ── Production reminders — every 30 minutes ──
   cron.schedule('*/30 * * * *', async () => {
-    console.log('[Cron] Running reminders...');
+    console.log('[Cron] Running 30-min reminder check...');
     try {
-      const http = require('http');
-      http.request({
-        hostname: 'localhost',
-        port: process.env.PORT || 3000,
-        path: '/send-reminders',
-        method: 'POST'
-      }).end();
+      await axios.post(`http://localhost:${process.env.PORT || 3000}/send-reminders`);
     } catch (e) {
-      console.error('[Cron] Error triggering reminders:', e.message);
+      console.error('[Cron] Reminder trigger error:', e.message);
     }
   });
-  console.log('[Cron] Reminder scheduler started');
+
+  // ── Past slot cleanup — every hour at :00 ──
+  cron.schedule('0 * * * *', async () => {
+    console.log('[Cron] Running hourly slot cleanup...');
+    try {
+      await axios.post(`http://localhost:${process.env.PORT || 3000}/cleanup-slots`);
+    } catch (e) {
+      console.error('[Cron] Cleanup trigger error:', e.message);
+    }
+  });
+
+  // ── System health check — every 10 minutes ──
+  cron.schedule('*/10 * * * *', async () => {
+    try {
+      const { runPeriodicCheck } = require('./monitor');
+      const { getClinic } = require('./db');
+      const botPhoneRaw = process.env.WHATSAPP_PHONE_ID || '';
+      const botPhone = botPhoneRaw.replace(/^whatsapp:/i, '').replace(/^\+/, '');
+      const clinic = await getClinic(botPhone);
+      await runPeriodicCheck(clinic?.staff_phone || null);
+    } catch (e) {
+      console.error('[Cron] Health check error:', e.message);
+    }
+  });
+
+  console.log('[Cron] ✅ All schedulers started: reminders (30m) + slot cleanup (1h) + health check (10m)');
 } catch (e) {
   console.log('[Cron] node-cron not available, reminders must be triggered manually');
 }
@@ -241,4 +323,7 @@ try {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log('[Monitor] Self-healing monitor active 🛡️');
+  console.log('[AI] Custom GPT with function calling enabled 🧠');
+  console.log('[WhatsApp] Interactive buttons/lists ready 📱');
 });

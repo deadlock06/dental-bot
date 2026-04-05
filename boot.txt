@@ -1,0 +1,29 @@
+﻿ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+[Boot] ≡ƒª╖ Dental Bot starting ΓÇö 2026-04-05T06:48:39.358Z
+[Boot] Fixes: slot-409, NL-atomic-lock, save-rollback, no-show, cleanup-cron
+ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü
+[AI] OPENAI_KEY loaded: true
+[Cron] Γ£à All schedulers started: reminders (30m) + slot cleanup (1h) + health check (10m)
+node : [CRASH] uncaughtException: Error: listen EADDRINUSE: address already in use :::3000
+At line:1 char:1
++ node index.js 2>&1 | Out-File -FilePath ".\boot.txt" -Encoding utf8;  ...
++ ~~~~~~~~~~~~~~~~~~
+    + CategoryInfo              : NotSpecified: ([    CRASH] uncaugh... in     use :::3000:String) [    ], RemoteException
+    + FullyQualifiedError    Id : NativeCommandErr    or
+ 
+    at Server.setupListenHandle [as _listen2] (node:net:1948:16)
+    at listenInCluster (node:net:2005:12)
+    at Server.listen (node:net:2110:7)
+    at app.listen (D:\Downloads\antigravity\dental-bot (2)\dental-bot\node_modules\express\lib\application.js:635:24)
+    at Object.<anonymous> (D:\Downloads\antigravity\dental-bot (2)\dental-bot\index.js:324:5)
+    at Module._compile (node:internal/modules/cjs/loader:1812:14)
+    at Object..js (node:internal/modules/cjs/loader:1943:10)
+    at Module.load (node:internal/modules/cjs/loader:1533:32)
+    at Module._load (node:internal/modules/cjs/loader:1335:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 3000
+}

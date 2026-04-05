@@ -223,11 +223,49 @@ async function sendTimeSlotMenu(to, ar, slots, header, plainTextFallback) {
   );
 }
 
+// ─────────────────────────────────────────────
+// Quick-reply buttons (up to 3 buttons)
+// buttons: [{ id, title }]
+// ─────────────────────────────────────────────
+async function sendButtonMessage(to, body, buttons, fallbackText) {
+  try {
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken  = process.env.TWILIO_AUTH_TOKEN;
+    const from       = process.env.TWILIO_WHATSAPP_FROM;
+
+    const client = twilio(accountSid, authToken);
+
+    await client.messages.create({
+      from:  from,
+      to:    `whatsapp:+${to}`,
+      body:  JSON.stringify({
+        type: 'interactive',
+        interactive: {
+          type: 'button',
+          body: { text: body },
+          action: {
+            buttons: buttons.map(b => ({
+              type: 'reply',
+              reply: { id: b.id, title: b.title }
+            }))
+          }
+        }
+      })
+    });
+  } catch (err) {
+    console.error('[WhatsApp] sendButtonMessage error:', err.message);
+    if (fallbackText) {
+      await sendMessage(to, fallbackText);
+    }
+  }
+}
+
 module.exports = {
   sendMessage,
   sendInteractiveList,
   sendMainMenu,
   sendDoctorMenu,
   sendTreatmentMenu,
-  sendTimeSlotMenu
+  sendTimeSlotMenu,
+  sendButtonMessage
 };

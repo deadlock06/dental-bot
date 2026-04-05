@@ -252,11 +252,28 @@ async function getAppointmentsDueFollowUp() {
   }
 }
 
+// ─────────────────────────────────────────────
+// Doctor Schedules — used as fallback when clinics.doctors JSONB is empty
+// ─────────────────────────────────────────────
+async function getDoctorsByClinic(clinicId) {
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/doctor_schedules?clinic_id=eq.${encodeURIComponent(clinicId)}&is_active=eq.true&select=*&order=doctor_name.asc`,
+      { headers }
+    );
+    return res.data || [];
+  } catch (err) {
+    console.error('[DB] getDoctorsByClinic error:', err.message);
+    return [];
+  }
+}
+
 module.exports = {
   getPatient, insertPatient, savePatient, deletePatient,
   getClinic, getClinicById,
   saveAppointment, getAppointment, updateAppointment,
   checkDuplicateBooking,
   getAppointmentsForReminder,
-  getAppointmentsDueTomorrow, getAppointmentsDueInOneHour, getAppointmentsDueFollowUp
+  getAppointmentsDueTomorrow, getAppointmentsDueInOneHour, getAppointmentsDueFollowUp,
+  getDoctorsByClinic
 };

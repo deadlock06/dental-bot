@@ -82,7 +82,8 @@ async function generateSlotsForDate(clinicId, doctorId, isoDate) {
 
     while (current + dur <= end) {
       if (breakStart !== null && breakEnd !== null && current >= breakStart && current < breakEnd) {
-        current += dur;
+        // Jump directly past the break instead of stepping through it slot-by-slot
+        current = breakEnd;
         continue;
       }
 
@@ -104,10 +105,19 @@ async function generateSlotsForDate(clinicId, doctorId, isoDate) {
     }
 
     if (slots.length > 0) {
+      // Use upsert with ignore-duplicates so re-generating an already-populated date is safe.
+      // The on_conflict param tells Supabase which unique key to use (clinic_id, doctor_id, slot_date, slot_time).
       await axios.post(
-        `${SUPABASE_URL}/rest/v1/doctor_slots`,
+        `${SUPABASE_URL}/rest/v1/doctor_slots?on_conflict=clinic_id,doctor_id,slot_date,slot_time`,
         slots,
-        { headers: { ...headers, Prefer: 'resolution=ignore-duplicates' } }
+        {
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            Prefer: 'resolution=ignore-duplicates,return=minimal'
+          }
+        }
       );
     }
 
