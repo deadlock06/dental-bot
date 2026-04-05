@@ -1336,24 +1336,21 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
   // Step 3 — Confirm reschedule
   if (step === 3) {
     const confirmed = val === '1' || /^(yes|نعم|تمام|ايوه|موافق)$/i.test(val);
-    console.log(`[TRACE Reschedule Step 3] val: "${val}", extractedValue: "${extractedValue}", confirmed: ${confirmed}, fd.appointment_id: "${fd.appointment_id}"`);
-
     if (confirmed && fd.appointment_id) {
-      console.log(`\n\n\n[!!! EXPLOSIVE EMERGENCY TRACE !!!]`);
-      console.log(`[TRACE] This is 100% running the NEW CODE inside bot.js!`);
-      console.log(`[TRACE] Phone: ${phone}, Appointment ID: ${fd.appointment_id}`);
-      console.log(`[TRACE] If you see this, the file sync is perfect!`);
+      console.log(`[TRACE Reschedule Step 3] Executing confirmation logic for ${phone}`);
 
       // ── Post-reschedule test reminder (3-minute delay for testing) ──
       const reminderPhone  = phone;
       const reminderAr     = ar;
       
-      // Let's FORCE a message and return immediately to avoid Supabase errors blocking it
-      await sendMessage(reminderPhone, '⏳ [DEBUG START] Your 3-minute reminder test timer has just started! (Reschedule)');
+      await sendMessage(reminderPhone, reminderAr ? '⏳ تم تفعيل مؤقت الاختبار الخاص بك لمدة 3 دقائق الآن! (إعادة جدولة)' : '⏳ Your 3-minute reminder test timer has just started! (Reschedule)');
 
       setTimeout(async () => {
         try {
-          await sendMessage(reminderPhone, `⏰ [DEBUG END] *Appointment Reminder!* 🦷\n\nHi ${fd.name},\nYour appointment is confirmed:\n📅 ${fd.new_date}\n⏰ ${fd.new_slot}\n🏥 ${cl.name}\n\nWe look forward to seeing you! 😊`);
+          const msg = reminderAr
+            ? `⏰ *تذكير بموعدك!* 🦷\n\nمرحباً ${fd.name}،\nتم تأكيد موعدك بنجاح:\n📅 ${fd.new_date}\n⏰ ${fd.new_slot}\n🏥 ${cl.name}\n\nنتطلع لرؤيتك! 😊`
+            : `⏰ *Appointment Reminder!* 🦷\n\nHi ${fd.name},\nYour appointment is confirmed:\n📅 ${fd.new_date}\n⏰ ${fd.new_slot}\n🏥 ${cl.name}\n\nWe look forward to seeing you! 😊`;
+          await sendMessage(reminderPhone, msg);
           console.log(`[Reminder] ✅ 3-min post-booking reminder sent to: ${reminderPhone} (Reschedule)`);
         } catch (e) {
           console.error('[Reminder] ❌ Post-booking reminder error:', e.message);
@@ -1369,6 +1366,23 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
         reminder_sent_24h:  false,
         reminder_sent_1h:   false
       });
+
+      // Phase 3 — update Google Calendar event if exists
+      if (calendarLib && fd.calendar_event_id && cl.google_calendar_id && newDateISO) {
+        try {
+          await calendarLib.updateBookingEvent(cl.google_calendar_id, fd.calendar_event_id, {
+            preferred_date_iso: newDateISO,
+            time_slot:          fd.new_slot
+          });
+        } catch (calErr) {
+          console.error('[Reschedule] Calendar update error (non-blocking):', calErr.message);
+        }
+      }
+      if (cl.staff_phone && cl.config?.features?.staff_notifications !== false) {
+        await sendMessage(cl.staff_phone,
+          `🔄 Appointment Rescheduled!\n━━━━━━━━━━━━━━\n👤 Patient: ${fd.name}\n📱 Phone: ${phone}\n📅 New Date: ${fd.new_date}\n⏰ New Time: ${fd.new_slot}\n━━━━━━━━━━━━━━\nRescheduled via WhatsApp AI 🔄`
+        );
+      }
 
       try {
         const { releaseSlotByPatient } = require('./slots');
