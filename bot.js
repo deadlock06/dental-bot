@@ -1,6 +1,7 @@
 const { getPatient, insertPatient, savePatient, saveAppointment, getAppointment, updateAppointment, checkDuplicateBooking } = require('./db');
-const { sendMessage } = require('./whatsapp');
+const { sendMessage, sendMainMenu, sendTreatmentMenu, sendDoctorMenu, sendTimeSlotMenu, sendInteractiveList } = require('./whatsapp');
 const { detectIntent, extractDate, extractTimeSlot } = require('./ai');
+const { withMonitor, validateFlowState, logError } = require('./monitor');
 
 let calendarLib = null;
 try {
@@ -10,10 +11,45 @@ try {
 }
 
 // ─────────────────────────────────────────────
+// Processing lock — prevent duplicate message handling
+// (Twilio retries or user double-taps)
+// ─────────────────────────────────────────────
+const processingLocks = new Map();
+
+// ─────────────────────────────────────────────
+// Stale flow reset — auto-clear flows abandoned >30 min ago
+// ─────────────────────────────────────────────
+async function clearStaleFlow(phone, patient) {
+  if (!patient || !patient.current_flow) return patient; // no active flow, nothing to clear
+  if (!patient.updated_at) return patient;
+  const lastUpdate = new Date(patient.updated_at);
+  const diffMinutes = (Date.now() - lastUpdate.getTime()) / 60000;
+  if (diffMinutes > 30) {
+    console.log(`[Bot] Stale flow detected for ${phone} (${Math.round(diffMinutes)}m idle) — resetting to main menu`);
+    const reset = { ...patient, current_flow: null, flow_step: 0, flow_data: {} };
+    await savePatient(phone, reset);
+    return reset;
+  }
+  return patient;
+}
+
+// ─────────────────────────────────────────────
 // Static strings
 // ─────────────────────────────────────────────
 
 const LANG_SELECT = '🌐 Welcome! Please choose your language / اختر لغتك:\n1️⃣ English\n2️⃣ العربية\n\n💡 Tap 1 for English, 2 for Arabic\nاضغط 1 للإنجليزية، 2 للعربية';
+
+// ─── Smart Menu: tries interactive list, falls back to plain text ───
+async function sendSmartMenu(phone, ar, cl) {
+  const clinicName = typeof cl === 'string' ? cl : (cl?.name || 'Our Clinic');
+  const plainText = ar ? menuAR(cl) : menuEN(cl);
+  try {
+    await sendMainMenu(phone, clinicName, ar, plainText);
+  } catch (e) {
+    console.log('[Bot] Interactive menu failed, using plain text:', e.message);
+    await sendMessage(phone, plainText);
+  }
+}
 
 // Accept either a plain clinic name string or a full clinic object (for feature flags + custom messages)
 function menuEN(clinicOrName) {
@@ -49,6 +85,15 @@ function menuAR(clinicOrName) {
 // Main entry point
 // ─────────────────────────────────────────────
 async function handleMessage(phone, text, clinic) {
+  // ── Processing lock — skip duplicate/retry messages ──
+  if (processingLocks.get(phone)) {
+    console.log(`[Bot] ⏳ Skipping duplicate message from ${phone} (lock active)`);
+    return;
+  }
+  processingLocks.set(phone, true);
+  // Release lock after 3 seconds
+  setTimeout(() => processingLocks.delete(phone), 3000);
+
   const msg = text.trim();
 
   const cl = clinic || {
@@ -68,59 +113,86 @@ async function handleMessage(phone, text, clinic) {
     return sendMessage(phone, LANG_SELECT);
   }
 
-  // ── Branch 2: No language chosen yet
-  if (!patient.language) {
+  // ── Stale flow reset — clear abandoned flows older than 30 min ──
+  patient = await clearStaleFlow(phone, patient);
+
+  // ── Branch 2: No language chosen yet (or corrupt language value) ──
+  if (!patient.language || !['ar', 'en'].includes(patient.language)) {
+    if (patient.language && !['ar', 'en'].includes(patient.language)) {
+      console.log(`[Bot] Corrupt language value "${patient.language}" for ${phone} — re-prompting`);
+      await savePatient(phone, { ...patient, language: null, current_flow: null, flow_step: 0, flow_data: {} });
+    }
     if (msg === '1' || /^english$/i.test(msg)) {
-      await savePatient(phone, { language: 'en', current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMessage(phone, menuEN(cl));
+      await savePatient(phone, { ...patient, language: 'en', current_flow: null, flow_step: 0, flow_data: {} });
+      return sendSmartMenu(phone, false, cl);
     }
     if (msg === '2' || /^(arabic|عربي|العربية)$/i.test(msg)) {
-      await savePatient(phone, { language: 'ar', current_flow: null, flow_step: 0, flow_data: {} });
-      return sendMessage(phone, menuAR(cl));
+      await savePatient(phone, { ...patient, language: 'ar', current_flow: null, flow_step: 0, flow_data: {} });
+      return sendSmartMenu(phone, true, cl);
     }
     return sendMessage(phone, LANG_SELECT);
   }
 
-  // ── Branch 3: Full patient with language
+  // ── Branch 3: Full patient with valid language
   const lang = patient.language;
   const ar = lang === 'ar';
   const flow = patient.current_flow;
   const step = patient.flow_step || 0;
   const fd = patient.flow_data || {};
 
-  // Language selection reset — patient sends "language" or "change language" to re-pick
-  if (/^(language|change language|اللغة|تغيير اللغة)$/i.test(msg.trim())) {
-    await savePatient(phone, { ...patient, language: null, current_flow: null, flow_step: 0 });
-    return sendMessage(phone, LANG_SELECT);
-  }
+  // ── Universal commands — always work regardless of flow ──
 
-  // FIX 2 — Language switch mid-conversation (before intent detection)
-  const langSwitch = msg.toLowerCase().trim();
-  if (/^(english|switch to english|change to english)$/i.test(langSwitch)) {
-    await savePatient(phone, { ...patient, language: 'en', current_flow: null, flow_step: 0 });
-    return sendMessage(phone, menuEN(cl));
-  }
-  if (/^(arabic|عربي|عربية|switch to arabic)$/i.test(langSwitch)) {
-    await savePatient(phone, { ...patient, language: 'ar', current_flow: null, flow_step: 0 });
-    return sendMessage(phone, menuAR(cl));
-  }
-
-  const ai = await detectIntent(msg, flow, step);
-  const { intent, extracted_value } = ai;
-
-  // Language change — show picker so patient explicitly chooses
-  if (intent === 'change_language' || /^(change language|language|لغة|تغيير اللغة|change lang)$/i.test(msg)) {
+  // Language selection reset
+  if (/^(language|change language|اللغة|تغيير اللغة|change lang)$/i.test(msg.trim())) {
     await savePatient(phone, { ...patient, language: null, current_flow: null, flow_step: 0, flow_data: {} });
     return sendMessage(phone, LANG_SELECT);
   }
 
-  // Greeting always clears any stale flow and shows menu
-  if (intent === 'greeting') {
-    await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
-    return sendMessage(phone, ar ? menuAR(cl) : menuEN(cl));
+  // Language switch mid-conversation
+  if (/^(english|switch to english|change to english)$/i.test(msg.trim())) {
+    await savePatient(phone, { ...patient, language: 'en', current_flow: null, flow_step: 0, flow_data: {} });
+    return sendSmartMenu(phone, false, cl);
+  }
+  if (/^(arabic|عربي|عربية|switch to arabic)$/i.test(msg.trim())) {
+    await savePatient(phone, { ...patient, language: 'ar', current_flow: null, flow_step: 0, flow_data: {} });
+    return sendSmartMenu(phone, true, cl);
   }
 
-  // FIX 1 — Slot numbers above 9: bypass AI extraction, pass raw number directly
+  // ── Determine which steps expect free-text input (don't run AI on these) ──
+  // These steps expect names, notes, dates — AI will misclassify them as intents
+  const FREE_TEXT_STEPS = {
+    booking:    [1, 4, 6, 21],  // name, notes, date, custom phone
+    reschedule: [1],             // new date
+  };
+  const isActiveFlow    = !!flow;
+  const isFreeTextStep  = isActiveFlow && (FREE_TEXT_STEPS[flow] || []).includes(step);
+  const isNumber        = /^\d+$/.test(msg.trim());
+
+  // ── AI Intent Detection — skip for free-text flow steps ──
+  let intent = 'continue_flow';
+  let extracted_value = null;
+  let confidence = 'high';
+
+  if (!isFreeTextStep) {
+    const ai = await detectIntent(msg, flow, step);
+    intent          = ai.intent;
+    extracted_value = ai.extracted_value;
+    confidence      = ai.confidence || 'low';
+  }
+
+  // ── Greeting — show menu (but NOT if in a free-text step; patient name "hi" etc.) ──
+  if (!isActiveFlow && intent === 'greeting') {
+    await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
+    return sendSmartMenu(phone, ar, cl);
+  }
+
+  // ── Active flow: "0" or "menu" — universal exit to main menu ──
+  if (isActiveFlow && /^(0|menu|main menu|القائمة|قائمة رئيسية)$/i.test(msg.trim())) {
+    await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
+    return sendSmartMenu(phone, ar, cl);
+  }
+
+  // ── Slot numbers above 9: bypass AI extraction, pass raw number directly ──
   if (flow === 'booking' && step === 7) {
     const num = parseInt(msg.trim());
     if (!isNaN(num) && num >= 1 && num <= 20) {
@@ -128,7 +200,8 @@ async function handleMessage(phone, text, clinic) {
     }
   }
 
-  // Active flow routing
+  // ── Active flow routing with smart interrupt detection ──
+
   if (flow === 'my_appointment') {
     const r = msg.trim();
     if (r === '1') {
@@ -169,15 +242,25 @@ async function handleMessage(phone, text, clinic) {
   }
 
   if (flow === 'booking') {
-    // Numbers are always flow inputs — never treat as menu selections mid-flow
-    const isNumber = /^\d+$/.test(msg.trim());
-    if (!isNumber && intent !== 'continue_flow' && intent !== 'unknown') {
+    // For free-text steps, go straight to flow handler — no interrupt check
+    if (isFreeTextStep) {
+      return handleBookingFlow(phone, msg, extracted_value, lang, ar, step, fd, patient, cl);
+    }
+    // For non-free-text steps (treatment select, slot select, confirm), check for explicit intent switch
+    if (!isNumber && intent !== 'continue_flow' && intent !== 'unknown' && intent !== 'greeting') {
+      // Only interrupt for strong signals: explicit intent keywords, not AI guesses
+      const EXPLICIT_SWITCH_INTENTS = ['cancel', 'reschedule', 'my_appointment', 'human', 'help'];
+      if (EXPLICIT_SWITCH_INTENTS.includes(intent)) {
+        await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
+        return routeIntent(phone, intent, lang, ar, msg, { ...patient, current_flow: null, flow_step: 0, flow_data: {} }, cl);
+      }
+      // For info intents (services, prices, location, etc.), answer then prompt to continue
       const interruptReply = await getIntentReply(intent, ar, cl);
       if (interruptReply) {
         await sendMessage(phone, interruptReply);
         return sendMessage(phone, ar
-          ? 'بالمناسبة، كنت في منتصف حجز موعد 😊\nهل تريد المتابعة؟\n1️⃣ نعم، أكمل الحجز\n2️⃣ لا، ابدأ من جديد'
-          : 'By the way, you were in the middle of booking 😊\nWould you like to continue?\n1️⃣ Yes, continue booking\n2️⃣ No, start over'
+          ? 'بالمناسبة، أنت في منتصف حجز موعد 😊\nأكمل الخطوة الحالية للمتابعة، أو اضغط 0 للقائمة الرئيسية'
+          : 'By the way, you\'re in the middle of booking 😊\nContinue the current step, or press 0 for main menu'
         );
       }
     }
@@ -185,35 +268,45 @@ async function handleMessage(phone, text, clinic) {
   }
 
   if (flow === 'reschedule') {
-    if (intent !== 'continue_flow' && intent !== 'unknown') {
+    // Free-text steps go straight to flow handler
+    if (isFreeTextStep) {
+      return handleRescheduleFlow(phone, msg, extracted_value, lang, ar, step, fd, patient, cl);
+    }
+    // Check for explicit intent switch on non-free-text steps
+    if (!isNumber && intent !== 'continue_flow' && intent !== 'unknown' && intent !== 'greeting') {
+      const EXPLICIT_SWITCH_INTENTS = ['cancel', 'booking', 'my_appointment', 'human', 'help'];
+      if (EXPLICIT_SWITCH_INTENTS.includes(intent)) {
+        await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
+        return routeIntent(phone, intent, lang, ar, msg, { ...patient, current_flow: null, flow_step: 0, flow_data: {} }, cl);
+      }
       const interruptReply = await getIntentReply(intent, ar, cl);
       if (interruptReply) {
         await sendMessage(phone, interruptReply);
         return sendMessage(phone, ar
-          ? 'بالمناسبة، كنت في منتصف إعادة جدولة موعدك 😊\nهل تريد المتابعة؟\n1️⃣ نعم، أكمل\n2️⃣ لا، ابدأ من جديد'
-          : 'By the way, you were in the middle of rescheduling 😊\nWould you like to continue?\n1️⃣ Yes, continue\n2️⃣ No, start over'
+          ? 'أنت في منتصف إعادة جدولة موعدك 😊\nأكمل الخطوة الحالية، أو اضغط 0 للقائمة الرئيسية'
+          : 'You\'re in the middle of rescheduling 😊\nContinue the current step, or press 0 for main menu'
         );
       }
-      const clearedPatient = { ...patient, current_flow: null, flow_step: 0, flow_data: {} };
-      await savePatient(phone, clearedPatient);
-      return routeIntent(phone, intent, lang, ar, msg, clearedPatient, cl);
     }
     return handleRescheduleFlow(phone, msg, extracted_value, lang, ar, step, fd, patient, cl);
   }
 
   if (flow === 'cancel') {
-    if (intent !== 'continue_flow' && intent !== 'unknown') {
+    // Cancel flow only has numeric confirm steps — always check intents
+    if (!isNumber && intent !== 'continue_flow' && intent !== 'unknown' && intent !== 'greeting') {
+      const EXPLICIT_SWITCH_INTENTS = ['booking', 'reschedule', 'my_appointment', 'human', 'help'];
+      if (EXPLICIT_SWITCH_INTENTS.includes(intent)) {
+        await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
+        return routeIntent(phone, intent, lang, ar, msg, { ...patient, current_flow: null, flow_step: 0, flow_data: {} }, cl);
+      }
       const interruptReply = await getIntentReply(intent, ar, cl);
       if (interruptReply) {
         await sendMessage(phone, interruptReply);
         return sendMessage(phone, ar
-          ? 'بالمناسبة، كنت في منتصف إلغاء موعدك 😊\nهل تريد المتابعة؟\n1️⃣ نعم، أكمل\n2️⃣ لا، ابدأ من جديد'
-          : 'By the way, you were in the middle of cancelling 😊\nWould you like to continue?\n1️⃣ Yes, continue\n2️⃣ No, start over'
+          ? 'أنت في منتصف إلغاء موعدك 😊\nأكمل الخطوة الحالية، أو اضغط 0 للقائمة الرئيسية'
+          : 'You\'re in the middle of cancelling 😊\nContinue the current step, or press 0 for main menu'
         );
       }
-      const clearedPatient = { ...patient, current_flow: null, flow_step: 0, flow_data: {} };
-      await savePatient(phone, clearedPatient);
-      return routeIntent(phone, intent, lang, ar, msg, clearedPatient, cl);
     }
     return handleCancelFlow(phone, msg, lang, ar, step, fd, patient, cl);
   }
@@ -248,7 +341,8 @@ async function getIntentReply(intent, ar, cl) {
 // BOOKING FLOW — steps 1-8
 // ─────────────────────────────────────────────
 
-const EXIT_RE = /^(0|menu|main menu|back|go back|start over|cancel|stop|exit|quit|قائمة|قائمة رئيسية|رجوع|ارجع|إلغاء|توقف|خروج|من البداية)$/i;
+// EXIT_RE — only menu/back commands. Intent words like 'cancel' are handled by AI routing above.
+const EXIT_RE = /^(0|menu|main menu|back|go back|start over|قائمة|قائمة رئيسية|رجوع|ارجع|من البداية)$/i;
 
 // ─────────────────────────────────────────────
 // Date helpers
@@ -290,11 +384,14 @@ function calculateRelativeDate(text) {
   if (/^(tomorrow|tmrw|غداً|بكرة|غدا)$/i.test(cleaned))
     return fmt(new Date(now.getTime() + 86400000));
 
+  if (/^(today|اليوم)$/i.test(cleaned))
+    return fmt(now);
+
   const afterDaysMatch = cleaned.match(/(?:after|in|بعد|في)\s+(\d+)\s+(?:days?|أيام?|يوم)/i);
   if (afterDaysMatch)
     return fmt(new Date(now.getTime() + parseInt(afterDaysMatch[1]) * 86400000));
 
-  // FIX 2 — "ok monday" / "next monday" / bare weekday name
+  // "ok monday" / "next monday" / bare weekday name
   const nextWeekdayMatch = cleaned.match(/next\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i);
   if (nextWeekdayMatch) return getNextWeekday(nextWeekdayMatch[1]);
   if (/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/i.test(cleaned))
@@ -307,27 +404,67 @@ function calculateRelativeDate(text) {
   if (weeksMatch)
     return fmt(new Date(now.getTime() + parseInt(weeksMatch[1]) * 7 * 86400000));
 
+  // ── Direct month-day parser ("April 21", "april 4", "21 April", "may 15") ──
+  const MONTHS = { january:0, february:1, march:2, april:3, may:4, june:5, july:6, august:7, september:8, october:9, november:10, december:11 };
+  const MONTHS_AR = { 'يناير':0, 'فبراير':1, 'مارس':2, 'أبريل':3, 'مايو':4, 'يونيو':5, 'يوليو':6, 'أغسطس':7, 'سبتمبر':8, 'أكتوبر':9, 'نوفمبر':10, 'ديسمبر':11 };
+  // English: "April 21" or "21 April"
+  const mdMatch = cleaned.match(/^(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})$/i)
+               || cleaned.match(/^(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december)$/i);
+  if (mdMatch) {
+    let monthName, day;
+    if (isNaN(parseInt(mdMatch[1]))) { monthName = mdMatch[1].toLowerCase(); day = parseInt(mdMatch[2]); }
+    else { monthName = mdMatch[2].toLowerCase(); day = parseInt(mdMatch[1]); }
+    const month = MONTHS[monthName];
+    if (month !== undefined && day >= 1 && day <= 31) {
+      const year = now.getFullYear();
+      let d = new Date(year, month, day);
+      d.setHours(0, 0, 0, 0);
+      const todayMidnight = new Date(now); todayMidnight.setHours(0, 0, 0, 0);
+      if (d < todayMidnight) d = new Date(year + 1, month, day);
+      return fmt(d);
+    }
+  }
+  // Arabic: "أبريل 21" or "21 أبريل"
+  const arMonthNames = Object.keys(MONTHS_AR).join('|');
+  const mdMatchAR = cleaned.match(new RegExp(`^(${arMonthNames})\\s+(\\d{1,2})$`))
+                 || cleaned.match(new RegExp(`^(\\d{1,2})\\s+(${arMonthNames})$`));
+  if (mdMatchAR) {
+    let monthName, day;
+    if (isNaN(parseInt(mdMatchAR[1]))) { monthName = mdMatchAR[1]; day = parseInt(mdMatchAR[2]); }
+    else { monthName = mdMatchAR[2]; day = parseInt(mdMatchAR[1]); }
+    const month = MONTHS_AR[monthName];
+    if (month !== undefined && day >= 1 && day <= 31) {
+      const year = now.getFullYear();
+      let d = new Date(year, month, day);
+      d.setHours(0, 0, 0, 0);
+      const todayMidnight = new Date(now); todayMidnight.setHours(0, 0, 0, 0);
+      if (d < todayMidnight) d = new Date(year + 1, month, day);
+      return fmt(d);
+    }
+  }
+
   return null;
 }
 
 // Phase 1 — Robust ISO date from any parsed date string.
-// Always returns YYYY-MM-DD with year >= 2026, or null.
+// Always returns YYYY-MM-DD with year >= current year, or null.
 function getDateISO(parsedDate) {
   if (!parsedDate) return null;
   try {
+    const currentYear = new Date().getFullYear();
     // Try direct parse — works when year is already present (e.g. "Wednesday, April 3, 2026")
     const d = new Date(parsedDate);
-    if (!isNaN(d.getTime()) && d.getFullYear() >= 2026) {
+    if (!isNaN(d.getTime()) && d.getFullYear() >= currentYear) {
       return d.toISOString().split('T')[0];
     }
-    // Year missing or wrong — append 2026 and try again
-    const d2 = new Date(parsedDate + ' 2026');
+    // Year missing or wrong — append current year and try again
+    const d2 = new Date(parsedDate + ` ${currentYear}`);
     if (!isNaN(d2.getTime())) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (d2 >= today) return d2.toISOString().split('T')[0];
-      // Date with 2026 is already past → use 2027
-      const d3 = new Date(parsedDate + ' 2027');
+      // Date with current year is already past → use next year
+      const d3 = new Date(parsedDate + ` ${currentYear + 1}`);
       if (!isNaN(d3.getTime())) return d3.toISOString().split('T')[0];
     }
     return null;
@@ -365,6 +502,63 @@ function getNextAvailableDays(workingDays, count) {
     checkDate.setDate(checkDate.getDate() + 1);
   }
   return result;
+}
+
+// ─────────────────────────────────────────────
+// Doctor helpers
+// ─────────────────────────────────────────────
+
+// Format "HH:MM" → "9AM" / "9:30AM"
+function formatTimeFromHHMM(timeStr) {
+  if (!timeStr) return '';
+  const parts = timeStr.split(':').map(Number);
+  const h = parts[0], m = parts[1] || 0;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h;
+  return m > 0 ? `${displayH}:${String(m).padStart(2, '0')}${ampm}` : `${displayH}${ampm}`;
+}
+
+// Returns doctor list in the format doctorSelectionMsg() expects.
+// Priority: clinic.doctors JSONB → doctor_schedules table fallback.
+async function getClinicDoctors(cl) {
+  // 1. Prefer JSONB array on the clinic record (legacy path)
+  if (Array.isArray(cl.doctors) && cl.doctors.length > 0) {
+    console.log(`[Doctors] Using cl.doctors JSONB (${cl.doctors.length} doctors)`);
+    return cl.doctors;
+  }
+  // 2. Fallback: query doctor_schedules directly
+  if (!cl.id) {
+    console.log('[Doctors] No clinic id — cannot fetch from doctor_schedules');
+    return [];
+  }
+  try {
+    const { getDoctorsByClinic } = require('./db');
+    const schedules = await getDoctorsByClinic(cl.id);
+    console.log(`[Doctors] doctor_schedules fallback: ${schedules.length} doctors for clinic ${cl.id}`);
+    const DAYS_SHORT = { Sunday:'Sun', Monday:'Mon', Tuesday:'Tue', Wednesday:'Wed', Thursday:'Thu', Friday:'Fri', Saturday:'Sat' };
+    const DAYS_AR_MAP = { Sunday:'الأحد', Monday:'الاثنين', Tuesday:'الثلاثاء', Wednesday:'الأربعاء', Thursday:'الخميس', Friday:'الجمعة', Saturday:'السبت' };
+    return schedules.map(s => {
+      const days = Array.isArray(s.working_days) ? s.working_days : [];
+      const daysShort = days.map(d => DAYS_SHORT[d] || d).join('–');
+      const daysArStr = days.map(d => DAYS_AR_MAP[d] || d).join('، ');
+      const startFmt  = formatTimeFromHHMM(s.start_time);
+      const endFmt    = formatTimeFromHHMM(s.end_time);
+      return {
+        id:               s.doctor_id,
+        name:             s.doctor_name,
+        name_ar:          s.doctor_name,
+        degree:           '',
+        degree_ar:        '',
+        specialization:   daysShort ? `${daysShort}, ${startFmt}–${endFmt}` : 'General Dentistry',
+        specialization_ar: daysArStr ? `${daysArStr}، ${startFmt}–${endFmt}` : 'طب أسنان عام',
+        available:        `${startFmt}–${endFmt}`,
+        available_ar:     `${startFmt}–${endFmt}`
+      };
+    });
+  } catch (e) {
+    console.error('[Doctors] getClinicDoctors error:', e.message);
+    return [];
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -416,11 +610,12 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     const isSkip = rawMsg.trim() === '0' || /^(skip|no|nothing|لا|تخطي)$/i.test(rawMsg.trim());
     fd.description = isSkip ? '' : rawMsg.trim();
     await savePatient(phone, { ...patient, flow_step: 5, flow_data: fd });
-    // Step 5 is now doctor selection — show doctor menu if doctors configured, else date prompt
-    const doctors = cl.doctors || [];
-    if (doctors.length > 0) {
-      return sendMessage(phone, doctorSelectionMsg(ar, doctors));
+    // Step 5 — doctor selection: query live from doctor_schedules if cl.doctors JSONB is empty
+    const doctors4 = await getClinicDoctors(cl);
+    if (doctors4.length > 0) {
+      return sendMessage(phone, doctorSelectionMsg(ar, doctors4));
     }
+    // No doctors found anywhere — skip to date selection
     return sendMessage(phone, ar
       ? 'متى تفضل موعدك؟ 📅\n\n💡 اكتب تاريخاً مثل: غداً، 20 أبريل، الاثنين الجاي\n0️⃣ القائمة الرئيسية'
       : 'When would you like your appointment? 📅\n\n💡 Type a date like: tomorrow, April 20, next Monday\n0️⃣ Main menu'
@@ -497,9 +692,10 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
 
   // Step 5 — Doctor selection (BEFORE date — doctor schedule determines available days)
   if (step === 5) {
-    const doctors = cl.doctors || [];
+    // Always fetch live — covers the case where cl.doctors JSONB is empty but doctor_schedules has data
+    const doctors = await getClinicDoctors(cl);
     if (doctors.length === 0) {
-      // No doctors configured — skip straight to date
+      // No doctors configured anywhere — skip straight to date
       fd.doctor_id   = null;
       fd.doctor_name = null;
       await savePatient(phone, { ...patient, flow_step: 6, flow_data: fd });
@@ -514,11 +710,11 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       fd.doctor_name = null;
     } else if (num >= 1 && num <= doctors.length) {
       const doc = doctors[num - 1];
-      fd.doctor_id     = doc.id || null;
-      fd.doctor_name   = doc.name;                    // always English — for DB + staff
-      fd.doctor_name_ar = doc.name_ar || doc.name;   // for patient-facing Arabic
+      fd.doctor_id      = doc.id || null;
+      fd.doctor_name    = doc.name;                  // always English — for DB + staff
+      fd.doctor_name_ar = doc.name_ar || doc.name;  // for patient-facing Arabic
     } else {
-      // Free-text or unrecognised — re-show doctor menu
+      // Free-text or unrecognised — re-show live doctor menu
       return sendMessage(phone, doctorSelectionMsg(ar, doctors));
     }
     // If doctor selected, fetch working days and suggest next available dates
@@ -811,7 +1007,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       // Try natural language → extractTimeSlot
       const matched = await extractTimeSlot(rawMsg, EN_SLOTS);
       if (!matched) {
-        // Re-show slot list using formatted display labels (BUG 1 — not raw slot_time)
+        // Re-show slot list using formatted display labels
         const displays2 = fd.slot_displays || fd.slot_keys || [];
         const slotLines2 = displays2.map((d, i) => `${formatSlotNumber(i)} ${d}`);
         const instruction2 = ar ? '\n\n💡 اضغط رقماً لاختيار موعدك' : '\n\n💡 Tap a number to select your time';
@@ -824,7 +1020,25 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       const enIndex = EN_SLOTS.indexOf(matched);
       fd.time_slot    = matched; // always English
       fd.time_slot_ar = AR_SLOTS[enIndex] || toArabicTime(matched);
-      fd.slot_time_key = null;
+      // RISK 2 FIX: Resolve slot_time_key from doctor slots so atomic bookSlot() fires correctly.
+      // Without this, natural-language time inputs skip the atomic lock → double-booking possible.
+      fd.slot_time_key = null; // default — will be overwritten below if doctor slot found
+      if (fd.doctor_id && fd.preferred_date_iso && cl.id) {
+        try {
+          const { getAvailableSlots: gasNL } = require('./slots');
+          const nlSlots = await gasNL(cl.id, fd.doctor_id, fd.preferred_date_iso);
+          // Match by display label (EN)
+          const nlMatch = nlSlots.find(s => s.slot_time_display === matched);
+          if (nlMatch) {
+            fd.slot_time_key = nlMatch.slot_time; // e.g. "09:00"
+            console.log(`[Step7] NL match resolved slot_time_key: "${fd.slot_time_key}"`);
+          } else {
+            console.warn(`[Step7] NL match "${matched}" not found in doctor slots — atomic lock skipped`);
+          }
+        } catch (e) {
+          console.error('[Step7] NL slot_time_key resolve error:', e.message);
+        }
+      }
     }
 
     fd.slot_time_raw = rawMsg.trim();
@@ -877,6 +1091,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
 
     if (confirmed) {
       // If doctor slot exists → lock it atomically first
+      let slotLocked = false;
       if (fd.doctor_id && fd.preferred_date_iso && fd.slot_time_key && cl.id) {
         const { bookSlot } = require('./slots');
         const result = await bookSlot(cl.id, fd.doctor_id, fd.preferred_date_iso, fd.slot_time_key, phone);
@@ -888,32 +1103,73 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
             : `Sorry, that slot was just taken by another patient 😊 Here are the available slots on ${fd.preferred_date}:`
           );
         }
+        if (result.success) slotLocked = true;
       }
 
       console.log('[Booking] Saving fd:', JSON.stringify(fd));
-      const savedAppt = await saveAppointment({
-        phone:              fd.phone || phone,
-        clinic_id:          cl.id || null,
-        name:               fd.name,
-        treatment:          fd.treatment,
-        description:        fd.description,
-        preferred_date:     fd.preferred_date,
-        preferred_date_iso: fd.preferred_date_iso || null,
-        preferred_date_raw: fd.preferred_date_raw || null,
-        time_slot:          fd.time_slot,
-        slot_time_raw:      fd.slot_time_raw || null,
-        doctor_id:          fd.doctor_id || null,
-        doctor_name:        fd.doctor_name || null
-      });
+      console.log('[TRACE] Step 8 Execution: point A');
+
+      // FIX: Validate preferred_date_iso — must be YYYY-MM-DD, never free text
+      const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+      let safeIso = fd.preferred_date_iso || null;
+      if (safeIso && !ISO_RE.test(safeIso)) {
+        console.warn(`[Booking] preferred_date_iso corrupt: "${safeIso}" — re-deriving`);
+        safeIso = getDateISO(safeIso) || getDateISO(fd.preferred_date) || null;
+      }
+      if (!safeIso && fd.preferred_date) {
+        safeIso = getDateISO(fd.preferred_date) || null;
+      }
+      if (safeIso && !ISO_RE.test(safeIso)) {
+        console.error(`[Booking] Still invalid ISO after re-derive: "${safeIso}" — nulling`);
+        safeIso = null;
+      }
+      console.log(`[Booking] preferred_date_iso (safe): "${safeIso}"`);
+      console.log('[TRACE] Step 8 Execution: point B - safeIso validation done');
+
+      // RISK 3 FIX: If saveAppointment fails after slot is locked, release slot to prevent orphaned locks
+      let savedAppt = null;
+      try {
+        savedAppt = await saveAppointment({
+          phone:              fd.phone || phone,
+          clinic_id:          cl.id || null,
+          name:               fd.name,
+          treatment:          fd.treatment,
+          description:        fd.description,
+          preferred_date:     fd.preferred_date,
+          preferred_date_iso: safeIso,
+          preferred_date_raw: fd.preferred_date_raw || null,
+          time_slot:          fd.time_slot,
+          slot_time_raw:      fd.slot_time_raw || null,
+          doctor_id:          fd.doctor_id || null,
+          doctor_name:        fd.doctor_name || null
+        });
+        if (!savedAppt) throw new Error('saveAppointment returned null');
+      } catch (saveErr) {
+        console.error('[Booking] saveAppointment FAILED:', saveErr.message);
+        // Release the slot we just locked — otherwise it's stuck as 'booked' with no appointment
+        if (slotLocked && fd.doctor_id && safeIso && cl.id) {
+          try {
+            const { releaseSlotByPatient } = require('./slots');
+            await releaseSlotByPatient(cl.id, fd.doctor_id, safeIso, phone);
+            console.log('[Booking] Slot released after appointment save failure');
+          } catch (releaseErr) {
+            console.error('[Booking] Slot release also failed:', releaseErr.message);
+          }
+        }
+        return sendMessage(phone, ar
+          ? 'عذراً، حدث خطأ أثناء تأكيد الحجز. يرجى المحاولة مرة أخرى.\n\n0️⃣ القائمة الرئيسية'
+          : 'Sorry, there was an error confirming your booking. Please try again.\n\n0️⃣ Main menu'
+        );
+      }
 
       // Link slot to appointment if both IDs are available
-      if (savedAppt && fd.doctor_id && fd.preferred_date_iso && fd.slot_time_key && cl.id) {
+      if (savedAppt && fd.doctor_id && safeIso && fd.slot_time_key && cl.id) {
         const { linkSlotToAppointment } = require('./slots');
-        await linkSlotToAppointment(cl.id, fd.doctor_id, fd.preferred_date_iso, phone, savedAppt.id);
+        await linkSlotToAppointment(cl.id, fd.doctor_id, safeIso, phone, savedAppt.id);
       }
 
       // Phase 3 — Google Calendar event (pro clinics only)
-      if (savedAppt && calendarLib && cl.plan === 'pro' && cl.google_calendar_id && cl.config?.features?.google_calendar !== false && fd.preferred_date_iso) {
+      if (savedAppt && calendarLib && cl.plan === 'pro' && cl.google_calendar_id && cl.config?.features?.google_calendar !== false && safeIso) {
         try {
           const eventId = await calendarLib.createBookingEvent(cl.google_calendar_id, {
             name:               fd.name,
@@ -921,7 +1177,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
             treatment:          fd.treatment,
             description:        fd.description || '',
             doctor_name:        fd.doctor_name || null,
-            preferred_date_iso: fd.preferred_date_iso,
+            preferred_date_iso: safeIso,
             time_slot:          fd.time_slot
           });
           if (eventId) {
@@ -933,29 +1189,61 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         }
       }
 
-      await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
       // Phase 4: respect staff_notifications feature flag (default on)
+      // NOTE: patient state reset is intentionally deferred until AFTER confirmation is sent
+      console.log('[TRACE] Step 8 Execution: point C - Calendar done, starting Staff Notif');
       if (cl.staff_phone && cl.config?.features?.staff_notifications !== false) {
-        // staff alert always in English regardless of patient language
-        // fd.time_slot is always English — no conversion needed
         const staffTime = fd.time_slot;
         const doctorLine = fd.doctor_name ? `\n👨‍⚕️ Doctor: ${fd.doctor_name}` : '';
         await sendMessage(cl.staff_phone,
           `🦷 New Booking Alert!\n━━━━━━━━━━━━━━\n👤 Patient: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n🔧 Treatment: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}${doctorLine}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${staffTime}\n━━━━━━━━━━━━━━\nBooked via WhatsApp AI ✅`
         );
       }
+      console.log('[TRACE] Step 8 Execution: point D - Setting up Reminder');
+
+      // ── Post-booking test reminder (3-minute delay for testing) ──
+      const reminderPhone  = phone;
+      const reminderName   = fd.name;
+      const reminderDate   = fd.preferred_date;
+      const reminderTime   = ar ? (fd.time_slot_ar || fd.time_slot) : fd.time_slot;
+      const reminderClinic = cl.name;
+      const reminderAr     = ar;
+      console.log(`[Reminder] ⏱️ 3-min reminder scheduled for ${reminderPhone}`);
+      
+      // Instantly confirm to the user that the timer has started
+      await sendMessage(reminderPhone, reminderAr ? '⏳ تم تفعيل مؤقت الاختبار الخاص بك لمدة 3 دقائق الآن!' : '⏳ Your 3-minute reminder test timer has just started!');
+
+      setTimeout(async () => {
+        try {
+          const msg = reminderAr
+            ? `⏰ *تذكير بموعدك!* 🦷\n\nمرحباً ${reminderName}،\nتم تأكيد موعدك بنجاح:\n📅 ${reminderDate}\n⏰ ${reminderTime}\n🏥 ${reminderClinic}\n\nنتطلع لرؤيتك! 😊`
+            : `⏰ *Appointment Reminder!* 🦷\n\nHi ${reminderName},\nYour appointment is confirmed:\n📅 ${reminderDate}\n⏰ ${reminderTime}\n🏥 ${reminderClinic}\n\nWe look forward to seeing you! 😊`;
+          await sendMessage(reminderPhone, msg);
+          console.log(`[Reminder] ✅ 3-min post-booking reminder sent to: ${reminderPhone}`);
+        } catch (e) {
+          console.error('[Reminder] ❌ Post-booking reminder error:', e.message);
+        }
+      }, 3 * 60 * 1000); // 3 minutes — change to production timing when ready
+
       const confirmDocAR = fd.doctor_name_ar || fd.doctor_name;
       const doctorConfirmLine = fd.doctor_name
         ? (ar ? `\n👨‍⚕️ الطبيب: ${confirmDocAR}` : `\n👨‍⚕️ Doctor: ${fd.doctor_name}`)
         : '';
       const confirmTreatment = ar ? (TREATMENT_MAP_AR[fd.treatment] || fd.treatment) : fd.treatment;
       const confirmDate      = ar ? toArabicDate(fd.preferred_date) : fd.preferred_date;
-      // Time display for confirmation — fd.time_slot is always English, convert for Arabic
       const confirmTime = ar ? (fd.time_slot_ar || toArabicTime(fd.time_slot)) : fd.time_slot;
-      return sendMessage(phone, ar
+
+      // FIX: Send confirmation FIRST, then clear patient state.
+      // This guarantees the patient always receives their confirmation message.
+      // If sendMessage throws, the patient remains in step 8 and can retry.
+      await sendMessage(phone, ar
         ? `🎉 *تم تأكيد موعدك!*\n\n📅 ${confirmDate}\n⏰ ${confirmTime}\n🏥 ${cl.name}\n🦷 ${confirmTreatment}${doctorConfirmLine}\n\nسنرسل لك تذكيراً قبل موعدك. نراك قريباً! 😊\n\n💡 اكتب *help* في أي وقت لرؤية خياراتك\n0️⃣ القائمة الرئيسية`
         : `🎉 *Appointment Confirmed!*\n\n📅 ${fd.preferred_date}\n⏰ ${fd.time_slot}\n🏥 ${cl.name}\n🦷 ${fd.treatment}${doctorConfirmLine}\n\nWe'll send you a reminder before your appointment. See you then! 😊\n\n💡 Type *help* anytime to see your options\n0️⃣ Main menu`
       );
+
+      // Now safe to clear flow — confirmation is already delivered
+      await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
+      return;
     } else if (denied) {
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
       return sendMessage(phone, ar ? menuAR(cl) : menuEN(cl));
@@ -1002,11 +1290,16 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
     if (!parsedDate) parsedDate = dateInput;
     // Phase 1 — normalise year using getDateISO
     const reschedISO = getDateISO(parsedDate);
-    if (reschedISO) {
-      parsedDate = new Date(reschedISO + 'T00:00:00').toLocaleDateString('en-US', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-      });
+    if (!reschedISO) {
+      console.warn(`[RescheduleStep1] Invalid date rejected: "${dateInput}"`);
+      return sendMessage(phone, ar
+        ? 'عذراً، لم أتمكن من فهم التاريخ. يرجى إدخال تاريخ صحيح 😊\n\n💡 اكتب تاريخاً مثل: غداً، 20 أبريل'
+        : "Sorry, I couldn't understand that date. Please enter a valid date 😊\n\n💡 Type a date like: tomorrow, April 20"
+      );
     }
+    parsedDate = new Date(reschedISO + 'T00:00:00').toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
 
     console.log(`[RescheduleStep1] date input="${dateInput}" parsed="${parsedDate}"`);
     fd.new_date = parsedDate;
@@ -1043,8 +1336,31 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
   // Step 3 — Confirm reschedule
   if (step === 3) {
     const confirmed = val === '1' || /^(yes|نعم|تمام|ايوه|موافق)$/i.test(val);
+    console.log(`[TRACE Reschedule Step 3] val: "${val}", extractedValue: "${extractedValue}", confirmed: ${confirmed}, fd.appointment_id: "${fd.appointment_id}"`);
+
     if (confirmed && fd.appointment_id) {
-      // Derive ISO for new date to persist and for calendar update
+      console.log(`\n\n\n[!!! EXPLOSIVE EMERGENCY TRACE !!!]`);
+      console.log(`[TRACE] This is 100% running the NEW CODE inside bot.js!`);
+      console.log(`[TRACE] Phone: ${phone}, Appointment ID: ${fd.appointment_id}`);
+      console.log(`[TRACE] If you see this, the file sync is perfect!`);
+
+      // ── Post-reschedule test reminder (3-minute delay for testing) ──
+      const reminderPhone  = phone;
+      const reminderAr     = ar;
+      
+      // Let's FORCE a message and return immediately to avoid Supabase errors blocking it
+      await sendMessage(reminderPhone, '⏳ [DEBUG START] Your 3-minute reminder test timer has just started! (Reschedule)');
+
+      setTimeout(async () => {
+        try {
+          await sendMessage(reminderPhone, `⏰ [DEBUG END] *Appointment Reminder!* 🦷\n\nHi ${fd.name},\nYour appointment is confirmed:\n📅 ${fd.new_date}\n⏰ ${fd.new_slot}\n🏥 ${cl.name}\n\nWe look forward to seeing you! 😊`);
+          console.log(`[Reminder] ✅ 3-min post-booking reminder sent to: ${reminderPhone} (Reschedule)`);
+        } catch (e) {
+          console.error('[Reminder] ❌ Post-booking reminder error:', e.message);
+        }
+      }, 3 * 60 * 1000); // 3 minutes
+
+      // Proceed with update
       const newDateISO = getDateISO(fd.new_date) || null;
       await updateAppointment(fd.appointment_id, {
         preferred_date:     fd.new_date,
@@ -1053,22 +1369,12 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
         reminder_sent_24h:  false,
         reminder_sent_1h:   false
       });
-      // Phase 3 — update Google Calendar event if exists
-      if (calendarLib && fd.calendar_event_id && cl.google_calendar_id && newDateISO) {
-        try {
-          await calendarLib.updateBookingEvent(cl.google_calendar_id, fd.calendar_event_id, {
-            preferred_date_iso: newDateISO,
-            time_slot:          fd.new_slot
-          });
-        } catch (calErr) {
-          console.error('[Reschedule] Calendar update error (non-blocking):', calErr.message);
-        }
-      }
-      if (cl.staff_phone) {
-        await sendMessage(cl.staff_phone,
-          `🔄 Appointment Rescheduled!\n👤 Patient: ${fd.name}\n📱 Phone: ${phone}\n📅 New Date: ${fd.new_date}\n⏰ New Time: ${fd.new_slot}`
-        );
-      }
+
+      try {
+        const { releaseSlotByPatient } = require('./slots');
+        await releaseSlotByPatient(cl.id, fd.old_doctor_id, fd.old_date_iso, phone);
+      } catch (e) {}
+
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
       const reschedSlotDisplay = ar ? (fd.new_slot_ar || toArabicTime(fd.new_slot)) : fd.new_slot;
       return sendMessage(phone, ar
@@ -1095,9 +1401,11 @@ async function handleCancelFlow(phone, rawMsg, lang, ar, step, fd, patient, cl) 
 
   if (step === 1) {
     const confirmed = val === '1' || /^(yes|نعم|تمام|ايوه|موافق)$/i.test(val);
+    const denied    = val === '2' || /^(no|لا|لأ|keep|احتفظ)$/i.test(val);
+
     if (confirmed && fd.appointment_id) {
       await updateAppointment(fd.appointment_id, { status: 'cancelled' });
-      // Phase 3 — delete Google Calendar event if exists
+      // Delete Google Calendar event if exists
       if (calendarLib && fd.calendar_event_id && cl.google_calendar_id) {
         try {
           await calendarLib.deleteBookingEvent(cl.google_calendar_id, fd.calendar_event_id);
@@ -1105,9 +1413,19 @@ async function handleCancelFlow(phone, rawMsg, lang, ar, step, fd, patient, cl) 
           console.error('[Cancel] Calendar delete error (non-blocking):', calErr.message);
         }
       }
-      if (cl.staff_phone) {
+      // Release doctor slot if applicable
+      if (fd.doctor_id && fd.appt_date_iso && cl.id) {
+        try {
+          const { releaseSlotByPatient } = require('./slots');
+          await releaseSlotByPatient(cl.id, fd.doctor_id, fd.appt_date_iso, phone);
+        } catch (e) {
+          console.error('[Cancel] releaseSlot error (non-blocking):', e.message);
+        }
+      }
+      // Staff notification with feature flag
+      if (cl.staff_phone && cl.config?.features?.staff_notifications !== false) {
         await sendMessage(cl.staff_phone,
-          `❌ Appointment Cancelled!\n👤 Patient: ${fd.name}\n📱 Phone: ${phone}\n📅 Date: ${fd.appt_date}\n⏰ Time: ${fd.appt_slot}`
+          `❌ Appointment Cancelled!\n━━━━━━━━━━━━━━\n👤 Patient: ${fd.name}\n📱 Phone: ${phone}\n📅 Date: ${fd.appt_date}\n⏰ Time: ${fd.appt_slot}\n━━━━━━━━━━━━━━\nCancelled via WhatsApp AI ❌`
         );
       }
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
@@ -1115,14 +1433,24 @@ async function handleCancelFlow(phone, rawMsg, lang, ar, step, fd, patient, cl) 
         ? 'تم إلغاء موعدك.\nنأمل أن نراك قريباً! 😊\n\n1️⃣ حجز موعد جديد\n💡 اكتب *help* في أي وقت\n0️⃣ القائمة الرئيسية'
         : 'Your appointment has been cancelled.\nWe hope to see you soon! 😊\n\n1️⃣ Book a new appointment\n💡 Type *help* anytime\n0️⃣ Main menu'
       );
-    } else {
+    } else if (denied) {
       await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
       return sendMessage(phone, ar
         ? `حسناً، تم الاحتفاظ بموعدك. نراك في ${fd.appt_date}! 😊\n\n0️⃣ القائمة الرئيسية`
         : `OK, your appointment is kept. See you on ${fd.appt_date}! 😊\n\n0️⃣ Main menu`
       );
+    } else {
+      // Invalid input — re-prompt
+      return sendMessage(phone, ar
+        ? `يرجى الاختيار:\n1️⃣ نعم، ألغِ الموعد\n2️⃣ لا، احتفظ بالموعد\n\n💡 اضغط 1 للإلغاء أو 2 للاحتفاظ\n0️⃣ القائمة الرئيسية`
+        : `Please choose:\n1️⃣ Yes, cancel it\n2️⃣ No, keep it\n\n💡 Tap 1 to cancel or 2 to keep\n0️⃣ Main menu`
+      );
     }
   }
+
+  // Catch-all for unexpected steps — reset to menu
+  await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });
+  return sendMessage(phone, ar ? menuAR(cl) : menuEN(cl));
 }
 
 // ─────────────────────────────────────────────
@@ -1232,8 +1560,8 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
 
     default:
       return sendMessage(phone, ar
-        ? `لم أفهم تماماً 😊\n\n💡 اضغط رقماً أو اكتب *help* لرؤية الخيارات\n\n${menuAR(cl)}`
-        : `I'm not sure I understood that 😊\n\n💡 Tap a number or type *help* to see all options\n\n${menuEN(cl)}`
+        ? `لم أفهم تماماً 😊\n\n💡 اضغط رقماً للاختيار، أو اكتب *help* لرؤية الخيارات\n0️⃣ القائمة الرئيسية`
+        : `I'm not sure I understood that 😊\n\n💡 Tap a number to choose, or type *help* to see all options\n0️⃣ Main menu`
       );
   }
 }
