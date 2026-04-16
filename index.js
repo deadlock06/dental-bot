@@ -1,8 +1,12 @@
 require('dotenv').config(); // must be first — loads env vars before any module reads them
 const express = require('express');
+const path = require('path');
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false })); // Twilio sends URL-encoded bodies
+
+const apiRoutes = require('./api');
+app.use('/api', apiRoutes);
 
 // Global error handlers — prevent crashes
 process.on('uncaughtException',  (err) => console.error('[CRASH] uncaughtException:', err));
@@ -319,6 +323,14 @@ try {
 } catch (e) {
   console.log('[Cron] node-cron not available, reminders must be triggered manually');
 }
+
+// ─────────────────────────────────────────────
+// Admin Dashboard
+// ─────────────────────────────────────────────
+app.use('/dashboard', express.static(path.join(__dirname, 'dashboard', 'dist')));
+app.get('/dashboard/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard', 'dist', 'index.html'));
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

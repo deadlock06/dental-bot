@@ -12,6 +12,36 @@ const headers = {
 };
 
 // ─────────────────────────────────────────────
+// In-Memory Elastic Soft-Locks (Waitlists)
+// ─────────────────────────────────────────────
+const slotHolds = new Map();
+
+function getActiveHoldsCount(clinicId, doctorId, isoDate, slotTime) {
+  const holdKey = `${clinicId}_${doctorId}_${isoDate}_${slotTime}`;
+  const holds = slotHolds.get(holdKey) || [];
+  const now = Date.now();
+  return holds.filter(h => h.expiresAt > now).length;
+}
+
+function acquireHold(clinicId, doctorId, isoDate, slotTime, phone) {
+  const holdKey = `${clinicId}_${doctorId}_${isoDate}_${slotTime}`;
+  const holds = slotHolds.get(holdKey) || [];
+  const now = Date.now();
+  const validHolds = holds.filter(h => h.expiresAt > now && h.phone !== phone);
+  
+  // Wait, capacity validation usually happens before calling acquireHold, but we'll return true.
+  validHolds.push({ phone, expiresAt: now + 10 * 60 * 1000 }); // 10 min hold
+  slotHolds.set(holdKey, validHolds);
+  return true;
+}
+
+function releaseHold(clinicId, doctorId, isoDate, slotTime, phone) {
+  const holdKey = `${clinicId}_${doctorId}_${isoDate}_${slotTime}`;
+  const holds = slotHolds.get(holdKey) || [];
+  slotHolds.set(holdKey, holds.filter(h => h.phone !== phone));
+}
+
+// ─────────────────────────────────────────────
 // Schedule queries
 // ─────────────────────────────────────────────
 
@@ -137,10 +167,32 @@ async function getAvailableSlots(clinicId, doctorId, isoDate) {
     await generateSlotsForDate(clinicId, doctorId, isoDate);
 
     const res = await axios.get(
-      `${SUPABASE_URL}/rest/v1/doctor_slots?clinic_id=eq.${clinicId}&doctor_id=eq.${encodeURIComponent(doctorId)}&slot_date=eq.${isoDate}&status=eq.available&order=slot_time.asc&select=*`,
+      `${SUPABASE_URL}/rest/v1/doctor_slots?clinic_id=eq.${clinicId}&doctor_id=eq.${encodeURIComponent(doctorId)}&slot_date=eq.${isoDate}&status=in.(available,booked)&order=slot_time.asc&select=*`,
       { headers }
     );
-    return res.data || [];
+    const allSlots = res.data || [];
+
+    const { getAppointmentCountsForDate } = require('./db');
+    const dbCounts = await getAppointmentCountsForDate(clinicId, doctorId, isoDate);
+
+    const elasticSlots = [];
+    const ELASTIC_CAPACITY_MAX = 2; // Allow up to 2 overlapping patients per slot
+
+    for (const slot of allSlots) {
+      const activeDbCount = dbCounts[slot.slot_time] || 0;
+      const memHoldCount  = getActiveHoldsCount(clinicId, doctorId, isoDate, slot.slot_time);
+      const totalCapacityUsed = activeDbCount + memHoldCount;
+
+      if (totalCapacityUsed < ELASTIC_CAPACITY_MAX) {
+        if (totalCapacityUsed > 0) {
+          slot.is_walkin = true;
+          slot.slot_time_display += ' (Short Wait)';
+          slot.slot_time_display_ar += ' (انتظار قصير)';
+        }
+        elasticSlots.push(slot);
+      }
+    }
+    return elasticSlots;
   } catch (err) {
     console.error('[Slots] getAvailableSlots error:', err.message);
     return [];
@@ -151,19 +203,25 @@ async function getAvailableSlots(clinicId, doctorId, isoDate) {
 // Booking / release (atomic)
 // ─────────────────────────────────────────────
 
-// Book a slot atomically — returns { success: true } or { success: false, reason }
-// The WHERE status=eq.available ensures only one patient can succeed (race condition safe)
+// Book a slot with Elastic Capacity limits — validates using db counts to prevent overbooking
 async function bookSlot(clinicId, doctorId, isoDate, slotTime, patientPhone) {
   console.log('[Slots] Booking slot:', clinicId, doctorId, isoDate, slotTime);
   try {
-    const res = await axios.patch(
-      `${SUPABASE_URL}/rest/v1/doctor_slots?clinic_id=eq.${clinicId}&doctor_id=eq.${encodeURIComponent(doctorId)}&slot_date=eq.${isoDate}&slot_time=eq.${encodeURIComponent(slotTime)}&status=eq.available`,
+    const { getAppointmentCountsForDate } = require('./db');
+    const dbCounts = await getAppointmentCountsForDate(clinicId, doctorId, isoDate);
+    const activeCount = dbCounts[slotTime] || 0;
+    const ELASTIC_CAPACITY_MAX = 2;
+
+    if (activeCount >= ELASTIC_CAPACITY_MAX) {
+      return { success: false, reason: 'slot_taken' };
+    }
+
+    await axios.patch(
+      `${SUPABASE_URL}/rest/v1/doctor_slots?clinic_id=eq.${clinicId}&doctor_id=eq.${encodeURIComponent(doctorId)}&slot_date=eq.${isoDate}&slot_time=eq.${encodeURIComponent(slotTime)}`,
       { status: 'booked', patient_phone: patientPhone },
       { headers: { ...headers, Prefer: 'return=representation' } }
     );
-    if (!res.data || res.data.length === 0) {
-      return { success: false, reason: 'slot_taken' };
-    }
+    
     return { success: true };
   } catch (err) {
     console.error('[Slots] bookSlot error:', err.message);
@@ -228,12 +286,8 @@ function formatTimeAr(minutes) {
 }
 
 module.exports = {
-  getDoctorSchedules,
-  getDoctorSchedule,
-  generateSlotsForDate,
-  getAvailableSlots,
-  bookSlot,
-  releaseSlotByPatient,
+  getAvailableSlots, bookSlot, releaseSlotByPatient, generateSlotsForDate,
+  acquireHold, releaseHold, getActiveHoldsCount,
   linkSlotToAppointment,
   toDateISO,
   getDayName

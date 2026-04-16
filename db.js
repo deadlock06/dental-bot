@@ -162,6 +162,27 @@ async function checkDuplicateBooking(phone, isoDate) {
   }
 }
 
+// Gets the count of existing appointments for a specific date (used for Elastic Capacity)
+async function getAppointmentCountsForDate(clinicId, doctorId, isoDate) {
+  try {
+    const url = doctorId
+      ? `${SUPABASE_URL}/rest/v1/appointments?clinic_id=eq.${clinicId}&doctor_id=eq.${encodeURIComponent(doctorId)}&preferred_date_iso=eq.${isoDate}&status=in.(confirmed,pending)&select=time_slot`
+      : `${SUPABASE_URL}/rest/v1/appointments?clinic_id=eq.${clinicId}&preferred_date_iso=eq.${isoDate}&status=in.(confirmed,pending)&select=time_slot`;
+    
+    const res = await axios.get(url, { headers });
+    const counts = {};
+    for (const row of res.data || []) {
+      if (row.time_slot) {
+        counts[row.time_slot] = (counts[row.time_slot] || 0) + 1;
+      }
+    }
+    return counts;
+  } catch (err) {
+    console.error('[DB] getAppointmentCountsForDate error:', err.message);
+    return {};
+  }
+}
+
 async function getAppointment(phone) {
   try {
     const res = await axios.get(
@@ -272,7 +293,7 @@ module.exports = {
   getPatient, insertPatient, savePatient, deletePatient,
   getClinic, getClinicById,
   saveAppointment, getAppointment, updateAppointment,
-  checkDuplicateBooking,
+  checkDuplicateBooking, getAppointmentCountsForDate,
   getAppointmentsForReminder,
   getAppointmentsDueTomorrow, getAppointmentsDueInOneHour, getAppointmentsDueFollowUp,
   getDoctorsByClinic
