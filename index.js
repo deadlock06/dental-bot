@@ -92,12 +92,12 @@ app.post('/webhook', async (req, res) => {
       .select('*')
       .or(`extracted_phone.eq.${fromPhone},extracted_phone.eq.+${fromPhone.replace(/^\+/, '')}`)
       .eq('status', 'messaged')
-      .single();
+      .maybeSingle();
 
     if (growthLead) {
       console.log(`[Handoff] Match found for ${fromPhone}. Triggering handoff.`);
       const { handoffLead } = require('./growth/handoff');
-      await handoffLead(growthSupabase, growthLead, messageTextRaw);
+      await handoffLead(growthLead, messageTextRaw);
       // Wait a moment for patient creation before continuing
       await new Promise(r => setTimeout(r, 500));
     }

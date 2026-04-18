@@ -20,7 +20,13 @@ const { sendWhatsApp } = require('./lib/whatsappProvider');
 const { generateMessage } = require('./brain');
 const { runIndeedScout } = require('./scouts/indeed');
 const { handoffLead } = require('./handoff');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { sendFollowUps } = require('../sender');
+
+let _stripe;
+function getStripe() {
+  if (!_stripe) _stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  return _stripe;
+}
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
@@ -54,7 +60,7 @@ router.post('/stripe-webhook', async (req, res) => {
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    event = getStripe().webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     console.error(`[Stripe Webhook] Error: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -88,7 +94,7 @@ router.post('/stripe-webhook', async (req, res) => {
     } else if (lead) {
       // CRITICAL: Trigger automated handoff so the bot knows they are a customer now
       try {
-        await handoffLead(supabase, lead, 'STRIPE_PAYMENT_COMPLETED');
+        await handoffLead(lead, 'STRIPE_PAYMENT_COMPLETED');
         console.log(`[Stripe] Handoff successful for ${lead.extracted_phone}`);
       } catch (hErr) {
         console.error('[Stripe Webhook] Handoff Error:', hErr);
@@ -333,6 +339,22 @@ router.post('/send-batch', basicAuth, async (req, res) => {
     failed: results.filter(r => !r.success).length,
     results
   });
+});
+
+// ========== FOLLOW-UPS ==========
+
+/**
+ * POST /growth/send-followups
+ * Called by daily cron at 9 AM Saudi time
+ */
+router.post('/send-followups', async (req, res) => {
+  res.sendStatus(200);
+  try {
+    const results = await sendFollowUps();
+    console.log(`[FollowUps] Processed ${results.length} follow-up(s)`);
+  } catch (e) {
+    console.error('[FollowUps] Error:', e.message);
+  }
 });
 
 // ========== SCOUTING ==========
