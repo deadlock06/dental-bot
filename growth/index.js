@@ -474,10 +474,18 @@ router.get('/dashboard', basicAuth, async (req, res) => {
           if (res.ok) window.location.reload();
           else alert('Approval failed');
         }
+        async function sendBatch() {
+          if (!confirm('Send messages to all verified_owner leads?')) return;
+          const res = await fetch('/growth/send-batch', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({limit:10, min_confidence:0}) });
+          const data = await res.json();
+          alert('Sent: ' + data.sent + ' messages');
+          window.location.reload();
+        }
       </script>
     </head>
     <body>
       <h1>🚀 Growth Swarm — نظام التحقق التلقائي</h1>
+      <button onclick="sendBatch()" style="margin-bottom:20px;padding:10px 20px;font-size:16px;">📤 Send Batch</button>
       <div class="stats">
         <div class="stat"><div class="stat-num">${stats.byStatus['messaged'] || 0}</div><div>تم الإرسال</div></div>
         <div class="stat"><div class="stat-num">${stats.byStatus['verified_owner'] || 0}</div><div>تم التحقق</div></div>
