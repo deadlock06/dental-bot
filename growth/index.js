@@ -6,6 +6,11 @@
 const express = require('express');
 const router = express.Router();
 const path = require('path');
+
+// Auto-redirect from /growth to /growth/dashboard
+router.get('/', (req, res) => {
+  res.redirect('/growth/dashboard');
+});
 const { createClient } = require('@supabase/supabase-js');
 
 const { parseRawInput } = require('./lib/smartParser');
