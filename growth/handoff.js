@@ -37,4 +37,24 @@ async function handoffLead(lead, replyMessage) {
   return { success: true, action: existing ? 'exists' : 'created' };
 }
 
-module.exports = { handoffLead };
+// *** ADD detectGrowthLeadReply AT TOP of your /webhook handler before dental bot logic ***
+async function detectGrowthLeadReply(supabase, phone, messageBody) {
+  const normalizedPhone = phone.replace('whatsapp:', '');
+
+  const { data: growthLead, error } = await supabase
+    .from('growth_leads_v2')
+    .select('*')
+    .eq('phone', normalizedPhone)
+    .in('status', ['messaged', 'bumped_1', 'bumped_2'])
+    .maybeSingle();
+
+  if (error) {
+    console.error('[handoff.js] Detection error:', error.message);
+    return null;
+  }
+
+  if (growthLead) console.log(`[handoff.js] Growth lead reply detected: ${normalizedPhone}`);
+  return growthLead || null;
+}
+
+module.exports = { handoffLead, detectGrowthLeadReply };

@@ -96,8 +96,8 @@ async function sendFollowUps() {
     .neq('status', 'opted_out')
     .lt('message_count', 3)
     .or(
-      `and(message_count.eq.1,message_sent_at.lt.${threeDaysAgo}),` +
-      `and(message_count.eq.2,message_sent_at.lt.${sevenDaysAgo})`
+      `and(message_count.eq.1,last_contacted_at.lt.${threeDaysAgo}),` +
+      `and(message_count.eq.2,last_contacted_at.lt.${sevenDaysAgo})`
     );
 
   if (error) {

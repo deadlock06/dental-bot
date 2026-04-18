@@ -42,8 +42,12 @@ const basicAuth = (req, res, next) => {
   const user = auth[0];
   const pass = auth[1];
   
-  const adminUser = process.env.ADMIN_USER || 'admin';
-  const adminPass = process.env.ADMIN_PASS || 'password123';
+  const adminUser = process.env.ADMIN_USER;
+  const adminPass = process.env.ADMIN_PASS;
+
+  if (!adminUser || !adminPass) {
+    return res.status(500).send('Server misconfigured: ADMIN_USER or ADMIN_PASS not set');
+  }
 
   if (user === adminUser && pass === adminPass) {
     next();
@@ -85,7 +89,7 @@ router.post('/stripe-webhook', async (req, res) => {
         stripe_customer_email: customerEmail,
         paid_at: new Date().toISOString()
       })
-      .or(`extracted_phone.eq.${phone},extracted_phone.eq.${normalizePhone(phone || '')}`)
+      .or(`phone.eq.${phone},phone.eq.${normalizePhone(phone || '')}`)
       .select()
       .single();
 
