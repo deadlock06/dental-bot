@@ -14,8 +14,8 @@ async function checkDuplicate(supabase, phone, name, city) {
   // Priority 1: Exact phone match (strongest signal)
   const { data: phoneMatch, error: phoneError } = await supabase
     .from('growth_leads_v2')
-    .select('id, extracted_name, status, created_at, message_sent_at')
-    .eq('extracted_phone', phone)
+    .select('id, name, status, created_at, message_sent_at')
+    .eq('phone', phone)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -26,7 +26,7 @@ async function checkDuplicate(supabase, phone, name, city) {
       confidence: 1.0,
       reason: 'exact_phone_match',
       existingId: phoneMatch.id,
-      existingName: phoneMatch.extracted_name,
+      existingName: phoneMatch.name,
       existingStatus: phoneMatch.status,
       lastContact: phoneMatch.message_sent_at,
       action: getDuplicateAction(phoneMatch.status)
@@ -36,15 +36,15 @@ async function checkDuplicate(supabase, phone, name, city) {
   // Priority 2: Name + city match (fuzzy-ish via ilike)
   const { data: nameMatches, error: nameError } = await supabase
     .from('growth_leads_v2')
-    .select('id, extracted_name, extracted_phone, status, created_at')
-    .eq('extracted_city', city)
-    .ilike('extracted_name', `%${name.replace(/\s+/g, '%')}%`)
+    .select('id, name, phone, status, created_at')
+    .eq('city', city)
+    .ilike('name', `%${name.replace(/\s+/g, '%')}%`)
     .limit(5);
   
   if (nameMatches && nameMatches.length > 0) {
     // Calculate similarity
     for (const match of nameMatches) {
-      const similarity = calculateNameSimilarity(name, match.extracted_name);
+      const similarity = calculateNameSimilarity(name, match.name);
       
       if (similarity > 0.85) {
         return {
@@ -52,8 +52,8 @@ async function checkDuplicate(supabase, phone, name, city) {
           confidence: similarity,
           reason: 'high_name_similarity_same_city',
           existingId: match.id,
-          existingName: match.extracted_name,
-          existingPhone: match.extracted_phone,
+          existingName: match.name,
+          existingPhone: match.phone,
           existingStatus: match.status,
           similarity: Math.round(similarity * 100) + '%',
           action: getDuplicateAction(match.status)

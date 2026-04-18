@@ -95,7 +95,7 @@ router.post('/stripe-webhook', async (req, res) => {
       // CRITICAL: Trigger automated handoff so the bot knows they are a customer now
       try {
         await handoffLead(lead, 'STRIPE_PAYMENT_COMPLETED');
-        console.log(`[Stripe] Handoff successful for ${lead.extracted_phone}`);
+        console.log(`[Stripe] Handoff successful for ${lead.phone}`);
       } catch (hErr) {
         console.error('[Stripe Webhook] Handoff Error:', hErr);
       }
@@ -170,9 +170,9 @@ router.post('/add-and-fire', async (req, res) => {
       .from('growth_leads_v2')
       .insert({
         raw_input,
-        extracted_phone: parsed.phone,
-        extracted_name: parsed.name,
-        extracted_city: parsed.city,
+        phone: parsed.phone,
+        name: parsed.name,
+        city: parsed.city,
         sources: ['manual_paste'],
         status: 'verifying'
       })
@@ -217,8 +217,8 @@ router.post('/add-and-fire', async (req, res) => {
       if (sendResult.success) {
         await supabase.from('growth_leads_v2').update({
           status: 'messaged',
-          message_sent: message,
-          message_sent_at: new Date().toISOString(),
+          last_message_sent: message,
+          last_contacted_at: new Date().toISOString(),
           whatsapp_provider: sendResult.provider,
           message_count: 1
         }).eq('id', lead.id);
@@ -292,7 +292,7 @@ router.post('/send-batch', basicAuth, async (req, res) => {
     .select('*')
     .eq('status', 'verified_owner')
     .gte('confidence_score', min_confidence)
-    .is('message_sent', null) 
+    .is('last_message_sent', null)
     .order('confidence_score', { ascending: false })
     .limit(limit);
   
@@ -307,14 +307,14 @@ router.post('/send-batch', basicAuth, async (req, res) => {
   const results = [];
   for (const lead of leads) {
     const message = await generateMessage({
-      name: lead.website_owner_name || lead.extracted_name,
-      business_name: lead.extracted_name,
+      name: lead.website_owner_name || lead.name,
+      business_name: lead.name,
       pain_signal: 'hiring_receptionist',
-      city: lead.extracted_city,
-      phone: lead.extracted_phone
+      city: lead.city,
+      phone: lead.phone
     });
     
-    const result = await sendWhatsApp(lead.extracted_phone, message);
+    const result = await sendWhatsApp(lead.phone, message);
     
     if (result.success) {
       await supabase.from('growth_leads_v2').update({
@@ -327,7 +327,7 @@ router.post('/send-batch', basicAuth, async (req, res) => {
     
     results.push({
       leadId: lead.id,
-      name: lead.extracted_name,
+      name: lead.name,
       success: result.success,
       provider: result.provider
     });
@@ -371,7 +371,7 @@ router.post('/scout/indeed', basicAuth, async (req, res) => {
     const { data: existing } = await supabase
       .from('growth_leads_v2')
       .select('id')
-      .ilike('extracted_name', `%${job.company}%`)
+      .ilike('name', `%${job.company}%`)
       .limit(1);
     
     if (existing && existing.length > 0) continue;
@@ -380,8 +380,8 @@ router.post('/scout/indeed', basicAuth, async (req, res) => {
       .from('growth_leads_v2')
       .insert({
         raw_input: `${job.company}, ${job.city}, from Indeed job: ${job.title}`,
-        extracted_name: job.company,
-        extracted_city: job.city,
+        name: job.company,
+        city: job.city,
         sources: ['indeed_scout'],
         pain_signal: job.painSignal,
         timing_score: job.timingScore,
@@ -435,8 +435,8 @@ router.get('/dashboard', basicAuth, async (req, res) => {
   
   const rows = (leads || []).map(l => `
     <tr style="${l.is_owner_verified ? 'background:rgba(72,219,251,0.1)' : ''}">
-      <td>${l.extracted_name}</td>
-      <td>${l.extracted_city}</td>
+      <td>${l.name}</td>
+      <td>${l.city}</td>
       <td><b>${l.status}</b></td>
       <td>${l.confidence_score}</td>
       <td>${l.is_owner_verified ? '✅' : '❌'}</td>
@@ -519,13 +519,13 @@ router.post('/approve/:id', basicAuth, async (req, res) => {
   if (!lead) return res.status(404).json({ error: 'Lead not found' });
   
   const message = await generateMessage({
-    name: lead.website_owner_name || lead.extracted_name,
-    business_name: lead.extracted_name,
-    city: lead.extracted_city,
-    phone: lead.extracted_phone
+    name: lead.website_owner_name || lead.name,
+    business_name: lead.name,
+    city: lead.city,
+    phone: lead.phone
   });
   
-  const result = await sendWhatsApp(lead.extracted_phone, message);
+  const result = await sendWhatsApp(lead.phone, message);
   
   if (result.success) {
     await supabase.from('growth_leads_v2').update({

@@ -35,23 +35,23 @@ async function processBatch(limit = 5) {
   const results = [];
   for (const lead of leads) {
     const message = await generateMessage({
-      name: lead.website_owner_name || lead.extracted_name,
-      business_name: lead.extracted_name,
-      city: lead.extracted_city,
-      phone: lead.extracted_phone
+      name: lead.website_owner_name || lead.name,
+      business_name: lead.name,
+      city: lead.city,
+      phone: lead.phone
     });
-    const sent = await sendWhatsApp(lead.extracted_phone, message);
+    const sent = await sendWhatsApp(lead.phone, message);
 
     if (sent.success) {
       await supabase.from('growth_leads_v2').update({
         status: 'messaged',
-        message_sent: message,
-        message_sent_at: new Date().toISOString(),
+        last_message_sent: message,
+        last_contacted_at: new Date().toISOString(),
         message_count: 1
       }).eq('id', lead.id);
     }
 
-    results.push({ phone: lead.extracted_phone, sent: sent.success, sid: sent.sid || sent.error });
+    results.push({ phone: lead.phone, sent: sent.success, sid: sent.sid || sent.error });
   }
 
   return results;
@@ -64,11 +64,11 @@ async function processBatch(limit = 5) {
 const FOLLOWUP_TEMPLATES = [
   // message_count === 1 → Day 3 bump
   (lead) =>
-    `Hey ${lead.extracted_name || 'Doctor'}, just following up — still curious how much ${lead.extracted_name || 'your clinic'} loses to missed calls each month? The link shows your exact number: ${buildGhostRoomUrl(lead)} -Jake`,
+    `Hey ${lead.name || 'Doctor'}, just following up — still curious how much ${lead.name || 'your clinic'} loses to missed calls each month? The link shows your exact number: ${buildGhostRoomUrl(lead)} -Jake`,
 
   // message_count === 2 → Day 7 final nudge
   (lead) =>
-    `Last message from me, ${lead.extracted_name || 'Doctor'} — if the timing isn't right, no worries. The report for ${lead.extracted_name || 'your clinic'} is still here when you're ready: ${buildGhostRoomUrl(lead)} -Jake`
+    `Last message from me, ${lead.name || 'Doctor'} — if the timing isn't right, no worries. The report for ${lead.name || 'your clinic'} is still here when you're ready: ${buildGhostRoomUrl(lead)} -Jake`
 ];
 
 function buildGhostRoomUrl(lead) {
@@ -76,9 +76,9 @@ function buildGhostRoomUrl(lead) {
   if (!base) return '';
   const phone = (process.env.TWILIO_WHATSAPP_FROM || '').replace(/^whatsapp:/i, '');
   const qs = new URLSearchParams({
-    name:   lead.website_owner_name || lead.extracted_name || '',
-    clinic: lead.extracted_name       || '',
-    city:   lead.extracted_city       || '',
+    name:   lead.website_owner_name || lead.name || '',
+    clinic: lead.name       || '',
+    city:   lead.city       || '',
     pain:   lead.pain_signal         || 'default',
     phone:  phone
   });
@@ -119,19 +119,19 @@ async function sendFollowUps() {
     if (!template) continue;
 
     const message = template(lead);
-    const sent = await sendWhatsApp(lead.extracted_phone, message);
+    const sent = await sendWhatsApp(lead.phone, message);
 
     if (sent.success) {
       await supabase.from('growth_leads_v2').update({
-        message_sent: message,
-        message_sent_at: new Date().toISOString(),
+        last_message_sent: message,
+        last_contacted_at: new Date().toISOString(),
         message_count: (lead.message_count || 1) + 1
       }).eq('id', lead.id);
 
-      console.log(`[FollowUp] Sent bump #${(lead.message_count || 1) + 1} to ${lead.extracted_phone} (${lead.extracted_name})`);
+      console.log(`[FollowUp] Sent bump #${(lead.message_count || 1) + 1} to ${lead.phone} (${lead.name})`);
     }
 
-    results.push({ phone: lead.extracted_phone, sent: sent.success, bump: templateIndex + 1, sid: sent.sid || sent.error });
+    results.push({ phone: lead.phone, sent: sent.success, bump: templateIndex + 1, sid: sent.sid || sent.error });
   }
 
   return results;

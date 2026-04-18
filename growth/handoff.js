@@ -2,7 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 async function handoffLead(lead, replyMessage) {
-  const phone = lead.extracted_phone || lead.phone;
+  const phone = lead.phone;
   console.log(`[Handoff] ${phone} → dental bot`);
 
   // 1. Check if already exists in patients table

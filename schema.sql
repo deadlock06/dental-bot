@@ -91,11 +91,14 @@ CREATE INDEX IF NOT EXISTS idx_slots_clinic_doctor_date
 CREATE TABLE IF NOT EXISTS growth_leads_v2 (
   id                    UUID DEFAULT gen_random_uuid() PRIMARY KEY,
 
-  -- Raw + extracted data
+  -- Raw + parsed data
   raw_input             TEXT,
-  extracted_phone       TEXT UNIQUE NOT NULL,
-  extracted_name        TEXT,
-  extracted_city        TEXT,
+  phone                 TEXT UNIQUE NOT NULL,
+  name                  TEXT,
+  business_name         TEXT,
+  city                  TEXT,
+  vertical              TEXT DEFAULT 'dental',
+  country               TEXT DEFAULT 'SA',
   sources               TEXT[] DEFAULT '{}',
 
   -- Verification
@@ -114,8 +117,8 @@ CREATE TABLE IF NOT EXISTS growth_leads_v2 (
 
   -- Outreach
   status                TEXT DEFAULT 'pending',
-  message_sent          TEXT,
-  message_sent_at       TIMESTAMPTZ,
+  last_message_sent     TEXT,
+  last_contacted_at     TIMESTAMPTZ,
   whatsapp_provider     TEXT DEFAULT 'twilio',
   message_count         INT DEFAULT 0,
   manually_approved     BOOLEAN DEFAULT false,
@@ -137,6 +140,6 @@ CREATE TABLE IF NOT EXISTS growth_leads_v2 (
   updated_at            TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_growth_phone  ON growth_leads_v2(extracted_phone);
+CREATE INDEX IF NOT EXISTS idx_growth_phone  ON growth_leads_v2(phone);
 CREATE INDEX IF NOT EXISTS idx_growth_status ON growth_leads_v2(status);
 CREATE INDEX IF NOT EXISTS idx_growth_score  ON growth_leads_v2(confidence_score DESC);

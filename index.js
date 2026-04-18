@@ -80,7 +80,7 @@ app.post('/webhook', async (req, res) => {
     await growthSupabase
       .from('growth_leads_v2')
       .update({ status: 'opted_out' })
-      .eq('extracted_phone', fromPhone);
+      .eq('phone', fromPhone);
     return; // Stop processing totally
   }
 
@@ -90,7 +90,7 @@ app.post('/webhook', async (req, res) => {
     const { data: growthLead } = await growthSupabase
       .from('growth_leads_v2')
       .select('*')
-      .or(`extracted_phone.eq.${fromPhone},extracted_phone.eq.+${fromPhone.replace(/^\+/, '')}`)
+      .or(`phone.eq.${fromPhone},phone.eq.+${fromPhone.replace(/^\+/, '')}`)
       .eq('status', 'messaged')
       .maybeSingle();
 
