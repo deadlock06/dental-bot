@@ -2,9 +2,6 @@ require('dotenv').config(); // must be first — loads env vars before any modul
 const express = require('express');
 const path = require('path');
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false })); // Twilio sends URL-encoded bodies
-
 const apiRoutes = require('./api');
 app.use('/api', apiRoutes);
 
@@ -12,6 +9,13 @@ const growthRouter = require('./growth/index');
 const { handoffLead } = require('./growth/handoff');
 const { createClient } = require('@supabase/supabase-js');
 const growthSupabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+// Stripe Webhook must be handled BEFORE express.json() for raw body access
+app.post('/growth/stripe-webhook', express.raw({ type: 'application/json' }));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false })); // Twilio sends URL-encoded bodies
+
 app.use('/growth', growthRouter);
 
 // Global error handlers — prevent crashes

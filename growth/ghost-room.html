@@ -451,6 +451,12 @@
     .cta-section h2 { margin-bottom: 8px; }
     .cta-section p { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
 
+    .cta-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .cta-btn {
       display: block;
       width: 100%;
@@ -465,6 +471,13 @@
       letter-spacing: 0.01em;
       box-shadow: 0 8px 32px rgba(139,92,246,0.4);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .cta-btn.secondary {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      box-shadow: none;
+      color: var(--text);
+      font-weight: 600;
     }
     .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(139,92,246,0.55); }
     .cta-btn:active { transform: translateY(0); }
@@ -723,19 +736,27 @@
 
   <!-- ── CTA ────────────────────────────────── -->
   <div class="cta-section">
-    <h2>Start your 7-day free trial today.</h2>
+    <h2 id="cta-headline">Stop the leaking. Activate AI.</h2>
     <p id="cta-sub-text">
-      No credit card required. Live on your WhatsApp within 24 hours.
+      Ready to handle your real patients 24/7. Setup in minutes.
     </p>
-    <a class="cta-btn" id="cta-btn" href="https://wa.me/message/demo" target="_blank">
-      Start Free Trial for <span id="cta-clinic-name">Your Clinic</span> →
-    </a>
-    <div class="cta-sub">7 days free · 299 SAR/month after · Cancel anytime</div>
+    
+    <div class="cta-container">
+      <a class="cta-btn" id="stripe-link" href="#" target="_blank">
+        Activate 24/7 AI Receptionist (299 SAR/mo)
+      </a>
+      <a class="cta-btn secondary" id="wa-link" href="#" target="_blank">
+        Talk to -Jake on WhatsApp
+      </a>
+    </div>
+
+    <div class="cta-sub" id="cta-sub-note">No setup fee. Saudi Compliant. Cancel anytime.</div>
+    
     <div class="trust-row">
-      <span class="trust-item">No code needed</span>
+      <span class="trust-item">Instant Activation</span>
       <span class="trust-item">Arabic + English</span>
+      <span class="trust-item">Meta-Ban Proof</span>
       <span class="trust-item">Works on your number</span>
-      <span class="trust-item">Setup in 24h</span>
     </div>
   </div>
 
@@ -753,16 +774,20 @@
   const pain    = params.get('pain')   || 'default';
   const phone   = params.get('phone')  || '';
 
-  /* ── 2. Build WhatsApp CTA link ─────────────── */
-  const waPhone = phone.replace(/[^0-9]/g, '');
-  const waText  = encodeURIComponent(
-    'Hi, I saw the report for ' + clinic + ' — I\'m interested in the free trial.'
+  /* ── 2. Build Links ─────────────── */
+  const stripeBase = params.get('stripe_link') || 'https://buy.stripe.com/placeholder'; // Add your link here later
+  const waPhone    = phone.replace(/[^0-9]/g, '');
+  const waText     = encodeURIComponent(
+    'Hi, I saw the report for ' + clinic + '. I am interested in activating the AI Receptionist!'
   );
-  const waLink = waPhone
+  
+  const stripeFinal = stripeBase + '?client_reference_id=' + (phone || 'unknown') + '&prefilled_email=' + name.replace(/\s+/g, '.') + '@clinic.com';
+  const waFinal     = waPhone
     ? 'https://wa.me/' + waPhone + '?text=' + waText
     : 'https://wa.me/message/demo?text=' + waText;
 
-  document.getElementById('cta-btn').href = waLink;
+  document.getElementById('stripe-link').href = stripeFinal;
+  document.getElementById('wa-link').href     = waFinal;
 
   /* ── 3. Populate text with clinic/doctor name ─ */
   document.title = clinic + ' — Revenue Report';
