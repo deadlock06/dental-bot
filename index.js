@@ -68,30 +68,47 @@ app.get('/webhook', (req, res) => {
 // Incoming WhatsApp messages
 // ─────────────────────────────────────────────
 app.post('/webhook', async (req, res) => {
-  // Send empty 200 — res.sendStatus(200) sends "OK" as body which Twilio forwards as a message
   res.status(200).end();
 
-  // --- GROWTH SWARM HANDOFF CHECK ---
+  const fromPhone = req.body.From?.replace('whatsapp:', '') || '';
+  const messageTextRaw = req.body.Body || '';
+  
+  // --- GROWTH SWARM: OPT-OUT DETECTION ---
+  const stopKeywords = ['stop', 'unsubscribe', 'توقف', 'إلغاء', 'أرجو التوقف'];
+  if (stopKeywords.some(k => messageTextRaw.toLowerCase().includes(k))) {
+    console.log(`[Opt-Out] Received STOP from ${fromPhone}. Marking lead as opted_out.`);
+    await growthSupabase
+      .from('growth_leads_v2')
+      .update({ status: 'opted_out' })
+      .eq('extracted_phone', fromPhone);
+    return; // Stop processing totally
+  }
+
+  // --- GROWTH SWARM: HANDOFF CHECK ---
   try {
-    const fromPhone = req.body.From?.replace('whatsapp:', '') || '';
+    // Check v2 table by phone
     const { data: growthLead } = await growthSupabase
-      .from('growth_leads')
+      .from('growth_leads_v2')
       .select('*')
-      .eq('phone', fromPhone)
+      .or(`extracted_phone.eq.${fromPhone},extracted_phone.eq.+${fromPhone.replace(/^\+/, '')}`)
       .eq('status', 'messaged')
       .single();
 
     if (growthLead) {
-      await handoffLead(growthLead, req.body.Body || '');
-      // Now let dental bot handle it normally (patient was created above)
+      console.log(`[Handoff] Match found for ${fromPhone}. Triggering handoff.`);
+      const { handoffLead } = require('./growth/handoff');
+      await handoffLead(growthSupabase, growthLead, messageTextRaw);
+      // Wait a moment for patient creation before continuing
+      await new Promise(r => setTimeout(r, 500));
     }
   } catch (e) {
-    // Not a growth lead — continue normally
+    // Not a growth lead or error — continue normally
   }
   // --- END GROWTH SWARM CHECK ---
 
   try {
     const body = req.body;
+    // ... continue with normal billing/message logic
     console.log('[Webhook] Raw body:', JSON.stringify(body));
 
     const fromRaw          = body?.From; // e.g. "whatsapp:+966572914855"

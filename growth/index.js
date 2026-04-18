@@ -10,13 +10,37 @@ const { createClient } = require('@supabase/supabase-js');
 
 const { parseRawInput } = require('./lib/smartParser');
 const { autoVerify } = require('./lib/autoVerify');
-const { checkDuplicate, mergeLeadData } = require('./lib/dedup');
+const { checkDuplicate } = require('./lib/dedup');
 const { sendWhatsApp } = require('./lib/whatsappProvider');
 const { generateMessage } = require('./brain');
 const { runIndeedScout } = require('./scouts/indeed');
+const { handoffLead } = require('./handoff');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+// ========== SECURITY: BASIC AUTH ==========
+
+const basicAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    res.setHeader('WWW-Authenticate', 'Basic realm="Growth Swarm"');
+    return res.status(401).send('Authentication required');
+  }
+  const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+  const user = auth[0];
+  const pass = auth[1];
+  
+  const adminUser = process.env.ADMIN_USER || 'admin';
+  const adminPass = process.env.ADMIN_PASS || 'password123';
+
+  if (user === adminUser && pass === adminPass) {
+    next();
+  } else {
+    res.setHeader('WWW-Authenticate', 'Basic realm="Growth Swarm"');
+    return res.status(401).send('Invalid credentials');
+  }
+};
 
 // ========== STRIPE WEBHOOK ==========
 
@@ -42,7 +66,7 @@ router.post('/stripe-webhook', async (req, res) => {
     console.log(`[Stripe] Payment success for ${customerEmail} (Phone: ${phone})`);
     
     // Update lead in DB
-    const { data, error } = await supabase
+    const { data: lead, error } = await supabase
       .from('growth_leads_v2')
       .update({ 
         status: 'customer',
@@ -50,10 +74,20 @@ router.post('/stripe-webhook', async (req, res) => {
         stripe_customer_email: customerEmail,
         paid_at: new Date().toISOString()
       })
-      .or(`extracted_phone.eq.${phone},extracted_phone.eq.${normalizePhone(phone || '')}`);
+      .or(`extracted_phone.eq.${phone},extracted_phone.eq.${normalizePhone(phone || '')}`)
+      .select()
+      .single();
 
     if (error) {
       console.error('[Stripe Webhook] DB Update Error:', error);
+    } else if (lead) {
+      // CRITICAL: Trigger automated handoff so the bot knows they are a customer now
+      try {
+        await handoffLead(supabase, lead, 'STRIPE_PAYMENT_COMPLETED');
+        console.log(`[Stripe] Handoff successful for ${lead.extracted_phone}`);
+      } catch (hErr) {
+        console.error('[Stripe Webhook] Handoff Error:', hErr);
+      }
     }
   }
 
@@ -239,7 +273,7 @@ router.post('/add-and-fire', async (req, res) => {
 /**
  * POST /growth/send-batch
  */
-router.post('/send-batch', async (req, res) => {
+router.post('/send-batch', basicAuth, async (req, res) => {
   const { limit = 5, min_confidence = 70 } = req.body;
   
   const { data: leads, error } = await supabase
@@ -301,7 +335,7 @@ router.post('/send-batch', async (req, res) => {
 /**
  * POST /growth/scout/indeed
  */
-router.post('/scout/indeed', async (req, res) => {
+router.post('/scout/indeed', basicAuth, async (req, res) => {
   const jobs = await runIndeedScout();
   
   const inserted = [];
@@ -353,7 +387,7 @@ router.post('/scout/indeed', async (req, res) => {
 /**
  * GET /growth/dashboard
  */
-router.get('/dashboard', async (req, res) => {
+router.get('/dashboard', basicAuth, async (req, res) => {
   const { status, min_confidence } = req.query;
   
   let query = supabase.from('growth_leads_v2').select('*').order('created_at', { ascending: false });
@@ -446,7 +480,7 @@ router.get('/dashboard', async (req, res) => {
 /**
  * POST /growth/approve/:id
  */
-router.post('/approve/:id', async (req, res) => {
+router.post('/approve/:id', basicAuth, async (req, res) => {
   const { id } = req.params;
   
   const { data: lead } = await supabase
