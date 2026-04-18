@@ -289,14 +289,13 @@ router.post('/add-and-fire', async (req, res) => {
  * POST /growth/send-batch
  */
 router.post('/send-batch', basicAuth, async (req, res) => {
-  const { limit = 5, min_confidence = 70 } = req.body;
-  
+  const { limit = 5, min_confidence = 0 } = req.body;
+
   const { data: leads, error } = await supabase
     .from('growth_leads_v2')
     .select('*')
-    .eq('status', 'verified_owner')
+    .in('status', ['new', 'verified_owner'])
     .gte('confidence_score', min_confidence)
-    .is('last_message_sent', null)
     .order('confidence_score', { ascending: false })
     .limit(limit);
   
@@ -312,20 +311,22 @@ router.post('/send-batch', basicAuth, async (req, res) => {
   for (const lead of leads) {
     const message = await generateMessage({
       name: lead.website_owner_name || lead.name,
-      business_name: lead.name,
-      pain_signal: 'hiring_receptionist',
+      business_name: lead.business_name || lead.name,
+      pain_signal: lead.pain_signal || 'hiring_receptionist',
+      pain_details: lead.pain_details || '',
       city: lead.city,
       phone: lead.phone
     });
-    
+
     const result = await sendWhatsApp(lead.phone, message);
-    
+
     if (result.success) {
       await supabase.from('growth_leads_v2').update({
         status: 'messaged',
-        message_sent: message,
-        message_sent_at: new Date().toISOString(),
-        message_count: 1
+        last_message_sent: message,
+        last_contacted_at: new Date().toISOString(),
+        first_contacted_at: lead.first_contacted_at || new Date().toISOString(),
+        message_count: (lead.message_count || 0) + 1
       }).eq('id', lead.id);
     }
     
