@@ -1,20 +1,37 @@
+/**
+ * sender.js — Anti-Gravity V2.5
+ * Bilingual follow-ups + opt-out
+ */
+
 const twilio = require('twilio');
 const { createClient } = require('@supabase/supabase-js');
-const { generateMessage } = require('./brain');
+const { generateMessage, buildGhostRoomUrl, detectLanguage } = require('./brain');
 
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+const OPT_OUT_KEYWORDS = [
+  'stop','unsubscribe','cancel','end','quit','remove',
+  'توقف','إلغاء','لا أريد','أرجو','حذف','أوقف',
+];
+
+function checkOptOut(message) {
+  if (!message) return false;
+  const lower = message.toLowerCase().trim();
+  return OPT_OUT_KEYWORDS.some(kw => lower.includes(kw.toLowerCase()));
+}
 
 async function sendWhatsApp(phone, message) {
   try {
     const msg = await client.messages.create({
       from: process.env.TWILIO_WHATSAPP_FROM,
       to: `whatsapp:${phone}`,
-      body: message
+      body: message,
     });
+    console.log(`[sender.js] Sent to ${phone} — SID: ${msg.sid}`);
     return { success: true, sid: msg.sid };
   } catch (err) {
-    console.error('Send failed:', err.message);
+    console.error('[sender.js] Twilio error:', err.message);
     return { success: false, error: err.message };
   }
 }
@@ -23,118 +40,112 @@ async function processBatch(limit = 5) {
   const { data: leads, error } = await supabase
     .from('growth_leads_v2')
     .select('*')
-    .eq('status', 'new')
-    .neq('status', 'opted_out')
+    .in('status', ['new', 'verified_owner'])
+    .order('confidence_score', { ascending: false })
     .limit(limit);
 
-  if (error || !leads || leads.length === 0) {
-    console.log('No new leads to message');
+  if (error || !leads?.length) {
+    console.log('[sender.js] No leads to process');
     return [];
   }
 
+  console.log(`[sender.js] Processing ${leads.length} leads...`);
   const results = [];
+
   for (const lead of leads) {
-    const message = await generateMessage({
-      name: lead.website_owner_name || lead.name,
-      business_name: lead.name,
-      city: lead.city,
-      phone: lead.phone
-    });
-    const sent = await sendWhatsApp(lead.phone, message);
+    try {
+      const message = await generateMessage(lead);
+      const sent = await sendWhatsApp(lead.phone, message);
 
-    if (sent.success) {
-      await supabase.from('growth_leads_v2').update({
-        status: 'messaged',
-        last_message_sent: message,
-        last_contacted_at: new Date().toISOString(),
-        message_count: 1
-      }).eq('id', lead.id);
+      if (sent.success) {
+        const now = new Date().toISOString();
+        await supabase.from('growth_leads_v2').update({
+          status: 'messaged',
+          last_message_sent: message,
+          last_contacted_at: now,
+          first_contacted_at: lead.first_contacted_at || now,
+          message_count: (lead.message_count || 0) + 1,
+        }).eq('id', lead.id);
+      }
+
+      results.push({ phone: lead.phone, name: lead.name, sent: sent.success, sid: sent.sid || sent.error });
+    } catch (err) {
+      console.error(`[sender.js] Error for ${lead.name}:`, err.message);
+      results.push({ phone: lead.phone, name: lead.name, sent: false, error: err.message });
     }
-
-    results.push({ phone: lead.phone, sent: sent.success, sid: sent.sid || sent.error });
   }
 
   return results;
-}
-
-// ─────────────────────────────────────────────
-// Follow-up sequence — runs daily at 9 AM
-// Sends a bump to leads that haven't replied in 3 days (message_count < 3)
-// ─────────────────────────────────────────────
-const FOLLOWUP_TEMPLATES = [
-  // message_count === 1 → Day 3 bump
-  (lead) =>
-    `Hey ${lead.name || 'Doctor'}, just following up — still curious how much ${lead.name || 'your clinic'} loses to missed calls each month? The link shows your exact number: ${buildGhostRoomUrl(lead)} -Jake`,
-
-  // message_count === 2 → Day 7 final nudge
-  (lead) =>
-    `Last message from me, ${lead.name || 'Doctor'} — if the timing isn't right, no worries. The report for ${lead.name || 'your clinic'} is still here when you're ready: ${buildGhostRoomUrl(lead)} -Jake`
-];
-
-function buildGhostRoomUrl(lead) {
-  const base = (process.env.BASE_URL || '').replace(/\/$/, '');
-  if (!base) return '';
-  const phone = (process.env.TWILIO_WHATSAPP_FROM || '').replace(/^whatsapp:/i, '');
-  const qs = new URLSearchParams({
-    name:   lead.website_owner_name || lead.name || '',
-    clinic: lead.name       || '',
-    city:   lead.city       || '',
-    pain:   lead.pain_signal         || 'default',
-    phone:  phone
-  });
-  return `${base}/growth/room?${qs.toString()}`;
 }
 
 async function sendFollowUps() {
-  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const results = [];
+  const now = new Date();
 
-  const { data: leads, error } = await supabase
+  const threeDaysAgo = new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString();
+  const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  // Bump 1 — Day 3
+  const { data: bump1 } = await supabase
     .from('growth_leads_v2')
     .select('*')
     .eq('status', 'messaged')
-    .neq('status', 'opted_out')
-    .lt('message_count', 3)
-    .or(
-      `and(message_count.eq.1,last_contacted_at.lt.${threeDaysAgo}),` +
-      `and(message_count.eq.2,last_contacted_at.lt.${sevenDaysAgo})`
-    );
+    .lt('last_contacted_at', threeDaysAgo);
 
-  if (error) {
-    console.error('[FollowUp] Supabase query error:', error.message);
-    return [];
-  }
+  if (bump1?.length) {
+    console.log(`[sender.js] Bump 1: ${bump1.length} leads`);
+    for (const lead of bump1) {
+      const lang = detectLanguage(lead);
+      const url = buildGhostRoomUrl(lead);
+      const name = lead.name || 'دكتور';
+      const message = lang === 'ar'
+        ? `دكتور ${name}، هل فكرت في عدد المرضى الذين تفقدهم يومياً؟ أنا هنا إذا أردت الحل. ${url} -جيك`
+        : `Dr. ${name}, have you counted how many patients slip away daily? I'm here if you want the fix. ${url} -Jake`;
 
-  if (!leads || leads.length === 0) {
-    console.log('[FollowUp] No leads due for follow-up');
-    return [];
-  }
-
-  console.log(`[FollowUp] ${leads.length} lead(s) due for follow-up`);
-  const results = [];
-
-  for (const lead of leads) {
-    const templateIndex = (lead.message_count || 1) - 1;
-    const template = FOLLOWUP_TEMPLATES[templateIndex];
-    if (!template) continue;
-
-    const message = template(lead);
-    const sent = await sendWhatsApp(lead.phone, message);
-
-    if (sent.success) {
-      await supabase.from('growth_leads_v2').update({
-        last_message_sent: message,
-        last_contacted_at: new Date().toISOString(),
-        message_count: (lead.message_count || 1) + 1
-      }).eq('id', lead.id);
-
-      console.log(`[FollowUp] Sent bump #${(lead.message_count || 1) + 1} to ${lead.phone} (${lead.name})`);
+      const sent = await sendWhatsApp(lead.phone, message);
+      if (sent.success) {
+        await supabase.from('growth_leads_v2').update({
+          status: 'bumped_1',
+          last_message_sent: message,
+          last_contacted_at: now.toISOString(),
+          message_count: (lead.message_count || 0) + 1,
+        }).eq('id', lead.id);
+        results.push({ name: lead.name, bump: 'bumped_1', sid: sent.sid });
+      }
     }
+  }
 
-    results.push({ phone: lead.phone, sent: sent.success, bump: templateIndex + 1, sid: sent.sid || sent.error });
+  // Bump 2 — Day 7
+  const { data: bump2 } = await supabase
+    .from('growth_leads_v2')
+    .select('*')
+    .eq('status', 'bumped_1')
+    .lt('last_contacted_at', sevenDaysAgo);
+
+  if (bump2?.length) {
+    console.log(`[sender.js] Bump 2: ${bump2.length} leads`);
+    for (const lead of bump2) {
+      const lang = detectLanguage(lead);
+      const url = buildGhostRoomUrl(lead);
+      const name = lead.name || 'دكتور';
+      const message = lang === 'ar'
+        ? `دكتور ${name}، هذه آخر رسالة مني. إذا تغير الوقت، أنا موجود. ${url} -جيك`
+        : `Dr. ${name}, last message from me. If timing changes, I'm here. ${url} -Jake`;
+
+      const sent = await sendWhatsApp(lead.phone, message);
+      if (sent.success) {
+        await supabase.from('growth_leads_v2').update({
+          status: 'bumped_2',
+          last_message_sent: message,
+          last_contacted_at: now.toISOString(),
+          message_count: (lead.message_count || 0) + 1,
+        }).eq('id', lead.id);
+        results.push({ name: lead.name, bump: 'bumped_2', sid: sent.sid });
+      }
+    }
   }
 
   return results;
 }
 
-module.exports = { sendWhatsApp, processBatch, sendFollowUps };
+module.exports = { sendWhatsApp, processBatch, sendFollowUps, checkOptOut };

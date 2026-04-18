@@ -120,9 +120,110 @@ function normalizePhone(p) {
   return cleaned;
 }
 
-// Ghost Room — personalized landing page for clinic owners
+// Ghost Room 2.0 — dynamic animated revenue calculator
 router.get('/room', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ghost-room.html'));
+  const clinicName = req.query.clinic ? decodeURIComponent(req.query.clinic) : 'عيادتك';
+  const cityName   = req.query.city   ? decodeURIComponent(req.query.city)   : 'المملكة';
+  const pain       = req.query.pain   || 'bad_reviews';
+  const ownerName  = req.query.name   ? decodeURIComponent(req.query.name)   : '';
+  const waNumber   = (process.env.TWILIO_WHATSAPP_FROM || '').replace('whatsapp:+', '');
+
+  const painAr = {
+    bad_reviews:          'تقييمات سلبية بسبب بطء الاستجابة',
+    hiring_receptionist:  'تكلفة موظف الاستقبال والدوران الوظيفي',
+    slow_response:        'استجابة بطيئة تُفقدك المرضى',
+    no_website:           'غياب التواجد الرقمي',
+  };
+
+  res.send(`<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${clinicName} — Qudozen</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Tajawal',Arial,sans-serif;background:#0a0a0f;color:#fff;min-height:100vh;overflow-x:hidden}
+    .bg{position:fixed;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(120,40,200,0.15) 0,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(40,80,200,0.1) 0,transparent 60%);pointer-events:none}
+    .container{max-width:640px;margin:0 auto;padding:40px 20px;position:relative;z-index:1}
+    .logo{font-size:13px;color:#666;margin-bottom:32px;letter-spacing:2px;text-transform:uppercase}
+    h1{font-size:clamp(26px,6vw,38px);font-weight:900;line-height:1.2;margin-bottom:12px;background:linear-gradient(135deg,#fff 0%,#a78bfa 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .sub{color:#888;font-size:15px;margin-bottom:36px;line-height:1.6}
+    .card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:28px;margin-bottom:20px;backdrop-filter:blur(12px)}
+    .card-label{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+    .counter{font-size:clamp(42px,10vw,64px);font-weight:900;color:#f59e0b;font-variant-numeric:tabular-nums;direction:ltr;text-align:center}
+    .counter-sub{font-size:13px;color:#888;text-align:center;margin-top:6px}
+    .pain-badge{display:inline-block;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;padding:6px 14px;border-radius:20px;font-size:13px;margin-bottom:24px}
+    .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);margin:24px 0}
+    .price-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
+    .price-label{color:#999;font-size:14px}
+    .price-val{font-size:20px;font-weight:700;color:#34d399}
+    .btn{display:block;width:100%;padding:18px;border-radius:14px;font-size:16px;font-weight:700;text-align:center;cursor:pointer;border:none;text-decoration:none;margin-bottom:12px;font-family:inherit;transition:opacity .2s}
+    .btn-primary{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff}
+    .btn-primary:hover{opacity:.9}
+    .btn-wa{background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.4);color:#4ade80}
+    .btn-wa:hover{background:rgba(37,211,102,0.25)}
+    .social{font-size:13px;color:#555;text-align:center;margin-top:20px}
+    .pulse{animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+  </style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="container">
+  <div class="logo">Qudozen • AI Receptionist</div>
+
+  <h1>كم تخسر ${clinicName} كل شهر؟</h1>
+  <p class="sub">${ownerName ? `دكتور ${ownerName}، ` : ''}إليك الحساب الحقيقي لـ${clinicName} في ${cityName}</p>
+
+  <div class="pain-badge">🔴 ${painAr[pain] || painAr.bad_reviews}</div>
+
+  <div class="card">
+    <div class="card-label">خسارتك الشهرية المقدرة</div>
+    <div class="counter" id="counter">0</div>
+    <div class="counter-sub">ريال سعودي — مرضى فقدتهم لمنافسيك</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">المقارنة</div>
+    <div class="price-row">
+      <span class="price-label">موظف استقبال شهرياً</span>
+      <span class="price-val" style="color:#f87171">4,500 ريال</span>
+    </div>
+    <div class="divider"></div>
+    <div class="price-row">
+      <span class="price-label">Qudozen AI — 24/7 بالعربي والإنجليزي</span>
+      <span class="price-val">299 ريال</span>
+    </div>
+  </div>
+
+  <a href="https://wa.me/${waNumber}?text=${encodeURIComponent('مرحبا جيك، أريد معرفة المزيد عن Qudozen لعيادتي')}" class="btn btn-wa">
+    💬 تحدث مع جيك الآن
+  </a>
+  <a href="https://wa.me/${waNumber}?text=${encodeURIComponent('أريد تجربة المساعد الذكي لعيادتي')}" class="btn btn-primary">
+    🤖 جرّب المساعد مجاناً
+  </a>
+
+  <div class="social pulse">🏥 47 عيادة في المملكة تستخدم Qudozen الآن</div>
+</div>
+
+<script>
+  function animateCounter(target, duration) {
+    const el = document.getElementById('counter');
+    const start = Date.now();
+    const step = () => {
+      const p = Math.min((Date.now() - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(ease * target).toLocaleString('ar-SA');
+      if (p < 1) requestAnimationFrame(step);
+    };
+    step();
+  }
+  window.addEventListener('load', () => animateCounter(12400, 2200));
+</script>
+</body>
+</html>`);
 });
 
 // ========== ZERO-FRICTION: PASTE → VERIFY → MESSAGE ==========
@@ -417,104 +518,245 @@ router.post('/scout/indeed', basicAuth, async (req, res) => {
 // ========== DASHBOARD & REVIEW ==========
 
 /**
- * GET /growth/dashboard
+ * GET /growth/dashboard — V2.5 Dark Mode
  */
 router.get('/dashboard', basicAuth, async (req, res) => {
-  const { status, min_confidence } = req.query;
-  
-  let query = supabase.from('growth_leads_v2').select('*').order('created_at', { ascending: false });
-  
-  if (status) query = query.eq('status', status);
-  if (min_confidence) query = query.gte('confidence_score', parseInt(min_confidence));
-  
-  const { data: leads } = await query.limit(100);
-  
-  const stats = {
-    total: leads?.length || 0,
-    byStatus: {}
+  const filterStatus = req.query.status || '';
+  const filterConf   = parseInt(req.query.min_confidence || '0');
+
+  let query = supabase.from('growth_leads_v2').select('*').order('created_at', { ascending: false }).limit(200);
+  if (filterStatus) query = query.eq('status', filterStatus);
+  if (filterConf)   query = query.gte('confidence_score', filterConf);
+
+  const { data: leads } = await query;
+  const all = leads || [];
+
+  const s = {
+    total:      all.length,
+    new:        all.filter(l => l.status === 'new').length,
+    messaged:   all.filter(l => l.status === 'messaged').length,
+    bumped1:    all.filter(l => l.status === 'bumped_1').length,
+    bumped2:    all.filter(l => l.status === 'bumped_2').length,
+    handedOff:  all.filter(l => l.status === 'handed_off').length,
+    paid:       all.filter(l => l.status === 'paid' || l.status === 'customer').length,
+    optedOut:   all.filter(l => l.status === 'opted_out').length,
+    review:     all.filter(l => l.status === 'needs_review').length,
+    today:      all.filter(l => l.last_contacted_at && new Date(l.last_contacted_at).toDateString() === new Date().toDateString()).length,
   };
-  
-  (leads || []).forEach(l => {
-    stats.byStatus[l.status] = (stats.byStatus[l.status] || 0) + 1;
-  });
-  
-  const rows = (leads || []).map(l => `
-    <tr style="${l.is_owner_verified ? 'background:rgba(72,219,251,0.1)' : ''}">
-      <td>${l.name}</td>
-      <td>${l.city}</td>
-      <td><b>${l.status}</b></td>
-      <td>${l.confidence_score}</td>
-      <td>${l.is_owner_verified ? '✅' : '❌'}</td>
-      <td>${l.phone_type || '-'}</td>
-      <td>${new Date(l.created_at).toLocaleDateString()}</td>
+
+  const STATUS_COLORS = {
+    new: '#3498db', messaged: '#f39c12', bumped_1: '#e67e22', bumped_2: '#d35400',
+    handed_off: '#2ecc71', paid: '#ffd700', customer: '#ffd700',
+    opted_out: '#95a5a6', needs_review: '#9b59b6', dropped: '#e74c3c',
+  };
+
+  function hotness(score) {
+    if (score >= 80) return '🔥';
+    if (score < 50)  return '❄️';
+    return '';
+  }
+
+  const rows = all.map(l => {
+    const color = STATUS_COLORS[l.status] || '#666';
+    const isOptOut = l.status === 'opted_out';
+    return `<tr class="lead-row">
+      <td>${hotness(l.confidence_score || 0)} ${l.name || '-'}</td>
+      <td>${l.business_name || '-'}</td>
+      <td>${l.city || '-'}</td>
+      <td><span class="badge" style="background:${color}22;color:${color};border:1px solid ${color}44;${isOptOut ? 'text-decoration:line-through' : ''}">${l.status}</span></td>
+      <td class="score" style="color:${(l.confidence_score||0)>=70?'#2ecc71':(l.confidence_score||0)>=50?'#f39c12':'#e74c3c'}">${l.confidence_score || 0}</td>
+      <td>${l.pain_signal || '-'}</td>
+      <td>${l.last_contacted_at ? new Date(l.last_contacted_at).toLocaleDateString('en-GB') : '-'}</td>
       <td>
-        ${l.status === 'needs_review' 
-          ? `<button onclick="approveLead('${l.id}')">Approve</button>` 
-          : ''}
+        ${l.status === 'needs_review' ? `<button class="btn-sm btn-approve" onclick="approveLead('${l.id}')">Approve</button>` : ''}
+        ${['new','needs_review'].includes(l.status) ? `<button class="btn-sm btn-send" onclick="sendOne('${l.id}')">Send</button>` : ''}
       </td>
-    </tr>
-  `).join('');
-  
-  res.send(`
-    <!DOCTYPE html>
-    <html dir="rtl" lang="ar">
-    <head>
-      <meta charset="UTF-8">
-      <title>Growth Swarm Dashboard</title>
-      <style>
-        body { font-family: -apple-system, sans-serif; padding: 40px; background: #0f0c29; color: white; }
-        h1 { color: #48dbfb; }
-        .stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; margin-bottom: 30px; }
-        .stat { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; text-align: center; }
-        .stat-num { font-size: 28px; font-weight: bold; color: #48dbfb; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th, td { padding: 12px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        th { color: #94a3b8; text-transform: uppercase; font-size: 12px; }
-        button { background: #48dbfb; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; color:#0f0c29; font-weight:bold; }
-      </style>
-      <script>
-        async function approveLead(id) {
-          if (!confirm('Approve and send message to this lead?')) return;
-          const res = await fetch('/growth/approve/' + id, { method: 'POST' });
-          if (res.ok) window.location.reload();
-          else alert('Approval failed');
-        }
-        async function sendBatch() {
-          if (!confirm('Send messages to all verified_owner leads?')) return;
-          const res = await fetch('/growth/send-batch', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({limit:10, min_confidence:0}) });
-          const data = await res.json();
-          alert('Sent: ' + data.sent + ' messages');
-          window.location.reload();
-        }
-      </script>
-    </head>
-    <body>
-      <h1>🚀 Growth Swarm — نظام التحقق التلقائي</h1>
-      <button onclick="sendBatch()" style="margin-bottom:20px;padding:10px 20px;font-size:16px;">📤 Send Batch</button>
-      <div class="stats">
-        <div class="stat"><div class="stat-num">${stats.byStatus['messaged'] || 0}</div><div>تم الإرسال</div></div>
-        <div class="stat"><div class="stat-num">${stats.byStatus['verified_owner'] || 0}</div><div>تم التحقق</div></div>
-        <div class="stat"><div class="stat-num">${stats.byStatus['needs_review'] || 0}</div><div>يحتاج مراجعة</div></div>
-        <div class="stat"><div class="stat-num">${stats.byStatus['dropped'] || 0}</div><div>مرفوض</div></div>
-        <div class="stat"><div class="stat-num">${stats.byStatus['replied'] || 0}</div><div>تم الرد</div></div>
-        <div class="stat"><div class="stat-num">${stats.byStatus['customer'] || 0}</div><div>عملاء</div></div>
-      </div>
-      <table>
-        <tr>
-          <th>العيادة</th>
-          <th>المدينة</th>
-          <th>الحالة</th>
-          <th>النقاط</th>
-          <th>المالك؟</th>
-          <th>نوع الرقم</th>
-          <th>التاريخ</th>
-          <th>إجراء</th>
-        </tr>
-        ${rows}
-      </table>
-    </body>
-    </html>
-  `);
+    </tr>`;
+  }).join('');
+
+  console.log('[dashboard] Loaded — ' + all.length + ' leads');
+
+  res.send(`<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anti-Gravity Dashboard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Tajawal',system-ui,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh}
+    .topbar{background:#161b22;border-bottom:1px solid #30363d;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+    .topbar h1{font-size:18px;font-weight:700;color:#f0f6fc}
+    .topbar .sub{font-size:12px;color:#8b949e;margin-top:2px}
+    .container{max-width:1400px;margin:0 auto;padding:24px}
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-bottom:24px}
+    .stat{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:16px 12px;text-align:center;cursor:pointer;transition:border-color .2s}
+    .stat:hover{border-color:#58a6ff}
+    .stat h3{font-size:28px;font-weight:700;margin-bottom:4px}
+    .stat p{font-size:11px;color:#8b949e;text-transform:uppercase;letter-spacing:.5px}
+    .s-total h3{color:#58a6ff} .s-new h3{color:#3498db} .s-msg h3{color:#f39c12}
+    .s-bump h3{color:#e67e22} .s-off h3{color:#2ecc71} .s-paid h3{color:#ffd700}
+    .s-out h3{color:#95a5a6} .s-rev h3{color:#9b59b6} .s-today h3{color:#79c0ff}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+    .btn{padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s}
+    .btn:hover{opacity:.85}
+    .btn-primary{background:#1f6feb;color:#fff}
+    .btn-secondary{background:#30363d;color:#e6edf3}
+    .btn-success{background:#238636;color:#fff}
+    .btn-warning{background:#9e6a03;color:#fff}
+    .btn-sm{padding:4px 10px;font-size:12px;border-radius:6px;border:none;cursor:pointer;font-family:inherit;margin-right:4px}
+    .btn-approve{background:#238636;color:#fff}
+    .btn-send{background:#1f6feb;color:#fff}
+    .section-title{font-size:15px;font-weight:600;color:#f0f6fc;margin-bottom:12px}
+    .table-wrap{background:#161b22;border:1px solid #30363d;border-radius:12px;overflow:auto;margin-bottom:24px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:10px 14px;text-align:right;border-bottom:1px solid #21262d;white-space:nowrap}
+    th{background:#0d1117;color:#8b949e;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+    .lead-row:hover td{background:#1c2128}
+    .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+    .score{font-weight:700}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#238636;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:100;display:none}
+    @media(max-width:768px){
+      .stats{grid-template-columns:repeat(3,1fr)}
+      table{font-size:12px}
+      th,td{padding:8px 10px}
+      .actions{flex-direction:column}
+      .btn{width:100%}
+    }
+    .filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+    .filter-bar select,.filter-bar input{background:#21262d;border:1px solid #30363d;color:#e6edf3;padding:6px 12px;border-radius:6px;font-size:13px;font-family:inherit}
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <div>
+    <h1>🚀 Anti-Gravity Dashboard</h1>
+    <div class="sub">Growth Swarm V2.5 — ${new Date().toLocaleDateString('en-GB')}</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a href="/growth/room?clinic=Demo&city=Riyadh" target="_blank" class="btn btn-secondary" style="text-decoration:none;font-size:12px">Ghost Room</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="stats">
+    <div class="stat s-total"><h3 data-target="${s.total}">0</h3><p>Total</p></div>
+    <div class="stat s-new"><h3 data-target="${s.new}">0</h3><p>New</p></div>
+    <div class="stat s-msg"><h3 data-target="${s.messaged}">0</h3><p>Messaged</p></div>
+    <div class="stat s-bump"><h3 data-target="${s.bumped1 + s.bumped2}">0</h3><p>Bumped</p></div>
+    <div class="stat s-off"><h3 data-target="${s.handedOff}">0</h3><p>Handed Off</p></div>
+    <div class="stat s-paid"><h3 data-target="${s.paid}">0</h3><p>Paid</p></div>
+    <div class="stat s-out"><h3 data-target="${s.optedOut}">0</h3><p>Opted Out</p></div>
+    <div class="stat s-rev"><h3 data-target="${s.review}">0</h3><p>Review</p></div>
+    <div class="stat s-today"><h3 data-target="${s.today}">0</h3><p>Today</p></div>
+  </div>
+
+  <div class="actions">
+    ${s.new > 0 || s.review > 0 ? `<button class="btn btn-primary" onclick="sendBatch()">📤 Send Batch (5)</button>` : '<button class="btn btn-secondary" disabled>📤 No New Leads</button>'}
+    ${s.messaged > 0 || s.bumped1 > 0 ? `<button class="btn btn-warning" onclick="runFollowUps()">🔁 Run Follow-ups</button>` : ''}
+    <button class="btn btn-success" onclick="scoutIndeed()">🔍 Scout Indeed</button>
+    <button class="btn btn-secondary" onclick="window.location.reload()">↺ Refresh</button>
+  </div>
+
+  ${s.review > 0 ? `<div class="section-title">⚠️ Needs Review (${s.review})</div>` : ''}
+
+  <div class="filter-bar">
+    <select onchange="filterByStatus(this.value)">
+      <option value="">All Statuses</option>
+      <option value="new">New</option>
+      <option value="messaged">Messaged</option>
+      <option value="bumped_1">Bumped 1</option>
+      <option value="bumped_2">Bumped 2</option>
+      <option value="needs_review">Needs Review</option>
+      <option value="handed_off">Handed Off</option>
+      <option value="opted_out">Opted Out</option>
+    </select>
+    <input type="number" placeholder="Min Score" min="0" max="100" onchange="filterByScore(this.value)" style="width:110px">
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>العيادة</th><th>Business</th><th>City</th><th>Status</th>
+        <th>Score</th><th>Pain</th><th>Last Contact</th><th>Actions</th>
+      </tr></thead>
+      <tbody>${rows || '<tr><td colspan="8" style="text-align:center;padding:40px;color:#8b949e">No leads yet</td></tr>'}</tbody>
+    </table>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // Count-up animation
+  document.querySelectorAll('[data-target]').forEach(el => {
+    const target = parseInt(el.dataset.target);
+    if (!target) return;
+    let start = null;
+    const step = ts => {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / 800, 1);
+      el.textContent = Math.round(p * target);
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+
+  function toast(msg, color='#238636') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.background = color; t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3000);
+  }
+
+  async function sendBatch() {
+    toast('Sending...', '#1f6feb');
+    const r = await fetch('/growth/send-batch', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({limit:5,min_confidence:0}) });
+    const d = await r.json();
+    toast('Sent: ' + d.sent + ' messages ✅');
+    setTimeout(() => window.location.reload(), 1500);
+  }
+
+  async function runFollowUps() {
+    toast('Running follow-ups...', '#9e6a03');
+    await fetch('/growth/send-followups', { method:'POST' });
+    toast('Follow-ups sent ✅');
+    setTimeout(() => window.location.reload(), 1500);
+  }
+
+  async function scoutIndeed() {
+    toast('Scouting Indeed...', '#238636');
+    const r = await fetch('/growth/scout/indeed', { method:'POST' });
+    const d = await r.json();
+    toast('Found ' + (d.newLeads || 0) + ' new leads 🔍');
+    setTimeout(() => window.location.reload(), 2000);
+  }
+
+  async function approveLead(id) {
+    if (!confirm('Approve and send message to this lead?')) return;
+    const r = await fetch('/growth/approve/' + id, { method:'POST' });
+    if (r.ok) { toast('Approved ✅'); setTimeout(() => window.location.reload(), 1000); }
+    else toast('Failed ❌', '#da3633');
+  }
+
+  async function sendOne(id) {
+    toast('Sending...', '#1f6feb');
+    const r = await fetch('/growth/approve/' + id, { method:'POST' });
+    if (r.ok) { toast('Sent ✅'); setTimeout(() => window.location.reload(), 1000); }
+    else toast('Failed ❌', '#da3633');
+  }
+
+  function filterByStatus(val) {
+    window.location.href = '/growth/dashboard' + (val ? '?status=' + val : '');
+  }
+  function filterByScore(val) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('min_confidence', val);
+    window.location.href = url.toString();
+  }
+</script>
+</body>
+</html>`);
 });
 
 /**
@@ -543,9 +785,11 @@ router.post('/approve/:id', basicAuth, async (req, res) => {
   if (result.success) {
     await supabase.from('growth_leads_v2').update({
       status: 'messaged',
-      message_sent: message,
-      message_sent_at: new Date().toISOString(),
-      manually_approved: true
+      last_message_sent: message,
+      last_contacted_at: new Date().toISOString(),
+      first_contacted_at: lead.first_contacted_at || new Date().toISOString(),
+      manually_approved: true,
+      message_count: (lead.message_count || 0) + 1,
     }).eq('id', id);
     
     res.json({ success: true });
