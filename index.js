@@ -8,6 +8,12 @@ app.use(express.urlencoded({ extended: false })); // Twilio sends URL-encoded bo
 const apiRoutes = require('./api');
 app.use('/api', apiRoutes);
 
+const growthRouter = require('./growth/index');
+const { handoffLead } = require('./growth/handoff');
+const { createClient } = require('@supabase/supabase-js');
+const growthSupabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+app.use('/growth', growthRouter);
+
 // Global error handlers — prevent crashes
 process.on('uncaughtException',  (err) => console.error('[CRASH] uncaughtException:', err));
 process.on('unhandledRejection', (err) => console.error('[CRASH] unhandledRejection:', err));
@@ -60,6 +66,25 @@ app.get('/webhook', (req, res) => {
 app.post('/webhook', async (req, res) => {
   // Send empty 200 — res.sendStatus(200) sends "OK" as body which Twilio forwards as a message
   res.status(200).end();
+
+  // --- GROWTH SWARM HANDOFF CHECK ---
+  try {
+    const fromPhone = req.body.From?.replace('whatsapp:', '') || '';
+    const { data: growthLead } = await growthSupabase
+      .from('growth_leads')
+      .select('*')
+      .eq('phone', fromPhone)
+      .eq('status', 'messaged')
+      .single();
+
+    if (growthLead) {
+      await handoffLead(growthLead, req.body.Body || '');
+      // Now let dental bot handle it normally (patient was created above)
+    }
+  } catch (e) {
+    // Not a growth lead — continue normally
+  }
+  // --- END GROWTH SWARM CHECK ---
 
   try {
     const body = req.body;
@@ -319,7 +344,17 @@ try {
     }
   });
 
-  console.log('[Cron] ✅ All schedulers started: reminders (30m) + slot cleanup (1h) + health check (10m)');
+  // ── Growth follow-ups — daily at 9 AM (Saudi time = UTC+3, so 6 AM UTC) ──
+  cron.schedule('0 6 * * *', async () => {
+    console.log('[Cron] Running daily growth follow-ups...');
+    try {
+      await axios.post(`http://localhost:${process.env.PORT || 3000}/growth/send-followups`);
+    } catch (e) {
+      console.error('[Cron] Follow-up trigger error:', e.message);
+    }
+  });
+
+  console.log('[Cron] ✅ All schedulers started: reminders (30m) + slot cleanup (1h) + health check (10m) + growth follow-ups (daily 9AM)');
 } catch (e) {
   console.log('[Cron] node-cron not available, reminders must be triggered manually');
 }
