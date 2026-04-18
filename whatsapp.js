@@ -32,24 +32,19 @@ async function sendInteractiveList(to, header, body, buttonText, sections, fallb
 
     const client = twilio(accountSid, authToken);
 
-    await client.messages.create({
-      from:        from,
-      to:          `whatsapp:+${to}`,
-      contentSid:  null,
-      body:        JSON.stringify({
-        type: 'interactive',
-        interactive: {
-          type:   'list',
-          header: { type: 'text', text: header },
-          body:   { text: body },
-          footer: { text: 'Powered by Deadlock Solutions' },
-          action: {
-            button:   buttonText,
-            sections: sections
-          }
-        }
-      })
-    });
+    // Build plain-text menu (Twilio sandbox doesn't support interactive lists)
+    let text = `*${header}*\n\n${body}\n`;
+    let idx = 1;
+    for (const section of sections) {
+      text += `\n*${section.title}*\n`;
+      for (const row of section.rows) {
+        text += `${idx}. ${row.title}\n`;
+        idx++;
+      }
+    }
+    text += '\nReply with a number to choose.';
+
+    await client.messages.create({ from, to: `whatsapp:+${to}`, body: text });
   } catch (err) {
     console.error('[WhatsApp] sendInteractiveList error:', err.message);
     // Fallback to plain text
@@ -235,23 +230,11 @@ async function sendButtonMessage(to, body, buttons, fallbackText) {
 
     const client = twilio(accountSid, authToken);
 
-    await client.messages.create({
-      from:  from,
-      to:    `whatsapp:+${to}`,
-      body:  JSON.stringify({
-        type: 'interactive',
-        interactive: {
-          type: 'button',
-          body: { text: body },
-          action: {
-            buttons: buttons.map(b => ({
-              type: 'reply',
-              reply: { id: b.id, title: b.title }
-            }))
-          }
-        }
-      })
-    });
+    // Plain-text button fallback for Twilio sandbox
+    let text = `${body}\n`;
+    buttons.forEach((b, i) => { text += `\n${i + 1}. ${b.title}`; });
+    text += '\n\nReply with a number to choose.';
+    await client.messages.create({ from, to: `whatsapp:+${to}`, body: text });
   } catch (err) {
     console.error('[WhatsApp] sendButtonMessage error:', err.message);
     if (fallbackText) {
