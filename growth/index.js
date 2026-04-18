@@ -20,7 +20,7 @@ const { sendWhatsApp } = require('./lib/whatsappProvider');
 const { generateMessage } = require('./brain');
 const { runIndeedScout } = require('./scouts/indeed');
 const { handoffLead } = require('./handoff');
-const { sendFollowUps } = require('../sender');
+const { sendFollowUps } = require('./sender');
 
 let _stripe;
 function getStripe() {
