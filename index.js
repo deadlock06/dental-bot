@@ -22,6 +22,7 @@ app.post('/growth/stripe-webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false })); // Twilio sends URL-encoded bodies
 
+app.use('/growth', express.static(path.join(__dirname, 'growth')));
 app.use('/growth', growthRouter);
 
 // Global error handlers — prevent crashes
