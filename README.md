@@ -1,55 +1,36 @@
-# WhatsApp Dental Receptionist 🦷
+# Qudozen Universal Healthcare AOS 🌐
 
-A bilingual (Arabic/English) WhatsApp AI receptionist for dental clinics in Saudi Arabia.
+A fully autonomous operating system (AOS) for healthcare facilities in Saudi Arabia, built with Node.js, Express, and React. It operates as a 24/7 intelligent receptionist, handling patient inquiries, booking dynamics, and proactive outreach via WhatsApp.
 
-## Setup Instructions
+## 🚀 System Components
 
-### Step 1 — Fill in your credentials
-1. Copy `.env.example` to `.env`
-2. Fill in all the values:
-   - SUPABASE_URL — your Supabase project URL
-   - SUPABASE_KEY — your Supabase anon key
-   - WHATSAPP_TOKEN — your Meta WhatsApp access token
-   - WHATSAPP_PHONE_ID — your Meta phone number ID
-   - VERIFY_TOKEN — keep as "dental123" or change it
-   - OPENAI_KEY — your OpenAI API key
+- **Layer 1 (Reception):** Handles incoming WhatsApp chats, answers queries in <3s, and books appointments using Twilio logic in `bot.js`.
+- **Layer 2 (Coordination):** Resolves scheduling conflicts via `slots.js` and strict capacity locking in Supabase.
+- **Layer 3 (Evolution):** Tracks drop-offs natively and analyzes operational health.
+- **Self-Healing Agent (`monitor.js`):** Continuously checks database latency, auto-recovers stuck patient flows, and alerts the admin.
+- **Growth Swarm (`growth/`):** Autonomous outreach protocols and the "Ghost Room" dashboard for tracking uncaptured value (`/growth/dashboard`).
 
-### Step 2 — Install dependencies
-```
-npm install
-```
+## 🛠️ Tech Stack & Hosting
 
-### Step 3 — Run locally
-```
-npm run dev
-```
+- **Backend:** Node.js, Express.js
+- **Database:** Supabase (PostgreSQL with RLS)
+- **AI Integrations:** OpenAI (gpt-4o-mini)
+- **Messaging:** Twilio WhatsApp API
+- **Deployment:** Render (Live at `https://qudozen.com`)
 
-### Step 4 — Deploy to Railway
-1. Go to railway.app
-2. Create new project
-3. Connect your GitHub repo
-4. Add all environment variables from .env
-5. Deploy
+## 🔑 Environment Variables required in `.env`:
+`SUPABASE_URL`, `SUPABASE_KEY`, `OPENAI_KEY`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`, `ADMIN_PHONE`
 
-### Step 5 — Connect WhatsApp
-1. Copy your Railway URL (e.g. https://your-app.railway.app)
-2. Go to Meta Developer Console → WhatsApp → Configuration
-3. Set Callback URL to: https://your-app.railway.app/webhook
-4. Set Verify Token to: dental123
-5. Click Verify and Save
-6. Subscribe to "messages" webhook field
+## 🏁 How to Run Locally
 
-## Project Structure
-- `index.js` — Express server, webhook handler
-- `bot.js` — Core conversation logic
-- `db.js` — Supabase database helpers
-- `whatsapp.js` — WhatsApp message sender
-- `ai.js` — OpenAI intent detection
+1. `npm install`
+2. Configure `.env` variables
+3. `npm run dev`
+4. Access the UI at `http://localhost:3000` and Dashboard at `http://localhost:3000/growth/dashboard`
 
-## Features
-- Bilingual Arabic/English
-- Full 6-step booking flow
-- Saves to Supabase
-- AI intent detection
-- Menu number routing
-- Status update filtering
+## 🩺 System Reality Check
+
+To manually test the system pulse, trigger the health-check endpoint:
+`curl https://qudozen.com/health`
+
+*© 2026 Qudozen. All Rights Reserved.*

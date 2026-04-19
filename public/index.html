@@ -569,45 +569,7 @@
   </div>
 </section>
 
-<!-- ════════════════════════════
-     CALCULATOR (ADDED AS REQUESTED)
-════════════════════════════ -->
-<section id="calculator" style="background: rgba(13, 148, 136, 0.03);">
-  <div class="inner">
-    <div class="section-head reveal">
-      <span class="tag">حاسبة الخسارة</span>
-      <h2>كم تخسر منشأتك الصحية كل شهر؟</h2>
-      <p class="subhead">اضبط الأرقام لعيادتك واحسب التكلفة الحقيقية للاستجابة البطيئة والأخطاء البشرية</p>
-    </div>
-    <div class="dash-wrap glass reveal" style="max-width: 600px; margin: 0 auto; padding: 36px; border-radius: 20px;">
-      <div style="margin-bottom: 20px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px; color:var(--muted);">
-          <span>عدد الاتصالات الفائتة أو المتأخرة يومياً</span>
-          <span style="color:var(--text); font-weight:700;" id="v1">5</span>
-        </div>
-        <input type="range" min="1" max="30" value="5" id="r1" oninput="calcUpdate()" style="width:100%; height:6px; border-radius:3px; background:rgba(255,255,255,0.1); appearance:none; outline:none; cursor:pointer;" class="slider">
-      </div>
-      <div style="margin-bottom: 20px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px; color:var(--muted);">
-          <span>متوسط قيمة الكشف أو الخدمة (ريال)</span>
-          <span style="color:var(--text); font-weight:700;" id="v2">350</span>
-        </div>
-        <input type="range" min="100" max="2000" value="350" step="50" id="r2" oninput="calcUpdate()" style="width:100%; height:6px; border-radius:3px; background:rgba(255,255,255,0.1); appearance:none; outline:none; cursor:pointer;" class="slider">
-      </div>
-      <div style="margin-bottom: 20px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:14px; color:var(--muted);">
-          <span>نسبة المرضى الذين يذهبون لمنافسك</span>
-          <span style="color:var(--text); font-weight:700;" id="v3">60%</span>
-        </div>
-        <input type="range" min="10" max="90" value="60" step="10" id="r3" oninput="calcUpdate()" style="width:100%; height:6px; border-radius:3px; background:rgba(255,255,255,0.1); appearance:none; outline:none; cursor:pointer;" class="slider">
-      </div>
-      <div style="background:rgba(94, 234, 212, 0.1); border:1px solid rgba(94, 234, 212, 0.3); border-radius:14px; padding:20px; text-align:center; margin-top:24px;">
-        <div style="font-size:48px; font-weight:900; color:var(--aqua); line-height:1.2;" id="calcResult">3,780</div>
-        <div style="font-size:14px; color:var(--muted); margin-top:4px;">ريال سعودي خسارة شهرية مقدرة للمنشأة</div>
-      </div>
-    </div>
-  </div>
-</section>
+
 
 <!-- ════════════════════════════
      PRICING
@@ -627,7 +589,7 @@
         <ul class="price-list">
           <li>مساعد استقبال 24/7</li>
           <li>تنسيق مواعيد آلي</li>
-          <li>دعم اللغتين (Layers 1)</li>
+          <li>دعم اللغتين (الطبقة 1)</li>
           <li>بنية تحتية آمنة</li>
         </ul>
         <a href="javascript:toggleChat()" class="btn btn-secondary" style="width: 100%;">تحول الآن</a>
@@ -747,16 +709,6 @@
 </div>
 
 <script>
-  function calcUpdate() {
-    const v1 = document.getElementById('r1').value;
-    const v2 = document.getElementById('r2').value;
-    const v3 = document.getElementById('r3').value;
-    document.getElementById('v1').textContent = v1;
-    document.getElementById('v2').textContent = v2;
-    document.getElementById('v3').textContent = v3 + '%';
-    const loss = v1 * v2 * (v3 / 100) * 26; // 26 working days
-    document.getElementById('calcResult').textContent = Math.round(loss).toLocaleString('en-US');
-  }
 
   // ════════════════════════════
   // REVEAL ANIMATIONS
@@ -798,12 +750,12 @@
       loadVal.textContent = v + '%';
     }
     if (conscBar) {
-      let c = 94 + (Math.random() * 2).toFixed(1);
+      let c = (94 + Math.random() * 2).toFixed(1);
       conscBar.style.width = c + '%';
       conscVal.textContent = c + '%';
     }
     if (trustBar) {
-      let t = 99 + (Math.random() * 0.9).toFixed(1);
+      let t = (99 + Math.random() * 0.9).toFixed(1);
       trustBar.style.width = t + '%';
       trustVal.textContent = t + '%';
     }
