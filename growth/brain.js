@@ -1,126 +1,68 @@
-/**
- * brain.js — Anti-Gravity V2.5
- * Elite bilingual outreach engine
- */
-
+require('dotenv').config();
 const OpenAI = require('openai');
-const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY || 'fake-key-for-test' });
 
-const ARABIC_CITIES = ['جازان','مكة','المدينة','أبها','تبوك','نجران','بريدة','الطائف',
-  'Jazan','Mecca','Medina','Abha','Tabuk','Najran','Buraidah','Taif'];
-
+const ARABIC_CITIES = ['جازان','مكة','المدينة','أبها','تبوك','نجران','Jazan','Mecca','Medina','Abha','Tabuk','Najran'];
 const ARABIC_REGEX = /[\u0600-\u06FF]/;
 
 function detectLanguage(lead) {
   const city = lead.city || '';
-  const name = lead.business_name || '';
-  if (ARABIC_REGEX.test(name)) return 'ar';
+  const name = lead.business_name || lead.business || '';
+  
   if (ARABIC_CITIES.some(c => city.toLowerCase().includes(c.toLowerCase()))) return 'ar';
-  if (name.startsWith('Al ') || name.startsWith('Al-')) return 'ar';
-  return 'ar'; // Saudi market default
+  if (name.startsWith('Al ') || name.startsWith('Al-') || ARABIC_REGEX.test(name)) return 'ar';
+  
+  return 'ar'; // Default Saudi market
 }
 
-function buildGhostRoomUrl(lead) {
-  const base = (process.env.BASE_URL || 'https://dental-bot-evpe.onrender.com').replace(/\/$/, '');
+function calculateHeatScore(lead) {
+  const pain = lead.pain || lead.pain_signal || 'bad_reviews';
+  const heatMap = { slow_response: 10, bad_reviews: 9, hiring_receptionist: 8, no_website: 7 };
+  return heatMap[pain] || 5;
+}
+
+function getGhostRoomUrl(lead) {
+  const base = (process.env.BASE_URL || 'https://qudozen.com').replace(/\/$/, '');
   const qs = new URLSearchParams({
-    name:   lead.website_owner_name || lead.name || '',
-    clinic: lead.business_name || '',
-    city:   lead.city || '',
-    pain:   lead.pain_signal || 'bad_reviews',
+    name: encodeURIComponent(lead.website_owner_name || lead.name || ''),
+    clinic: encodeURIComponent(lead.business_name || lead.business || ''),
+    city: encodeURIComponent(lead.city || ''),
+    pain: lead.pain_signal || lead.pain || 'bad_reviews',
   });
   return `${base}/growth/room?${qs.toString()}`;
 }
 
 const AR_TEMPLATES = {
   bad_reviews: (lead, url) =>
-    `كم مريضاً خسرته ${lead.business_name || 'عيادتك'} هذا الشهر بسبب ردود الفعل البطيئة؟ الأرقام ستصدمك — ${url} -جيك`,
+    `دكتور ${lead.name || ''}، مراجعين ${lead.business_name || 'العيادة'} يبحثون عن عيادة ترد على رسائلهم بسرعة. لو عيادتك كانت أول من يرد — كم مريض كنت ستكسب هذا الشهر؟ ${url} -جيك`,
   hiring_receptionist: (lead, url) =>
-    `رأيت أن ${lead.business_name || 'عيادتك'} تبحث عن موظف استقبال — هل تعلم أن الذكاء الاصطناعي يرد على المرضى في 3 ثوانٍ على مدار الساعة بـ 299 ريال فقط؟ ${url} -جيك`,
+    `دكتور ${lead.name || ''}، كلما استأجرت موظفة استقبال جديدة — تدربها، ثم تترك. الذكاء الاصطناعي لا يغادر أبداً. جرب بنفسك؟ ${url} -جيك`,
   slow_response: (lead, url) =>
-    `${lead.name || 'دكتور'}، كم مريضاً اتصل بـ${lead.business_name || 'عيادتك'} ولم يجد رداً فذهب لمنافس؟ الرقم الحقيقي هنا — ${url} -جيك`,
-  no_website: (lead, url) => {
-    const vName = lead.vertical === 'dental' ? 'طبيب أسنان' : 'طبيب متخصص';
-    return `${lead.name || 'دكتور'}، ${lead.business_name || 'عيادتك'} غير موجودة على الإنترنت — يعني كل مريض يبحث عن ${vName} في ${lead.city || 'مدينتك'} لن يجدك. هل تريد معرفة كم تخسر؟ ${url} -جيك`;
-  }
+    `دكتور ${lead.name || ''}، ${lead.business_name || 'العيادة'} تخسر مراجعين كل ساعة بسبب التأخر في الرد. هل تعلم كم تكلفك هذه الساعات شهرياً؟ اكتشف هنا: ${url} -جيك`,
+  no_website: (lead, url) =>
+    `دكتور ${lead.name || ''}، لاحظت أن مرضاك في ${lead.city || 'المدينة'} يذهبون لمنافسيك لعدم توفرك بالبحث. كم مريض تخسر يومياً؟ ${url} -جيك`
 };
 
 const EN_TEMPLATES = {
   bad_reviews: (lead, url) =>
-    `How many patients has ${lead.business_name || 'your clinic'} lost this month to slow responses — have you ever calculated the number? ${url} -Jake`,
+    `Dr. ${lead.name || ''}, every hour ${lead.business_name || "your clinic"} doesn't reply to a WhatsApp message, a patient books with your competitor instead. Want to see exactly how much that's costing you? ${url} -Jake`,
   hiring_receptionist: (lead, url) =>
-    `Noticed ${lead.business_name || 'your clinic'} is hiring a receptionist — what if an AI answered 24/7 for 299 SAR instead of monthly salary + benefits? ${url} -Jake`,
+    `Dr. ${lead.name || ''}, notice how receptionists need constant training before they quit? What if an AI handled everything 24/7 without leaving? Want to see how? ${url} -Jake`,
   slow_response: (lead, url) =>
-    `Dr. ${lead.name || ''}, every hour ${lead.business_name || 'your clinic'} takes to reply is a patient deciding on your competitor — want to see the exact number? ${url} -Jake`,
-  no_website: (lead, url) => {
-    const vName = lead.vertical === 'dental' ? 'dentist' : 'specialist';
-    return `${lead.business_name || 'Your clinic'} doesn't appear online — every patient searching for a ${vName} in ${lead.city || 'your city'} finds your competitor instead. Curious how much that costs? ${url} -Jake`;
-  }
+    `Dr. ${lead.name || ''}, your missed calls and slow responses are sending patients directly to competitors. Want to see the exact numbers on what you're losing? ${url} -Jake`,
+  no_website: (lead, url) =>
+    `Dr. ${lead.name || ''}, patients searching in ${lead.city || 'your area'} are finding competitors instead of you. What if fixing this was entirely automated? ${url} -Jake`
 };
 
-function fallbackMessage(lead) {
+function generateMessage(lead) {
   const lang = detectLanguage(lead);
-  const url = buildGhostRoomUrl(lead);
-  const pain = lead.pain_signal || 'bad_reviews';
+  const pain = lead.pain || lead.pain_signal || 'bad_reviews';
+  const url = getGhostRoomUrl(lead);
+  
   const templates = lang === 'ar' ? AR_TEMPLATES : EN_TEMPLATES;
-  const fn = templates[pain] || templates.bad_reviews;
-  console.log(`[brain.js] Fallback message (${lang}) for pain: ${pain}`);
-  return fn(lead, url);
+  const generate = templates[pain] || templates.bad_reviews;
+  
+  return generate(lead, url);
 }
 
-async function generateMessage(lead) {
-  const lang = detectLanguage(lead);
-  const url = buildGhostRoomUrl(lead);
-  const pain = lead.pain_signal || 'bad_reviews';
-  const sig = lang === 'ar' ? '-جيك' : '-Jake';
-
-  const systemPrompt = lang === 'ar'
-    ? `أنت جيك، متخصص في التواصل مع المراكز الطبية السعودية (${lead.vertical || 'dental'}) لعرض مساعد استقبال يعمل بالذكاء الاصطناعي من Qudozen.
-القواعد:
-- جملة واحدة فقط (جملتان إذا ضرورة قصوى).
-- افتح بفجوة فضول — لا تبدأ بـ"مرحبا" العادية.
-- اذكر نقطة الألم بتفصيل محدد.
-- استخدم تأثير الخسارة ("تخسر مرضى").
-- انتهِ بسؤال مفتوح (ليس نعم/لا).
-- وقّع بـ${sig} في النهاية.
-- أقل من 300 حرف.
-- لا تكن روبوتياً.`
-    : `You are Jake, outreach specialist for Qudozen AI autonomous receptionist in Saudi Arabia, targeting ${lead.vertical || 'dental'} clinics.
-Rules:
-- ONE sentence (two max if essential).
-- Open with a curiosity gap — NOT "Hi I wanted to reach out".
-- Mention their specific pain with exact detail.
-- Use loss aversion ("you're losing patients").
-- End with an open question (not yes/no).
-- Sign ${sig} at the end.
-- Under 300 characters.
-- Sound human, not robotic.`;
-
-  const userPrompt = `Lead: ${lead.name || 'Doctor'} at ${lead.business_name || 'clinic'}, ${lead.city || 'Saudi Arabia'}
-Pain: ${pain} — ${lead.pain_details || 'no extra details'}
-Include this URL at the end: ${url}
-Write the message now:`;
-
-  try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      max_tokens: 150,
-      temperature: 0.75,
-    });
-
-    let message = response.choices[0].message.content.trim();
-    if (!message.includes(sig)) message += ` ${sig}`;
-    if (!message.includes('room?')) message += ` ${url}`;
-
-    console.log(`[brain.js] Generated (${lang}) for ${lead.name}: ${message.substring(0, 60)}...`);
-    return message;
-  } catch (err) {
-    console.error('[brain.js] OpenAI error:', err.message);
-    return fallbackMessage(lead);
-  }
-}
-
-module.exports = { generateMessage, buildGhostRoomUrl, detectLanguage };
+module.exports = { generateMessage, getGhostRoomUrl, detectLanguage, calculateHeatScore };

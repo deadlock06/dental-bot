@@ -3,896 +3,203 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Qudozen — مساعد الاستقبال الذكي لعيادات الأسنان في المملكة العربية السعودية. يرد على المرضى 24/7 بالعربي والإنجليزي.">
-  <title>Qudozen — مساعد الاستقبال الذكي للعيادات</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <title>Qudozen AOS - الذكاء الاصطناعي للعيادات</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <style>
-    :root {
-      --bg: #0B1120;
-      --surface: rgba(15, 23, 42, 0.6);
-      --border: rgba(94, 234, 212, 0.1);
-      --aqua: #5EEAD4;
-      --teal: #0D9488;
-      --sand: #D4A574;
-      --text: #F8FAFC;
-      --muted: #94A3B8;
-      --glass: rgba(15, 23, 42, 0.8);
-      --glass-hi: rgba(94, 234, 212, 0.05);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: 'Tajawal', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      overflow-x: hidden;
-      direction: rtl;
-    }
-
-
-    /* ════════════════════════════
-       UTILITIES & ANIMATIONS
-    ════════════════════════════ */
-    .inner { max-width: 1200px; margin: 0 auto; padding: 0 28px; }
-    .inner-narrow { max-width: 900px; margin: 0 auto; padding: 0 28px; }
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
+    body { font-family: 'Tajawal', sans-serif; background-color: #0B1120; color: white; overflow-x: hidden; }
     .glass {
-      background: var(--surface);
-      backdrop-filter: blur(40px);
-      -webkit-backdrop-filter: blur(40px);
-      border: 1px solid var(--border);
-      border-radius: 24px;
+      background: rgba(13, 148, 136, 0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(94, 234, 212, 0.1);
     }
-    @keyframes slowFloat {
-      0%, 100% { transform: translateY(0) rotate(0); }
-      33% { transform: translateY(-15px) rotate(1deg); }
-      66% { transform: translateY(5px) rotate(-0.5deg); }
-    }
-    .floating { animation: slowFloat 25s ease-in-out infinite; }
-    
-    @keyframes breathe {
-      0%, 100% { transform: scale(1); opacity: 0.6; }
-      50% { transform: scale(1.05); opacity: 0.8; }
-    }
-    @keyframes float-bg {
-      0% { transform: translate(-50%, -50%) rotate(0deg); }
-      100% { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-    .reveal { opacity: 0; transform: translateY(20px); transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
-    .reveal.active { opacity: 1; transform: translateY(0); }
-
-    /* ════════════════════════════
-       NAV
-    ════════════════════════════ */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-      height: 80px; display: flex; align-items: center;
-      transition: background 0.4s, backdrop-filter 0.4s;
-    }
-    nav.scrolled {
-      background: rgba(11, 17, 32, 0.8);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-inner {
-      width: 100%; display: flex; justify-content: space-between; align-items: center;
-    }
-    .logo {
-      font-size: 20px; font-weight: 900; letter-spacing: -0.5px;
-      color: var(--text); text-decoration: none;
-      direction: ltr; unicode-bidi: embed; /* LOCK DIRECTION */
-    }
-    .logo span { color: var(--aqua); }
-    .nav-links { display: flex; gap: 36px; align-items: center; }
-    .nav-links a {
-      color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500;
-      transition: color 0.3s;
-    }
-    .nav-links a:hover { color: var(--aqua); }
-    .cta-mini {
-      background: var(--teal); color: #fff;
-      padding: 10px 24px; border-radius: 40px;
-      font-size: 13px; font-weight: 700; text-decoration: none;
-      transition: transform 0.3s, box-shadow 0.3s;
-    }
-    .cta-mini:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(13, 148, 136, 0.4); }
-
-    /* ════════════════════════════
-       HERO
-    ════════════════════════════ */
-    #hero {
-      padding: 180px 28px 120px;
-      position: relative; overflow: hidden;
-      text-align: center;
-    }
-    .hero-liquid {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 120%; height: 120%; z-index: -1;
-      background: 
-        radial-gradient(circle at 15% 25%, rgba(94, 234, 212, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 85% 75%, rgba(212, 165, 116, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at 50% 50%, rgba(11, 17, 32, 1) 0%, transparent 100%);
-      filter: blur(100px);
-      animation: float-bg 25s infinite linear;
-    }
-    .hero-tag {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(94, 234, 212, 0.05); border: 1px solid var(--border);
-      padding: 6px 16px; border-radius: 40px; color: var(--aqua);
-      font-size: 12px; font-weight: 700; margin-bottom: 24px;
-    }
-    .hero-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--aqua); animation: breathe 2s infinite; }
-    
-    h1 {
-      font-size: clamp(38px, 8vw, 76px); font-weight: 900; line-height: 1.05;
-      margin-bottom: 24px; letter-spacing: -2px;
-    }
-    h1 span {
-      background: linear-gradient(135deg, #fff, var(--aqua));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .hero-p {
-      color: var(--muted); font-size: clamp(17px, 3vw, 21px);
-      max-width: 750px; margin: 0 auto 48px; font-weight: 400;
-    }
-    .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-    .btn {
-      padding: 20px 42px; border-radius: 18px; font-size: 16px; font-weight: 700;
-      text-decoration: none; transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); cursor: pointer; border: none; font-family: inherit;
-    }
-    .btn-primary {
-      background: var(--teal); color: #fff;
-      box-shadow: 0 10px 40px rgba(13, 148, 136, 0.3);
-    }
-    .btn-primary:hover { transform: translateY(-4px); box-shadow: 0 15px 50px rgba(13, 148, 136, 0.5); }
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.03); color: var(--text);
-      border: 1px solid var(--border); backdrop-filter: blur(10px);
-    }
-    .btn-secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--aqua); }
-
-    .hero-stats {
-      display: flex; justify-content: center; gap: 60px; margin-top: 100px; flex-wrap: wrap;
-    }
-    .stat-item { text-align: center; }
-    .stat-val { font-size: 32px; font-weight: 900; color: var(--aqua); line-height: 1; }
-    .stat-lbl { font-size: 13px; color: var(--muted); margin-top: 8px; font-weight: 500; }
-
-    /* ════════════════════════════
-       SECTIONS GENERAL
-    ════════════════════════════ */
-    section { padding: 100px 0; }
-    .section-head { text-align: center; margin-bottom: 60px; }
-    .tag {
-      color: var(--sand); font-size: 12px; font-weight: 700; letter-spacing: 2px;
-      text-transform: uppercase; margin-bottom: 12px; display: block;
-    }
-    h2 { font-size: clamp(28px, 5vw, 42px); font-weight: 900; line-height: 1.2; margin-bottom: 20px; }
-    .subhead { color: var(--muted); font-size: 17px; max-width: 600px; margin: 0 auto; }
-
-    /* ════════════════════════════
-       SYSTEM LAYERS
-    ════════════════════════════ */
-    #system { background: radial-gradient(circle at center, rgba(13, 148, 136, 0.05) 0%, transparent 70%); }
-    .layer-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;
-    }
-    .layer-card { padding: 40px; position: relative; overflow: hidden; }
-    .layer-num {
-      position: absolute; top: 20px; left: 20px; font-size: 80px; font-weight: 900;
-      color: rgba(94, 234, 212, 0.03); line-height: 1; pointer-events: none;
-    }
-    .layer-icon {
-      width: 48px; height: 48px; border-radius: 12px;
-      background: rgba(94, 234, 212, 0.1); display: flex; align-items: center; justify-content: center;
-      margin-bottom: 24px; color: var(--aqua); font-size: 20px;
-    }
-    .layer-card h3 { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
-    .layer-ar { font-size: 14px; color: var(--aqua); font-weight: 600; margin-bottom: 16px; }
-    .layer-card p { color: var(--muted); font-size: 15px; }
-
-    /* ════════════════════════════
-       LIVE DASHBOARD
-    ════════════════════════════ */
-    .dash-wrap {
-      background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border);
-      border-radius: 32px; padding: 40px; overflow: hidden; position: relative;
-    }
-    .dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }
-    .pulse-bar { height: 4px; background: rgba(94, 234, 212, 0.1); border-radius: 2px; margin-bottom: 20px; position: relative; }
-    .pulse-progress { height: 100%; background: var(--aqua); border-radius: 2px; position: absolute; transition: width 1s ease; }
-    .ticker-item { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
-    .ticker-val { font-weight: 700; color: var(--aqua); }
-
-    /* ════════════════════════════
-       PRICING
-    ════════════════════════════ */
-    .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px; }
-    .price-card { padding: 48px; text-align: center; transition: border-color 0.4s; }
-    .price-card:hover { border-color: rgba(94, 234, 212, 0.3); }
-    .price-tag { font-size: 13px; font-weight: 700; color: var(--aqua); margin-bottom: 16px; display: block; }
-    .price-amt { font-size: 56px; font-weight: 900; margin-bottom: 8px; }
-    .price-amt span { font-size: 20px; color: var(--muted); }
-    .price-desc { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
-    .price-list { text-align: right; list-style: none; margin-bottom: 40px; }
-    .price-list li { margin-bottom: 12px; font-size: 14px; display: flex; align-items: center; gap: 10px; }
-    .price-list li::before { content: '✓'; color: var(--aqua); font-weight: 900; }
-
-    /* ════════════════════════════
-       FOOTER
-    ════════════════════════════ */
-    footer { padding: 80px 0 40px; border-top: 1px solid var(--border); }
-    .foot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; margin-bottom: 60px; }
-    .foot-title { font-size: 15px; font-weight: 700; margin-bottom: 20px; color: var(--text); }
-    .foot-links a { display: block; color: var(--muted); text-decoration: none; font-size: 14px; margin-bottom: 12px; transition: color 0.3s; }
-    .foot-links a:hover { color: var(--aqua); }
-
-    @media (max-width: 900px) {
-      .dash-grid { grid-template-columns: 1fr; }
-      .nav-links { display: none; }
-      .inner, .inner-narrow { padding: 80px 20px; }
-    }
-    /* ════════════════════════════
-       CONTACT FLOW CHAT
-    ════════════════════════════ */
-    #chat-fab {
-      position: fixed; bottom: 28px; left: 28px; z-index: 2000;
-      direction: ltr;
-    }
-    .chat-fab-btn {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: var(--sand); color: #080E1A;
-      font-weight: 700; font-size: 14px; font-family: 'Tajawal', sans-serif;
-      padding: 12px 22px; border-radius: 40px; border: none; cursor: pointer;
-      box-shadow: 0 8px 32px rgba(212,165,116,0.25);
-      transition: transform 0.4s ease, box-shadow 0.4s ease;
-    }
-    .chat-fab-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(212,165,116,0.35); }
-    .chat-fab-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: rgba(8,14,26,0.45);
-      animation: breathe 8s ease-in-out infinite;
-    }
-
-    #chat-window {
-      position: fixed; bottom: 88px; left: 28px;
-      width: 380px; max-height: 540px; z-index: 2000;
-      background: rgba(8,14,26,0.97);
-      backdrop-filter: blur(40px);
-      border: 1px solid rgba(212,165,116,0.18);
-      border-radius: 24px;
-      display: flex; flex-direction: column; overflow: hidden;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
-      opacity: 0; transform: translateY(16px) scale(0.97);
-      pointer-events: none;
-      transition: opacity 0.35s ease, transform 0.35s ease;
-      direction: rtl;
-    }
-    #chat-window.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
-
-    .chat-topbar {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 18px; flex-shrink: 0;
-      border-bottom: 1px solid rgba(94,234,212,0.07);
-      background: rgba(8,14,26,0.9);
-    }
-    .chat-topbar-info { display: flex; align-items: center; gap: 10px; }
-    .chat-avatar {
-      width: 32px; height: 32px; border-radius: 9px;
-      background: linear-gradient(135deg, var(--teal), var(--sand));
-      display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700;
-    }
-    .chat-name { font-size: 13px; font-weight: 700; color: var(--text); }
-    .chat-online { font-size: 11px; color: var(--aqua); }
-    .chat-x {
-      background: none; border: none; cursor: pointer;
-      color: var(--muted); font-size: 18px;
-      line-height: 1; transition: color 0.3s;
-    }
-    .chat-x:hover { color: var(--text); }
-
-    .chat-crumb {
-      padding: 7px 18px; font-size: 11px; color: var(--muted);
-      border-bottom: 1px solid rgba(94,234,212,0.04);
-      min-height: 30px; display: flex; align-items: center; flex-shrink: 0;
-    }
-
-    .chat-msgs {
-      flex: 1; overflow-y: auto;
-      padding: 14px 14px 6px;
-      display: flex; flex-direction: column; gap: 9px;
-    }
-    .chat-msgs::-webkit-scrollbar { width: 3px; }
-    .chat-msgs::-webkit-scrollbar-thumb { background: rgba(212,165,116,0.2); border-radius: 2px; }
-
-    .cmsg {
-      max-width: 92%; padding: 10px 13px; border-radius: 13px;
-      font-size: 13px; line-height: 1.65; white-space: pre-wrap;
-      animation: cmsg-in 0.28s ease;
-    }
-    @keyframes cmsg-in {
-      from { opacity: 0; transform: translateY(7px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .cmsg-bot {
-      background: rgba(13, 148, 136, 0.09); border: 1px solid rgba(13, 148, 136, 0.14);
-      border-top-right-radius: 3px; color: var(--text);
-    }
-    .cmsg-user {
-      background: rgba(212, 165, 116, 0.13); border: 1px solid rgba(212, 165, 116, 0.22);
-      border-top-left-radius: 3px; color: var(--text); align-self: flex-end;
-    }
-    .chat-typing-ind {
-      display: inline-flex; align-items: center; gap: 4px; padding: 10px 13px;
-    }
-    .chat-typing-ind span {
-      width: 5px; height: 5px; border-radius: 50%; background: var(--aqua);
-      animation: tdot 1.1s ease-in-out infinite;
-    }
-    @keyframes tdot {
-      0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
-      40% { opacity: 1; transform: scale(1); }
-    }
-
-    .chat-opts {
-      padding: 7px 12px 8px;
-      display: flex; flex-direction: column; gap: 5px; flex-shrink: 0;
-    }
-    .copt {
-      background: rgba(12, 21, 32, 0.7); border: 1px solid rgba(94, 234, 212, 0.1);
-      border-radius: 10px; padding: 9px 13px;
-      font-size: 13px; color: var(--text); text-align: right; cursor: pointer;
-      transition: background 0.3s, border-color 0.3s, transform 0.25s;
-      font-family: inherit;
-    }
-    .copt:hover {
-      background: rgba(13, 148, 136, 0.1); border-color: rgba(13, 148, 136, 0.22);
-      transform: translateX(-4px);
-    }
-
-    .chat-nav {
-      display: flex; gap: 7px; padding: 0 12px 10px; flex-shrink: 0;
-    }
-    .cnav {
-      background: none; border: 1px solid rgba(94, 234, 212, 0.08);
-      border-radius: 8px; padding: 5px 12px;
-      font-size: 11px; color: var(--muted); cursor: pointer;
-      transition: color 0.3s, border-color 0.3s; font-family: inherit;
-    }
-    .cnav:hover { color: var(--aqua); border-color: rgba(94, 234, 212, 0.2); }
-
-    @media (max-width: 768px) {
-      /* Navigation */
-      .nav-links { 
-        display: none; 
-        flex-direction: column; 
-        position: fixed; 
-        top: 70px; left: 0; right: 0; 
-        background: rgba(11, 17, 32, 0.98); 
-        padding: 40px 20px; 
-        gap: 24px; 
-        border-bottom: 1px solid var(--border);
-        backdrop-filter: blur(20px);
-      }
-      .nav-links.open { display: flex !important; }
-      .nav-toggle { display: block !important; }
-      nav { height: 70px !important; }
-      .nav-inner { padding: 0 20px !important; }
-      
-      /* Hero */
-      #hero { padding: 140px 20px 60px !important; }
-      h1 { font-size: clamp(32px, 10vw, 48px) !important; letter-spacing: -1px !important; line-height: 1.1 !important; }
-      .hero-p { font-size: 16px !important; margin-bottom: 32px !important; }
-      .hero-stats { gap: 20px !important; margin-top: 50px !important; justify-content: space-around !important; }
-      .stat-val { font-size: 26px !important; }
-      .btn { width: 100% !important; padding: 16px !important; margin-bottom: 12px; }
-      
-      /* Dashboard Metrics */
-      .dash-wrap { padding: 24px !important; border-radius: 20px !important; }
-      .dash-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
-      .dash-side { 
-        border-right: none !important; 
-        border-top: 1px solid var(--border) !important; 
-        padding: 24px 0 0 !important; 
-        margin-top: 10px !important;
-      }
-      
-      /* Pricing */
-      .price-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
-      .price-card { padding: 40px 24px !important; border-radius: 24px !important; }
-      .price-amt { font-size: 48px !important; }
-      
-      /* Layers */
-      .layer-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
-      .layer-card { padding: 28px !important; }
-      
-      /* Chat Window Tweaks */
-      #chat-window { bottom: 80px !important; left: 16px !important; width: calc(100vw - 32px) !important; height: 75vh !important; }
-      #chat-fab { bottom: 20px !important; left: 20px !important; }
-    }
+    .text-teal { color: #5EEAD4; }
+    .bg-teal { background-color: #0D9488; }
+    .text-gold { color: #D4A574; }
+    .bg-gold { background-color: #D4A574; }
+    .bg-gold:hover { background-color: #b78a5e; }
+    .mockup-message { padding: 10px 15px; border-radius: 15px; margin-bottom: 10px; font-size: 14px; max-width: 80%; }
+    .mockup-received { background: #1e293b; border-bottom-right-radius: 2px; }
+    .mockup-sent { background: #0D9488; border-bottom-left-radius: 2px; align-self: flex-start; margin-right: auto; }
   </style>
 </head>
-<body id="top">
+<body class="antialiased">
 
-<!-- ════════════════════════════
-     NAV
-════════════════════════════ -->
-<nav id="navbar">
-  <div class="inner nav-inner">
-    <a href="#top" class="logo">Qudo<span>zen</span></a>
-    <div class="nav-links" id="navLinks">
-      <a href="#system">النظام</a>
-      <a href="#dashboard">مركز القيادة</a>
-      <a href="#pricing">البنية التحتية</a>
-      <a href="#swarm">السوارم</a>
-      <a href="https://wa.me/966570733834" class="cta-mini">ابدأ التحول</a>
+  <!-- Navbar -->
+  <nav class="fixed w-full z-50 glass px-6 py-4 flex justify-between items-center">
+    <div class="text-xl font-bold tracking-wider">QUDOZEN <span class="text-teal">AOS</span></div>
+    <div class="hidden md:flex gap-6 text-sm">
+      <a href="#calculator" class="hover:text-teal transition">الحاسبة</a>
+      <a href="#products" class="hover:text-teal transition">المنتجات</a>
+      <a href="#pricing" class="hover:text-teal transition">الأسعار</a>
     </div>
-    <button class="nav-toggle" id="navToggle" style="display:none; background:none; border:none; color:var(--text); font-size:24px; cursor:pointer; padding:10px;">☰</button>
-  </div>
-</nav>
+    <a href="https://wa.me/966570733834" class="bg-gold text-gray-900 px-5 py-2 rounded-full font-bold hover:scale-105 transition">جرب الآن</a>
+  </nav>
 
-<!-- ════════════════════════════
-     HERO
-════════════════════════════ -->
-<section id="hero">
-  <div class="hero-liquid"></div>
-  <div class="inner">
-    <div class="hero-tag reveal">
-      <span class="dot"></span>
-      نظام التشغيل الذاتي للمنشآت
+  <!-- Hero Section -->
+  <section class="h-screen flex flex-col justify-center items-center text-center px-4 pt-16 relative">
+    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
+    <h1 class="text-4xl md:text-6xl font-black mb-6 z-10 leading-tight">
+      جرب كيف تعمل عيادتك <br> 
+      بـ <span class="text-teal">ذكاء اصطناعي</span> في 60 ثانية.
+    </h1>
+    <p class="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl z-10">
+      النظام التشغيلي الأول للرعاية الصحية. نرد على مرضاك، نحجز المواعيد، ونسترد المرضى المفقودين 24/7 دون تدخل بشري.
+    </p>
+    <div class="flex gap-4 z-10 flex-col w-full sm:flex-row justify-center max-w-xs sm:max-w-none">
+      <a href="/growth/ghost-room" class="bg-gold text-gray-900 px-8 py-4 rounded-full font-bold text-lg hover:shadow-[0_0_20px_rgba(212,165,116,0.4)] transition">ادخل غرفة العمليات (تجربة حية)</a>
+      <a href="#calculator" class="glass px-8 py-4 rounded-full font-bold text-lg hover:bg-white/5 transition">احسب خسائرك الآن</a>
     </div>
-    <h1 class="reveal">البنية التحتية<br><span>التي تفكر عنك</span></h1>
-    <p class="hero-p reveal">نظام Qudozen هو العقل التشغيلي لمنشأتك. لا يحتاج لتدريب، لا يتعب، ولا ينام. يدير الاستقبال والتنسيق والتطوير ذاتياً بالكامل.</p>
-    
-    <div class="hero-btns reveal">
-      <a href="javascript:toggleChat()" class="btn btn-primary">ابدأ التحول</a>
-      <a href="#dashboard" class="btn btn-secondary">إدراك الحالة</a>
-    </div>
+  </section>
 
-    <div class="hero-stats reveal">
-      <div class="stat-item">
-        <div class="stat-val">3s</div>
-        <div class="stat-lbl">سرعة الاستجابة</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-val">∞</div>
-        <div class="stat-lbl">وعي تشغيلي مستمر</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-val">24/7</div>
-        <div class="stat-lbl">بدون تدخل بشري</div>
+  <!-- Animated Chat Mockup -->
+  <section class="py-20 px-4 md:px-0 max-w-3xl mx-auto" id="demo">
+    <div class="glass p-4 rounded-3xl border-gray-800 border-4 border-b-8 shadow-2xl relative overflow-hidden" style="height: 480px; display: flex; flex-direction: column;">
+      <div class="text-center font-bold pb-4 border-b border-gray-700 mb-4 text-teal">Qudozen AI 👨‍⚕️</div>
+      <div class="flex flex-col gap-2 overflow-y-auto" id="chatContainer">
+        <!-- Injected by GSAP -->
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ════════════════════════════
-     PROBLEM (Liquid Focus)
-════════════════════════════ -->
-<section id="problem">
-  <div class="inner-narrow">
-    <div class="section-head reveal">
-      <span class="tag">التحدي التشغيلي</span>
-      <h2>التعقيد يقتل التركيز</h2>
-      <p class="subhead">نحن نعلم أنك لا تبحث عن "برنامج" إضافي. بل تبحث عن اختفاء التعقيد التشغيلي لتركز على ما تجيده حقاً: تقديم الرعاية الطبية.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════════════════
-     SYSTEM LAYERS
-════════════════════════════ -->
-<section id="system">
-  <div class="inner">
-    <div class="section-head reveal">
-      <span class="tag">البنية التحتية</span>
-      <h2>ثلاث طبقات من الوعي</h2>
-    </div>
-    
-    <div class="layer-grid">
-      <div class="glass layer-card reveal">
-        <div class="layer-num">01</div>
-        <div class="layer-icon">👤</div>
-        <h3>الاستقبال</h3>
-        <div class="layer-ar">Layer 1 — Reception</div>
-        <p>الواجهة الذكية التي تدير محادثات المرضى، تحجز المواعيد، وترد على الاستفسارات في 3 ثوانٍ. تعمل كوعي أولي للمنشأة.</p>
-      </div>
+  <!-- Calculator Section -->
+  <section id="calculator" class="py-24 px-6 bg-[#0f172a]">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-3xl font-bold mb-4">حاسبة الخسائر المخفية</h2>
+      <p class="text-gray-400 mb-12">كم تكلفك رسائل الواتساب التي لا يتم الرد عليها فوراً؟</p>
       
-      <div class="glass layer-card reveal">
-        <div class="layer-num">02</div>
-        <div class="layer-icon">⚙️</div>
-        <h3>التنسيق</h3>
-        <div class="layer-ar">Layer 2 — Coordination</div>
-        <p>طبقة التنسيق التي تنظم الموارد، الأطباء، والمواعيد. تمنع التضارب وتضمن انسيابية العمل دون الحاجة لمدير بشري.</p>
-      </div>
-      
-      <div class="glass layer-card reveal">
-        <div class="layer-num">03</div>
-        <div class="layer-icon">🧠</div>
-        <h3>التعلم</h3>
-        <div class="layer-ar">Layer 3 — Evolution</div>
-        <p>الذكاء التطوري الذي يحلل الأنماط، يتوقع الاحتياجات، ويطور أداء المنشأة بناءً على البيانات المتراكمة - التشغيل يصبح أذكى يومياً.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════════════════
-     COMMAND CENTER (DASHBOARD)
-════════════════════════════ -->
-<section id="dashboard">
-  <div class="inner">
-    <div class="section-head reveal">
-      <span class="tag">مركز القيادة</span>
-      <h2>ليس أرقاماً للفخر. إدراك للحالة.</h2>
-      <p class="subhead">شفافية كاملة في الوعي التشغيلي لمنشأتك. نبض حي يوضح مدى استقلالية التشغيل في هذه اللحظة.</p>
-    </div>
-
-    <div class="dash-wrap glass reveal">
-      <div class="dash-grid">
-        <div class="dash-main">
-          <div class="ticker-item">
-            <span>الوعي الحي (System Consciousness)</span>
-            <span class="ticker-val" id="consc-val">94%</span>
-          </div>
-          <div class="pulse-bar"><div class="pulse-progress" id="consc-bar" style="width: 94%;"></div></div>
-          
-          <div class="ticker-item">
-            <span>ثقة النظام (System Trust)</span>
-            <span class="ticker-val" id="trust-val">99.2%</span>
-          </div>
-          <div class="pulse-bar"><div class="pulse-progress" id="trust-bar" style="width: 99.2%;"></div></div>
-
-          <div class="ticker-item">
-            <span>الحمل التشغيلي المباشر</span>
-            <span class="ticker-val" id="load-val">12%</span>
-          </div>
-          <div class="pulse-bar"><div class="pulse-progress" id="load-bar" style="width: 12%;"></div></div>
-        </div>
+      <div class="glass p-8 rounded-2xl flex flex-col items-center">
+        <label class="block mb-2 text-gold font-semibold">متوسط المحادثات المتأخرة يومياً</label>
+        <input type="range" id="lostLeadsRange" min="1" max="50" value="10" class="w-full max-w-md accent-teal-500 mb-6">
+        <div class="text-2xl font-bold mb-8"><span id="lostLeadsOutput" class="text-teal">10</span> محادثات تضيع كل يوم</div>
         
-        <div class="dash-side" style="border-right: 1px solid var(--border); padding-right: 30px;">
-          <div class="foot-title">وقت الاستجابة</div>
-          <div style="font-size: 32px; font-weight: 900; color: var(--aqua); margin: 10px 0;">0.8s</div>
-          <div style="font-size: 12px; color: var(--muted);">سرعة معالجة البيانات</div>
-          
-          <div style="margin-top: 32px;">
-            <div style="font-size: 14px; font-weight: 700; color: var(--sand);">إشارات مبكرة (Signals)</div>
-            <div id="signals-ticker" style="font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.4;">
-              • لا يوجد تعارضات متوقعة للـ 24 ساعة القادمة<br>
-              • وعي النظام مستقر في جميع الطبقات
-            </div>
-          </div>
+        <div class="text-gray-400">الخسارة الشهرية المقدرة:</div>
+        <div class="text-5xl md:text-7xl font-black text-rose-500 my-4" id="lossAmount">18,000 ريال</div>
+        <a href="https://wa.me/966570733834?text=كيف%20أوقف%20هذا%20النزيف؟" class="mt-6 text-gold underline hover:text-white transition">أوقف هذا النزيف الآن ←</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products Showcase -->
+  <section id="products" class="py-24 px-6">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-3xl font-bold mb-12 text-center text-teal">منظومة متكاملة لعيادتك</h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="glass p-8 rounded-2xl hover:-translate-y-2 transition duration-300">
+          <div class="text-4xl mb-4">🤖</div>
+          <h3 class="text-xl font-bold mb-2">Dental Bot</h3>
+          <p class="text-gray-400 text-sm">مساعد ذكي يرد على مرضاك 24/7، يجيب على الاستفسارات، ويحجز المواعيد على الواتساب فوراً.</p>
+        </div>
+        <div class="glass p-8 rounded-2xl border-teal-500/30 hover:-translate-y-2 transition duration-300 relative overflow-hidden">
+          <div class="absolute top-0 right-0 bg-teal text-xs font-bold px-3 py-1 rounded-bl-lg">جديد</div>
+          <div class="text-4xl mb-4">🦇</div>
+          <h3 class="text-xl font-bold mb-2 text-gold">Growth Swarm</h3>
+          <p class="text-gray-400 text-sm">محرك تسويق صامت يبحث عن منافسيك، يحلل مراجعاتهم، ويستهدف مرضاهم بذكاء.</p>
+        </div>
+        <div class="glass p-8 rounded-2xl hover:-translate-y-2 transition duration-300">
+          <div class="text-4xl mb-4">⚙️</div>
+          <h3 class="text-xl font-bold mb-2">AOS Dashboard</h3>
+          <p class="text-gray-400 text-sm">لوحة تحكم مركزية تمنحك سيطرة كاملة على العيادة، المواعيد، وتقارير النمو.</p>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-
-
-<!-- ════════════════════════════
-     PRICING
-════════════════════════════ -->
-<section id="pricing">
-  <div class="inner">
-    <div class="section-head reveal">
-      <span class="tag">الاشتراك</span>
-      <h2>بنية تحتية تنمو معك</h2>
-    </div>
-
-    <div class="price-grid">
-      <div class="glass price-card reveal">
-        <span class="price-tag">Awareness</span>
-        <div class="price-amt">299 <span>SAR</span></div>
-        <div class="price-desc">للممارسين الذين يحتاجون لاستيفاء الوعي الأساسي</div>
-        <ul class="price-list">
-          <li>مساعد استقبال 24/7</li>
-          <li>تنسيق مواعيد آلي</li>
-          <li>دعم اللغتين (الطبقة 1)</li>
-          <li>بنية تحتية آمنة</li>
-        </ul>
-        <a href="javascript:toggleChat()" class="btn btn-secondary" style="width: 100%;">تحول الآن</a>
-      </div>
-
-      <div class="glass price-card reveal" style="border-color: var(--teal);">
-        <span class="price-tag">System</span>
-        <div class="price-amt">499 <span>SAR</span></div>
-        <div style="font-size: 12px; color: var(--aqua); margin: -10px 0 10px;">+ 699 SAR رسوم تأسيس البنية التحتية</div>
-        <div class="price-desc">نظام التشغيل الذاتي الكامل للمنشآت المتنامية</div>
-        <ul class="price-list">
-          <li>كل مميزات Awareness</li>
-          <li>تنسيق الموارد وذكاء التوزيع</li>
-          <li>طبقة Evolution للتعلم المستمر</li>
-          <li>تكامل سيادي مع أنظمة العيادة</li>
-        </ul>
-        <a href="javascript:toggleChat()" class="btn btn-primary" style="width: 100%;">اعتمـاد النظام</a>
-      </div>
-
-      <div class="glass price-card reveal">
-        <span class="price-tag">Swarm</span>
-        <div class="price-amt">Custom</div>
-        <div class="price-desc">للمجموعات الطبية وسلاسل العيادات الضخمة</div>
-        <ul class="price-list">
-          <li>ربط متعدد المرافق</li>
-          <li>بنية تحتية موحدة</li>
-          <li>تقارير تحليلية مركزية</li>
-          <li>مدير نجاح مخصص</li>
-        </ul>
-        <a href="#" class="btn btn-secondary" style="width: 100%;">تواصل معنا</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════════════════
-     SWARM NODE MAP
-════════════════════════════ -->
-<section id="swarm" style="background: rgba(13, 148, 136, 0.03);">
-  <div class="inner">
-    <div class="section-head reveal">
-      <span class="tag">المستقبل</span>
-      <h2>Growth Swarm</h2>
-      <p class="subhead">نظام توزيع الأحمال الذكي الذي يسمح لعيادتك بالتمدد في مدن متعددة ككيان واحد متصل.</p>
-    </div>
-    
-      <div class="dash-wrap glass reveal" style="height: 300px; display: flex; align-items: center; justify-content: center;">
-      <div style="text-align: center;">
-        <div style="font-size: 14px; color: var(--muted); margin-bottom: 20px;">خريطة العقد التلقائية — Swarm OS</div>
-        <div style="display: flex; gap: 20px; align-items: center; justify-content: center;">
-          <div class="floating" style="width: 12px; height: 12px; border-radius: 50%; background: var(--aqua); box-shadow: 0 0 20px var(--aqua);"></div>
-          <div style="width: 60px; height: 1px; background: var(--border);"></div>
-          <div class="floating" style="width: 12px; height: 12px; border-radius: 50%; background: var(--teal); animation-delay: 2s;"></div>
-          <div style="width: 60px; height: 1px; background: var(--border);"></div>
-          <div class="floating" style="width: 12px; height: 12px; border-radius: 50%; background: var(--muted); opacity: 0.3; animation-delay: 4s;"></div>
+  <!-- Pricing -->
+  <section id="pricing" class="py-24 px-6 bg-[#0f172a]">
+    <div class="max-w-5xl mx-auto text-center">
+      <h2 class="text-3xl font-bold mb-12 text-gold">استثمر في راحة بالك</h2>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Basic -->
+        <div class="glass p-8 rounded-2xl flex flex-col">
+          <h3 class="text-lg text-gray-300 mb-2">الأساسي | Dental Bot</h3>
+          <div class="text-4xl font-bold mb-6">299 <span class="text-xl text-gray-500">ريال/شهر</span></div>
+          <ul class="text-sm text-gray-400 space-y-3 mb-8 text-right flex-1">
+            <li>✅ مساعد ذكي للردود الأساسية</li>
+            <li>✅ حجز المواعيد العادية</li>
+            <li>✅ لوحة تحكم مصغرة</li>
+          </ul>
+          <a href="#" class="w-full bg-gray-800 py-3 rounded-xl font-bold hover:bg-gray-700 transition">اشترك الآن</a>
         </div>
-        <div style="margin-top: 30px; font-size: 12px; color: var(--aqua);">تحجيم الوعي عبر الشبكة...</div>
+        <!-- Pro -->
+        <div class="glass p-8 rounded-2xl border-gold border flex flex-col transform scale-105 shadow-[0_0_30px_rgba(212,165,116,0.1)]">
+          <div class="text-gold text-sm font-bold mb-2">الأكثر طلباً</div>
+          <h3 class="text-lg text-white mb-2">احترافي | AOS System</h3>
+          <div class="text-4xl font-bold mb-6 text-teal">499 <span class="text-xl text-gray-500">ريال/شهر</span></div>
+          <ul class="text-sm text-gray-400 space-y-3 mb-8 text-right flex-1">
+            <li>✅ يشمل الخطة الأساسية</li>
+            <li>✅ الردود الذكية المتقدمة</li>
+            <li>✅ ربط مع تقويم Google</li>
+            <li>✅ تذكير تلقائي بالواتساب</li>
+            <li>✅ إعداد مجاني</li>
+          </ul>
+          <a href="#" class="w-full bg-teal text-white py-3 rounded-xl font-bold hover:brightness-110 transition">اشترك الآن</a>
+        </div>
+        <!-- Growth -->
+        <div class="glass p-8 rounded-2xl flex flex-col">
+          <h3 class="text-lg text-gray-300 mb-2">نظام النمو | Swarm</h3>
+          <div class="text-4xl font-bold mb-6">+699 <span class="text-xl text-gray-500">ريال/شهر</span></div>
+          <ul class="text-sm text-gray-400 space-y-3 mb-8 text-right flex-1">
+            <li>✅ محرك جلب المرضى حصري</li>
+            <li>✅ استهداف أخطاء المنافسين</li>
+            <li>✅ متابعة آلية للمرضى المترددين</li>
+            <li>*يضاف لاشتراك الاحترافي</li>
+          </ul>
+          <a href="#" class="w-full bg-gray-800 py-3 rounded-xl font-bold hover:bg-gray-700 transition">تواصل معنا</a>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ════════════════════════════
-     FOOTER
-════════════════════════════ -->
-<footer>
-  <div class="inner">
-    <div class="foot-grid">
-      <div>
-        <a href="#" class="logo">Qudo<span>zen</span></a>
-        <p style="color: var(--muted); font-size: 13px; margin-top: 20px;">نظام التشغيل الذاتي للمنشآت الحديثة. بنية تحتية سيادية مصّممة بمقاييس عالمية في المملكة العربية السعودية.</p>
-      </div>
-      <div class="foot-links">
-        <div class="foot-title">الروابط</div>
-        <a href="#system">النظام</a>
-        <a href="#dashboard">نبض التشغيل</a>
-        <a href="#pricing">الأسعار</a>
-        <a href="/growth/dashboard">لوحة الإدارة</a>
-      </div>
-      <div class="foot-links">
-        <div class="foot-title">قانوني</div>
-        <a href="#">سياسة الخصوصية</a>
-        <a href="#">الشروط والأحكام</a>
-      </div>
+  <!-- Footer -->
+  <footer class="glass py-12 px-6 mt-12 text-center text-sm text-gray-500">
+    <div class="mb-4">
+      <a href="https://wa.me/966570733834" class="text-teal hover:text-white mx-2">تواصل عبر واتساب</a> | 
+      <a href="mailto:hello@qudozen.com" class="text-teal hover:text-white mx-2">راسلنا</a>
     </div>
-    <div style="text-align: center; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 30px;">
-      © 2026 Qudozen. جميع الحقوق محفوظة.
-    </div>
-  </div>
-</footer>
+    <p>© 2026 Qudozen AOS. جميع الحقوق محفوظة.</p>
+  </footer>
 
-<div id="chat-fab">
-  <button class="chat-fab-btn" onclick="toggleChat()">
-    <span class="chat-fab-dot"></span>
-    تحدث مع النظام
-  </button>
-</div>
+  <script>
+    // Calculator Logic
+    const slider = document.getElementById('lostLeadsRange');
+    const output = document.getElementById('lostLeadsOutput');
+    const loss = document.getElementById('lossAmount');
+    slider.oninput = function() {
+      output.innerText = this.value;
+      const calc = (parseInt(this.value) * 30 * 60); // Assuming 60 SAR profit per lead
+      loss.innerText = calc.toLocaleString('ar-SA') + ' ريال';
+    }
 
-<div id="chat-window" class="glass">
-  <div class="chat-topbar">
-    <div class="chat-topbar-info">
-      <div class="chat-avatar">Q</div>
-      <div>
-        <div class="chat-name">نظام Qudozen</div>
-        <div class="chat-online">متصل حياً</div>
-      </div>
-    </div>
-    <button class="chat-x" onclick="toggleChat()">×</button>
-  </div>
-  <div class="chat-crumb" id="chat-crumb">البداية</div>
-  <div class="chat-msgs" id="chat-msgs"></div>
-  <div class="chat-opts" id="chat-opts"></div>
-  <div class="chat-nav">
-    <button class="cnav" onclick="resetChat()">إعادة الضبط</button>
-    <button class="cnav" onclick="selectOption('contact')">تحدث مع إنسان</button>
-  </div>
-</div>
+    // Chat Animation
+    const messages = [
+      { sender: 'user', text: 'أهلاً، سني يوجعني جداً أبي موعد اليوم 😭' },
+      { sender: 'bot', text: 'سلامتك ماتشوف شر! أبشر، أوفر لك موعد طوارئ. متى يناسبك؟ العصر أو العشاء؟' },
+      { sender: 'user', text: 'العصر أفضل' },
+      { sender: 'bot', text: 'تم تخصيص موعد عاجل لك الساعة 4:00 عصراً مع د. أحمد. تم الحجز ✅' }
+    ];
 
-<script>
+    const chatContainer = document.getElementById('chatContainer');
+    let delay = 0.5;
 
-  // ════════════════════════════
-  // REVEAL ANIMATIONS
-  // ════════════════════════════
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('active');
-      }
+    messages.forEach((msg, idx) => {
+      const div = document.createElement('div');
+      div.className = `mockup-message opacity-0 translate-y-4 ${msg.sender === 'bot' ? 'mockup-received' : 'mockup-sent'}`;
+      div.innerText = msg.text;
+      chatContainer.appendChild(div);
+
+      gsap.to(div, {
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        delay: delay,
+        ease: "power2.out"
+      });
+      delay += msg.sender === 'user' ? 2 : 1;
     });
-  }, { threshold: 0.1 });
 
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-  // ════════════════════════════
-  // NAV SCROLL EFFECT
-  // ════════════════════════════
-  window.addEventListener('scroll', () => {
-    const nav = document.getElementById('navbar');
-    if (window.scrollY > 50) {
-      nav.classList.add('scrolled');
-    } else {
-      nav.classList.remove('scrolled');
-    }
-  });
-
-  // Dashboard Ticker Logic
-  function updateDashboard() {
-    const loadBar = document.getElementById('load-bar');
-    const loadVal = document.getElementById('load-val');
-    const conscBar = document.getElementById('consc-bar');
-    const conscVal = document.getElementById('consc-val');
-    const trustBar = document.getElementById('trust-bar');
-    const trustVal = document.getElementById('trust-val');
-
-    if (loadBar) {
-      let v = 10 + Math.floor(Math.random() * 25); 
-      loadBar.style.width = v + '%';
-      loadVal.textContent = v + '%';
-    }
-    if (conscBar) {
-      let c = (94 + Math.random() * 2).toFixed(1);
-      conscBar.style.width = c + '%';
-      conscVal.textContent = c + '%';
-    }
-    if (trustBar) {
-      let t = (99 + Math.random() * 0.9).toFixed(1);
-      trustBar.style.width = t + '%';
-      trustVal.textContent = t + '%';
-    }
-  }
-  setInterval(updateDashboard, 4000);
-  updateDashboard();
-
-  // ════════════════════════════
-  // CONTACT FLOW (CHAT)
-  // ════════════════════════════
-  const chatMsgs = document.getElementById('chat-msgs');
-  const chatOpts = document.getElementById('chat-opts');
-  const chatCrumb = document.getElementById('chat-crumb');
-  const chatWindow = document.getElementById('chat-window');
-
-  const flow = {
-    start: {
-      text: "أهلاً بك في وعي Qudozen. كيف يمكن لهذا النظام خدمتك اليوم؟",
-      opts: [
-        { text: "أريد فهم الطبقات الثلاث", next: "understanding" },
-        { text: "أواجه مشكلة تقنية", next: "support" },
-        { text: "أريد الاشتراك (عيادة جديدة)", next: "onboarding" },
-        { text: "أنا عميل حالي (لوحة التحكم)", next: "dashboard_links" },
-        { text: "تواصل مباشر مع إنسان", next: "direct" }
-      ]
-    },
-    // Path 1: Understanding
-    understanding: {
-      text: "النظام يعمل عبر 3 طبقات:\n1. الاستقبال (Reception)\n2. التنسيق (Coordination)\n3. التطور (Evolution)\nأي طبقة تود التعمق فيها؟",
-      opts: [
-        { text: "طبقة الاستقبال الذكي", next: "layer1" },
-        { text: "طبقة التنسيق الآلي", next: "layer2" },
-        { text: "التعلم المستمر (Evolution)", next: "layer3" },
-        { text: "عد للبداية", next: "start" }
-      ]
-    },
-    layer1: { text: "الاستقبال: يرد النظام في 3 ثوانٍ على WhatsApp، يحجز المواعيد، ويزيل ضغط المكالمات تماماً.", opts: [{ text: "فهمت، أريد الاشتراك", next: "onboarding" }, { text: "عودة", next: "understanding" }] },
-    layer2: { text: "التنسيق: يربط الأطباء بالموارد ويمنع التعارضات. موظف الاستقبال يتحول لمشرف بدلاً من مُدخل بيانات.", opts: [{ text: "فهمت، أريد الاشتراك", next: "onboarding" }, { text: "عودة", next: "understanding" }] },
-    layer3: { text: "التطور: النظام يحلل أنماط عيادتك ويقترح تحسينات، ويصبح أسرع وأدق مع كل محادثة.", opts: [{ text: "فهمت، أريد الاشتراك", next: "onboarding" }, { text: "عودة", next: "understanding" }] },
-
-    // Path 2: Support
-    support: {
-      text: "نعتذر عن الإزعاج. ما نوع المشكلة؟",
-      opts: [
-        { text: "النظام لا يستجيب", next: "direct" },
-        { text: "خطأ في مزامنة المواعيد", next: "direct" },
-        { text: "تحديث الإعدادات", next: "direct" },
-        { text: "أخرى", next: "direct" }
-      ]
-    },
-
-    // Path 3: Onboarding
-    onboarding: {
-      text: "الاشتراك يبدأ من 299 SAR أو 499 SAR + رسوم تأسيس.\nما هو حجم منشأتك؟",
-      opts: [
-        { text: "طبيب واحد / عيادة ناشئة", next: "direct" },
-        { text: "مركز طبي (2-5 أطباء)", next: "direct" },
-        { text: "مجموعة طبية (Swarm)", next: "direct" }
-      ]
-    },
-
-    // Path 4: Client
-    dashboard_links: {
-      text: "يمكنك الوصول لأدواتك هنا:",
-      opts: [
-        { text: "لوحة التحكم الحية", url: "/growth/dashboard" },
-        { text: "تحديث الفواتير", next: "direct" },
-        { text: "إعدادات العيادة", next: "direct" },
-        { text: "عودة", next: "start" }
-      ]
-    },
-
-    // Path 5: Direct
-    direct: {
-      text: "سيقوم أحد خبراء البنية التحتية لدينا بالرد عليك خلال 4 ساعات كحد أقصى. تواصل معنا الآن عبر WhatsApp.",
-      opts: [
-        { text: "فتح WhatsApp", url: "https://wa.me/14155238886?text=مرحبا+Qudozen+طلب+مساعدة" },
-        { text: "عد للبداية", next: "start" }
-      ]
-    }
-  };
-
-  function toggleChat() {
-    chatWindow.classList.toggle('open');
-    if (chatWindow.classList.contains('open') && chatMsgs.innerHTML === "") {
-      renderStep('start');
-    }
-  }
-
-  function renderStep(stepId) {
-    const step = flow[stepId];
-    chatCrumb.textContent = `المسار: ${stepId === 'start' ? 'البداية' : stepId}`;
-    
-    // Add bot message
-    const botDiv = document.createElement('div');
-    botDiv.className = 'cmsg cmsg-bot';
-    botDiv.textContent = step.text;
-    chatMsgs.appendChild(botDiv);
-    chatMsgs.scrollTop = chatMsgs.scrollHeight;
-
-    // Render options
-    chatOpts.innerHTML = "";
-    step.opts.forEach(opt => {
-      const btn = document.createElement('button');
-      btn.className = 'copt';
-      btn.textContent = opt.text;
-      btn.onclick = () => {
-        if (opt.url) {
-          window.open(opt.url, '_blank');
-        } else {
-          addUserMsg(opt.text);
-          setTimeout(() => renderStep(opt.next), 600);
-        }
-      };
-      chatOpts.appendChild(btn);
-    });
-  }
-
-  function addUserMsg(text) {
-    const userDiv = document.createElement('div');
-    userDiv.className = 'cmsg cmsg-user';
-    userDiv.textContent = text;
-    chatMsgs.appendChild(userDiv);
-    chatMsgs.scrollTop = chatMsgs.scrollHeight;
-    chatOpts.innerHTML = '<div class="chat-typing-ind"><span></span><span></span><span></span></div>';
-  }
-
-  function resetChat() {
-    chatMsgs.innerHTML = "";
-    renderStep('start');
-  }
-
-  function selectOption(id) {
-    if (id === 'contact') {
-      window.open("https://wa.me/14155238886", "_blank");
-    }
-  }
-</script>
+  </script>
 </body>
 </html>

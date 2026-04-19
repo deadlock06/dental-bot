@@ -1263,8 +1263,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       // This guarantees the patient always receives their confirmation message.
       // If sendMessage throws, the patient remains in step 8 and can retry.
       await sendMessage(phone, ar
-        ? `🎉 *تم تأكيد موعدك!*\n\n📅 ${confirmDate}\n⏰ ${confirmTime}\n🏥 ${cl.name}\n🦷 ${confirmTreatment}${doctorConfirmLine}\n\nسنرسل لك تذكيراً قبل موعدك. نراك قريباً! 😊\n\n💡 اكتب *help* في أي وقت لرؤية خياراتك\n0️⃣ القائمة الرئيسية`
-        : `🎉 *Appointment Confirmed!*\n\n📅 ${fd.preferred_date}\n⏰ ${fd.time_slot}\n🏥 ${cl.name}\n🦷 ${fd.treatment}${doctorConfirmLine}\n\nWe'll send you a reminder before your appointment. See you then! 😊\n\n💡 Type *help* anytime to see your options\n0️⃣ Main menu`
+        ? `🎉 *تم تأكيد موعدك!*\n\n📅 ${confirmDate}\n⏰ ${confirmTime}\n🏥 ${cl.name}\n🦷 ${confirmTreatment}${doctorConfirmLine}\n\nفي الاستخدام الحقيقي، أنا أتولى كل هذا بنسبة 100%.\n\n⚡ اشترك الآن بـ 299 ريال/الشهر أو تحدث مع جيك للأسئلة.\n\n💡 اكتب *help* في أي وقت لرؤية خياراتك\n0️⃣ القائمة الرئيسية`
+        : `🎉 *Appointment Confirmed!*\n\n📅 ${fd.preferred_date}\n⏰ ${fd.time_slot}\n🏥 ${cl.name}\n🦷 ${fd.treatment}${doctorConfirmLine}\n\nIn real use, I handle 100% of this.\n\n⚡ Activate for 299 SAR/month or Chat with Jake for questions.\n\n💡 Type *help* anytime to see your options\n0️⃣ Main menu`
       );
 
       // Now safe to clear flow — confirmation is already delivered

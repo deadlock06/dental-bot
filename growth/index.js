@@ -123,111 +123,56 @@ function normalizePhone(p) {
   return cleaned;
 }
 
-// Ghost Room 2.0 — dynamic animated revenue calculator
-router.get('/room', (req, res) => {
-  const clinicName = req.query.clinic ? decodeURIComponent(req.query.clinic) : 'عيادتك';
-  const cityName   = req.query.city   ? decodeURIComponent(req.query.city)   : 'المملكة';
-  const pain       = req.query.pain   || 'bad_reviews';
-  const ownerName  = req.query.name   ? decodeURIComponent(req.query.name)   : '';
-  const waNumber   = (process.env.TWILIO_WHATSAPP_FROM || '').replace('whatsapp:+', '');
-
-  const painAr = {
-    bad_reviews:          'تقييمات سلبية بسبب بطء الاستجابة',
-    hiring_receptionist:  'تكلفة موظف الاستقبال والدوران الوظيفي',
-    slow_response:        'استجابة بطيئة تُفقدك المرضى',
-    no_website:           'غياب التواجد الرقمي',
-  };
-
-  res.send(`<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${clinicName} — Qudozen</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Tajawal',Arial,sans-serif;background:#0a0a0f;color:#fff;min-height:100vh;overflow-x:hidden}
-    .bg{position:fixed;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(120,40,200,0.15) 0,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(40,80,200,0.1) 0,transparent 60%);pointer-events:none}
-    .container{max-width:640px;margin:0 auto;padding:40px 20px;position:relative;z-index:1}
-    .logo{font-size:13px;color:#666;margin-bottom:32px;letter-spacing:2px;text-transform:uppercase}
-    h1{font-size:clamp(26px,6vw,38px);font-weight:900;line-height:1.2;margin-bottom:12px;background:linear-gradient(135deg,#fff 0%,#a78bfa 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .sub{color:#888;font-size:15px;margin-bottom:36px;line-height:1.6}
-    .card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:28px;margin-bottom:20px;backdrop-filter:blur(12px)}
-    .card-label{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-    .counter{font-size:clamp(42px,10vw,64px);font-weight:900;color:#f59e0b;font-variant-numeric:tabular-nums;direction:ltr;text-align:center}
-    .counter-sub{font-size:13px;color:#888;text-align:center;margin-top:6px}
-    .pain-badge{display:inline-block;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;padding:6px 14px;border-radius:20px;font-size:13px;margin-bottom:24px}
-    .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);margin:24px 0}
-    .price-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
-    .price-label{color:#999;font-size:14px}
-    .price-val{font-size:20px;font-weight:700;color:#34d399}
-    .btn{display:block;width:100%;padding:18px;border-radius:14px;font-size:16px;font-weight:700;text-align:center;cursor:pointer;border:none;text-decoration:none;margin-bottom:12px;font-family:inherit;transition:opacity .2s}
-    .btn-primary{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff}
-    .btn-primary:hover{opacity:.9}
-    .btn-wa{background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.4);color:#4ade80}
-    .btn-wa:hover{background:rgba(37,211,102,0.25)}
-    .social{font-size:13px;color:#555;text-align:center;margin-top:20px}
-    .pulse{animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
-  </style>
-</head>
-<body>
-<div class="bg"></div>
-<div class="container">
-  <div class="logo">Qudozen • AI Receptionist</div>
-
-  <h1>كم تخسر ${clinicName} كل شهر؟</h1>
-  <p class="sub">${ownerName ? `دكتور ${ownerName}، ` : ''}إليك الحساب الحقيقي لـ${clinicName} في ${cityName}</p>
-
-  <div class="pain-badge">🔴 ${painAr[pain] || painAr.bad_reviews}</div>
-
-  <div class="card">
-    <div class="card-label">خسارتك الشهرية المقدرة</div>
-    <div class="counter" id="counter">0</div>
-    <div class="counter-sub">ريال سعودي — مرضى فقدتهم لمنافسيك</div>
-  </div>
-
-  <div class="card">
-    <div class="card-label">المقارنة</div>
-    <div class="price-row">
-      <span class="price-label">موظف استقبال شهرياً</span>
-      <span class="price-val" style="color:#f87171">4,500 ريال</span>
-    </div>
-    <div class="divider"></div>
-    <div class="price-row">
-      <span class="price-label">Qudozen AI — 24/7 بالعربي والإنجليزي</span>
-      <span class="price-val">299 ريال</span>
-    </div>
-  </div>
-
-  <a href="https://wa.me/${waNumber}?text=${encodeURIComponent('مرحبا جيك، أريد معرفة المزيد عن Qudozen لعيادتي')}" class="btn btn-wa">
-    💬 تحدث مع جيك الآن
-  </a>
-  <a href="https://wa.me/${waNumber}?text=${encodeURIComponent('أريد تجربة المساعد الذكي لعيادتي')}" class="btn btn-primary">
-    🤖 جرّب المساعد مجاناً
-  </a>
-
-  <div class="social pulse">🏥 47 عيادة في المملكة تستخدم Qudozen الآن</div>
-</div>
-
-<script>
-  function animateCounter(target, duration) {
-    const el = document.getElementById('counter');
-    const start = Date.now();
-    const step = () => {
-      const p = Math.min((Date.now() - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - p, 3);
-      el.textContent = Math.round(ease * target).toLocaleString('ar-SA');
-      if (p < 1) requestAnimationFrame(step);
-    };
-    step();
-  }
-  window.addEventListener('load', () => animateCounter(12400, 2200));
-</script>
-</body>
-</html>`);
+router.get('/ghost-room', (req, res) => {
+  res.sendFile(path.join(__dirname, 'ghost-room.html'));
 });
+
+// Alias for backwards compatibility if needed
+router.get('/room', (req, res) => {
+  res.sendFile(path.join(__dirname, 'ghost-room.html'));
+});
+
+router.post('/leads', async (req, res) => {
+  const { data, error } = await supabase.from('growth_leads_v2').insert(req.body);
+  res.json({ success: !error, data, error });
+});
+
+router.get('/leads', async (req, res) => {
+  const { data, error } = await supabase.from('growth_leads_v2').select('*');
+  res.json({ success: !error, data, error });
+});
+
+router.post('/send', async (req, res) => {
+  const { id } = req.body;
+  const { data: lead } = await supabase.from('growth_leads_v2').select('*').eq('id', id).single();
+  if (lead) {
+    const msg = await generateMessage(lead);
+    const sent = await sendWhatsApp(lead.phone, msg);
+    res.json({ success: sent.success, message: msg });
+  } else {
+    res.status(404).json({ error: 'lead not found' });
+  }
+});
+
+router.post('/bump', async (req, res) => {
+  const results = await sendFollowUps();
+  res.json({ success: true, results });
+});
+
+router.post('/handoff', async (req, res) => {
+  const { lead, message } = req.body;
+  const result = await handoffLead(lead, message);
+  res.json(result);
+});
+
+router.get('/stats', async (req, res) => {
+  const { data, error } = await supabase.from('growth_leads_v2').select('status, confidence_score');
+  res.json({ success: !error, total: data?.length || 0, data });
+});
+
+/* replaced inline html route */
+
+// inline HTML route was replaced
 
 // ========== ZERO-FRICTION: PASTE → VERIFY → MESSAGE ==========
 
