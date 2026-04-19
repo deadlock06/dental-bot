@@ -3,144 +3,181 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Qudozen — Live Report</title>
+  <title>غرفة العمليات - تحليل النزيف الخفي | Qudozen</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { 
-      font-family: 'Tajawal', sans-serif; 
-      background: #09090e; 
-      color: #fff; 
-      min-height: 100vh; 
-      display: flex; justify-content: center; align-items: center;
-      overflow-x: hidden;
-    }
-    .bg {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: radial-gradient(ellipse at 20% 50%, rgba(120, 30, 255, 0.15) 0, transparent 60%),
-                  radial-gradient(ellipse at 80% 50%, rgba(30, 200, 255, 0.1) 0, transparent 60%);
-      pointer-events: none; z-index: 0;
-    }
-    .container {
-      position: relative; z-index: 1;
-      width: 100%; max-width: 500px; padding: 30px 20px;
-    }
-    .header { text-align: center; margin-bottom: 25px; }
-    .live-indicator {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 6px 12px; background: rgba(239,68,68,0.1); 
-      border-radius: 20px; color: #ef4444; font-size: 13px; font-weight: bold;
-    }
-    .pulse-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; animation: pulse 1.5s infinite; }
-    h1 { font-size: 24px; color: #e2e8f0; margin-top: 15px; font-weight: 400; text-align: center; }
-    .business-name { color: #c084fc; font-weight: bold; }
+    body { font-family: 'Tajawal', sans-serif; background-color: #040914; color: white; overflow: hidden; }
     
-    .loss-card {
-      background: rgba(255, 255, 255, 0.03); 
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 20px; padding: 30px; text-align: center;
-      backdrop-filter: blur(10px); margin-bottom: 20px;
+    .glass {
+      background: rgba(13, 148, 136, 0.03); 
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(225, 29, 72, 0.2); /* Bleeding red border */
     }
-    .loss-label { color: #94a3b8; font-size: 14px; margin-bottom: 10px; }
-    .counter-wrapper { display: flex; justify-content: center; align-items: baseline; gap: 8px; margin-bottom: 5px; }
-    .counter { font-size: 52px; font-weight: 900; color: #f59e0b; font-variant-numeric: tabular-nums; }
-    .currency { font-size: 20px; color: #f59e0b; }
-    .loss-sub { color: #64748b; font-size: 13px; }
-    .calc-details { margin-top: 15px; font-size: 12px; color: #475569; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); }
     
-    .social-proof {
-      background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.1);
-      border-radius: 15px; padding: 15px; margin-bottom: 30px; text-align: center;
+    .ticker { font-variant-numeric: tabular-nums; }
+    
+    /* Heartbeat animation */
+    @keyframes heartbeat { 
+      0%, 100% { transform: scale(1); opacity: 0.8; } 
+      50% { transform: scale(1.05); opacity: 1; text-shadow: 0 0 20px rgba(225,29,72,0.8); } 
     }
-    .social-proof p { color: #34d399; font-size: 14px; font-weight: 700; margin-bottom: 5px; }
-    .social-proof span { color: #6ee7b7; font-size: 12px; opacity: 0.8; }
+    .heartbeat-text { animation: heartbeat 2s infinite; }
     
-    .ctas { display: flex; flex-direction: column; gap: 12px; }
-    .btn {
-      width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; 
-      font-weight: 700; cursor: pointer; text-decoration: none; text-align: center; transition: all 0.2s;
+    /* Background Scanner Line */
+    @keyframes scan {
+      0% { top: -10%; opacity: 0; }
+      10% { opacity: 0.5; }
+      90% { opacity: 0.5; }
+      100% { top: 110%; opacity: 0; }
     }
-    .btn-primary { background: linear-gradient(135deg, #a855f7, #6366f1); color: white; }
-    .btn-primary:hover { box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); transform: translateY(-2px); }
-    .btn-whatsapp { background: transparent; border: 1px solid #25D366; color: #25D366; }
-    .btn-whatsapp:hover { background: rgba(37, 211, 102, 0.1); }
+    .scanner-line {
+      position: absolute;
+      left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(225, 29, 72, 0.8), transparent);
+      box-shadow: 0 0 20px rgba(225, 29, 72, 0.6);
+      animation: scan 4s linear infinite;
+      z-index: 0;
+    }
     
-    .guarantees { display: flex; justify-content: center; gap: 20px; margin-top: 20px; color: #64748b; font-size: 12px; }
-    
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    /* Glitch Effect */
+    @keyframes glitch {
+      2%, 64% { transform: translate(2px,0) skew(0deg); }
+      4%, 60% { transform: translate(-2px,0) skew(0deg); }
+      62% { transform: translate(0,0) skew(5deg); }
+    }
+    .glitch { animation: glitch 4s infinite; }
   </style>
 </head>
-<body>
-  <div class="bg"></div>
-  <div class="container">
-    <div class="header">
-      <div class="live-indicator"><div class="pulse-dot"></div> LIVE CALCULATION</div>
-      <h1 id="introText">دكتور <span id="ownerName"></span>، أثناء قراءتك لهذه الصفحة...</h1>
-    </div>
+<body class="h-screen w-screen relative flex items-center justify-center p-4">
 
-    <div class="loss-card">
-      <div class="loss-label">بإمكان أن تكون <span class="business-name" id="clinicName"></span> قد فقدت</div>
-      <div class="counter-wrapper">
-        <div class="counter" id="revenueCounter">0</div>
-        <div class="currency">ريال</div>
+  <!-- Background Ambience -->
+  <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(225,29,72,0.05)_0%,rgba(4,9,20,1)_80%)] z-0"></div>
+  <div class="scanner-line"></div>
+  <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-5 pointer-events-none z-0 mix-blend-overlay border-red-500"></div>
+
+  <!-- Medical UI Frame -->
+  <div class="relative z-10 w-full max-w-4xl glass rounded-3xl p-8 md:p-12 shadow-[0_0_50px_rgba(225,29,72,0.15)] flex flex-col items-center">
+    
+    <!-- Top Bar -->
+    <div class="w-full flex justify-between items-center mb-8 border-b border-rose-900/30 pb-4">
+      <div class="flex items-center gap-3">
+        <span class="w-3 h-3 rounded-full bg-rose-500 animate-pulse"></span>
+        <span class="text-xs font-bold text-rose-500 uppercase tracking-widest font-mono">Live Diagnosis</span>
       </div>
-      <div class="loss-sub">من إيرادات المرضى المحتملة هذا الشهر</div>
-      <div class="calc-details">
-        مبني على: متوسط تأخير ساعتين × 12 مريض مفقود × 360 ريال للموعد
+      <div class="text-xs text-gray-500 font-mono tracking-widest" id="sys-time">SYS_TIME: 00:00:00</div>
+    </div>
+
+    <!-- Main Subject -->
+    <div class="text-center mb-10 w-full">
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-400 mb-2">تحليل النزيف الدائم لعيادة</h1>
+      <h2 class="text-4xl md:text-5xl font-black text-white glitch" id="clinic-name">جاري استخراج البيانات...</h2>
+    </div>
+
+    <!-- Live Counter -->
+    <div class="flex flex-col items-center mb-12">
+      <div class="text-sm text-rose-400 uppercase tracking-widest font-bold mb-4 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
+        <span>الخسارة المقدرة شهرياً لتأخر الردود</span>
+      </div>
+      
+      <div class="flex items-end gap-3 justify-center w-full focus-in">
+        <span class="text-rose-500 text-3xl md:text-4xl pb-3 font-bold">ريال</span>
+        <span class="text-6xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-br from-rose-400 to-red-600 ticker heartbeat-text drop-shadow-[0_0_15px_rgba(225,29,72,0.8)]" id="loss-counter">
+          0
+        </span>
+      </div>
+      
+      <div class="mt-4 text-gray-500 text-sm font-mono tracking-widest" id="loss-baseline">
+        [ BASELINE: 10 PATIENTS/DAY x 30 DAYS x 350 SAR ]
       </div>
     </div>
 
-    <div class="social-proof">
-      <p id="socialText">📊 عيادات في مدينتك تستخدم الاستقبال الذكي</p>
-      <span>معدل استرجاع المرضى: 78% • متوسط التوفير: 6,700 ريال/شهر</span>
+    <!-- Psychology Box -->
+    <div class="w-full bg-[#0a0508] border border-rose-900/50 rounded-xl p-6 text-center shadow-inner relative overflow-hidden mb-10">
+      <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-rose-500 to-transparent"></div>
+      <p class="text-gray-300 text-lg leading-relaxed" id="pain-message">
+        المرضى لا ينتظرون. عندما يتألم المريض في الـ 12 ليلاً، عيادتك مغلقة بينما العيادة المجاورة لها ذكاء يصطاد المريض ويرحب به.
+      </p>
     </div>
 
-    <div class="ctas">
-      <button class="btn btn-primary" onclick="alert('Proceed to detailed funnel')">🔮 اكشف التقرير الكامل</button>
-      <a href="#" id="waLink" class="btn btn-whatsapp">💬 تحدث مع جيك (بشري)</a>
+    <!-- The Escape -> Jake Handoff -->
+    <div class="w-full flex justify-center">
+      <a href="#" id="jake-btn" class="bg-gradient-to-r from-teal-500 to-teal-700 text-white px-10 py-5 rounded-2xl font-black text-xl md:text-2xl hover:scale-105 transition duration-300 shadow-[0_0_30px_rgba(13,148,136,0.3)] border border-teal-400/50 flex flex-col items-center">
+        <span>تحدث مع جيك لإيقاف النزيف فوراً</span>
+        <span class="text-xs font-normal text-teal-100 mt-2 tracking-widest opacity-80">(اضغط لفتح واتساب شخصي)</span>
+      </a>
     </div>
 
-    <div class="guarantees">
-      <span>✅ لا يتطلب بطاقة ائتمانية</span>
-      <span>✅ إعداد في 24 ساعة</span>
-    </div>
   </div>
 
   <script>
+    // System Time Clock
+    setInterval(() => {
+      const now = new Date();
+      document.getElementById('sys-time').innerText = 'SYS_TIME: ' + now.toISOString().split('T')[1].split('.')[0] + ' KSA';
+    }, 1000);
+
+    // URL Parsing (Ghost Room params)
     const urlParams = new URLSearchParams(window.location.search);
-    const clinic = urlParams.get('clinic') ? decodeURIComponent(urlParams.get('clinic')) : "العيادة";
-    const city = urlParams.get('city') ? decodeURIComponent(urlParams.get('city')) : "الرياض";
-    const ownerName = urlParams.get('name') ? decodeURIComponent(urlParams.get('name')) : "الطبيب";
-
-    document.getElementById('clinicName').innerText = clinic;
-    document.getElementById('ownerName').innerText = ownerName;
-    document.getElementById('socialText').innerText = '📊 47 عيادة في ' + city + ' تستخدم الاستقبال الذكي';
-
-    const waNumber = '966500000000'; // Replace with Jake's Number
-    const waMsg = encodeURIComponent('مرحباً جيك، أرغب في معرفة المزيد عن كيف يمكن لـ Qudozen إيقاف خسارة المرضى لعيادتي');
-    document.getElementById('waLink').href = 'https://wa.me/' + waNumber + '?text=' + waMsg;
-
-    // Animated Counter Ticking Up (Loss Aversion)
-    const duration = 2500;
-    const target = 8640;
-    const counterEl = document.getElementById('revenueCounter');
+    const clinicName = urlParams.get('clinic') || 'عيادتك';
+    const city = urlParams.get('city') || 'المملكة';
+    const pain = urlParams.get('pain') || 'general';
+    const volumeStr = urlParams.get('vol') || '10'; // Patients lost per day
     
-    let start = null;
-    function animateCount(timestamp) {
-      if(!start) start = timestamp;
-      const progress = Math.min((timestamp - start) / duration, 1);
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-      counterEl.innerText = Math.floor(easeOutQuart * target).toLocaleString('ar-SA');
-      if(progress < 1) {
-        requestAnimationFrame(animateCount);
-      } else {
+    document.getElementById('clinic-name').innerText = clinicName;
+    document.getElementById('jake-btn').href = `https://wa.me/966570733834?text=${encodeURIComponent('أهلاً جيك، دخلت غرفة العمليات وشعرت بالرعب من حجم الخسارة لـ ' + clinicName + '. أريد وقف النزيف.')}`;
+
+    // Pain Signatures Mapping
+    const painMap = {
+      'bad_reviews': `المنافسون يسرقون مرضاك المحتملين بسبب تقييمات الاستقبال السلبية. كل مريض يقرأ تقييماً سيئاً يكلفك عائداً مدى الحياة.`,
+      'no_website': `غياب التواجد الرقمي والصمت التام لعيادتك في ${city} يعني أنك تترك المرضى للعيادات التي ترد بثوانٍ.`,
+      'hiring_receptionist': `دوران الموظفين العالي يكلفك آلاف الريالات للتدريب، ومع ذلك يسقطون محادثات المرضى بسبب ضغط العمل.`,
+      'general': `المرضى لا ينتظرون. عندما يتألم المريض في الـ 12 ليلاً، عيادتك مغلقة بينما العيادة المجاورة لها ذكاء يصطاد المريض ويرحب به.`
+    };
+    
+    document.getElementById('pain-message').innerText = painMap[pain] || painMap['general'];
+
+    // The Brutal Math (Default 10 * 30 * 350 SAR = 105,000 SAR)
+    const patientsLostPerDay = parseInt(volumeStr) || 10;
+    const baseValueSAR = 350; // Minimum viable dental visit
+    const daysInMonth = 30;
+    const totalMonthlyLoss = patientsLostPerDay * daysInMonth * baseValueSAR; // 105,000 SAR
+    
+    document.getElementById('loss-baseline').innerText = `[ BASELINE: ${patientsLostPerDay} PATIENTS/DAY x ${daysInMonth} DAYS x ${baseValueSAR} SAR AVG VISIT ]`;
+
+    // GSAP Animate Counter Ticking Up Psychologically
+    const counterEl = document.getElementById('loss-counter');
+    const obj = { val: 0 };
+    
+    // Animate up to the base loss in 3 seconds
+    gsap.to(obj, {
+      val: totalMonthlyLoss,
+      duration: 3,
+      ease: "power2.out",
+      onUpdate: () => {
+        counterEl.innerText = Math.floor(obj.val).toLocaleString('en-US');
+      },
+      onComplete: () => {
+        // Now tick up infinitely like a bleeding meter
         setInterval(() => {
-          let current = parseInt(counterEl.innerText.replace(/,/g, '').replace(/٬/g, ''), 10) || target;
-          counterEl.innerText = (current + Math.floor(Math.random() * 5)).toLocaleString('ar-SA');
-        }, 3000);
+          let current = parseFloat(counterEl.innerText.replace(/,/g, ''));
+          // Add roughly 3 SAR per second (1 hour = ~ 10k, just simulating pain over time)
+          const bleed = Math.random() * (12 - 2) + 2; 
+          current += bleed;
+          counterEl.innerText = Math.floor(current).toLocaleString('en-US');
+          
+          // Flash red harder on jump
+          gsap.fromTo(counterEl, 
+            { textShadow: "0 0 40px rgba(225,29,72,1)" }, 
+            { textShadow: "0 0 15px rgba(225,29,72,0.8)", duration: 0.5 }
+          );
+        }, 1200);
       }
-    }
-    requestAnimationFrame(animateCount);
+    });
+
   </script>
 </body>
 </html>

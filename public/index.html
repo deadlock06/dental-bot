@@ -3,203 +3,409 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Qudozen AOS - الذكاء الاصطناعي للعيادات</title>
+  <title>Qudozen - نظام التشغيل الذاتي للعيادات</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
     body { font-family: 'Tajawal', sans-serif; background-color: #0B1120; color: white; overflow-x: hidden; }
     .glass {
-      background: rgba(13, 148, 136, 0.05);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(94, 234, 212, 0.1);
+      background: rgba(13, 148, 136, 0.05); /* Teal tint */
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(94, 234, 212, 0.1); /* Aqua glow */
     }
-    .text-teal { color: #5EEAD4; }
+    .text-teal { color: #0D9488; }
+    .text-aqua { color: #5EEAD4; } /* Aqua glow */
     .bg-teal { background-color: #0D9488; }
-    .text-gold { color: #D4A574; }
+    .text-gold { color: #D4A574; } /* Sand gold */
     .bg-gold { background-color: #D4A574; }
     .bg-gold:hover { background-color: #b78a5e; }
-    .mockup-message { padding: 10px 15px; border-radius: 15px; margin-bottom: 10px; font-size: 14px; max-width: 80%; }
-    .mockup-received { background: #1e293b; border-bottom-right-radius: 2px; }
-    .mockup-sent { background: #0D9488; border-bottom-left-radius: 2px; align-self: flex-start; margin-right: auto; }
+    
+    /* Liquid Physics Animations */
+    @keyframes float1 { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } }
+    @keyframes float2 { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(30px) scale(0.95); } }
+    .blob1 { animation: float1 25s ease-in-out infinite; }
+    .blob2 { animation: float2 22s ease-in-out infinite reverse; }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0B1120; }
+    ::-webkit-scrollbar-thumb { background: #0D9488; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #5EEAD4; }
+    
+    /* Chat Widget */
+    .chat-widget {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 60px;
+      height: 60px;
+      background-color: #25D366; /* WhatsApp Green */
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+      z-index: 1000;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .chat-widget:hover { transform: scale(1.1); }
   </style>
 </head>
-<body class="antialiased">
+<body class="antialiased selection:bg-[#0D9488] selection:text-white relative">
+
+  <!-- Liquid Aesthetic Background -->
+  <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+    <div class="absolute top-[10%] -left-[10%] w-[50vw] h-[50vw] bg-[#0D9488]/10 rounded-full blur-[80px] blob1"></div>
+    <div class="absolute bottom-[20%] -right-[10%] w-[40vw] h-[40vw] bg-[#5EEAD4]/10 rounded-full blur-[80px] blob2"></div>
+    <div class="absolute top-[60%] left-[30%] w-[30vw] h-[30vw] bg-[#D4A574]/5 rounded-full blur-[80px] blob1" style="animation-delay: -10s;"></div>
+  </div>
 
   <!-- Navbar -->
-  <nav class="fixed w-full z-50 glass px-6 py-4 flex justify-between items-center">
-    <div class="text-xl font-bold tracking-wider">QUDOZEN <span class="text-teal">AOS</span></div>
-    <div class="hidden md:flex gap-6 text-sm">
-      <a href="#calculator" class="hover:text-teal transition">الحاسبة</a>
-      <a href="#products" class="hover:text-teal transition">المنتجات</a>
-      <a href="#pricing" class="hover:text-teal transition">الأسعار</a>
+  <nav class="fixed w-full z-50 glass px-6 py-4 flex justify-between items-center transition-all duration-300" id="navbar">
+    <div class="text-xl font-bold tracking-wider flex items-center gap-2">
+      <span class="text-2xl text-gold">⚡</span> QUDOZEN
     </div>
-    <a href="https://wa.me/966570733834" class="bg-gold text-gray-900 px-5 py-2 rounded-full font-bold hover:scale-105 transition">جرب الآن</a>
+    <div class="hidden md:flex gap-8 text-sm font-medium text-gray-300">
+      <a href="#architecture" class="hover:text-aqua transition">بنية الوعي</a>
+      <a href="#loss" class="hover:text-aqua transition">النزيف الخفي</a>
+      <a href="#pricing" class="hover:text-aqua transition">الاستثمار</a>
+      <a href="#jake" class="hover:text-aqua transition">رسالة جيك</a>
+    </div>
+    <a href="/growth/ghost-room" class="bg-gold text-gray-900 px-6 py-2.5 rounded-xl font-bold hover:bg-[#b78a5e] transition transform hover:-translate-y-0.5 shadow-lg shadow-gold/20">جرب غرفة العمليات</a>
   </nav>
 
   <!-- Hero Section -->
-  <section class="h-screen flex flex-col justify-center items-center text-center px-4 pt-16 relative">
-    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
-    <h1 class="text-4xl md:text-6xl font-black mb-6 z-10 leading-tight">
-      جرب كيف تعمل عيادتك <br> 
-      بـ <span class="text-teal">ذكاء اصطناعي</span> في 60 ثانية.
-    </h1>
-    <p class="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl z-10">
-      النظام التشغيلي الأول للرعاية الصحية. نرد على مرضاك، نحجز المواعيد، ونسترد المرضى المفقودين 24/7 دون تدخل بشري.
-    </p>
-    <div class="flex gap-4 z-10 flex-col w-full sm:flex-row justify-center max-w-xs sm:max-w-none">
-      <a href="/growth/ghost-room" class="bg-gold text-gray-900 px-8 py-4 rounded-full font-bold text-lg hover:shadow-[0_0_20px_rgba(212,165,116,0.4)] transition">ادخل غرفة العمليات (تجربة حية)</a>
-      <a href="#calculator" class="glass px-8 py-4 rounded-full font-bold text-lg hover:bg-white/5 transition">احسب خسائرك الآن</a>
-    </div>
-  </section>
-
-  <!-- Animated Chat Mockup -->
-  <section class="py-20 px-4 md:px-0 max-w-3xl mx-auto" id="demo">
-    <div class="glass p-4 rounded-3xl border-gray-800 border-4 border-b-8 shadow-2xl relative overflow-hidden" style="height: 480px; display: flex; flex-direction: column;">
-      <div class="text-center font-bold pb-4 border-b border-gray-700 mb-4 text-teal">Qudozen AI 👨‍⚕️</div>
-      <div class="flex flex-col gap-2 overflow-y-auto" id="chatContainer">
-        <!-- Injected by GSAP -->
+  <section class="min-h-screen flex flex-col justify-center items-center text-center px-4 pt-24 relative z-10 border-b border-white/5">
+    <div class="max-w-4xl mx-auto flex flex-col items-center">
+      <div class="mb-6 inline-block px-4 py-1.5 rounded-full glass text-sm font-medium text-aqua flex items-center gap-2">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-[#5EEAD4]"></span>
+        </span>
+        بنية تحتية متطورة للعيادات
       </div>
-    </div>
-  </section>
-
-  <!-- Calculator Section -->
-  <section id="calculator" class="py-24 px-6 bg-[#0f172a]">
-    <div class="max-w-4xl mx-auto text-center">
-      <h2 class="text-3xl font-bold mb-4">حاسبة الخسائر المخفية</h2>
-      <p class="text-gray-400 mb-12">كم تكلفك رسائل الواتساب التي لا يتم الرد عليها فوراً؟</p>
       
-      <div class="glass p-8 rounded-2xl flex flex-col items-center">
-        <label class="block mb-2 text-gold font-semibold">متوسط المحادثات المتأخرة يومياً</label>
-        <input type="range" id="lostLeadsRange" min="1" max="50" value="10" class="w-full max-w-md accent-teal-500 mb-6">
-        <div class="text-2xl font-bold mb-8"><span id="lostLeadsOutput" class="text-teal">10</span> محادثات تضيع كل يوم</div>
-        
-        <div class="text-gray-400">الخسارة الشهرية المقدرة:</div>
-        <div class="text-5xl md:text-7xl font-black text-rose-500 my-4" id="lossAmount">18,000 ريال</div>
-        <a href="https://wa.me/966570733834?text=كيف%20أوقف%20هذا%20النزيف؟" class="mt-6 text-gold underline hover:text-white transition">أوقف هذا النزيف الآن ←</a>
+      <h1 class="text-5xl md:text-7xl font-black mb-8 leading-[1.15] tracking-tight">
+        جرب كيف تعمل عيادتك بـ <br>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-[#5EEAD4]">وعي اصطناعي</span> في 60 ثانية.
+      </h1>
+      
+      <p class="text-lg md:text-2xl text-gray-400 mb-12 max-w-2xl leading-relaxed">
+        المرضى لا ينتظرون. عيادتك تفقد المرضى يومياً بسبب تأخر الردود ليلاً وخلال ضغط العمل. نحن نبني تحولاً كاملاً، لتعمل عيادتك بتشغيل ذاتي 24/7.
+      </p>
+      
+      <div class="flex flex-col sm:flex-row gap-5 w-full justify-center max-w-md sm:max-w-none">
+        <a href="/growth/ghost-room" class="bg-gold text-[#0B1120] px-8 py-4 rounded-xl font-bold text-lg hover:shadow-[0_0_25px_rgba(212,165,116,0.6)] transition duration-300 flex items-center justify-center gap-2">
+          <span>شاهد النزيف (غرفة العمليات)</span>
+          <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </a>
+        <a href="#jake" class="glass px-8 py-4 rounded-xl font-bold text-lg text-white hover:bg-white/10 transition duration-300 flex items-center justify-center">
+          اقرأ رسالة جيك
+        </a>
       </div>
     </div>
   </section>
 
-  <!-- Products Showcase -->
-  <section id="products" class="py-24 px-6">
+  <!-- Three-Layer Architecture Section (Critical Addition) -->
+  <section id="architecture" class="py-24 px-6 relative z-10 border-b border-white/5 bg-[#0B1120]">
     <div class="max-w-6xl mx-auto">
-      <h2 class="text-3xl font-bold mb-12 text-center text-teal">منظومة متكاملة لعيادتك</h2>
-      <div class="grid md:grid-cols-3 gap-8">
-        <div class="glass p-8 rounded-2xl hover:-translate-y-2 transition duration-300">
-          <div class="text-4xl mb-4">🤖</div>
-          <h3 class="text-xl font-bold mb-2">Dental Bot</h3>
-          <p class="text-gray-400 text-sm">مساعد ذكي يرد على مرضاك 24/7، يجيب على الاستفسارات، ويحجز المواعيد على الواتساب فوراً.</p>
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">أكثر من مجرد بوت محادثة. <span class="text-gold">بنية تحتية كاملة.</span></h2>
+        <p class="text-gray-400 text-lg">تحول كامل في كيفية عمل العيادة. القوة تكمن في طبقات الوعي الثلاث.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8 relative">
+        <!-- Connecting Line -->
+        <div class="hidden md:block absolute top-[40%] left-0 right-0 h-0.5 bg-gradient-to-r from-teal-900 via-aqua-500 to-gold/30 z-0"></div>
+
+        <!-- Layer 1 -->
+        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 group bg-[#0B1120]/80">
+          <div class="w-16 h-16 rounded-2xl bg-teal-900 border border-teal-500 flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(13,148,136,0.4)]">1️⃣</div>
+          <h3 class="text-2xl font-bold mb-3 text-white">طبقة الاستقبال</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            الواجهة الأمامية عبر الواتساب. نظام تشغيل ذاتي يرد فوراً على مرضاك، يستوعب حالتهم (زراعة، عصب، تنظيف)، ويحجز المواعيد بلغة عربية سليمة.
+          </p>
         </div>
-        <div class="glass p-8 rounded-2xl border-teal-500/30 hover:-translate-y-2 transition duration-300 relative overflow-hidden">
-          <div class="absolute top-0 right-0 bg-teal text-xs font-bold px-3 py-1 rounded-bl-lg">جديد</div>
-          <div class="text-4xl mb-4">🦇</div>
-          <h3 class="text-xl font-bold mb-2 text-gold">Growth Swarm</h3>
-          <p class="text-gray-400 text-sm">محرك تسويق صامت يبحث عن منافسيك، يحلل مراجعاتهم، ويستهدف مرضاهم بذكاء.</p>
+
+        <!-- Layer 2 -->
+        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 group bg-[#0B1120]/80 mt-12 md:mt-0">
+          <div class="w-16 h-16 rounded-2xl bg-aqua-900 border border-[#5EEAD4] flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(94,234,212,0.4)]">2️⃣</div>
+          <h3 class="text-2xl font-bold mb-3 text-white">طبقة التنسيق</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            الدماغ الذي يربط المحادثة بالواقع. تنسيق فوري مع التقويم الخاص بك، منع التعارضات في المواعيد، وإرسال تذكيرات آلية لضمان حضور المرضى.
+          </p>
         </div>
-        <div class="glass p-8 rounded-2xl hover:-translate-y-2 transition duration-300">
-          <div class="text-4xl mb-4">⚙️</div>
-          <h3 class="text-xl font-bold mb-2">AOS Dashboard</h3>
-          <p class="text-gray-400 text-sm">لوحة تحكم مركزية تمنحك سيطرة كاملة على العيادة، المواعيد، وتقارير النمو.</p>
+
+        <!-- Layer 3 -->
+        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 group bg-[#0B1120]/80 mt-12 md:mt-0">
+          <div class="w-16 h-16 rounded-2xl bg-gold/20 border border-gold flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(212,165,116,0.4)]">3️⃣</div>
+          <h3 class="text-2xl font-bold mb-3 text-gold">طبقة التعلم (السوارم)</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            محرك وعي تسويقي يراقب السوق من أجلك. يستعيد المرضى المترددين، ويجمع التقييمات على جوجل بصمت ليرفع تصنيف العيادة وتفوقها على البقية.
+          </p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Pricing -->
-  <section id="pricing" class="py-24 px-6 bg-[#0f172a]">
-    <div class="max-w-5xl mx-auto text-center">
-      <h2 class="text-3xl font-bold mb-12 text-gold">استثمر في راحة بالك</h2>
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <!-- Basic -->
-        <div class="glass p-8 rounded-2xl flex flex-col">
-          <h3 class="text-lg text-gray-300 mb-2">الأساسي | Dental Bot</h3>
-          <div class="text-4xl font-bold mb-6">299 <span class="text-xl text-gray-500">ريال/شهر</span></div>
-          <ul class="text-sm text-gray-400 space-y-3 mb-8 text-right flex-1">
-            <li>✅ مساعد ذكي للردود الأساسية</li>
-            <li>✅ حجز المواعيد العادية</li>
-            <li>✅ لوحة تحكم مصغرة</li>
-          </ul>
-          <a href="#" class="w-full bg-gray-800 py-3 rounded-xl font-bold hover:bg-gray-700 transition">اشترك الآن</a>
+  <!-- Interactive WhatsApp Visualization -->
+  <section class="py-24 px-4 relative z-10 border-b border-white/5 bg-gradient-to-b from-[#0B1120] to-[#0A0F18]" id="demo">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-12">
+      
+      <div class="flex-1">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6 text-aqua">العمل المستمر، أثناء غيابك 💤</h2>
+        <p class="text-gray-400 text-lg mb-6">
+          شاهد كيف تتصرف بنية الوعي الخاصة بنا. لا مزيد من ترك المرضى قلقين ينتظرون حتى الصباح لتأكيد موعدهم.
+        </p>
+        <ul class="space-y-4 text-gray-300">
+          <li class="flex items-center gap-3"><span class="text-teal text-xl">✓</span> قراءة طبيعة الألم وتصنيف الطوارئ</li>
+          <li class="flex items-center gap-3"><span class="text-teal text-xl">✓</span> تنسيق الموعد في أقل من دقيقة</li>
+          <li class="flex items-center gap-3"><span class="text-teal text-xl">✓</span> الحجز المؤكد على واتساب فوراً</li>
+        </ul>
+      </div>
+      
+      <!-- Mockup Base -->
+      <div class="flex-1 w-full max-w-md w-full">
+        <div class="glass rounded-3xl overflow-hidden border border-gray-800 shadow-2xl flex flex-col" style="height: 480px;">
+          <!-- Mockup Header -->
+          <div class="bg-[#1e293b] p-4 flex items-center gap-4 relative z-10 border-b border-gray-800">
+            <div class="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-xl shadow-lg">🤖</div>
+            <div>
+              <div class="font-bold text-white tracking-wide">النظام الذكي</div>
+              <div class="text-xs text-[#5EEAD4] flex items-center gap-1">
+                <span class="w-1.5 h-1.5 bg-[#5EEAD4] rounded-full inline-block animate-pulse"></span>
+                متصل دائماً
+              </div>
+            </div>
+          </div>
+          
+          <!-- Mockup Body (GSAP Logic) -->
+          <div class="flex-1 bg-[#0A0F18] p-5 overflow-y-auto relative" id="chatContainer">
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-5 pointer-events-none"></div>
+          </div>
         </div>
-        <!-- Pro -->
-        <div class="glass p-8 rounded-2xl border-gold border flex flex-col transform scale-105 shadow-[0_0_30px_rgba(212,165,116,0.1)]">
-          <div class="text-gold text-sm font-bold mb-2">الأكثر طلباً</div>
-          <h3 class="text-lg text-white mb-2">احترافي | AOS System</h3>
-          <div class="text-4xl font-bold mb-6 text-teal">499 <span class="text-xl text-gray-500">ريال/شهر</span></div>
-          <ul class="text-sm text-gray-400 space-y-3 mb-8 text-right flex-1">
-            <li>✅ يشمل الخطة الأساسية</li>
-            <li>✅ الردود الذكية المتقدمة</li>
-            <li>✅ ربط مع تقويم Google</li>
-            <li>✅ تذكير تلقائي بالواتساب</li>
-            <li>✅ إعداد مجاني</li>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Pricing Table (STRICT ACCURACY) -->
+  <section id="pricing" class="py-24 px-6 bg-[#0B1120] border-t border-white/5 relative z-10">
+    <div class="max-w-6xl mx-auto text-center relative z-10">
+      <h2 class="text-3xl md:text-5xl font-black mb-4 text-white">الاستثمار في البنية التحتية</h2>
+      <p class="text-gray-400 text-lg mb-16 max-w-2xl mx-auto">اختر طبقة الوعي التي تناسب عيادتك. أسعارنا ثابتة، ولا نخبئ الرسوم.</p>
+      
+      <div class="grid md:grid-cols-3 gap-8 items-stretch">
+        
+        <!-- التوعية / Tier 1 -->
+        <div class="glass p-8 rounded-3xl flex flex-col text-right border border-gray-800 hover:border-gray-600 transition">
+          <h3 class="text-xl text-gray-300 mb-2 font-bold">بوت الأسنان (الأساسي)</h3>
+          <div class="flex items-baseline gap-2 mb-6 border-b border-gray-800 pb-6 mt-4">
+            <span class="text-4xl font-black text-white">299</span>
+            <span class="text-gray-500">ريال/شهر</span>
+          </div>
+          <ul class="text-sm text-gray-300 space-y-4 mb-10 flex-1">
+            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>ردود آلية على واتساب 24/7</span></li>
+            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>حجز المواعيد الأساسية</span></li>
+            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>لغة عربية مخصصة للسعودية</span></li>
           </ul>
-          <a href="#" class="w-full bg-teal text-white py-3 rounded-xl font-bold hover:brightness-110 transition">اشترك الآن</a>
+          <div class="text-sm font-bold text-gray-400 mb-4 text-center pb-2">بدون رسوم إعداد</div>
+          <a href="https://wa.me/966570733834?text=أريد%20الاشتراك%20في%20بوت%20الأسنان%20الأساسي" class="w-full bg-[#1e293b] text-white py-3.5 rounded-xl font-bold hover:bg-gray-700 transition text-center border border-gray-700 shadow-md">البدء بالأساسي</a>
         </div>
-        <!-- Growth -->
-        <div class="glass p-8 rounded-2xl flex flex-col">
-          <h3 class="text-lg text-gray-300 mb-2">نظام النمو | Swarm</h3>
-          <div class="text-4xl font-bold mb-6">+699 <span class="text-xl text-gray-500">ريال/شهر</span></div>
-          <ul class="text-sm text-gray-400 space-y-3 mb-8 text-right flex-1">
-            <li>✅ محرك جلب المرضى حصري</li>
-            <li>✅ استهداف أخطاء المنافسين</li>
-            <li>✅ متابعة آلية للمرضى المترددين</li>
-            <li>*يضاف لاشتراك الاحترافي</li>
+        
+        <!-- النظام / Tier 2 (Fixed setup fee) -->
+        <div class="glass p-8 rounded-3xl flex flex-col text-right border-2 border-[#0D9488]/50 shadow-[0_0_30px_rgba(13,148,136,0.15)] transform md:-translate-y-4 relative bg-[#091520]">
+          <h3 class="text-xl text-[#5EEAD4] mb-2 font-bold mt-2">النظام الشامل</h3>
+          <div class="flex items-baseline gap-2 mb-6 border-b border-gray-800 pb-6 mt-2">
+            <span class="text-5xl font-black text-white">499</span>
+            <span class="text-gray-500">ريال/شهر</span>
+          </div>
+          <ul class="text-sm text-gray-200 space-y-4 mb-10 flex-1">
+            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>الاستقبال الآلي (כל ميزات الأساسي)</span></li>
+            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>التنسيق اللحظي مع تقويم جوجل</span></li>
+            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>نظام التذكيرات لتقليل الاسترجاع</span></li>
+            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>التحول الذاتي في إغلاق المواعيد</span></li>
           </ul>
-          <a href="#" class="w-full bg-gray-800 py-3 rounded-xl font-bold hover:bg-gray-700 transition">تواصل معنا</a>
+          <!-- CRITICAL COMPLIANCE FIX: +699 SAR Setup -->
+          <div class="text-xs text-rose-300 font-bold mb-4 text-center bg-rose-900/20 py-2.5 rounded-lg border border-rose-900/50">+ 699 ريال رسوم إعداد (تدفع لمرة واحدة)</div>
+          
+          <a href="https://wa.me/966570733834?text=أريد%20النظام%20الشامل%20لعيادتي" class="w-full bg-[#0D9488] text-white py-3.5 rounded-xl font-black hover:bg-[#0c8077] transition text-center shadow-[0_0_20px_rgba(13,148,136,0.3)]">تفعيل النظام الشامل</a>
+        </div>
+        
+        <!-- السوارم / Tier 3 (Fixed Pricing Label) -->
+        <div class="glass p-8 rounded-3xl flex flex-col text-right border border-gray-800 hover:border-gray-600 transition">
+          <h3 class="text-xl text-gray-300 mb-2 font-bold">السوارم (طبقة التعلم)</h3>
+          <div class="flex items-baseline gap-2 mb-6 border-b border-gray-800 pb-6 mt-4">
+            <span class="text-4xl font-black text-gold">مخصص</span>
+          </div>
+          <ul class="text-sm text-gray-300 space-y-4 mb-10 flex-1">
+            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>تتبع واسترجاع المرضى المترددين تلقائياً</span></li>
+            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>توليد آلي للتقييمات على جوجل</span></li>
+            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>صيانة وعي العيادة بصمت في السوق</span></li>
+          </ul>
+          <a href="https://wa.me/966570733834?text=أريد%20مناقشة%20طبقة%20السوارم." class="w-full bg-transparent border border-gray-500 text-gray-300 py-3.5 rounded-xl font-bold hover:bg-gray-800 transition text-center">اتصل بنا للتسعير</a>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <!-- Facilities / Verticals Tabs Section (Healthcare targeting) -->
+  <section class="py-24 px-6 bg-[#0A0F18] border-t border-white/5 relative z-10">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold mb-4">يعمل بوعي تام مع قطاعك</h2>
+        <p class="text-gray-400">بنية النظام تتكيف وتتعلم مصطلحات واحتياجات مجالك الطبي الدقيق.</p>
+      </div>
+
+      <div class="flex flex-wrap justify-center gap-4 mb-12">
+        <button class="px-6 py-3 rounded-full bg-teal text-white font-bold shadow-[0_0_15px_rgba(13,148,136,0.5)]">عيادات الأسنان 🦷</button>
+        <a href="https://wa.me/966570733834?text=هل%20لديكم%20نسخة%20للعلاج%20الطبيعي؟" class="px-6 py-3 rounded-full glass text-gray-300 font-medium hover:bg-white/5 transition">الجلدية والتجميل ✨</a>
+        <a href="https://wa.me/966570733834?text=هل%20لديكم%20نسخة%20للعلاج%20الطبيعي؟" class="px-6 py-3 rounded-full glass text-gray-300 font-medium hover:bg-white/5 transition">العلاج الطبيعي 🧘</a>
+        <a href="https://wa.me/966570733834?text=هل%20لديكم%20نسخة%20للعقارات؟" class="px-6 py-3 rounded-full glass text-gray-300 font-medium hover:bg-white/5 transition">العقارات والوساطة 🏢</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Articles / Authority Section -->
+  <section class="py-24 px-6 border-t border-white/5 bg-[#0B1120] relative z-10">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex justify-between items-end mb-12">
+        <div>
+          <h2 class="text-3xl font-bold mb-2 text-white">الرؤى المؤسسية</h2>
+          <p class="text-gray-400">تحليلاتنا في إدارة العيادات، التخلف عن الحضور، والتشغيل الذاتي.</p>
+        </div>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-6">
+        <article class="glass rounded-2xl p-6 border-teal-900/30 hover:border-teal-500/50 transition">
+          <h3 class="text-lg font-bold mb-3 text-aqua">تشغيل ذاتي بدون موظف استقبال؟</h3>
+          <p class="text-gray-400 text-sm mb-4">كيف يمكن للبنية التحتية الذكية إدارة 100% من حجوزات الفترة المسائية بشكل آمن وفعّال.</p>
+        </article>
+        <article class="glass rounded-2xl p-6 border-teal-900/30 hover:border-teal-500/50 transition">
+          <h3 class="text-lg font-bold mb-3 text-gold">خسائر المواعيد الضائعة (No-Show)</h3>
+          <p class="text-gray-400 text-sm mb-4">آلية استخدام "طبقة التنسيق" والواتساب الآلي لتقليص نسبة تخلّف المرضى عن الحضور بنسبة 40%.</p>
+        </article>
+        <article class="glass rounded-2xl p-6 border-teal-900/30 hover:border-teal-500/50 transition">
+          <h3 class="text-lg font-bold mb-3 text-aqua">قاعدة הـ 5 دقائق للرد</h3>
+          <p class="text-gray-400 text-sm mb-4">احتمالية حجز المريض تهبط 80% إذا تأخر الرد عن 5 دقائق فقط. الدقيقة بمال.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Jake Persona Section / The Truth (Crucial Closure) -->
+  <section id="jake" class="py-32 border-t border-[#1e293b] relative z-10 bg-[#070b14]">
+    <div class="max-w-4xl mx-auto px-6">
+      
+      <div class="flex flex-col md:flex-row gap-8 items-start relative z-10">
+        <div class="w-32 h-32 rounded-3xl bg-[#0D9488]/10 border border-[#0D9488]/30 flex items-center justify-center text-5xl shrink-0 shadow-[0_0_30px_rgba(13,148,136,0.1)]">
+          👨‍💻
+        </div>
+        <div>
+          <h3 class="text-3xl font-black mb-4 text-white">رسالة لك من مؤسس النظام</h3>
+          <div class="text-sm font-bold text-teal mb-6 tracking-wide">من: جيك</div>
+          
+          <div class="space-y-4 text-gray-300 leading-relaxed text-lg">
+            <p>
+              مرحباً. رأيت أطباء ممتازين يبنون عيادات بملايين الريالات، ثم يخسرون وعشرين إلى ثلاثين مريضاً شهرياً بشكل سخيف. ليس بسبب سوء الرعاية الطبية، بل لأن الاستقبال الطبيعي لا يمكنه الرد فوراً في الـ 12 ليلاً حين يتألم المريض ويبدأ بمراسلة أول 5 عيادات على خرائط جوجل.
+            </p>
+            <p>
+              من يرد أولاً، يحصل على المريض. هذه هي الحقيقة القاسية للسوق.
+            </p>
+            <p>
+              نظام التشغيل الذاتي الذي بنيته لا يتعلق بمجرد "الرد الآلي". إنه يتعلق بحماية العيادة من هذا النزيف اليومي الخفي. البنية التحتية الخاصة بنا تتكفل بالرد الإنساني، والحجز، والمتابعة. لكي تستيقظ صباحاً وترى جدول الأطباء ممتلئاً تلقائياً.
+            </p>
+            <p>
+              إذا كنت جاهزاً لوقف النزيف في عيادتك، اضغط على الزر أدناه لتراسلني أنا شخصياً عبر واتساب. ودعنا نناقش الأرقام بجدية.
+            </p>
+          </div>
+          
+          <div class="mt-10">
+            <a href="https://wa.me/966570733834?text=أهلاً%20جيك،%20قرأت%20رسالتك%20وأريد%20وقف%20النزيف%20في%20عيادتي." class="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black hover:bg-gray-200 transition">
+              <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+              تحدث مع جيك شخصياً
+            </a>
+            <div class="mt-4 text-sm text-gray-500 font-medium">أو عبر البريد الإلكتروني: jake@qudozen.com</div>
+            <div class="mt-1 text-sm text-gray-500 font-medium">منصة التواصل الإداري واتساب: 0570733834</div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="glass py-12 px-6 mt-12 text-center text-sm text-gray-500">
-    <div class="mb-4">
-      <a href="https://wa.me/966570733834" class="text-teal hover:text-white mx-2">تواصل عبر واتساب</a> | 
-      <a href="mailto:hello@qudozen.com" class="text-teal hover:text-white mx-2">راسلنا</a>
+  <!-- Complete Footer -->
+  <footer class="bg-black py-12 px-6 border-t border-gray-900 relative z-10">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+      <div class="text-center md:text-right">
+        <div class="text-xl font-bold tracking-wider mb-2 text-gold">⚡ QUDOZEN</div>
+        <p class="text-gray-500 text-sm">البنية التحتية والمحرك الذكي للرعاية الصحية.</p>
+      </div>
+      
+      <div class="flex gap-8 text-sm font-medium">
+        <a href="#architecture" class="text-gray-400 hover:text-aqua transition">الوعي والتنسيق</a>
+        <a href="https://wa.me/966570733834" class="text-gray-400 hover:text-aqua transition">دعم واتساب</a>
+        <a href="/growth/ghost-room" class="text-gray-400 hover:text-aqua transition">غرفة العمليات</a>
+      </div>
+      
+      <div class="text-gray-600 text-sm">
+        © 2026 Qudozen. جميع الحقوق محفوظة.
+      </div>
     </div>
-    <p>© 2026 Qudozen AOS. جميع الحقوق محفوظة.</p>
   </footer>
 
-  <script>
-    // Calculator Logic
-    const slider = document.getElementById('lostLeadsRange');
-    const output = document.getElementById('lostLeadsOutput');
-    const loss = document.getElementById('lossAmount');
-    slider.oninput = function() {
-      output.innerText = this.value;
-      const calc = (parseInt(this.value) * 30 * 60); // Assuming 60 SAR profit per lead
-      loss.innerText = calc.toLocaleString('ar-SA') + ' ريال';
-    }
+  <!-- Floating WhatsApp Widget -->
+  <a href="https://wa.me/966570733834" class="chat-widget" id="wa-widget" aria-label="تواصل عبر واتساب">
+    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+  </a>
 
-    // Chat Animation
+  <script>
+    // Chat Simulation Animation using GSAP
     const messages = [
       { sender: 'user', text: 'أهلاً، سني يوجعني جداً أبي موعد اليوم 😭' },
-      { sender: 'bot', text: 'سلامتك ماتشوف شر! أبشر، أوفر لك موعد طوارئ. متى يناسبك؟ العصر أو العشاء؟' },
+      { sender: 'bot', text: 'سلامتك ماتشوف شر! النظام الذكي هنا. متوفر موعد طوارئ بسبب حالتك، متى يناسبك؟ العصر ولا العشاء؟' },
       { sender: 'user', text: 'العصر أفضل' },
-      { sender: 'bot', text: 'تم تخصيص موعد عاجل لك الساعة 4:00 عصراً مع د. أحمد. تم الحجز ✅' }
+      { sender: 'bot', text: 'تم التنسيق الفوري. حجزت لك الساعة 4:00 عصراً مع د. أحمد. مسجل في تقويم العيادة ✅' },
+      { sender: 'bot', text: 'استلمنا تأكيد الحضور. راح أذكرك قبل الموعد بساعة. هل تحتاج لمساعدة للوصول عبر جوجل ماب؟' }
     ];
 
     const chatContainer = document.getElementById('chatContainer');
     let delay = 0.5;
 
-    messages.forEach((msg, idx) => {
+    messages.forEach((msg) => {
       const div = document.createElement('div');
-      div.className = `mockup-message opacity-0 translate-y-4 ${msg.sender === 'bot' ? 'mockup-received' : 'mockup-sent'}`;
+      div.className = `mockup-message opacity-0 translate-y-6 ${msg.sender === 'bot' ? 'mockup-received border border-gray-700' : 'mockup-sent shadow-md'}`;
       div.innerText = msg.text;
+      
+      const timeSpan = document.createElement('div');
+      timeSpan.className = `text-[10px] mt-1 ${msg.sender === 'bot' ? 'text-gray-500 text-left' : 'text-teal-100 text-left'}`;
+      timeSpan.innerText = 'الآن';
+      div.appendChild(timeSpan);
+      
       chatContainer.appendChild(div);
 
       gsap.to(div, {
         opacity: 1,
         y: 0,
-        duration: 0.5,
+        duration: 0.6,
         delay: delay,
-        ease: "power2.out"
+        ease: "back.out(1.2)"
       });
-      delay += msg.sender === 'user' ? 2 : 1;
+      delay += msg.sender === 'user' ? 2.5 : 1.5;
     });
 
+    // Navbar blur on scroll
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('navbar');
+      if (window.scrollY > 50) {
+        nav.classList.add('border-b', 'border-[#1e293b]', 'shadow-lg', 'bg-[#0B1120]/90');
+      } else {
+        nav.classList.remove('border-b', 'border-[#1e293b]', 'shadow-lg', 'bg-[#0B1120]/90');
+      }
+    });
   </script>
 </body>
 </html>
