@@ -34,8 +34,9 @@ app.use((req, res, next) => {
 });
 
 // Root health check
+app.use('/public', express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => {
-  res.send('Dental Bot is running 🦷');
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Full system health check — JSON status of all components
