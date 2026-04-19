@@ -103,12 +103,22 @@
       </p>
     </div>
 
-    <!-- The Escape -> Jake Handoff -->
-    <div class="w-full flex justify-center">
-      <a href="#" id="jake-btn" class="bg-gradient-to-r from-teal-500 to-teal-700 text-white px-10 py-5 rounded-2xl font-black text-xl md:text-2xl hover:scale-105 transition duration-300 shadow-[0_0_30px_rgba(13,148,136,0.3)] border border-teal-400/50 flex flex-col items-center">
-        <span>تحدث مع جيك لإيقاف النزيف فوراً</span>
-        <span class="text-xs font-normal text-teal-100 mt-2 tracking-widest opacity-80">(اضغط لفتح واتساب شخصي)</span>
+    <!-- The Escape -> Dual CTAs & Social Proof -->
+    <div class="w-full flex flex-col md:flex-row justify-center gap-4 mb-6">
+      <a href="#" id="jake-btn" class="flex-1 bg-gradient-to-r from-teal-500 to-teal-700 text-white px-8 py-5 rounded-2xl font-black text-xl hover:scale-105 transition duration-300 shadow-[0_0_30px_rgba(13,148,136,0.3)] border border-teal-400/50 flex flex-col items-center">
+        <span>تحدث مع جيك</span>
+        <span class="text-xs font-normal text-teal-100 mt-2 tracking-widest opacity-80">(واتساب شخصي لإيقاف النزيف)</span>
       </a>
+      <a href="#" id="report-btn" class="flex-1 bg-transparent border-2 border-rose-900/50 text-white px-8 py-5 rounded-2xl font-black text-xl hover:bg-rose-900/20 transition duration-300 flex flex-col items-center justify-center">
+        <span>استخرج التقرير الكامل</span>
+        <span class="text-xs font-normal text-gray-400 mt-2 tracking-widest">(أرقام وبيانات المنافسين)</span>
+      </a>
+    </div>
+    
+    <div class="w-full text-center mt-2 pb-4">
+      <div class="inline-block bg-white/5 border border-white/10 px-6 py-2 rounded-full text-sm text-gray-400 heartbeat-text">
+        🩺 <span id="social-proof-count">47</span> عيادة في <span id="social-proof-city">المملكة</span> أوقفت هذا النزيف وتفوقت اليوم.
+      </div>
     </div>
 
   </div>
@@ -128,7 +138,9 @@
     const volumeStr = urlParams.get('vol') || '10'; // Patients lost per day
     
     document.getElementById('clinic-name').innerText = clinicName;
+    document.getElementById('social-proof-city').innerText = city;
     document.getElementById('jake-btn').href = `https://wa.me/966570733834?text=${encodeURIComponent('أهلاً جيك، دخلت غرفة العمليات وشعرت بالرعب من حجم الخسارة لـ ' + clinicName + '. أريد وقف النزيف.')}`;
+    document.getElementById('report-btn').href = `https://wa.me/966570733834?text=${encodeURIComponent('أهلاً جيك، أريد استخراج تقرير التحليل الكامل لعيادتي ' + clinicName)}`;
 
     // Pain Signatures Mapping
     const painMap = {
