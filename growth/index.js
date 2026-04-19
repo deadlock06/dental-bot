@@ -18,9 +18,13 @@ const { autoVerify } = require('./lib/autoVerify');
 const { checkDuplicate } = require('./lib/dedup');
 const { sendWhatsApp } = require('./lib/whatsappProvider');
 const { generateMessage } = require('./brain');
-const { runIndeedScout } = require('./scouts/indeed');
-const { handoffLead } = require('./handoff');
-const { sendFollowUps } = require('./sender');
+const { runIndeedScout }  = require('./scouts/indeed');
+const { runAllScouts }    = require('./scouts/orchestrator');
+const { handoffLead }     = require('./handoff');
+const { sendFollowUps, processBatch } = require('./sender');
+
+// Track last scout run in memory (survives restarts via DB query instead)
+let lastScoutReport = null;
 
 let _stripe;
 function getStripe() {
@@ -463,56 +467,52 @@ router.post('/send-followups', async (req, res) => {
   }
 });
 
-// ========== SCOUTING ==========
+// ========== SCOUTING (ORCHESTRATED) ==========
 
-/**
- * POST /growth/scout/indeed
- */
-router.post('/scout/indeed', basicAuth, async (req, res) => {
-  const jobs = await runIndeedScout();
-  
-  const inserted = [];
-  for (const job of jobs.slice(0, 10)) { 
-    // Check if company already exists
-    const { data: existing } = await supabase
-      .from('growth_leads_v2')
-      .select('id')
-      .ilike('name', `%${job.company}%`)
-      .limit(1);
-    
-    if (existing && existing.length > 0) continue;
-    
-    const { data: lead } = await supabase
-      .from('growth_leads_v2')
-      .insert({
-        raw_input: `${job.company}, ${job.city}, from Indeed job: ${job.title}`,
-        name: job.company,
-        city: job.city,
-        sources: ['indeed_scout'],
-        pain_signal: job.painSignal,
-        timing_score: job.timingScore,
-        status: 'pending', 
-        posted_at: job.postedAt
-      })
-      .select()
-      .single();
-    
-    if (lead) {
-      inserted.push({
-        id: lead.id,
-        company: job.company,
-        city: job.city,
-        daysAgo: job.daysAgo
-      });
-    }
+// POST /growth/scout/run — Run all scouts (or specific ones)
+router.post('/scout/run', basicAuth, async (req, res) => {
+  const { scouts, autoSend = false, cities } = req.body;
+  console.log('[index.js] Scout run triggered via API');
+  try {
+    const report = await runAllScouts(supabase, { scouts, autoSend, cities });
+    lastScoutReport = report;
+    res.json({ success: true, ...report });
+  } catch (err) {
+    console.error('[index.js] Scout run error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
   }
-  
-  res.json({
-    success: true,
-    jobsFound: jobs.length,
-    newLeads: inserted.length,
-    leads: inserted
-  });
+});
+
+// POST /growth/scout/indeed — Legacy compat: runs just Indeed via orchestrator
+router.post('/scout/indeed', basicAuth, async (req, res) => {
+  console.log('[index.js] Indeed scout triggered');
+  try {
+    const report = await runAllScouts(supabase, { scouts: ['indeed', 'job_portals'] });
+    lastScoutReport = report;
+    res.json({ success: true, newLeads: report.inserted, ...report });
+  } catch (err) {
+    console.error('[index.js] Indeed scout error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /growth/scout/places — Google Places only
+router.post('/scout/places', basicAuth, async (req, res) => {
+  const { cities, autoSend = false } = req.body;
+  console.log('[index.js] Google Places scout triggered');
+  try {
+    const report = await runAllScouts(supabase, { scouts: ['google_places'], cities, autoSend });
+    lastScoutReport = report;
+    res.json({ success: true, newLeads: report.inserted, ...report });
+  } catch (err) {
+    console.error('[index.js] Places scout error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /growth/scout/status — Last scout report
+router.get('/scout/status', basicAuth, (req, res) => {
+  res.json({ success: true, lastRun: lastScoutReport });
 });
 
 // ========== DASHBOARD & REVIEW ==========
@@ -725,11 +725,15 @@ router.get('/dashboard', basicAuth, async (req, res) => {
   }
 
   async function scoutIndeed() {
-    toast('Scouting Indeed...', '#238636');
-    const r = await fetch('/growth/scout/indeed', { method:'POST' });
+    toast('🔍 Scouting all portals + Google Places...', '#238636');
+    const r = await fetch('/growth/scout/run', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ scouts: ['indeed', 'job_portals', 'google_places'], autoSend: false })
+    });
     const d = await r.json();
-    toast('Found ' + (d.newLeads || 0) + ' new leads 🔍');
-    setTimeout(() => window.location.reload(), 2000);
+    toast(`Found ${d.inserted || 0} new leads across all sources ✅`);
+    setTimeout(() => window.location.reload(), 2500);
   }
 
   async function approveLead(id) {

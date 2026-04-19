@@ -366,7 +366,7 @@ try {
     }
   });
 
-  // ── Growth follow-ups — daily at 9 AM (Saudi time = UTC+3, so 6 AM UTC) ──
+  // ── Growth follow-ups — daily 9 AM Saudi (6 AM UTC) ──
   cron.schedule('0 6 * * *', async () => {
     console.log('[Cron] Running daily growth follow-ups...');
     try {
@@ -376,7 +376,50 @@ try {
     }
   });
 
-  console.log('[Cron] ✅ All schedulers started: reminders (30m) + slot cleanup (1h) + health check (10m) + growth follow-ups (daily 9AM)');
+  // ── Job portal scout — every 6 hours ──
+  cron.schedule('0 */6 * * *', async () => {
+    console.log('[Cron] Running job portal scout (6h)...');
+    try {
+      const { runAllScouts } = require('./growth/scouts/orchestrator');
+      const { createClient } = require('@supabase/supabase-js');
+      const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+      const report = await runAllScouts(sb, { scouts: ['indeed', 'job_portals'], autoSend: false });
+      console.log(`[Cron] Job scout done: ${report.inserted} new leads`);
+    } catch (e) {
+      console.error('[Cron] Job scout error:', e.message);
+    }
+  });
+
+  // ── Google Places scout — weekly Sunday 7 AM Saudi (4 AM UTC) ──
+  cron.schedule('0 4 * * 0', async () => {
+    console.log('[Cron] Running weekly Google Places scout...');
+    try {
+      const { runAllScouts } = require('./growth/scouts/orchestrator');
+      const { createClient } = require('@supabase/supabase-js');
+      const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+      const report = await runAllScouts(sb, { scouts: ['google_places'], autoSend: false });
+      console.log(`[Cron] Places scout done: ${report.inserted} new leads`);
+    } catch (e) {
+      console.error('[Cron] Places scout error:', e.message);
+    }
+  });
+
+  // ── Auto-batch — daily 10 AM Saudi (7 AM UTC), after scout ──
+  cron.schedule('0 7 * * *', async () => {
+    console.log('[Cron] Running daily auto-batch send...');
+    try {
+      const { processBatch } = require('./growth/sender');
+      const { createClient } = require('@supabase/supabase-js');
+      const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+      const results = await processBatch(10);
+      const sent = results.filter(r => r.sent || r.status === 'messaged').length;
+      console.log(`[Cron] Auto-batch done: ${sent} messages sent`);
+    } catch (e) {
+      console.error('[Cron] Auto-batch error:', e.message);
+    }
+  });
+
+  console.log('[Cron] ✅ All schedulers started: reminders (30m) + cleanup (1h) + health (10m) + follow-ups (daily 9AM) + job scout (6h) + places scout (weekly) + auto-batch (daily 10AM)');
 } catch (e) {
   console.log('[Cron] node-cron not available, reminders must be triggered manually');
 }
