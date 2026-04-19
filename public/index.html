@@ -763,6 +763,15 @@
   // ════════════════════════════
   // CONTACT FLOW (CHAT)
   // ════════════════════════════
+  const chatMsgs = document.getElementById('chat-msgs');
+  const chatOpts = document.getElementById('chat-opts');
+  const chatCrumb = document.getElementById('chat-crumb');
+  const chatWindow = document.getElementById('chat-window');
+
+  const flow = {
+    start: {
+      text: "أهلاً بك في وعي Qudozen. كيف يمكن لهذا النظام خدمتك اليوم؟",
+      opts: [
         { text: "أريد فهم الطبقات الثلاث", next: "understanding" },
         { text: "أواجه مشكلة تقنية", next: "support" },
         { text: "أريد الاشتراك (عيادة جديدة)", next: "onboarding" },
