@@ -741,7 +741,7 @@ router.get('/dashboard', basicAuth, async (req, res) => {
       body: JSON.stringify({ scouts: ['indeed', 'job_portals', 'google_places'], autoSend: false })
     });
     const d = await r.json();
-    toast(`Found ${d.inserted || 0} new leads across all sources ✅`);
+    toast('Found ' + (d.inserted || 0) + ' new leads across all sources ✅');
     setTimeout(() => window.location.reload(), 2500);
   }
 
