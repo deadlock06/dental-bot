@@ -187,12 +187,13 @@ function keywordFallback(text, currentFlow = null) {
     'leave a review': 'reviews', 'leave review': 'reviews', 'تقييم العيادة': 'reviews',
     'talk to staff': 'human', 'talk to someone': 'human', 'التحدث مع الفريق': 'human',
     'إعادة جدولة': 'reschedule', 'إلغاء الموعد': 'cancel',
-    'الأسعار': 'prices', 'الموقع': 'location'
+    'الأسعار': 'prices', 'الموقع': 'location',
+    'تنظيف وتلميع': 'booking', 'حشوات': 'booking', 'تقويم': 'booking', 'زراعة': 'booking'
   };
   if (exactMap[t]) return { intent: exactMap[t], detected_language: lang, extracted_value: null, confidence: 'high' };
 
   // English keyword patterns
-  if (/book|appointment|schedule|reserve|pain|hurt|ache|consultation|emergency|checkup|visit|session|physio|rehab|treatment|laser|filling|braces|cleaning|extraction/i.test(t))
+  if (/book|appointment|schedule|reserve|pain|hurt|ache|consultation|emergency|checkup|visit|session|physio|rehab|treatment|laser|filling|braces|cleaning|extraction|toothache|gum|bleeding|broken tooth|wisdom|dentist/i.test(t))
     return { intent: 'booking', detected_language: 'en', extracted_value: null, confidence: 'medium' };
   if (/\bprice|cost|\bfee\b|charges|how much|affordable|discount|payment plan|treatment fee|rates?\b|packages?\b|offers?\b/i.test(t))
     return { intent: 'prices', detected_language: 'en', extracted_value: null, confidence: 'medium' };
@@ -216,7 +217,7 @@ function keywordFallback(text, currentFlow = null) {
     return { intent: 'greeting', detected_language: 'en', extracted_value: null, confidence: 'medium' };
 
   // Arabic keyword patterns
-  if (/أبغى موعد|حابب أحجز|بدي موعد|أريد حجز|يوجع|ألم|وجع|محتاج جلسة|أبغى أجي|فحص|كشف|استشارة|حجز|طوارئ/i.test(t))
+  if (/أبغى موعد|حابب أحجز|بدي موعد|أريد حجز|يوجع|ألم|وجع|محتاج جلسة|أبغى أجي|فحص|كشف|استشارة|حجز|طوارئ|سني|ضرسي|عصب|خلع|تقويم|تبييض|زراعة/i.test(t))
     return { intent: 'booking', detected_language: 'ar', extracted_value: null, confidence: 'medium' };
   if (/كم تكلف|كم السعر|أسعاركم|كم سعر|غالي|رخيص|عندكم عروض|خصومات|تكلفة العلاج|بكم|قديش/i.test(t))
     return { intent: 'prices', detected_language: 'ar', extracted_value: null, confidence: 'medium' };

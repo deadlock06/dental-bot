@@ -65,10 +65,13 @@ function menuEN(clinicOrName) {
   const showReschedule = cfg?.features?.reschedule       !== false;
   const showCancel     = cfg?.features?.cancel           !== false;
   
-  let menu = `${welcome}\nI'm your AI autonomous assistant, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment\n2️⃣ My appointment\n`;
+  const assistantType = vertical === 'dental' ? 'dental assistant' : 'autonomous assistant';
+  const teamLabel    = vertical === 'dental' ? 'Meet Our Doctors 👨‍⚕️' : 'Our Team 👨‍⚕️';
+  
+  let menu = `${welcome}\nI'm your AI ${assistantType}, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment\n2️⃣ My appointment\n`;
   if (showReschedule) menu += `3️⃣ Reschedule\n`;
   if (showCancel)     menu += `4️⃣ Cancel appointment\n`;
-  menu += `5️⃣ Our services\n6️⃣ Our Team 👨‍⚕️\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍⚕️ (type 10)\n\n💡 Tap a number or tell me what you need 😊`;
+  menu += `5️⃣ Our services\n6️⃣ ${teamLabel}\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍⚕️ (type 10)\n\n💡 Tap a number or tell me what you need 😊`;
   return menu;
 }
 
@@ -84,10 +87,13 @@ function menuAR(clinicOrName) {
   const showReschedule = cfg?.features?.reschedule       !== false;
   const showCancel     = cfg?.features?.cancel           !== false;
   
-  let menu = `${welcome}\nأنا مساعدك الذكي، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد\n2️⃣ موعدي الحالي\n`;
+  const assistantType = vertical === 'dental' ? 'لطب الأسنان' : 'الذكي';
+  const teamLabel    = vertical === 'dental' ? 'تعرف على أطبائنا 👨‍⚕️' : 'تعرف على فريقنا 👨‍⚕️';
+  
+  let menu = `${welcome}\nأنا مساعدك ${assistantType}، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد\n2️⃣ موعدي الحالي\n`;
   if (showReschedule) menu += `3️⃣ إعادة جدولة\n`;
   if (showCancel)     menu += `4️⃣ إلغاء الموعد\n`;
-  menu += `5️⃣ خدماتنا\n6️⃣ تعرف على فريقنا 👨‍⚕️\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️ (اكتب 10)\n\n💡 اضغط رقماً أو أخبرني بما تحتاج 😊`;
+  menu += `5️⃣ خدماتنا\n6️⃣ ${teamLabel}\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️ (اكتب 10)\n\n💡 اضغط رقماً أو أخبرني بما تحتاج 😊`;
   return menu;
 }
 
