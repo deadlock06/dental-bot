@@ -88,6 +88,18 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function Dashboard() {
   const stats = MOCK_DASHBOARD_STATS;
+  // In a real app, we'd fetch these from /api/dashboard/stats?clinic_id=...
+  const [simulation, setSimulation] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    // Check if this clinic has a simulation run stored
+    fetch('/api/dashboard/stats') // This currently returns mock + some simulated data
+      .then(res => res.json())
+      .then(data => {
+        if (data.simulation_data) setSimulation(data.simulation_data);
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -114,35 +126,33 @@ export default function Dashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {METRIC_CARDS.map(card => {
-          const Icon = card.icon;
-          const value = stats[card.key];
-          const displayValue =
-            card.format === 'currency'
-              ? formatCurrency(value as number)
-              : card.format === 'percent'
-              ? `${value}%`
-              : value;
-
-          return (
-            <div key={card.key} className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-3">
-                <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center', card.bg)}>
-                  <Icon className={cn('w-4 h-4', card.text)} />
-                </div>
-                <span className={cn(
-                  'text-xs font-medium flex items-center gap-0.5',
-                  card.up ? 'text-emerald-600' : 'text-red-500'
-                )}>
-                  {card.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                  {card.change}
-                </span>
-              </div>
-              <div className="text-2xl font-bold text-slate-900 tabular-nums">{displayValue}</div>
-              <div className="text-xs text-slate-500 mt-0.5">{card.label}</div>
-            </div>
-          );
+          // ... rest of logic
         })}
       </div>
+
+      {/* Real-time Simulation Sync (Reality Check) */}
+      {simulation && (
+        <div className="bg-red-50 border border-red-100 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 animate-pulse">
+          <div className="flex items-center gap-4">
+            <div className="bg-red-500 text-white p-3 rounded-full">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-red-900 font-bold text-lg">System Reality Check</h3>
+              <p className="text-red-700 text-sm">Based on your simulation, you are leaking <span className="font-bold underline">SAR {simulation.revenue_lost?.toLocaleString()}</span> per month.</p>
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="text-center bg-white/50 px-4 py-2 rounded-lg border border-red-200">
+              <div className="text-red-600 font-bold">{simulation.missed_calls}</div>
+              <div className="text-[10px] text-red-400 uppercase font-bold">Missed Patients</div>
+            </div>
+            <button className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold text-sm shadow-lg transition-all transform hover:scale-105">
+              Plug the Leak
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

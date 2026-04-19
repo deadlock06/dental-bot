@@ -31,6 +31,7 @@
       direction: rtl;
     }
 
+
     /* ════════════════════════════
        UTILITIES & ANIMATIONS
     ════════════════════════════ */
@@ -361,29 +362,73 @@
     }
     .cnav:hover { color: var(--aqua); border-color: rgba(94, 234, 212, 0.2); }
 
-    @media (max-width: 480px) {
-      #chat-window { width: calc(100vw - 32px); left: 16px; bottom: 80px; }
-      #chat-fab { left: 16px; bottom: 16px; }
+    @media (max-width: 768px) {
+      /* Navigation */
+      .nav-links { 
+        display: none; 
+        flex-direction: column; 
+        position: fixed; 
+        top: 70px; left: 0; right: 0; 
+        background: rgba(11, 17, 32, 0.98); 
+        padding: 40px 20px; 
+        gap: 24px; 
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(20px);
+      }
+      .nav-links.open { display: flex !important; }
+      .nav-toggle { display: block !important; }
+      nav { height: 70px !important; }
+      .nav-inner { padding: 0 20px !important; }
+      
+      /* Hero */
+      #hero { padding: 140px 20px 60px !important; }
+      h1 { font-size: clamp(32px, 10vw, 48px) !important; letter-spacing: -1px !important; line-height: 1.1 !important; }
+      .hero-p { font-size: 16px !important; margin-bottom: 32px !important; }
+      .hero-stats { gap: 20px !important; margin-top: 50px !important; justify-content: space-around !important; }
+      .stat-val { font-size: 26px !important; }
+      .btn { width: 100% !important; padding: 16px !important; margin-bottom: 12px; }
+      
+      /* Dashboard Metrics */
+      .dash-wrap { padding: 24px !important; border-radius: 20px !important; }
+      .dash-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+      .dash-side { 
+        border-right: none !important; 
+        border-top: 1px solid var(--border) !important; 
+        padding: 24px 0 0 !important; 
+        margin-top: 10px !important;
+      }
+      
+      /* Pricing */
+      .price-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+      .price-card { padding: 40px 24px !important; border-radius: 24px !important; }
+      .price-amt { font-size: 48px !important; }
+      
+      /* Layers */
+      .layer-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+      .layer-card { padding: 28px !important; }
+      
+      /* Chat Window Tweaks */
+      #chat-window { bottom: 80px !important; left: 16px !important; width: calc(100vw - 32px) !important; height: 75vh !important; }
+      #chat-fab { bottom: 20px !important; left: 20px !important; }
     }
   </style>
 </head>
-<body>
-
-<body>
+<body id="top">
 
 <!-- ════════════════════════════
      NAV
 ════════════════════════════ -->
 <nav id="navbar">
   <div class="inner nav-inner">
-    <a href="#" class="logo">Qudo<span>zen</span></a>
-    <div class="nav-links">
+    <a href="#top" class="logo">Qudo<span>zen</span></a>
+    <div class="nav-links" id="navLinks">
       <a href="#system">النظام</a>
       <a href="#dashboard">مركز القيادة</a>
       <a href="#pricing">البنية التحتية</a>
       <a href="#swarm">السوارم</a>
-      <a href="https://wa.me/14155238886" class="cta-mini">ابدأ التحول</a>
+      <a href="https://wa.me/966570733834" class="cta-mini">ابدأ التحول</a>
     </div>
+    <button class="nav-toggle" id="navToggle" style="display:none; background:none; border:none; color:var(--text); font-size:24px; cursor:pointer; padding:10px;">☰</button>
   </div>
 </nav>
 
@@ -718,15 +763,6 @@
   // ════════════════════════════
   // CONTACT FLOW (CHAT)
   // ════════════════════════════
-  const chatMsgs = document.getElementById('chat-msgs');
-  const chatOpts = document.getElementById('chat-opts');
-  const chatCrumb = document.getElementById('chat-crumb');
-  const chatWindow = document.getElementById('chat-window');
-
-  const flow = {
-    start: {
-      text: "أهلاً بك في وعي Qudozen. كيف يمكن لهذا النظام خدمتك اليوم؟",
-      opts: [
         { text: "أريد فهم الطبقات الثلاث", next: "understanding" },
         { text: "أواجه مشكلة تقنية", next: "support" },
         { text: "أريد الاشتراك (عيادة جديدة)", next: "onboarding" },

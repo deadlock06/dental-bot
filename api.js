@@ -54,6 +54,42 @@ router.post('/appointments', async (req, res) => res.json({ success: true }));
 router.put('/appointments/:id', async (req, res) => res.json({ success: true }));
 router.get('/doctors', async (req, res) => res.json([]));
 router.put('/doctors/:id/schedule', async (req, res) => res.json({ success: true }));
+// POST /api/sync-simulation
+router.post('/sync-simulation', async (req, res) => {
+  try {
+    const { phone, clinic_name, doctor_name, revenue_lost, missed_calls, pain_signal, simulation_data } = req.body;
+    
+    if (!phone) return res.status(400).json({ error: 'Missing phone' });
+
+    // UPSERT into growth_leads_v2
+    const upsertData = {
+      phone,
+      clinic_name,
+      doctor_name,
+      revenue_lost,
+      missed_calls,
+      pain_signal,
+      simulation_data,
+      status: 'simulated',
+      updated_at: new Date().toISOString()
+    };
+
+    const url = `${SUPABASE_URL}/rest/v1/growth_leads_v2`;
+    const response = await axios.post(url, upsertData, {
+      headers: {
+        ...headers,
+        'Prefer': 'resolution=merge-duplicates' // Handle UPSERT logic
+      }
+    });
+
+    console.log(`[Sync] Simulation stored for ${phone}`);
+    res.json({ success: true, data: response.data });
+  } catch (err) {
+    console.error('[Sync] Error:', err.response?.data || err.message);
+    res.status(500).json({ error: 'Sync failed' });
+  }
+});
+
 router.get('/analytics', async (req, res) => res.json({}));
 
 module.exports = router;

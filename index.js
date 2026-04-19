@@ -1,7 +1,13 @@
 require('dotenv').config(); // must be first — loads env vars before any module reads them
 const express = require('express');
-const path = require('path');
-const app = express();
+const helmet  = require('helmet');
+const twilio  = require('twilio');
+const path    = require('path');
+const app     = express();
+
+app.use(helmet({
+  contentSecurityPolicy: false, // allow external assets/scripts for now
+}));
 const apiRoutes = require('./api');
 app.use('/api', apiRoutes);
 
@@ -68,7 +74,8 @@ app.get('/webhook', (req, res) => {
 // ─────────────────────────────────────────────
 // Incoming WhatsApp messages
 // ─────────────────────────────────────────────
-app.post('/webhook', async (req, res) => {
+// Incoming WhatsApp messages — Secured with Twilio Signature Verification
+app.post('/webhook', twilio.webhook(), async (req, res) => {
   res.status(200).end();
 
   const fromPhone = req.body.From?.replace('whatsapp:', '') || '';
@@ -187,16 +194,18 @@ function parseDateToISO(dateStr) {
 app.post('/send-reminders', async (req, res) => {
   res.sendStatus(200);
 
-  try {
-    const now          = new Date();
-    const todayISO     = now.toISOString().split('T')[0];
-    const tomorrowISO  = new Date(now.getTime() + 86400000).toISOString().split('T')[0];
-    const yesterdayISO = new Date(now.getTime() - 86400000).toISOString().split('T')[0];
+    const { getAppointmentsDueTomorrow, getAppointmentsDueInOneHour, getAppointmentsDueFollowUp } = require('./db');
+    
+    // Fetch specifically what we need for this run
+    const tomorrowLeads  = await getAppointmentsDueTomorrow();
+    const oneHourLeads   = await getAppointmentsDueInOneHour();
+    const followUpLeads  = await getAppointmentsDueFollowUp();
+    
+    console.log(`[Reminders] Processing ${tomorrowLeads.length} tomorrows, ${oneHourLeads.length} 1-hour, ${followUpLeads.length} follow-ups`);
+    
+    const allReminders = [...tomorrowLeads, ...oneHourLeads, ...followUpLeads];
 
-    const all = await getAppointmentsForReminder(() => true);
-    console.log(`[Reminders] Processing ${all.length} appointments`);
-
-    for (const appt of all) {
+    for (const appt of allReminders) {
       // Phase 2: prefer stored ISO column; fall back to parsing the display string
       const apptDateISO = appt.preferred_date_iso || parseDateToISO(appt.preferred_date);
       if (!apptDateISO) {
@@ -360,7 +369,8 @@ try {
       const botPhoneRaw = process.env.WHATSAPP_PHONE_ID || '';
       const botPhone = botPhoneRaw.replace(/^whatsapp:/i, '').replace(/^\+/, '');
       const clinic = await getClinic(botPhone);
-      await runPeriodicCheck(clinic?.staff_phone || null);
+      const adminPhone = process.env.ADMIN_PHONE || clinic?.staff_phone || null;
+      await runPeriodicCheck(adminPhone);
     } catch (e) {
       console.error('[Cron] Health check error:', e.message);
     }

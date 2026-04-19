@@ -990,6 +990,9 @@
       appendBubble(msg);
       if (msgIndex < MESSAGES.length) {
         setTimeout(showNextBubble, 800 + Math.random() * 400);
+      } else {
+        // Chat finished — sync data!
+        setTimeout(syncSimulation, 1000);
       }
     }
   }
@@ -1005,6 +1008,36 @@
     // keep typing indicator at bottom
     chatBody.appendChild(typingEl);
     chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  /* ── 9.1 Sync to Dashboard ─────────────────── */
+  async function syncSimulation() {
+    console.log('[Sync] Sending results to dashboard...');
+    const data = {
+      phone: params.get('phone') || '',
+      clinic_name: clinic,
+      doctor_name: name,
+      revenue_lost: cfg.monthlyLoss,
+      missed_calls: cfg.missedCalls,
+      pain_signal: pain,
+      simulation_data: {
+        perDay: cfg.perDay,
+        lostAppts: cfg.lostAppts,
+        roiVerdict: document.getElementById('roi-verdict').innerText
+      }
+    };
+
+    try {
+      const response = await fetch('/api/sync-simulation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const res = await response.json();
+      console.log('[Sync] Success:', res);
+    } catch (e) {
+      console.error('[Sync] Failed:', e.message);
+    }
   }
 
   /* ── 10. Intersection Observer triggers ──────── */

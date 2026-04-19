@@ -2,6 +2,7 @@ const { getPatient, insertPatient, savePatient, saveAppointment, getAppointment,
 const { sendMessage, sendMainMenu, sendTreatmentMenu, sendDoctorMenu, sendTimeSlotMenu, sendInteractiveList } = require('./whatsapp');
 const { detectIntent, extractDate, extractTimeSlot } = require('./ai');
 const { withMonitor, validateFlowState, logError } = require('./monitor');
+const { DateTime } = require('luxon');
 
 let calendarLib = null;
 try {
@@ -108,10 +109,10 @@ async function handleMessage(phone, text, clinic) {
     return;
   }
   processingLocks.set(phone, true);
-  // Release lock after 3 seconds
-  setTimeout(() => processingLocks.delete(phone), 3000);
 
-  const msg = text.trim();
+  try {
+    const msg = text.trim();
+    // ... rest of logic
 
   const cl = clinic || {
     name: 'Our Clinic',
@@ -330,7 +331,11 @@ async function handleMessage(phone, text, clinic) {
     return handleCancelFlow(phone, msg, lang, ar, step, fd, patient, cl);
   }
 
-  return routeIntent(phone, intent, lang, ar, msg, patient, cl);
+    return routeIntent(phone, intent, lang, ar, msg, patient, cl);
+  } finally {
+    // Release lock after processing or on error
+    processingLocks.delete(phone);
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -397,8 +402,10 @@ function normalizeDate(dateStr) {
 function calculateRelativeDate(text) {
   const t = text.toLowerCase().trim();
   const cleaned = t.replace(/^(ok|okay|how about|what about|maybe|perhaps|let's try|try)\s+/i, '').trim();
-  const now = new Date();
-  const fmt = (d) => d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  
+  // Pin to Saudi Arabia (Asia/Riyadh) for all relative calculations
+  const now = DateTime.now().setZone('Asia/Riyadh');
+  const fmt = (d) => d.toFormat('cccc, LLLL d, yyyy'); // matches "Tuesday, April 20, 2026"
 
   if (/^(tomorrow|tmrw|غداً|بكرة|غدا)$/i.test(cleaned))
     return fmt(new Date(now.getTime() + 86400000));
