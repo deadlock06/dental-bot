@@ -126,7 +126,7 @@ function normalizePhone(p) {
 
 // Ghost Room 2.0 — dynamic animated revenue calculator
 router.get('/room', (req, res) => {
-  const clinicName = req.query.clinic ? decodeURIComponent(req.query.clinic) : 'عيادتك';
+  const clinicName = req.query.clinic ? decodeURIComponent(req.query.clinic) : 'وكالتك';
   const cityName   = req.query.city   ? decodeURIComponent(req.query.city)   : 'المملكة';
   const pain       = req.query.pain   || 'bad_reviews';
   const ownerName  = req.query.name   ? decodeURIComponent(req.query.name)   : '';
@@ -186,7 +186,7 @@ router.get('/room', (req, res) => {
   <div class="card">
     <div class="card-label">خسارتك الشهرية المقدرة</div>
     <div class="counter" id="counter">0</div>
-    <div class="counter-sub">ريال سعودي — مرضى فقدتهم لمنافسيك</div>
+    <div class="counter-sub">ريال سعودي — صفقات فقدتها لمنافسيك</div>
   </div>
 
   <div class="card">
@@ -209,7 +209,7 @@ router.get('/room', (req, res) => {
     🤖 جرّب المساعد مجاناً
   </a>
 
-  <div class="social pulse">🏥 47 عيادة في المملكة تستخدم Qudozen الآن</div>
+  <div class="social pulse">🏢 47 وكالة عقارية في المملكة تستخدم Qudozen الآن</div>
 </div>
 
 <script>

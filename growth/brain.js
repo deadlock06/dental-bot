@@ -33,24 +33,24 @@ function buildGhostRoomUrl(lead) {
 
 const AR_TEMPLATES = {
   bad_reviews: (lead, url) =>
-    `كم مريضاً خسرته ${lead.business_name || 'عيادتك'} هذا الشهر بسبب ردود الفعل البطيئة؟ الأرقام ستصدمك — ${url} -جيك`,
+    `كم صفقة خسرتها ${lead.business_name || 'وكالتك'} هذا الشهر بسبب ردود الفعل البطيئة؟ الأرقام ستصدمك — ${url} -جيك`,
   hiring_receptionist: (lead, url) =>
-    `رأيت أن ${lead.business_name || 'عيادتك'} تبحث عن موظف استقبال — هل تعلم أن الذكاء الاصطناعي يرد على المرضى في 3 ثوانٍ على مدار الساعة بـ 299 ريال فقط؟ ${url} -جيك`,
+    `رأيت أن ${lead.business_name || 'وكالتك'} تبحث عن موظف استقبال — هل تعلم أن الذكاء الاصطناعي يرد على العملاء في 3 ثوانٍ على مدار الساعة بـ 299 ريال فقط؟ ${url} -جيك`,
   slow_response: (lead, url) =>
-    `${lead.name || 'دكتور'}، كم مريضاً اتصل بـ${lead.business_name || 'عيادتك'} ولم يجد رداً فذهب لمنافس؟ الرقم الحقيقي هنا — ${url} -جيك`,
+    `${lead.name || 'أخي'}، كم عميلاً اتصل بـ${lead.business_name || 'وكالتك'} ولم يجد رداً فذهب لمنافس؟ الرقم الحقيقي هنا — ${url} -جيك`,
   no_website: (lead, url) =>
-    `${lead.name || 'دكتور'}، ${lead.business_name || 'عيادتك'} غير موجودة على الإنترنت — يعني كل مريض يبحث عن طبيب أسنان في ${lead.city || 'مدينتك'} لن يجدك. هل تريد معرفة كم تخسر؟ ${url} -جيك`,
+    `${lead.name || 'أخي'}، ${lead.business_name || 'وكالتك'} غير موجودة على الإنترنت — يعني كل عميل يبحث عن عقار في ${lead.city || 'مدينتك'} لن يجدك. هل تريد معرفة كم تخسر؟ ${url} -جيك`,
 };
 
 const EN_TEMPLATES = {
   bad_reviews: (lead, url) =>
-    `How many patients has ${lead.business_name || 'your clinic'} lost this month to slow responses — have you ever calculated the number? ${url} -Jake`,
+    `How many deals has ${lead.business_name || 'your agency'} lost this month to slow responses — have you ever calculated the number? ${url} -Jake`,
   hiring_receptionist: (lead, url) =>
-    `Noticed ${lead.business_name || 'your clinic'} is hiring a receptionist — what if an AI answered 24/7 for 299 SAR instead of monthly salary + benefits? ${url} -Jake`,
+    `Noticed ${lead.business_name || 'your agency'} is hiring a receptionist — what if an AI answered 24/7 for 299 SAR instead of monthly salary + benefits? ${url} -Jake`,
   slow_response: (lead, url) =>
-    `Dr. ${lead.name || ''}, every hour ${lead.business_name || 'your clinic'} takes to reply is a patient deciding on your competitor — want to see the exact number? ${url} -Jake`,
+    `${lead.name || ''}, every hour ${lead.business_name || 'your agency'} takes to reply is a client deciding on your competitor — want to see the exact number? ${url} -Jake`,
   no_website: (lead, url) =>
-    `${lead.business_name || 'Your clinic'} doesn't appear online — every patient searching for a dentist in ${lead.city || 'your city'} finds your competitor instead. Curious how much that costs? ${url} -Jake`,
+    `${lead.business_name || 'Your agency'} doesn't appear online — every client searching for property in ${lead.city || 'your city'} finds your competitor instead. Curious how much that costs? ${url} -Jake`,
 };
 
 function fallbackMessage(lead) {
@@ -70,22 +70,22 @@ async function generateMessage(lead) {
   const sig = lang === 'ar' ? '-جيك' : '-Jake';
 
   const systemPrompt = lang === 'ar'
-    ? `أنت جيك، متخصص في التواصل مع عيادات الأسنان السعودية لعرض مساعد استقبال يعمل بالذكاء الاصطناعي من Qudozen.
+    ? `أنت جيك، متخصص في التواصل مع وكالات العقارات السعودية لعرض مساعد استقبال يعمل بالذكاء الاصطناعي من Qudozen.
 القواعد:
 - جملة واحدة فقط (جملتان إذا ضرورة قصوى).
 - افتح بفجوة فضول — لا تبدأ بـ"مرحبا" العادية.
 - اذكر نقطة الألم بتفصيل محدد.
-- استخدم تأثير الخسارة ("تخسر مرضى").
+- استخدم تأثير الخسارة ("تخسر صفقات").
 - انتهِ بسؤال مفتوح (ليس نعم/لا).
 - وقّع بـ${sig} في النهاية.
 - أقل من 300 حرف.
 - لا تكن روبوتياً.`
-    : `You are Jake, outreach specialist for Qudozen AI dental receptionist in Saudi Arabia.
+    : `You are Jake, outreach specialist for Qudozen AI property assistant in Saudi Arabia.
 Rules:
 - ONE sentence (two max if essential).
 - Open with a curiosity gap — NOT "Hi I wanted to reach out".
 - Mention their specific pain with exact detail.
-- Use loss aversion ("you're losing patients").
+- Use loss aversion ("you're losing deals").
 - End with an open question (not yes/no).
 - Sign ${sig} at the end.
 - Under 300 characters.

@@ -70,8 +70,8 @@ const MENU_SECTIONS_EN = [
   {
     title: 'Information',
     rows: [
-      { id: '5',  title: 'Our Services 🦷',    description: 'View treatments' },
-      { id: '6',  title: 'Our Doctors 👨‍⚕️',    description: 'Meet our team' },
+      { id: '5',  title: 'Our Listings 🏠',     description: 'View properties' },
+      { id: '6',  title: 'Our Agents 🤝',      description: 'Meet our agents' },
       { id: '7',  title: 'Prices 💰',           description: 'View price list' },
       { id: '8',  title: 'Location 📍',         description: 'Find us on maps' },
       { id: '9',  title: 'Leave Review ⭐',     description: 'Share your experience' },
@@ -96,11 +96,11 @@ const MENU_SECTIONS_AR = [
   {
     title: 'المعلومات',
     rows: [
-      { id: '5',  title: 'خدماتنا 🦷',           description: 'عرض العلاجات' },
-      { id: '6',  title: 'أطباؤنا 👨‍⚕️',           description: 'تعرف على فريقنا' },
+      { id: '5',  title: 'عقاراتنا 🏠',            description: 'عرض العقارات' },
+      { id: '6',  title: 'وكلاؤنا 🤝',            description: 'تعرف على وكلائنا' },
       { id: '7',  title: 'الأسعار 💰',            description: 'قائمة الأسعار' },
       { id: '8',  title: 'الموقع 📍',             description: 'جدنا على الخريطة' },
-      { id: '9',  title: 'تقييم العيادة ⭐',      description: 'شارك تجربتك' },
+      { id: '9',  title: 'تقييم الوكالة ⭐',      description: 'شارك تجربتك' },
       { id: '10', title: 'التحدث مع الفريق 👩‍⚕️', description: 'تحدث مع موظف' }
     ]
   }
@@ -114,7 +114,7 @@ async function sendMainMenu(to, clinicName, ar, plainTextFallback) {
   if (ar) {
     await sendInteractiveList(
       to,
-      `أهلاً في ${clinicName}! 🦷`,
+      `أهلاً في ${clinicName}! 🏠`,
       'كيف يمكنني مساعدتك اليوم؟',
       'اختر خدمة',
       MENU_SECTIONS_AR,
@@ -123,8 +123,8 @@ async function sendMainMenu(to, clinicName, ar, plainTextFallback) {
   } else {
     await sendInteractiveList(
       to,
-      `Welcome to ${clinicName}! 🦷`,
-      "I'm your AI dental assistant. How can I help you today?",
+      `Welcome to ${clinicName}! 🏠`,
+      "I'm your AI real estate assistant. How can I help you today?",
       'Choose an option',
       MENU_SECTIONS_EN,
       plainTextFallback
@@ -153,10 +153,10 @@ async function sendDoctorMenu(to, ar, doctors, plainTextFallback) {
 
   await sendInteractiveList(
     to,
-    ar ? '👨‍⚕️ اختر طبيبك' : '👨‍⚕️ Choose Your Doctor',
-    ar ? 'اضغط لاختيار طبيب أو تابع بدون تفضيل' : 'Tap to select a doctor or continue without preference',
+    ar ? '🤝 اختر وكيلك' : '🤝 Choose Your Agent',
+    ar ? 'اضغط لاختيار وكيل أو تابع بدون تفضيل' : 'Tap to select an agent or continue without preference',
     ar ? 'اختر' : 'Select',
-    [{ title: ar ? 'فريقنا الطبي' : 'Our Dental Team', rows }],
+    [{ title: ar ? 'فريقنا' : 'Our Team', rows }],
     plainTextFallback
   );
 }
@@ -164,35 +164,35 @@ async function sendDoctorMenu(to, ar, doctors, plainTextFallback) {
 // ─────────────────────────────────────────────
 // Treatment selection interactive list
 // ─────────────────────────────────────────────
-async function sendTreatmentMenu(to, ar, plainTextFallback) {
+async function sendPropertyTypeMenu(to, ar, plainTextFallback) {
   const rows = ar
     ? [
-        { id: '1', title: 'تنظيف وتلميع 🦷',       description: 'إزالة الجير والتلميع' },
-        { id: '2', title: 'حشوات',                  description: 'علاج التسوس' },
-        { id: '3', title: 'تقويم الأسنان 📐',       description: 'تقويم وتصحيح الأسنان' },
-        { id: '4', title: 'تبييض الأسنان ⚪',        description: 'تفتيح لون الأسنان' },
-        { id: '5', title: 'خلع',                    description: 'خلع سن' },
-        { id: '6', title: 'زراعة أسنان 🔬',         description: 'زراعة سن جذري' },
-        { id: '7', title: 'علاج العصب 🏥',          description: 'علاج قناة الجذر' },
-        { id: '8', title: 'أخرى / غير متأكد',       description: 'استشارة أو علاج آخر' }
+        { id: '1', title: 'شقة 🏢',              description: 'شقق للإيجار أو البيع' },
+        { id: '2', title: 'فيلا 🏡',             description: 'فلل ومنازل فاخرة' },
+        { id: '3', title: 'استوديو 🛏️',          description: 'وحدات استوديو' },
+        { id: '4', title: 'تاون هاوس 🏘️',        description: 'وحدات سكنية متلاصقة' },
+        { id: '5', title: 'مكتب 🏢',             description: 'مساحات تجارية ومكاتب' },
+        { id: '6', title: 'مستودع 🏭',           description: 'مستودعات وصناعي' },
+        { id: '7', title: 'أرض 🌍',              description: 'قطع أراضي' },
+        { id: '8', title: 'أخرى / غير متأكد',    description: 'استشارة عامة' }
       ]
     : [
-        { id: '1', title: 'Cleaning & Polishing 🦷', description: 'Scaling and polishing' },
-        { id: '2', title: 'Fillings',                description: 'Cavity treatment' },
-        { id: '3', title: 'Braces & Orthodontics 📐',description: 'Teeth straightening' },
-        { id: '4', title: 'Teeth Whitening ⚪',      description: 'Brighten your smile' },
-        { id: '5', title: 'Extraction',              description: 'Tooth removal' },
-        { id: '6', title: 'Dental Implants 🔬',     description: 'Permanent tooth replacement' },
-        { id: '7', title: 'Root Canal 🏥',           description: 'Root canal treatment' },
-        { id: '8', title: 'Other / Not sure',        description: 'Consultation or other' }
+        { id: '1', title: 'Apartment 🏢',         description: 'Apartments for rent or sale' },
+        { id: '2', title: 'Villa 🏡',             description: 'Luxury villas and homes' },
+        { id: '3', title: 'Studio 🛏️',           description: 'Studio units' },
+        { id: '4', title: 'Townhouse 🏘️',        description: 'Townhouse units' },
+        { id: '5', title: 'Office 🏢',            description: 'Commercial spaces' },
+        { id: '6', title: 'Warehouse 🏭',         description: 'Warehouses and industrial' },
+        { id: '7', title: 'Land 🌍',              description: 'Land plots' },
+        { id: '8', title: 'Other / Not sure',     description: 'General consultation' }
       ];
 
   await sendInteractiveList(
     to,
-    ar ? '🦷 نوع العلاج' : '🦷 Treatment Type',
-    ar ? 'ما نوع العلاج الذي تحتاجه؟' : 'What type of treatment do you need?',
-    ar ? 'اختر العلاج' : 'Select treatment',
-    [{ title: ar ? 'العلاجات' : 'Treatments', rows }],
+    ar ? '🏠 نوع العقار' : '🏠 Property Type',
+    ar ? 'ما نوع العقار الذي تبحث عنه؟' : 'What type of property are you looking for?',
+    ar ? 'اختر النوع' : 'Select type',
+    [{ title: ar ? 'أنواع العقارات' : 'Property Types', rows }],
     plainTextFallback
   );
 }
@@ -248,7 +248,7 @@ module.exports = {
   sendInteractiveList,
   sendMainMenu,
   sendDoctorMenu,
-  sendTreatmentMenu,
+  sendPropertyTypeMenu,
   sendTimeSlotMenu,
   sendButtonMessage
 };

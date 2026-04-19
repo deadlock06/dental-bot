@@ -10,22 +10,22 @@ const http  = require('http');
 const PORTALS = [
   {
     name:    'indeed_sa',
-    url:     'https://rss.indeed.com/rss?q=dental+receptionist&l=Saudi+Arabia&sort=date',
+    url:     'https://rss.indeed.com/rss?q=real+estate+receptionist&l=Saudi+Arabia&sort=date',
     parser:  parseIndeedRSS,
   },
   {
     name:    'indeed_sa_ar',
-    url:     'https://rss.indeed.com/rss?q=%D9%85%D9%88%D8%B8%D9%81+%D8%A7%D8%B3%D8%AA%D9%82%D8%A8%D8%A7%D9%84+%D8%A3%D8%B3%D9%86%D8%A7%D9%86&l=Saudi+Arabia&sort=date',
+    url:     'https://rss.indeed.com/rss?q=%D9%85%D9%88%D8%B8%D9%81+%D8%A7%D8%B3%D8%AA%D9%82%D8%A8%D8%A7%D9%84+%D8%B9%D9%82%D8%A7%D8%B1%D8%A7%D8%AA&l=Saudi+Arabia&sort=date',
     parser:  parseIndeedRSS,
   },
   {
     name:    'bayt',
-    url:     'https://www.bayt.com/en/rss/saudi-arabia-jobs/dental-receptionist-jobs/',
+    url:     'https://www.bayt.com/en/rss/saudi-arabia-jobs/real-estate-receptionist-jobs/',
     parser:  parseGenericRSS,
   },
   {
     name:    'naukrigulf',
-    url:     'https://www.naukrigulf.com/dental-receptionist-jobs-in-saudi-arabia',
+    url:     'https://www.naukrigulf.com/real-estate-receptionist-jobs-in-saudi-arabia',
     parser:  parseNaukrigulf,
   },
 ];
@@ -92,7 +92,7 @@ function parseIndeedRSS(xml, portalName) {
     const pubDate = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || '';
     const link    = item.match(/<link>(.*?)<\/link>/)?.[1] || '';
 
-    const isDental = /dental|dentist|أسنان|طب أسنان/i.test(title + desc);
+    const isDental = /real estate|property|عقار|وكالة عقارية/i.test(title + desc);
     if (!isDental) continue;
 
     const company = extractCompany(title) || extractCompany(desc) ||
@@ -137,7 +137,7 @@ function parseNaukrigulf(html, portalName) {
     const company = block.match(/comp-name[^>]*>([^<]+)/)?.[1]?.trim() || '';
     const city    = block.match(/loc[^>]*>([^<]+)/)?.[1]?.trim() || '';
 
-    const isDental = /dental|dentist|أسنان/i.test(title + company);
+    const isDental = /real estate|property|عقار/i.test(title + company);
     if (!isDental || !company) continue;
 
     leads.push({
