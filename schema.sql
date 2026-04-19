@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS clinics (
   review_link      TEXT,
   staff_phone      TEXT,
   plan             TEXT DEFAULT 'basic',
+  vertical         TEXT DEFAULT 'dental',
+  services         JSONB DEFAULT '[]',
   config           JSONB DEFAULT '{}',
   doctors          JSONB DEFAULT '[]',
   created_at       TIMESTAMPTZ DEFAULT now()

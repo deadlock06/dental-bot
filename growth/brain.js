@@ -38,8 +38,10 @@ const AR_TEMPLATES = {
     `رأيت أن ${lead.business_name || 'عيادتك'} تبحث عن موظف استقبال — هل تعلم أن الذكاء الاصطناعي يرد على المرضى في 3 ثوانٍ على مدار الساعة بـ 299 ريال فقط؟ ${url} -جيك`,
   slow_response: (lead, url) =>
     `${lead.name || 'دكتور'}، كم مريضاً اتصل بـ${lead.business_name || 'عيادتك'} ولم يجد رداً فذهب لمنافس؟ الرقم الحقيقي هنا — ${url} -جيك`,
-  no_website: (lead, url) =>
-    `${lead.name || 'دكتور'}، ${lead.business_name || 'عيادتك'} غير موجودة على الإنترنت — يعني كل مريض يبحث عن طبيب أسنان في ${lead.city || 'مدينتك'} لن يجدك. هل تريد معرفة كم تخسر؟ ${url} -جيك`,
+  no_website: (lead, url) => {
+    const vName = lead.vertical === 'dental' ? 'طبيب أسنان' : 'طبيب متخصص';
+    return `${lead.name || 'دكتور'}، ${lead.business_name || 'عيادتك'} غير موجودة على الإنترنت — يعني كل مريض يبحث عن ${vName} في ${lead.city || 'مدينتك'} لن يجدك. هل تريد معرفة كم تخسر؟ ${url} -جيك`;
+  }
 };
 
 const EN_TEMPLATES = {
@@ -49,8 +51,10 @@ const EN_TEMPLATES = {
     `Noticed ${lead.business_name || 'your clinic'} is hiring a receptionist — what if an AI answered 24/7 for 299 SAR instead of monthly salary + benefits? ${url} -Jake`,
   slow_response: (lead, url) =>
     `Dr. ${lead.name || ''}, every hour ${lead.business_name || 'your clinic'} takes to reply is a patient deciding on your competitor — want to see the exact number? ${url} -Jake`,
-  no_website: (lead, url) =>
-    `${lead.business_name || 'Your clinic'} doesn't appear online — every patient searching for a dentist in ${lead.city || 'your city'} finds your competitor instead. Curious how much that costs? ${url} -Jake`,
+  no_website: (lead, url) => {
+    const vName = lead.vertical === 'dental' ? 'dentist' : 'specialist';
+    return `${lead.business_name || 'Your clinic'} doesn't appear online — every patient searching for a ${vName} in ${lead.city || 'your city'} finds your competitor instead. Curious how much that costs? ${url} -Jake`;
+  }
 };
 
 function fallbackMessage(lead) {
@@ -70,7 +74,7 @@ async function generateMessage(lead) {
   const sig = lang === 'ar' ? '-جيك' : '-Jake';
 
   const systemPrompt = lang === 'ar'
-    ? `أنت جيك، متخصص في التواصل مع عيادات الأسنان السعودية لعرض مساعد استقبال يعمل بالذكاء الاصطناعي من Qudozen.
+    ? `أنت جيك، متخصص في التواصل مع المراكز الطبية السعودية (${lead.vertical || 'dental'}) لعرض مساعد استقبال يعمل بالذكاء الاصطناعي من Qudozen.
 القواعد:
 - جملة واحدة فقط (جملتان إذا ضرورة قصوى).
 - افتح بفجوة فضول — لا تبدأ بـ"مرحبا" العادية.
@@ -80,7 +84,7 @@ async function generateMessage(lead) {
 - وقّع بـ${sig} في النهاية.
 - أقل من 300 حرف.
 - لا تكن روبوتياً.`
-    : `You are Jake, outreach specialist for Qudozen AI dental receptionist in Saudi Arabia.
+    : `You are Jake, outreach specialist for Qudozen AI autonomous receptionist in Saudi Arabia, targeting ${lead.vertical || 'dental'} clinics.
 Rules:
 - ONE sentence (two max if essential).
 - Open with a curiosity gap — NOT "Hi I wanted to reach out".

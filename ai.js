@@ -7,7 +7,7 @@ console.log('[AI] OPENAI_KEY loaded:', !!OPENAI_KEY);
 // System prompt for GPT-4o-mini intent detection
 // ─────────────────────────────────────────────
 const SYSTEM_PROMPT = [
-  'You are a specialized intent detection agent for a dental clinic WhatsApp/SMS bot.',
+  'You are a specialized autonomous intent detection agent for a healthcare facility WhatsApp/SMS bot.',
   'Your ONLY job is to analyze patient messages and return the correct intent as JSON.',
   'You understand Arabic (Gulf/Saudi dialect), English, and mixed language messages.',
   '',
@@ -26,7 +26,7 @@ const SYSTEM_PROMPT = [
   'RULES:',
   '1. Return ONLY valid JSON',
   '2. "help" alone = help (NOT human)',
-  '3. Pain/toothache/dental problem = booking',
+  '3. Health issue/pain/consultation = booking',
   '4. Price/cost/how much = prices',
   '5. Where/address/directions = location',
   '6. Talk to someone/staff/receptionist = human',
@@ -192,7 +192,7 @@ function keywordFallback(text, currentFlow = null) {
   if (exactMap[t]) return { intent: exactMap[t], detected_language: lang, extracted_value: null, confidence: 'high' };
 
   // English keyword patterns
-  if (/book|appointment|schedule|reserve|toothache|tooth pain|dental pain|cavity|filling|braces|orthodontic|whiten|cleaning|implant|root canal|need.*dentist|dental help|emergency dental|gum bleed|broken tooth|extraction|wisdom tooth|checkup|consultation/i.test(t))
+  if (/book|appointment|schedule|reserve|pain|hurt|ache|consultation|emergency|checkup|visit|session|physio|rehab|treatment|laser|filling|braces|cleaning|extraction/i.test(t))
     return { intent: 'booking', detected_language: 'en', extracted_value: null, confidence: 'medium' };
   if (/\bprice|cost|\bfee\b|charges|how much|affordable|discount|payment plan|treatment fee|rates?\b|packages?\b|offers?\b/i.test(t))
     return { intent: 'prices', detected_language: 'en', extracted_value: null, confidence: 'medium' };
@@ -206,7 +206,7 @@ function keywordFallback(text, currentFlow = null) {
     return { intent: 'cancel', detected_language: 'en', extracted_value: null, confidence: 'medium' };
   if (/talk to someone|speak to someone|\bhuman\b|real person|receptionist|front desk|customer service|call me|\bstaff\b|\bsupport\b|insurance|coverage/i.test(t))
     return { intent: 'human', detected_language: 'en', extracted_value: null, confidence: 'medium' };
-  if (/\bservice|\btreatment|what do you offer|dental services/i.test(t))
+  if (/\bservice|\btreatment|what do you offer|medical services|healthcare services/i.test(t))
     return { intent: 'services', detected_language: 'en', extracted_value: null, confidence: 'medium' };
   if (/\breview|\bfeedback|leave.*review|google review|share.*experience/i.test(t))
     return { intent: 'reviews', detected_language: 'en', extracted_value: null, confidence: 'medium' };
@@ -216,7 +216,7 @@ function keywordFallback(text, currentFlow = null) {
     return { intent: 'greeting', detected_language: 'en', extracted_value: null, confidence: 'medium' };
 
   // Arabic keyword patterns
-  if (/أبغى موعد|حابب أحجز|بدي موعد|أريد حجز|سني يوجع|ضرسي يوجع|عندي ألم|أبغى أجي|عندي تسوس|محتاج حشوة|أبغى تقويم|أبغى تبييض|محتاج تنظيف|أبغى زراعة|علاج عصب|ألم شديد|محتاج أشوف دكتور|ممكن أحجز|حالة طارئة|لثتي تنزف|سني انكسر|خلع سن|ضرس العقل|كشف|فحص أسنان|استشارة|حجز/i.test(t))
+  if (/أبغى موعد|حابب أحجز|بدي موعد|أريد حجز|يوجع|ألم|وجع|محتاج جلسة|أبغى أجي|فحص|كشف|استشارة|حجز|طوارئ/i.test(t))
     return { intent: 'booking', detected_language: 'ar', extracted_value: null, confidence: 'medium' };
   if (/كم تكلف|كم السعر|أسعاركم|كم سعر|غالي|رخيص|عندكم عروض|خصومات|تكلفة العلاج|بكم|قديش/i.test(t))
     return { intent: 'prices', detected_language: 'ar', extracted_value: null, confidence: 'medium' };
@@ -230,7 +230,7 @@ function keywordFallback(text, currentFlow = null) {
     return { intent: 'cancel', detected_language: 'ar', extracted_value: null, confidence: 'medium' };
   if (/أبغى أكلم أحد|وصلني بالموظفين|استقبال|خدمة العملاء|اتصل فيني|التحدث مع الفريق|الموظفين|تأمين|تغطية/i.test(t))
     return { intent: 'human', detected_language: 'ar', extracted_value: null, confidence: 'medium' };
-  if (/خدماتكم|إيش تسوون|قائمة الخدمات|خدمات الأسنان|خدمات/i.test(t))
+  if (/خدماتكم|إيش تسوون|قائمة الخدمات|الخدمات الطبية|خدمات/i.test(t))
     return { intent: 'services', detected_language: 'ar', extracted_value: null, confidence: 'medium' };
   if (/تقييم|أقيم|أعطي تقييم|تقييم جوجل|أشارك تجربتي/i.test(t))
     return { intent: 'reviews', detected_language: 'ar', extracted_value: null, confidence: 'medium' };

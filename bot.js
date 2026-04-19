@@ -42,9 +42,10 @@ const LANG_SELECT = '🌐 Welcome! Please choose your language / اختر لغت
 // ─── Smart Menu: tries interactive list, falls back to plain text ───
 async function sendSmartMenu(phone, ar, cl) {
   const clinicName = typeof cl === 'string' ? cl : (cl?.name || 'Our Clinic');
-  const plainText = ar ? menuAR(cl) : menuEN(cl);
+  const vertical   = cl?.vertical || 'dental';
+  const plainText  = ar ? menuAR(cl) : menuEN(cl);
   try {
-    await sendMainMenu(phone, clinicName, ar, plainText);
+    await sendMainMenu(phone, clinicName, ar, plainText, vertical);
   } catch (e) {
     console.log('[Bot] Interactive menu failed, using plain text:', e.message);
     await sendMessage(phone, plainText);
@@ -54,29 +55,39 @@ async function sendSmartMenu(phone, ar, cl) {
 // Accept either a plain clinic name string or a full clinic object (for feature flags + custom messages)
 function menuEN(clinicOrName) {
   const name = typeof clinicOrName === 'string' ? clinicOrName : (clinicOrName?.name || 'Our Clinic');
-  console.log('[Menu] Clinic name:', name);
+  const vertical = typeof clinicOrName === 'object' ? clinicOrName?.vertical : 'dental';
+  console.log('[Menu] Clinic name:', name, 'Vertical:', vertical);
+  
   const cfg  = typeof clinicOrName === 'object' ? clinicOrName?.config : null;
-  const welcome       = cfg?.messages?.welcome_en       || `Welcome to ${name}! 🦷✨`;
+  const vEmoji = vertical === 'dental' ? '🦷' : vertical === 'physio' ? '🧘' : '🩺';
+  
+  const welcome       = cfg?.messages?.welcome_en       || `Welcome to ${name}! ${vEmoji}✨`;
   const showReschedule = cfg?.features?.reschedule       !== false;
   const showCancel     = cfg?.features?.cancel           !== false;
-  let menu = `${welcome}\nI'm your AI dental assistant, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment\n2️⃣ My appointment\n`;
+  
+  let menu = `${welcome}\nI'm your AI autonomous assistant, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment\n2️⃣ My appointment\n`;
   if (showReschedule) menu += `3️⃣ Reschedule\n`;
   if (showCancel)     menu += `4️⃣ Cancel appointment\n`;
-  menu += `5️⃣ Our services\n6️⃣ Meet Our Doctors 👨‍⚕️\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍⚕️ (type 10)\n\n💡 Tap a number or tell me what you need 😊`;
+  menu += `5️⃣ Our services\n6️⃣ Our Team 👨‍⚕️\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍⚕️ (type 10)\n\n💡 Tap a number or tell me what you need 😊`;
   return menu;
 }
 
 function menuAR(clinicOrName) {
   const name = typeof clinicOrName === 'string' ? clinicOrName : (clinicOrName?.name || 'عيادتنا');
-  console.log('[Menu] Clinic name:', name);
+  const vertical = typeof clinicOrName === 'object' ? clinicOrName?.vertical : 'dental';
+  console.log('[Menu] Clinic name:', name, 'Vertical:', vertical);
+  
   const cfg  = typeof clinicOrName === 'object' ? clinicOrName?.config : null;
-  const welcome       = cfg?.messages?.welcome_ar       || `أهلاً وسهلاً بك في ${name}! 🦷✨`;
+  const vEmoji = vertical === 'dental' ? '🦷' : vertical === 'physio' ? '🧘' : '🩺';
+  
+  const welcome       = cfg?.messages?.welcome_ar       || `أهلاً وسهلاً بك في ${name}! ${vEmoji}✨`;
   const showReschedule = cfg?.features?.reschedule       !== false;
   const showCancel     = cfg?.features?.cancel           !== false;
+  
   let menu = `${welcome}\nأنا مساعدك الذكي، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد\n2️⃣ موعدي الحالي\n`;
   if (showReschedule) menu += `3️⃣ إعادة جدولة\n`;
   if (showCancel)     menu += `4️⃣ إلغاء الموعد\n`;
-  menu += `5️⃣ خدماتنا\n6️⃣ تعرف على أطبائنا 👨‍⚕️\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️ (اكتب 10)\n\n💡 اضغط رقماً أو أخبرني بما تحتاج 😊`;
+  menu += `5️⃣ خدماتنا\n6️⃣ تعرف على فريقنا 👨‍⚕️\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️ (اكتب 10)\n\n💡 اضغط رقماً أو أخبرني بما تحتاج 😊`;
   return menu;
 }
 
@@ -98,6 +109,8 @@ async function handleMessage(phone, text, clinic) {
 
   const cl = clinic || {
     name: 'Our Clinic',
+    vertical: 'dental',
+    services: [],
     location: 'Please contact us for our address.',
     maps_link: 'https://maps.google.com',
     review_link: 'https://g.page/r/your-review-link',
@@ -613,7 +626,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     // Step 5 — doctor selection: query live from doctor_schedules if cl.doctors JSONB is empty
     const doctors4 = await getClinicDoctors(cl);
     if (doctors4.length > 0) {
-      return sendMessage(phone, doctorSelectionMsg(ar, doctors4));
+      return sendMessage(phone, doctorSelectionMsg(ar, doctors4, cl.vertical));
     }
     // No doctors found anywhere — skip to date selection
     return sendMessage(phone, ar
@@ -666,14 +679,14 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     }
     fd.phone = phone;
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
-    return sendMessage(phone, treatmentMenuMsg(ar));
+    return sendMessage(phone, treatmentMenuMsg(ar, cl.vertical, cl.services));
   }
 
   // Step 21 — Custom phone entry
   if (step === 21) {
     fd.phone = val;
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
-    return sendMessage(phone, treatmentMenuMsg(ar));
+    return sendMessage(phone, treatmentMenuMsg(ar, cl.vertical, cl.services));
   }
 
   // Step 3 — Treatment type

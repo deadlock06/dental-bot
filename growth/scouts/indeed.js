@@ -15,12 +15,12 @@ const SAUDI_CITIES = [
   { name: 'Medina', arabic: 'المدينة', indeedCode: 'medina' }
 ];
 
-const ARABIC_SEARCH_TERMS = [
-  'استقبال عيادة أسنان',
-  'موظف استقبال طبيب أسنان',
-  'سكرتيرة عيادة أسنان',
-  'receptionist dental clinic'
-];
+const VERTICAL_SEARCH_TERMS = {
+  dental:      ['استقبال عيادة أسنان', 'سكرتيرة عيادة أسنان', 'receptionist dental clinic'],
+  physio:      ['استقبال مركز علاج طبيعي', 'موظف استقبال علاج طبيعي', 'receptionist physiotherapy'],
+  dermatology: ['استقبال عيادة جلدية', 'سكرتيرة عيادة تجميل', 'receptionist skin clinic'],
+  general:     ['استقبال طبي', 'استقبال مجمع طبي', 'medical receptionist']
+};
 
 /**
  * Fetch jobs from Indeed.sa RSS feed
@@ -109,13 +109,14 @@ function cleanHtml(html) {
 /**
  * Run full scout for all cities
  */
-async function runIndeedScout() {
+async function runIndeedScout(vertical = 'dental') {
   const allJobs = [];
+  const searchTerms = VERTICAL_SEARCH_TERMS[vertical] || VERTICAL_SEARCH_TERMS.dental;
   
   for (const city of SAUDI_CITIES.slice(0, 3)) { // Start with top 3 cities
-    console.log(`[Indeed] Scanning ${city.arabic}...`);
+    console.log(`[Indeed] Scanning ${city.arabic} for ${vertical}...`);
     
-    for (const term of ARABIC_SEARCH_TERMS.slice(0, 2)) {
+    for (const term of searchTerms.slice(0, 2)) {
       const jobs = await fetchIndeedJobs(city.indeedCode, term);
       allJobs.push(...jobs.map(j => ({ ...j, city: city.name, cityArabic: city.arabic })));
       

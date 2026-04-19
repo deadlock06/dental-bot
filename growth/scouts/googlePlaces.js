@@ -11,11 +11,14 @@ const SAUDI_CITIES = [
   'Taif', 'Abha', 'Tabuk', 'Jazan', 'Najran', 'Buraidah', 'Hail', 'Jubail',
 ];
 
-const SEARCH_QUERIES = [
-  'dental clinic',
-  'dentist',
-  'عيادة أسنان',
-];
+const VERTICAL_QUERIES = {
+  dental:      ['dental clinic', 'dentist', 'عيادة أسنان'],
+  physio:      ['physiotherapy clinic', 'physio', 'مركز علاج طبيعي'],
+  dermatology: ['dermatology clinic', 'skin clinic', 'عيادة جلدية'],
+  cosmetic:    ['cosmetic clinic', 'plastic surgery', 'عيادة تجميل'],
+  pediatric:   ['pediatric clinic', 'عيادة أطفال'],
+  general:     ['medical center', 'general clinic', 'مجمع طبي']
+};
 
 function fetchJson(url) {
   return new Promise((resolve, reject) => {
@@ -97,8 +100,9 @@ async function runGooglePlacesScout(options = {}) {
     return [];
   }
 
-  const cities      = options.cities  || SAUDI_CITIES.slice(0, 5); // Default: top 5 cities
-  const queries     = options.queries || SEARCH_QUERIES.slice(0, 2);
+  const vertical    = options.vertical || 'dental';
+  const cities      = options.cities   || SAUDI_CITIES.slice(0, 5); // Default: top 5 cities
+  const queries     = options.queries  || VERTICAL_QUERIES[vertical] || VERTICAL_QUERIES.dental;
   const maxPerCity  = options.maxPerCity || 20;
   const allLeads    = [];
   const seenIds     = new Set();
@@ -144,7 +148,7 @@ async function runGooglePlacesScout(options = {}) {
             phone:          phone || null,
             city:           city,
             country:        'SA',
-            vertical:       'dental',
+            vertical:       vertical,
             pain_signal:    pain,
             pain_details:   [
               place.rating     ? `Rating: ${place.rating}/5 (${place.user_ratings_total} reviews)` : null,
