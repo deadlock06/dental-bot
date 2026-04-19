@@ -3,1234 +3,520 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Qudozen — نظام التشغيل الذاتي للعيادات. من الاستقبال إلى التنسيق. وعي واحد يدير كل شيء.">
-  <title>Qudozen — نظام التشغيل الذاتي للعيادات</title>
+  <meta name="description" content="Qudozen — مساعد الاستقبال الذكي لعيادات الأسنان في المملكة العربية السعودية. يرد على المرضى 24/7 بالعربي والإنجليزي.">
+  <title>Qudozen — مساعد الاستقبال الذكي للعيادات</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:       #080E1A;
-      --surface:  #0C1520;
-      --surface2: #101D2E;
-      --teal:     #0D9488;
-      --teal-lt:  #14B8A6;
-      --teal-dim: rgba(13,148,136,0.12);
-      --sand:     #D4A574;
-      --sand-dim: rgba(212,165,116,0.12);
-      --coral:    #E07A5F;
-      --coral-dim:rgba(224,122,95,0.1);
-      --aqua:     #5EEAD4;
-      --aqua-dim: rgba(94,234,212,0.08);
-      --border:   rgba(94,234,212,0.09);
-      --border-sand: rgba(212,165,116,0.18);
-      --text:     #D8E8F0;
-      --text-dim: #A0BBC8;
-      --muted:    #607A8A;
-      --deep:     #3A5568;
+      --bg: #0B1120;
+      --surface: rgba(15, 23, 42, 0.6);
+      --border: rgba(94, 234, 212, 0.1);
+      --aqua: #5EEAD4;
+      --teal: #0D9488;
+      --sand: #D4A574;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+      --glass: rgba(15, 23, 42, 0.8);
+      --glass-hi: rgba(94, 234, 212, 0.05);
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-
     body {
-      font-family: 'Tajawal', system-ui, sans-serif;
+      font-family: 'Tajawal', sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.75;
+      line-height: 1.6;
       overflow-x: hidden;
+      direction: rtl;
     }
 
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 2px; opacity: 0.5; }
-
-    /* ── CANVAS ── */
-    #ocean {
-      position: fixed; inset: 0; z-index: 0;
-      pointer-events: none;
+    /* ════════════════════════════
+       UTILITIES & ANIMATIONS
+    ════════════════════════════ */
+    .inner { max-width: 1200px; margin: 0 auto; padding: 0 28px; }
+    .inner-narrow { max-width: 900px; margin: 0 auto; padding: 0 28px; }
+    .glass {
+      background: var(--surface);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
     }
+    @keyframes slowFloat {
+      0%, 100% { transform: translateY(0) rotate(0); }
+      33% { transform: translateY(-15px) rotate(1deg); }
+      66% { transform: translateY(5px) rotate(-0.5deg); }
+    }
+    .floating { animation: slowFloat 25s ease-in-out infinite; }
+    
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+    }
+    @keyframes float-bg {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    .reveal { opacity: 0; transform: translateY(20px); transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .reveal.active { opacity: 1; transform: translateY(0); }
 
-    /* ── NAV ── */
+    /* ════════════════════════════
+       NAV
+    ════════════════════════════ */
     nav {
-      position: fixed; top: 0; inset-inline: 0; z-index: 100;
-      background: rgba(8,14,26,0.75);
-      backdrop-filter: blur(28px) saturate(1.4);
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      height: 80px; display: flex; align-items: center;
+      transition: background 0.4s, backdrop-filter 0.4s;
+    }
+    nav.scrolled {
+      background: rgba(11, 17, 32, 0.8);
+      backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
-      height: 64px;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 40px;
+    }
+    .nav-inner {
+      width: 100%; display: flex; justify-content: space-between; align-items: center;
     }
     .logo {
       font-size: 20px; font-weight: 900; letter-spacing: -0.5px;
       color: var(--text); text-decoration: none;
+      direction: ltr; unicode-bidi: embed; /* LOCK DIRECTION */
     }
     .logo span { color: var(--aqua); }
     .nav-links { display: flex; gap: 36px; align-items: center; }
     .nav-links a {
-      color: var(--muted); font-size: 14px; text-decoration: none;
-      transition: color 0.6s;
+      color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500;
+      transition: color 0.3s;
     }
     .nav-links a:hover { color: var(--aqua); }
-    .nav-cta {
-      background: rgba(13,148,136,0.15);
-      border: 1px solid rgba(13,148,136,0.3);
-      color: var(--aqua); font-weight: 700; font-size: 14px;
-      padding: 9px 22px; border-radius: 10px; text-decoration: none;
-      transition: background 0.6s, border-color 0.6s;
+    .cta-mini {
+      background: var(--teal); color: #fff;
+      padding: 10px 24px; border-radius: 40px;
+      font-size: 13px; font-weight: 700; text-decoration: none;
+      transition: transform 0.3s, box-shadow 0.3s;
     }
-    .nav-cta:hover { background: rgba(13,148,136,0.25); border-color: rgba(13,148,136,0.5); }
-
-    /* ── LAYOUT ── */
-    section { position: relative; z-index: 1; }
-    .inner { max-width: 1080px; margin: 0 auto; padding: 110px 28px; }
-    .inner-narrow { max-width: 720px; margin: 0 auto; padding: 110px 28px; }
-
-    .lbl {
-      font-size: 11px; font-weight: 700; letter-spacing: 4px;
-      color: var(--teal); text-transform: uppercase;
-      margin-bottom: 20px;
-    }
-    .lbl-sand { color: var(--sand); }
-
-    h2 {
-      font-size: clamp(32px, 4.5vw, 58px);
-      font-weight: 900; line-height: 1.18;
-      letter-spacing: -0.5px;
-      margin-bottom: 22px;
-    }
-    .sub {
-      font-size: clamp(15px, 1.8vw, 19px);
-      color: var(--text-dim);
-      max-width: 580px;
-      line-height: 1.8;
-    }
-
-    /* ── REVEAL ── */
-    .r {
-      opacity: 0; transform: translateY(24px);
-      transition: opacity 0.9s ease, transform 0.9s ease;
-    }
-    .r.on { opacity: 1; transform: translateY(0); }
-    .r.d1 { transition-delay: 0.1s; }
-    .r.d2 { transition-delay: 0.22s; }
-    .r.d3 { transition-delay: 0.34s; }
-    .r.d4 { transition-delay: 0.46s; }
-    .r.d5 { transition-delay: 0.58s; }
+    .cta-mini:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(13, 148, 136, 0.4); }
 
     /* ════════════════════════════
        HERO
     ════════════════════════════ */
     #hero {
-      min-height: 100vh;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center;
-      padding: 100px 28px 80px;
-    }
-
-    .hero-signal {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: rgba(13,148,136,0.07);
-      border: 1px solid var(--border);
-      border-radius: 40px; padding: 9px 22px;
-      font-size: 13px; color: var(--muted);
-      margin-bottom: 52px;
-      letter-spacing: 0.3px;
-    }
-    .hero-signal .pulse {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--teal);
-      animation: breathe 8s ease-in-out infinite;
-    }
-
-    .hero-h1 {
-      font-size: clamp(44px, 7vw, 88px);
-      font-weight: 900; line-height: 1.1;
-      letter-spacing: -1.5px;
-      margin-bottom: 28px;
-    }
-    .hero-h1 em { font-style: normal; color: var(--aqua); }
-    .hero-h1 .sand { color: var(--sand); }
-
-    .hero-sub {
-      font-size: clamp(17px, 2vw, 22px);
-      color: var(--text-dim);
-      max-width: 560px;
-      margin: 0 auto 56px;
-      line-height: 1.8;
-      font-weight: 300;
-    }
-
-    .hero-actions {
-      display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
-      margin-bottom: 80px;
-    }
-    .btn-sand {
-      background: var(--sand);
-      color: #080E1A; font-weight: 800; font-size: 16px;
-      padding: 15px 38px; border-radius: 12px; text-decoration: none;
-      transition: opacity 0.6s, transform 0.6s;
-    }
-    .btn-sand:hover { opacity: 0.85; transform: translateY(-2px); }
-    .btn-outline {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text-dim); font-size: 15px; font-weight: 500;
-      padding: 14px 32px; border-radius: 12px; text-decoration: none;
-      transition: border-color 0.6s, color 0.6s;
-    }
-    .btn-outline:hover { border-color: rgba(94,234,212,0.3); color: var(--aqua); }
-
-    .hero-pillars {
-      display: flex; gap: 40px; justify-content: center; flex-wrap: wrap;
-    }
-    .hero-pillar { text-align: center; }
-    .hero-pillar-word {
-      font-size: 14px; font-weight: 700; color: var(--aqua);
-      letter-spacing: 1px;
-    }
-    .hero-pillar-desc {
-      font-size: 12px; color: var(--muted); margin-top: 3px;
-    }
-    .hero-sep {
-      color: var(--deep); font-size: 20px; align-self: center;
-      margin-top: -6px;
-    }
-
-    /* ════════════════════════════
-       PROBLEM
-    ════════════════════════════ */
-    #problem {
-      background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
-    }
-
-    .problem-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      margin-top: 56px;
-    }
-    .problem-card {
-      background: rgba(12,21,32,0.8);
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      padding: 36px 28px;
-      backdrop-filter: blur(20px);
-      transition: border-color 0.6s, transform 0.6s;
-    }
-    .problem-card:hover {
-      border-color: rgba(94,234,212,0.2);
-      transform: translateY(-3px);
-    }
-    .problem-icon {
-      font-size: 28px; margin-bottom: 18px;
-      display: block; opacity: 0.8;
-    }
-    .problem-card h3 {
-      font-size: 18px; font-weight: 700;
-      margin-bottom: 10px; color: var(--text);
-    }
-    .problem-card p {
-      font-size: 14px; color: var(--muted); line-height: 1.7;
-    }
-    .problem-card .signal {
-      margin-top: 18px;
-      display: inline-block;
-      background: var(--coral-dim);
-      border: 1px solid rgba(224,122,95,0.2);
-      color: var(--coral);
-      font-size: 12px; font-weight: 600;
-      padding: 5px 12px; border-radius: 20px;
-    }
-
-    /* ════════════════════════════
-       SYSTEM — Three Layers
-    ════════════════════════════ */
-    #system { background: var(--surface); }
-
-    .system-layout {
-      display: grid;
-      grid-template-columns: 1fr 420px;
-      gap: 80px;
-      align-items: center;
-      margin-top: 64px;
-    }
-
-    .layer-list { display: flex; flex-direction: column; gap: 0; }
-    .layer-item {
-      display: flex; gap: 22px;
-      padding: 30px 0;
-      border-bottom: 1px solid var(--border);
-      cursor: default;
-      transition: opacity 0.6s;
-    }
-    .layer-item:last-child { border-bottom: none; }
-    .layer-indicator {
-      flex-shrink: 0;
-      width: 48px;
-    }
-    .layer-ring {
-      width: 20px; height: 20px;
-      border-radius: 50%;
-      border: 2px solid var(--teal);
-      margin-top: 4px;
-      position: relative;
-      transition: border-color 0.6s;
-    }
-    .layer-ring::after {
-      content: '';
-      position: absolute; inset: 4px;
-      border-radius: 50%;
-      background: var(--teal);
-      opacity: 0.4;
-      animation: breathe 8s ease-in-out infinite;
-    }
-    .layer-item:nth-child(2) .layer-ring { border-color: var(--sand); }
-    .layer-item:nth-child(2) .layer-ring::after { background: var(--sand); animation-delay: -2.6s; }
-    .layer-item:nth-child(3) .layer-ring { border-color: var(--aqua); }
-    .layer-item:nth-child(3) .layer-ring::after { background: var(--aqua); animation-delay: -5.3s; }
-
-    .layer-body h3 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
-    .layer-body .layer-ar { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
-    .layer-body p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
-
-    /* Concentric rings visualization */
-    .rings-visual {
-      position: relative;
-      width: 420px; height: 420px;
-      flex-shrink: 0;
-    }
-    .ring-svg {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-    }
-    .ring-center {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
+      padding: 180px 28px 120px;
+      position: relative; overflow: hidden;
       text-align: center;
     }
-    .ring-center-label {
-      font-size: 13px; font-weight: 700; color: var(--aqua);
-      letter-spacing: 2px; text-transform: uppercase;
+    .hero-liquid {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 120%; height: 120%; z-index: -1;
+      background: 
+        radial-gradient(circle at 15% 25%, rgba(94, 234, 212, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(212, 165, 116, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(11, 17, 32, 1) 0%, transparent 100%);
+      filter: blur(100px);
+      animation: float-bg 25s infinite linear;
     }
-    .ring-center-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(94, 234, 212, 0.05); border: 1px solid var(--border);
+      padding: 6px 16px; border-radius: 40px; color: var(--aqua);
+      font-size: 12px; font-weight: 700; margin-bottom: 24px;
+    }
+    .hero-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--aqua); animation: breathe 2s infinite; }
+    
+    h1 {
+      font-size: clamp(38px, 8vw, 76px); font-weight: 900; line-height: 1.05;
+      margin-bottom: 24px; letter-spacing: -2px;
+    }
+    h1 span {
+      background: linear-gradient(135deg, #fff, var(--aqua));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-p {
+      color: var(--muted); font-size: clamp(17px, 3vw, 21px);
+      max-width: 750px; margin: 0 auto 48px; font-weight: 400;
+    }
+    .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      padding: 20px 42px; border-radius: 18px; font-size: 16px; font-weight: 700;
+      text-decoration: none; transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); cursor: pointer; border: none; font-family: inherit;
+    }
+    .btn-primary {
+      background: var(--teal); color: #fff;
+      box-shadow: 0 10px 40px rgba(13, 148, 136, 0.3);
+    }
+    .btn-primary:hover { transform: translateY(-4px); box-shadow: 0 15px 50px rgba(13, 148, 136, 0.5); }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.03); color: var(--text);
+      border: 1px solid var(--border); backdrop-filter: blur(10px);
+    }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--aqua); }
+
+    .hero-stats {
+      display: flex; justify-content: center; gap: 60px; margin-top: 100px; flex-wrap: wrap;
+    }
+    .stat-item { text-align: center; }
+    .stat-val { font-size: 32px; font-weight: 900; color: var(--aqua); line-height: 1; }
+    .stat-lbl { font-size: 13px; color: var(--muted); margin-top: 8px; font-weight: 500; }
 
     /* ════════════════════════════
-       DASHBOARD PREVIEW
+       SECTIONS GENERAL
     ════════════════════════════ */
-    #dashboard { background: var(--bg); }
-
-    .dash-frame {
-      background: rgba(12,21,32,0.9);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      overflow: hidden;
-      backdrop-filter: blur(40px);
-      box-shadow: 0 40px 120px rgba(0,0,0,0.5), 0 0 100px rgba(13,148,136,0.04);
-      margin-top: 56px;
+    section { padding: 100px 0; }
+    .section-head { text-align: center; margin-bottom: 60px; }
+    .tag {
+      color: var(--sand); font-size: 12px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; margin-bottom: 12px; display: block;
     }
-    .dash-topbar {
-      background: rgba(8,14,26,0.9);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 24px;
-      display: flex; align-items: center; gap: 14px;
-    }
-    .dash-dot {
-      width: 10px; height: 10px; border-radius: 50%;
-    }
-    .d-red   { background: rgba(224,122,95,0.4); }
-    .d-sand  { background: rgba(212,165,116,0.4); }
-    .d-teal  { background: rgba(13,148,136,0.5); }
-    .dash-title {
-      font-size: 13px; color: var(--muted); margin-right: auto;
-      letter-spacing: 1px;
-    }
-    .dash-status {
-      font-size: 12px; color: var(--teal);
-      display: flex; align-items: center; gap: 6px;
-    }
-    .dash-status::before {
-      content: '';
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--teal);
-      animation: breathe 8s ease-in-out infinite;
-    }
-
-    .dash-body {
-      display: grid;
-      grid-template-columns: 200px 1fr 1fr;
-      grid-template-rows: auto auto;
-      gap: 1px;
-      background: var(--border);
-    }
-
-    .dash-cell {
-      background: var(--surface);
-      padding: 28px 24px;
-    }
-    .dash-cell-label {
-      font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 16px;
-    }
-
-    /* Facility state */
-    .facility-state {
-      grid-row: 1 / 3;
-      display: flex; flex-direction: column; gap: 20px;
-    }
-    .state-orb-wrap {
-      display: flex; justify-content: center; align-items: center;
-      height: 140px;
-      position: relative;
-    }
-    .state-orb {
-      width: 90px; height: 90px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 40% 40%, var(--teal-lt), var(--teal), #063935);
-      box-shadow: 0 0 40px rgba(13,148,136,0.3), 0 0 80px rgba(13,148,136,0.1);
-      animation: orb-breathe 8s ease-in-out infinite;
-    }
-    .state-ring {
-      position: absolute;
-      border-radius: 50%;
-      border: 1px solid rgba(13,148,136,0.2);
-      animation: ring-expand 8s ease-in-out infinite;
-    }
-    .state-ring-1 { width: 110px; height: 110px; }
-    .state-ring-2 { width: 130px; height: 130px; animation-delay: 1.5s; }
-    .state-ring-3 { width: 150px; height: 150px; animation-delay: 3s; }
-
-    .state-label { text-align: center; font-size: 14px; font-weight: 700; color: var(--teal-lt); }
-    .state-desc  { text-align: center; font-size: 12px; color: var(--muted); }
-
-    .state-signals { display: flex; flex-direction: column; gap: 8px; }
-    .signal-row {
-      display: flex; justify-content: space-between; align-items: center;
-      font-size: 12px;
-    }
-    .signal-key { color: var(--muted); }
-    .signal-val { color: var(--text); font-weight: 600; }
-    .signal-val.sand { color: var(--sand); }
-    .signal-val.teal { color: var(--aqua); }
-
-    /* Metrics */
-    .dash-metric {
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    .metric-num {
-      font-size: 40px; font-weight: 900; line-height: 1;
-      color: var(--text);
-    }
-    .metric-unit { font-size: 16px; color: var(--muted); font-weight: 400; }
-    .metric-bar-wrap {
-      height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px;
-      margin-top: 8px; overflow: hidden;
-    }
-    .metric-bar {
-      height: 100%; border-radius: 2px;
-      background: var(--teal);
-      transition: width 1.5s ease;
-    }
-    .metric-label { font-size: 12px; color: var(--muted); }
-
-    /* Predictive signals */
-    .pred-list { display: flex; flex-direction: column; gap: 10px; }
-    .pred-item {
-      background: var(--sand-dim);
-      border: 1px solid var(--border-sand);
-      border-radius: 10px; padding: 12px 14px;
-      font-size: 13px;
-    }
-    .pred-item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .pred-item-title { color: var(--text); font-weight: 600; }
-    .pred-item-time  { font-size: 11px; color: var(--sand); }
-    .pred-item-desc  { font-size: 12px; color: var(--muted); }
-
-    /* Conversations */
-    .conv-list { display: flex; flex-direction: column; gap: 8px; }
-    .conv-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px; border-radius: 10px;
-      background: rgba(255,255,255,0.02);
-    }
-    .conv-dot {
-      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-      animation: breathe 8s ease-in-out infinite;
-    }
-    .conv-dot.active { background: var(--teal); }
-    .conv-dot.wait   { background: var(--sand); animation-delay: -4s; }
-    .conv-name { font-size: 13px; color: var(--text); flex: 1; }
-    .conv-state { font-size: 11px; color: var(--muted); }
-    .conv-time  { font-size: 11px; color: var(--deep); }
+    h2 { font-size: clamp(28px, 5vw, 42px); font-weight: 900; line-height: 1.2; margin-bottom: 20px; }
+    .subhead { color: var(--muted); font-size: 17px; max-width: 600px; margin: 0 auto; }
 
     /* ════════════════════════════
-       OPERATIONAL LOAD CALCULATOR
+       SYSTEM LAYERS
     ════════════════════════════ */
-    #calculator {
-      background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
+    #system { background: radial-gradient(circle at center, rgba(13, 148, 136, 0.05) 0%, transparent 70%); }
+    .layer-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;
     }
+    .layer-card { padding: 40px; position: relative; overflow: hidden; }
+    .layer-num {
+      position: absolute; top: 20px; left: 20px; font-size: 80px; font-weight: 900;
+      color: rgba(94, 234, 212, 0.03); line-height: 1; pointer-events: none;
+    }
+    .layer-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: rgba(94, 234, 212, 0.1); display: flex; align-items: center; justify-content: center;
+      margin-bottom: 24px; color: var(--aqua); font-size: 20px;
+    }
+    .layer-card h3 { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+    .layer-ar { font-size: 14px; color: var(--aqua); font-weight: 600; margin-bottom: 16px; }
+    .layer-card p { color: var(--muted); font-size: 15px; }
 
-    .calc-frame {
-      background: rgba(12,21,32,0.8);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 48px;
-      backdrop-filter: blur(30px);
-      margin-top: 56px;
+    /* ════════════════════════════
+       LIVE DASHBOARD
+    ════════════════════════════ */
+    .dash-wrap {
+      background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border);
+      border-radius: 32px; padding: 40px; overflow: hidden; position: relative;
     }
-    .calc-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 48px;
-      align-items: start;
-    }
-    .calc-inputs { display: flex; flex-direction: column; gap: 32px; }
-
-    .calc-input-group label {
-      display: block;
-      font-size: 14px; color: var(--text-dim); margin-bottom: 12px;
-    }
-    .calc-slider-wrap {
-      display: flex; align-items: center; gap: 16px;
-    }
-    input[type=range] {
-      flex: 1; -webkit-appearance: none; appearance: none;
-      height: 4px; border-radius: 2px;
-      background: linear-gradient(to left, var(--teal) var(--pct, 50%), rgba(255,255,255,0.07) var(--pct, 50%));
-      outline: none; cursor: pointer;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px; height: 18px; border-radius: 50%;
-      background: var(--teal);
-      box-shadow: 0 0 12px rgba(13,148,136,0.4);
-      transition: transform 0.3s;
-    }
-    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-    .calc-val {
-      font-size: 18px; font-weight: 700;
-      color: var(--sand); min-width: 42px; text-align: center;
-    }
-
-    .calc-output { display: flex; flex-direction: column; gap: 20px; }
-    .calc-output-label {
-      font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 8px;
-    }
-    .output-row {
-      display: flex; flex-direction: column; gap: 6px;
-    }
-    .output-metric {
-      font-size: 48px; font-weight: 900; line-height: 1;
-      color: var(--aqua);
-    }
-    .output-metric-label { font-size: 14px; color: var(--text-dim); }
-    .output-divider { border: none; border-top: 1px solid var(--border); }
-
-    .output-row-sm {
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .output-row-sm-label { font-size: 14px; color: var(--muted); }
-    .output-row-sm-val   { font-size: 18px; font-weight: 700; color: var(--text); }
+    .dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }
+    .pulse-bar { height: 4px; background: rgba(94, 234, 212, 0.1); border-radius: 2px; margin-bottom: 20px; position: relative; }
+    .pulse-progress { height: 100%; background: var(--aqua); border-radius: 2px; position: absolute; transition: width 1s ease; }
+    .ticker-item { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+    .ticker-val { font-weight: 700; color: var(--aqua); }
 
     /* ════════════════════════════
        PRICING
     ════════════════════════════ */
-    #pricing { background: var(--surface); }
-
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-top: 64px;
-    }
-    .plan {
-      background: rgba(8,14,26,0.7);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 36px 28px;
-      backdrop-filter: blur(30px);
-      transition: transform 0.6s, border-color 0.6s;
-      display: flex; flex-direction: column;
-    }
-    .plan:hover { transform: translateY(-4px); }
-
-    /* subtle visual weight on النظام */
-    .plan.featured {
-      border-color: rgba(212,165,116,0.25);
-      background: rgba(10,18,28,0.9);
-      box-shadow: 0 0 80px rgba(212,165,116,0.05);
-    }
-    .plan.featured::before {
-      content: '';
-      position: absolute; top: 0; inset-inline: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--sand), transparent);
-      border-radius: 24px 24px 0 0;
-    }
-
-    .plan-ar {
-      font-size: 26px; font-weight: 900; margin-bottom: 3px;
-    }
-    .plan-en {
-      font-size: 13px; color: var(--muted); letter-spacing: 2px;
-      text-transform: uppercase; margin-bottom: 24px;
-    }
-    .plan-for {
-      font-size: 13px; color: var(--text-dim);
-      margin-bottom: 28px; line-height: 1.6;
-    }
-    .plan-price-row {
-      display: flex; align-items: baseline; gap: 6px;
-      margin-bottom: 8px;
-    }
-    .plan-num {
-      font-size: 52px; font-weight: 900; line-height: 1;
-      color: var(--text);
-    }
-    .plan-num.sand { color: var(--sand); }
-    .plan-curr { font-size: 16px; color: var(--muted); }
-    .plan-period { font-size: 13px; color: var(--deep); }
-    .plan-setup {
-      font-size: 13px; color: var(--muted); margin-bottom: 32px;
-    }
-    .plan-setup span { color: var(--sand); }
-
-    .plan-divider {
-      border: none; border-top: 1px solid var(--border);
-      margin-bottom: 24px;
-    }
-    .plan-features {
-      list-style: none; display: flex; flex-direction: column;
-      gap: 12px; margin-bottom: 36px; flex: 1;
-    }
-    .plan-features li {
-      display: flex; gap: 10px; align-items: flex-start;
-      font-size: 14px; color: var(--text-dim);
-    }
-    .plan-features li::before {
-      content: '—';
-      color: var(--teal); flex-shrink: 0;
-      margin-top: 1px; font-weight: 300;
-    }
-    .plan-features.sand li::before { color: var(--sand); }
-
-    .plan-cta {
-      display: block; text-align: center; text-decoration: none;
-      padding: 14px; border-radius: 12px;
-      font-weight: 700; font-size: 15px;
-      transition: opacity 0.6s, transform 0.6s;
-    }
-    .plan-cta:hover { opacity: 0.8; transform: translateY(-1px); }
-    .plan-cta-teal {
-      background: var(--teal-dim);
-      border: 1px solid rgba(13,148,136,0.25);
-      color: var(--aqua);
-    }
-    .plan-cta-sand {
-      background: var(--sand);
-      color: #080E1A;
-    }
-    .plan-cta-outline {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-    }
-
-    /* ════════════════════════════
-       FUTURE — Swarm
-    ════════════════════════════ */
-    #future { background: var(--bg); }
-
-    .swarm-layout {
-      display: grid;
-      grid-template-columns: 1fr 360px;
-      gap: 80px;
-      align-items: center;
-      margin-top: 64px;
-    }
-
-    .node-map {
-      width: 360px; height: 380px;
-      position: relative; flex-shrink: 0;
-    }
-    .node {
-      position: absolute;
-      display: flex; flex-direction: column;
-      align-items: center; gap: 6px;
-      cursor: default;
-    }
-    .node-circle {
-      width: 52px; height: 52px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      border: 1px solid var(--border);
-      background: rgba(12,21,32,0.9);
-      transition: border-color 0.6s, box-shadow 0.6s;
-    }
-    .node.active .node-circle {
-      border-color: rgba(13,148,136,0.4);
-      box-shadow: 0 0 24px rgba(13,148,136,0.15);
-    }
-    .node-label {
-      font-size: 12px; color: var(--muted); text-align: center;
-      font-weight: 600;
-    }
-    .node.active .node-label { color: var(--teal-lt); }
-
-    /* SVG connecting lines drawn by JS */
-    .node-lines { position: absolute; inset: 0; pointer-events: none; }
-
-    .future-text { display: flex; flex-direction: column; gap: 24px; }
-    .future-item { display: flex; gap: 16px; align-items: flex-start; }
-    .future-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--teal); flex-shrink: 0; margin-top: 8px;
-      animation: breathe 8s ease-in-out infinite;
-    }
-    .future-dot.sand { background: var(--sand); animation-delay: -2.6s; }
-    .future-dot.coral { background: var(--coral); animation-delay: -5.3s; }
-    .future-item h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
-    .future-item p  { font-size: 14px; color: var(--muted); line-height: 1.7; }
-
-    /* ════════════════════════════
-       TRUST
-    ════════════════════════════ */
-    #trust {
-      background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
-    }
-
-    .trust-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
-      margin-top: 56px;
-    }
-    .trust-card {
-      background: rgba(12,21,32,0.8);
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      padding: 36px 28px;
-      backdrop-filter: blur(20px);
-      transition: border-color 0.6s, transform 0.6s;
-    }
-    .trust-card:hover {
-      border-color: rgba(94,234,212,0.2);
-      transform: translateY(-3px);
-    }
-
-    /* liquid shield visual */
-    .trust-shield {
-      width: 56px; height: 64px; margin-bottom: 20px;
-      position: relative;
-    }
-    .trust-shield svg { width: 100%; height: 100%; }
-
-    .trust-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
-    .trust-card p  { font-size: 14px; color: var(--muted); line-height: 1.7; }
-
-    .trust-quote {
-      margin-top: 60px;
-      text-align: center;
-      padding: 40px;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      background: rgba(12,21,32,0.5);
-      backdrop-filter: blur(20px);
-    }
-    .trust-quote p {
-      font-size: clamp(16px, 2vw, 22px);
-      color: var(--text-dim);
-      font-weight: 300; line-height: 1.9;
-      max-width: 600px; margin: 0 auto;
-    }
-    .trust-quote strong { color: var(--aqua); font-weight: 700; }
+    .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px; }
+    .price-card { padding: 48px; text-align: center; transition: border-color 0.4s; }
+    .price-card:hover { border-color: rgba(94, 234, 212, 0.3); }
+    .price-tag { font-size: 13px; font-weight: 700; color: var(--aqua); margin-bottom: 16px; display: block; }
+    .price-amt { font-size: 56px; font-weight: 900; margin-bottom: 8px; }
+    .price-amt span { font-size: 20px; color: var(--muted); }
+    .price-desc { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
+    .price-list { text-align: right; list-style: none; margin-bottom: 40px; }
+    .price-list li { margin-bottom: 12px; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+    .price-list li::before { content: '✓'; color: var(--aqua); font-weight: 900; }
 
     /* ════════════════════════════
        FOOTER
     ════════════════════════════ */
-    footer {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 52px 40px 36px;
-    }
-    .footer-inner {
-      max-width: 1080px; margin: 0 auto;
-      display: flex; flex-direction: column; gap: 36px;
-    }
-    .footer-top {
-      display: flex; justify-content: space-between; align-items: flex-start;
-      flex-wrap: wrap; gap: 24px;
-    }
-    .footer-brand p {
-      font-size: 14px; color: var(--muted); margin-top: 10px;
-      max-width: 280px; line-height: 1.7;
-    }
-    .footer-cols { display: flex; gap: 60px; flex-wrap: wrap; }
-    .footer-col h4 {
-      font-size: 12px; font-weight: 700; letter-spacing: 3px;
-      text-transform: uppercase; color: var(--teal);
-      margin-bottom: 16px;
-    }
-    .footer-col a {
-      display: block; color: var(--muted); font-size: 14px;
-      text-decoration: none; margin-bottom: 10px;
-      transition: color 0.6s;
-    }
-    .footer-col a:hover { color: var(--aqua); }
-    .footer-bottom {
-      border-top: 1px solid var(--border);
-      padding-top: 28px;
-      display: flex; justify-content: space-between; align-items: center;
-      flex-wrap: wrap; gap: 12px;
-    }
-    .footer-bottom p { font-size: 13px; color: var(--deep); }
+    footer { padding: 80px 0 40px; border-top: 1px solid var(--border); }
+    .foot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; margin-bottom: 60px; }
+    .foot-title { font-size: 15px; font-weight: 700; margin-bottom: 20px; color: var(--text); }
+    .foot-links a { display: block; color: var(--muted); text-decoration: none; font-size: 14px; margin-bottom: 12px; transition: color 0.3s; }
+    .foot-links a:hover { color: var(--aqua); }
 
-    /* ════════════════════════════
-       ANIMATIONS
-    ════════════════════════════ */
-    @keyframes breathe {
-      0%, 100% { opacity: 1;   transform: scale(1); }
-      50%       { opacity: 0.35; transform: scale(0.75); }
-    }
-    @keyframes orb-breathe {
-      0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(13,148,136,0.3), 0 0 80px rgba(13,148,136,0.1); }
-      50%       { transform: scale(1.08); box-shadow: 0 0 60px rgba(13,148,136,0.4), 0 0 120px rgba(13,148,136,0.15); }
-    }
-    @keyframes ring-expand {
-      0%, 100% { transform: scale(1); opacity: 0.3; }
-      50%       { transform: scale(1.06); opacity: 0.12; }
-    }
-    @keyframes rotate-slow {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-    @keyframes rotate-slow-r {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(-360deg); }
-    }
-
-    /* ════════════════════════════
-       RESPONSIVE
-    ════════════════════════════ */
     @media (max-width: 900px) {
-      .system-layout  { grid-template-columns: 1fr; }
-      .rings-visual    { display: none; }
-      .swarm-layout    { grid-template-columns: 1fr; }
-      .node-map        { display: none; }
-      .pricing-grid    { grid-template-columns: 1fr; }
-      .calc-grid       { grid-template-columns: 1fr; }
-      .dash-body       { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto; }
-      .facility-state  { grid-row: auto; grid-column: 1 / 3; }
-      nav { padding: 0 20px; }
+      .dash-grid { grid-template-columns: 1fr; }
       .nav-links { display: none; }
       .inner, .inner-narrow { padding: 80px 20px; }
+    }
+    /* ════════════════════════════
+       CONTACT FLOW CHAT
+    ════════════════════════════ */
+    #chat-fab {
+      position: fixed; bottom: 28px; left: 28px; z-index: 2000;
+      direction: ltr;
+    }
+    .chat-fab-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--sand); color: #080E1A;
+      font-weight: 700; font-size: 14px; font-family: 'Tajawal', sans-serif;
+      padding: 12px 22px; border-radius: 40px; border: none; cursor: pointer;
+      box-shadow: 0 8px 32px rgba(212,165,116,0.25);
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+    .chat-fab-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(212,165,116,0.35); }
+    .chat-fab-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(8,14,26,0.45);
+      animation: breathe 8s ease-in-out infinite;
+    }
+
+    #chat-window {
+      position: fixed; bottom: 88px; left: 28px;
+      width: 380px; max-height: 540px; z-index: 2000;
+      background: rgba(8,14,26,0.97);
+      backdrop-filter: blur(40px);
+      border: 1px solid rgba(212,165,116,0.18);
+      border-radius: 24px;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+      opacity: 0; transform: translateY(16px) scale(0.97);
+      pointer-events: none;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      direction: rtl;
+    }
+    #chat-window.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
+
+    .chat-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(94,234,212,0.07);
+      background: rgba(8,14,26,0.9);
+    }
+    .chat-topbar-info { display: flex; align-items: center; gap: 10px; }
+    .chat-avatar {
+      width: 32px; height: 32px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--teal), var(--sand));
+      display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700;
+    }
+    .chat-name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .chat-online { font-size: 11px; color: var(--aqua); }
+    .chat-x {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 18px;
+      line-height: 1; transition: color 0.3s;
+    }
+    .chat-x:hover { color: var(--text); }
+
+    .chat-crumb {
+      padding: 7px 18px; font-size: 11px; color: var(--muted);
+      border-bottom: 1px solid rgba(94,234,212,0.04);
+      min-height: 30px; display: flex; align-items: center; flex-shrink: 0;
+    }
+
+    .chat-msgs {
+      flex: 1; overflow-y: auto;
+      padding: 14px 14px 6px;
+      display: flex; flex-direction: column; gap: 9px;
+    }
+    .chat-msgs::-webkit-scrollbar { width: 3px; }
+    .chat-msgs::-webkit-scrollbar-thumb { background: rgba(212,165,116,0.2); border-radius: 2px; }
+
+    .cmsg {
+      max-width: 92%; padding: 10px 13px; border-radius: 13px;
+      font-size: 13px; line-height: 1.65; white-space: pre-wrap;
+      animation: cmsg-in 0.28s ease;
+    }
+    @keyframes cmsg-in {
+      from { opacity: 0; transform: translateY(7px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .cmsg-bot {
+      background: rgba(13, 148, 136, 0.09); border: 1px solid rgba(13, 148, 136, 0.14);
+      border-top-right-radius: 3px; color: var(--text);
+    }
+    .cmsg-user {
+      background: rgba(212, 165, 116, 0.13); border: 1px solid rgba(212, 165, 116, 0.22);
+      border-top-left-radius: 3px; color: var(--text); align-self: flex-end;
+    }
+    .chat-typing-ind {
+      display: inline-flex; align-items: center; gap: 4px; padding: 10px 13px;
+    }
+    .chat-typing-ind span {
+      width: 5px; height: 5px; border-radius: 50%; background: var(--aqua);
+      animation: tdot 1.1s ease-in-out infinite;
+    }
+    @keyframes tdot {
+      0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    .chat-opts {
+      padding: 7px 12px 8px;
+      display: flex; flex-direction: column; gap: 5px; flex-shrink: 0;
+    }
+    .copt {
+      background: rgba(12, 21, 32, 0.7); border: 1px solid rgba(94, 234, 212, 0.1);
+      border-radius: 10px; padding: 9px 13px;
+      font-size: 13px; color: var(--text); text-align: right; cursor: pointer;
+      transition: background 0.3s, border-color 0.3s, transform 0.25s;
+      font-family: inherit;
+    }
+    .copt:hover {
+      background: rgba(13, 148, 136, 0.1); border-color: rgba(13, 148, 136, 0.22);
+      transform: translateX(-4px);
+    }
+
+    .chat-nav {
+      display: flex; gap: 7px; padding: 0 12px 10px; flex-shrink: 0;
+    }
+    .cnav {
+      background: none; border: 1px solid rgba(94, 234, 212, 0.08);
+      border-radius: 8px; padding: 5px 12px;
+      font-size: 11px; color: var(--muted); cursor: pointer;
+      transition: color 0.3s, border-color 0.3s; font-family: inherit;
+    }
+    .cnav:hover { color: var(--aqua); border-color: rgba(94, 234, 212, 0.2); }
+
+    @media (max-width: 480px) {
+      #chat-window { width: calc(100vw - 32px); left: 16px; bottom: 80px; }
+      #chat-fab { left: 16px; bottom: 16px; }
     }
   </style>
 </head>
 <body>
 
-<canvas id="ocean"></canvas>
+<body>
 
-<!-- ═══════ NAV ═══════ -->
-<nav>
-  <a href="/growth/dashboard" class="logo" dir="ltr">Qudo<span>zen</span></a>
-  <div class="nav-links">
-    <a href="#problem">التعقيد</a>
-    <a href="#system">النظام</a>
-    <a href="#dashboard">مركز القيادة</a>
-    <a href="#pricing">البنية التحتية</a>
+<!-- ════════════════════════════
+     NAV
+════════════════════════════ -->
+<nav id="navbar">
+  <div class="inner nav-inner">
+    <a href="#" class="logo">Qudo<span>zen</span></a>
+    <div class="nav-links">
+      <a href="#system">النظام</a>
+      <a href="#dashboard">مركز القيادة</a>
+      <a href="#pricing">البنية التحتية</a>
+      <a href="#swarm">السوارم</a>
+      <a href="https://wa.me/14155238886" class="cta-mini">ابدأ التحول</a>
+    </div>
   </div>
-  <a href="https://wa.me/966500000000" class="nav-cta" dir="ltr">تحدث معنا</a>
 </nav>
 
-<!-- ═══════ HERO ═══════ -->
+<!-- ════════════════════════════
+     HERO
+════════════════════════════ -->
 <section id="hero">
-  <div class="hero-signal r">
-    <span class="pulse"></span>
-    نظام التشغيل الذاتي للعيادات
-  </div>
-
-  <h1 class="hero-h1 r">
-    وعي واحد<br>
-    <em>يدير كل شيء</em>
-  </h1>
-
-  <p class="hero-sub r">
-    من الاستقبال إلى التنسيق.<br>
-    لا تعقيد. لا متابعة. لا قلق.
-  </p>
-
-  <div class="hero-actions r">
-    <a href="https://wa.me/966500000000" class="btn-sand">ابدأ التحول</a>
-    <a href="#system" class="btn-outline">استكشف النظام</a>
-  </div>
-
-  <div class="hero-pillars r">
-    <div class="hero-pillar">
-      <div class="hero-pillar-word">الاستقبال</div>
-      <div class="hero-pillar-desc">واجهة المريض</div>
-    </div>
-    <div class="hero-sep">·</div>
-    <div class="hero-pillar">
-      <div class="hero-pillar-word">التنسيق</div>
-      <div class="hero-pillar-desc">إدارة الموارد</div>
-    </div>
-    <div class="hero-sep">·</div>
-    <div class="hero-pillar">
-      <div class="hero-pillar-word">التعلم</div>
-      <div class="hero-pillar-desc">تحسين مستمر</div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════ PROBLEM ═══════ -->
-<section id="problem">
+  <div class="hero-liquid"></div>
   <div class="inner">
-    <p class="lbl r">المشكلة</p>
-    <h2 class="r">التعقيد يقتل التركيز</h2>
-    <p class="sub r">
-      طاقم العيادة لا يخسر وقتاً — يخسر حضوراً.
-      كل تحويل يدوي، كل رسالة لم تُرَد، كل تنسيق فائت
-      يستهلك انتباهاً كان يُصرف في الرعاية.
-    </p>
+    <div class="hero-tag reveal">
+      <span class="dot"></span>
+      نظام التشغيل الذاتي للمنشآت
+    </div>
+    <h1 class="reveal">البنية التحتية<br><span>التي تفكر عنك</span></h1>
+    <p class="hero-p reveal">نظام Qudozen هو العقل التشغيلي لمنشأتك. لا يحتاج لتدريب، لا يتعب، ولا ينام. يدير الاستقبال والتنسيق والتطوير ذاتياً بالكامل.</p>
+    
+    <div class="hero-btns reveal">
+      <a href="javascript:toggleChat()" class="btn btn-primary">ابدأ التحول</a>
+      <a href="#dashboard" class="btn btn-secondary">إدراك الحالة</a>
+    </div>
 
-    <div class="problem-grid">
-      <div class="problem-card r d1">
-        <span class="problem-icon">🌐</span>
-        <h3>أدوات مفككة</h3>
-        <p>
-          واتساب هنا، التقويم هناك، السجل في مكان آخر.
-          موظف الاستقبال يعيش في سبع شاشات ويعطيك خمسة أخطاء.
-        </p>
-        <span class="signal">تبديل سياق × 34 / يوم</span>
+    <div class="hero-stats reveal">
+      <div class="stat-item">
+        <div class="stat-val">3s</div>
+        <div class="stat-lbl">سرعة الاستجابة</div>
       </div>
-      <div class="problem-card r d2">
-        <span class="problem-icon">🌙</span>
-        <h3>ساعات خارج الدوام</h3>
-        <p>
-          المريض يكتب الساعة 11 ليلاً. لا أحد يرد.
-          لا يعاود الاتصال — يجد مكاناً آخر.
-          لم تخسر صفقة. خسرت علاقة.
-        </p>
-        <span class="signal">حضور منقطع 14 ساعة / يوم</span>
+      <div class="stat-item">
+        <div class="stat-val">∞</div>
+        <div class="stat-lbl">وعي تشغيلي مستمر</div>
       </div>
-      <div class="problem-card r d3">
-        <span class="problem-icon">🔁</span>
-        <h3>عمل يدوي متكرر</h3>
-        <p>
-          تأكيد المواعيد. إرسال التذكيرات. إعادة الجدولة.
-          مهام لا تحتاج تفكيراً — لكنها تستهلك الطاقة
-          التي كانت تُصرف في تطوير الممارسة.
-        </p>
-        <span class="signal">3.2 ساعة / يوم على المهام المتكررة</span>
+      <div class="stat-item">
+        <div class="stat-val">24/7</div>
+        <div class="stat-lbl">بدون تدخل بشري</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════ SYSTEM — Three Layers ═══════ -->
+<!-- ════════════════════════════
+     PROBLEM (Liquid Focus)
+════════════════════════════ -->
+<section id="problem">
+  <div class="inner-narrow">
+    <div class="section-head reveal">
+      <span class="tag">التحدي التشغيلي</span>
+      <h2>التعقيد يقتل التركيز</h2>
+      <p class="subhead">نحن نعلم أنك لا تبحث عن "برنامج" إضافي. بل تبحث عن اختفاء التعقيد التشغيلي لتركز على ما تجيده حقاً: تقديم الرعاية الطبية.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════
+     SYSTEM LAYERS
+════════════════════════════ -->
 <section id="system">
   <div class="inner">
-    <p class="lbl r">ثلاث طبقات من الوعي</p>
-    <h2 class="r">هذا ليس برنامجاً<br>هذا نظام تشغيل</h2>
-
-    <div class="system-layout">
-      <div class="layer-list r">
-        <div class="layer-item">
-          <div class="layer-indicator">
-            <div class="layer-ring"></div>
-          </div>
-          <div class="layer-body">
-            <h3>الاستقبال</h3>
-            <div class="layer-ar">Reception — Patient Interface</div>
-            <p>
-              يرد على المريض فوراً. يحجز. يُذكّر. يُجيب على أسئلة الخدمات
-              والأسعار والأطباء — بالعربي والإنجليزي، 24 ساعة، دون أخطاء.
-              الطبقة التي يراها المريض. ويثق بها.
-            </p>
-          </div>
-        </div>
-        <div class="layer-item">
-          <div class="layer-indicator">
-            <div class="layer-ring"></div>
-          </div>
-          <div class="layer-body">
-            <h3>التنسيق</h3>
-            <div class="layer-ar">Coordination — Operational Layer</div>
-            <p>
-              يُنظّم الأطباء والمواعيد والموارد. يكتشف التعارضات قبل حدوثها.
-              يُبلغ الطاقم بالتغييرات. يُحرر موظف الاستقبال من إدارة
-              الفوضى — ليتفرغ للرعاية.
-            </p>
-          </div>
-        </div>
-        <div class="layer-item">
-          <div class="layer-indicator">
-            <div class="layer-ring"></div>
-          </div>
-          <div class="layer-body">
-            <h3>التعلم</h3>
-            <div class="layer-ar">Evolution — Intelligence Layer</div>
-            <p>
-              يُحلل الأنماط. يتوقع الأوقات الساخنة. يُحسّن ردوده بناءً
-              على كل محادثة. كل أسبوع، النظام أذكى من الأسبوع الماضي.
-              بدون تدخل منك.
-            </p>
-          </div>
-        </div>
+    <div class="section-head reveal">
+      <span class="tag">البنية التحتية</span>
+      <h2>ثلاث طبقات من الوعي</h2>
+    </div>
+    
+    <div class="layer-grid">
+      <div class="glass layer-card reveal">
+        <div class="layer-num">01</div>
+        <div class="layer-icon">👤</div>
+        <h3>لابقتسالا</h3>
+        <div class="layer-ar">Layer 1 — Reception</div>
+        <p>الواجهة الذكية التي تدير محادثات المرضى، تحجز المواعيد، وترد على الاستفسارات في 3 ثوانٍ. تعمل كوعي أولي للمنشأة.</p>
       </div>
-
-      <!-- Concentric Rings -->
-      <div class="rings-visual r d3">
-        <svg class="ring-svg" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Outer ring — التعلم -->
-          <circle cx="210" cy="210" r="190" stroke="rgba(94,234,212,0.12)" stroke-width="1"/>
-          <circle cx="210" cy="210" r="190" stroke="url(#grad-aqua)" stroke-width="1.5"
-            stroke-dasharray="6 18"
-            style="animation: rotate-slow 40s linear infinite; transform-origin: 210px 210px;"/>
-          <!-- Mid ring — التنسيق -->
-          <circle cx="210" cy="210" r="135" stroke="rgba(212,165,116,0.15)" stroke-width="1"/>
-          <circle cx="210" cy="210" r="135" stroke="url(#grad-sand)" stroke-width="1.5"
-            stroke-dasharray="4 14"
-            style="animation: rotate-slow-r 28s linear infinite; transform-origin: 210px 210px;"/>
-          <!-- Inner ring — الاستقبال -->
-          <circle cx="210" cy="210" r="78" stroke="rgba(13,148,136,0.2)" stroke-width="1"/>
-          <circle cx="210" cy="210" r="78" stroke="url(#grad-teal)" stroke-width="2"
-            stroke-dasharray="3 10"
-            style="animation: rotate-slow 18s linear infinite; transform-origin: 210px 210px;"/>
-          <!-- Center glow -->
-          <circle cx="210" cy="210" r="28" fill="rgba(13,148,136,0.15)"/>
-          <circle cx="210" cy="210" r="14" fill="rgba(13,148,136,0.4)"/>
-          <!-- Node dots on rings -->
-          <circle cx="210" cy="20" r="4" fill="rgba(94,234,212,0.5)"/>
-          <circle cx="380" cy="280" r="4" fill="rgba(94,234,212,0.4)"/>
-          <circle cx="70"  cy="280" r="4" fill="rgba(94,234,212,0.3)"/>
-          <circle cx="210" cy="75" r="3" fill="rgba(212,165,116,0.5)"/>
-          <circle cx="328" cy="278" r="3" fill="rgba(212,165,116,0.4)"/>
-          <circle cx="92"  cy="278" r="3" fill="rgba(212,165,116,0.3)"/>
-          <defs>
-            <linearGradient id="grad-teal" x1="0" y1="0" x2="420" y2="420" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#0D9488"/>
-              <stop offset="1" stop-color="#5EEAD4"/>
-            </linearGradient>
-            <linearGradient id="grad-sand" x1="0" y1="0" x2="420" y2="420" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#D4A574"/>
-              <stop offset="1" stop-color="#E07A5F" stop-opacity="0.5"/>
-            </linearGradient>
-            <linearGradient id="grad-aqua" x1="0" y1="0" x2="420" y2="420" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#5EEAD4" stop-opacity="0.6"/>
-              <stop offset="1" stop-color="#0D9488" stop-opacity="0.3"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <div class="ring-center">
-          <div class="ring-center-label">وعي حي</div>
-          <div class="ring-center-sub">Live Awareness</div>
-        </div>
+      
+      <div class="glass layer-card reveal">
+        <div class="layer-num">02</div>
+        <div class="layer-icon">⚙️</div>
+        <h3>قيسنتلا</h3>
+        <div class="layer-ar">Layer 2 — Coordination</div>
+        <p>طبقة التنسيق التي تنظم الموارد، الأطباء، والمواعيد. تمنع التضارب وتضمن انسيابية العمل دون الحاجة لمدير بشري.</p>
+      </div>
+      
+      <div class="glass layer-card reveal">
+        <div class="layer-num">03</div>
+        <div class="layer-icon">🧠</div>
+        <h3>ملعتلا</h3>
+        <div class="layer-ar">Layer 3 — Evolution</div>
+        <p>الذكاء التطوري الذي يحلل الأنماط، يتوقع الاحتياجات، ويطور أداء المنشأة بناءً على البيانات المتراكمة - التشغيل يصبح أذكى يومياً.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════ DASHBOARD PREVIEW ═══════ -->
+<!-- ════════════════════════════
+     COMMAND CENTER (DASHBOARD)
+════════════════════════════ -->
 <section id="dashboard">
   <div class="inner">
-    <p class="lbl r">مركز القيادة</p>
-    <h2 class="r">وعي عملياتي — لا إسقاطات مالية</h2>
-    <p class="sub r">
-      لا أرقام للزهو. أرقام للوعي الظرفي.
-      ما يحدث الآن. ما سيحدث خلال 30 دقيقة.
-      ما يحتاج انتباهك — وما لا يحتاجه.
-    </p>
+    <div class="section-head reveal">
+      <span class="tag">مركز القيادة</span>
+      <h2>ليس أرقاماً للفخر. إدراك للحالة.</h2>
+      <p class="subhead">شفافية كاملة في الوعي التشغيلي لمنشأتك. نبض حي يوضح مدى استقلالية التشغيل في هذه اللحظة.</p>
+    </div>
 
-    <div class="dash-frame r">
-      <div class="dash-topbar">
-        <div class="dash-dot d-red"></div>
-        <div class="dash-dot d-sand"></div>
-        <div class="dash-dot d-teal"></div>
-        <span class="dash-title">Qudozen — مركز القيادة</span>
-        <span class="dash-status">النظام نشط</span>
-      </div>
-
-      <div class="dash-body">
-
-        <!-- Facility State -->
-        <div class="dash-cell facility-state">
-          <div class="dash-cell-label">الوعي الحي</div>
-          <div class="state-orb-wrap">
-            <div class="state-ring state-ring-3"></div>
-            <div class="state-ring state-ring-2"></div>
-            <div class="state-ring state-ring-1"></div>
-            <div class="state-orb"></div>
+    <div class="dash-wrap glass reveal">
+      <div class="dash-grid">
+        <div class="dash-main">
+          <div class="ticker-item">
+            <span>الوعي الحي (System Consciousness)</span>
+            <span class="ticker-val" id="consc-val">94%</span>
           </div>
-          <div class="state-label">هادئ ومنتج</div>
-          <div class="state-desc" style="margin-bottom:20px">Calm / Productive</div>
-
-          <div class="state-signals">
-            <div class="signal-row">
-              <span class="signal-key">ثقة النظام</span>
-              <span class="signal-val teal">96%</span>
-            </div>
-            <div class="signal-row">
-              <span class="signal-key">الحمل المعرفي</span>
-              <span class="signal-val">منخفض</span>
-            </div>
-            <div class="signal-row">
-              <span class="signal-key">تدخلات يدوية</span>
-              <span class="signal-val">2 اليوم</span>
-            </div>
-            <div class="signal-row">
-              <span class="signal-key">حالة الشبكة</span>
-              <span class="signal-val teal">متصل</span>
-            </div>
+          <div class="pulse-bar"><div class="pulse-progress" id="consc-bar" style="width: 94%;"></div></div>
+          
+          <div class="ticker-item">
+            <span>ثقة النظام (System Trust)</span>
+            <span class="ticker-val" id="trust-val">99.2%</span>
           </div>
+          <div class="pulse-bar"><div class="pulse-progress" id="trust-bar" style="width: 99.2%;"></div></div>
+
+          <div class="ticker-item">
+            <span>الحمل التشغيلي المباشر</span>
+            <span class="ticker-val" id="load-val">12%</span>
+          </div>
+          <div class="pulse-bar"><div class="pulse-progress" id="load-bar" style="width: 12%;"></div></div>
         </div>
-
-        <!-- Response Time -->
-        <div class="dash-cell">
-          <div class="dash-cell-label">متوسط وقت الرد</div>
-          <div class="dash-metric">
-            <div class="metric-num"><span id="resp-num">47</span><span class="metric-unit"> ث</span></div>
-            <div class="metric-bar-wrap"><div class="metric-bar" id="resp-bar" style="width:85%;background:var(--teal)"></div></div>
-            <div class="metric-label">الهدف: أقل من 90 ث · الأداء: ممتاز</div>
-          </div>
-        </div>
-
-        <!-- Resolution Rate -->
-        <div class="dash-cell">
-          <div class="dash-cell-label">معدل الحل الذاتي</div>
-          <div class="dash-metric">
-            <div class="metric-num"><span>94</span><span class="metric-unit">%</span></div>
-            <div class="metric-bar-wrap"><div class="metric-bar" style="width:94%;background:var(--teal-lt)"></div></div>
-            <div class="metric-label">من المحادثات تُحل دون تدخل بشري</div>
-          </div>
-        </div>
-
-        <!-- Predictive Signals -->
-        <div class="dash-cell">
-          <div class="dash-cell-label">إشارات استباقية</div>
-          <div class="pred-list">
-            <div class="pred-item">
-              <div class="pred-item-top">
-                <span class="pred-item-title">موعدان متزامنان</span>
-                <span class="pred-item-time">خلال 28 دقيقة</span>
-              </div>
-              <div class="pred-item-desc">د. أحمد — مريضان في نفس الفترة، راجع الجدول</div>
+        
+        <div class="dash-side" style="border-right: 1px solid var(--border); padding-right: 30px;">
+          <div class="foot-title">وقت الاستجابة</div>
+          <div style="font-size: 32px; font-weight: 900; color: var(--aqua); margin: 10px 0;">0.8s</div>
+          <div style="font-size: 12px; color: var(--muted);">سرعة معالجة البيانات</div>
+          
+          <div style="margin-top: 32px;">
+            <div style="font-size: 14px; font-weight: 700; color: var(--sand);">إشارات مبكرة (Signals)</div>
+            <div id="signals-ticker" style="font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.4;">
+              • لا يوجد تعارضات متوقعة للـ 24 ساعة القادمة<br>
+              • وعي النظام مستقر في جميع الطبقات
             </div>
-            <div class="pred-item">
-              <div class="pred-item-top">
-                <span class="pred-item-title">ذروة متوقعة</span>
-                <span class="pred-item-time">11:30 — 13:00</span>
-              </div>
-              <div class="pred-item-desc">استناداً لنمط الثلاثاء — 6 استفسارات متوقعة</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Active Conversations -->
-        <div class="dash-cell">
-          <div class="dash-cell-label">المحادثات الجارية</div>
-          <div class="conv-list">
-            <div class="conv-item">
-              <div class="conv-dot active"></div>
-              <div class="conv-name">محمد ع.</div>
-              <div class="conv-state">حجز · خطوة 3/4</div>
-              <div class="conv-time">منذ 2 د</div>
-            </div>
-            <div class="conv-item">
-              <div class="conv-dot active"></div>
-              <div class="conv-name">سارة ك.</div>
-              <div class="conv-state">استفسار خدمات</div>
-              <div class="conv-time">منذ 4 د</div>
-            </div>
-            <div class="conv-item">
-              <div class="conv-dot wait"></div>
-              <div class="conv-name">أحمد م.</div>
-              <div class="conv-state">انتظار تأكيد</div>
-              <div class="conv-time">منذ 8 د</div>
-            </div>
-            <div class="conv-item">
-              <div class="conv-dot active"></div>
-              <div class="conv-name">نورة ف.</div>
-              <div class="conv-state">إعادة جدولة</div>
-              <div class="conv-time">منذ 11 د</div>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /dash-body -->
-    </div><!-- /dash-frame -->
-  </div>
-</section>
-
-<!-- ═══════ OPERATIONAL LOAD CALCULATOR ═══════ -->
-<section id="calculator">
-  <div class="inner">
-    <p class="lbl r">حاسبة العبء التشغيلي</p>
-    <h2 class="r">كم تُنفق من طاقتك<br>على ما لا يستحقها؟</h2>
-    <p class="sub r">
-      ليست خسارة مالية. خسارة حضور.
-      احسب الساعات والتحولات السياقية التي يُزيلها Qudozen من يومك.
-    </p>
-
-    <div class="calc-frame r">
-      <div class="calc-grid">
-        <div class="calc-inputs">
-          <div class="calc-input-group">
-            <label>عدد الأطباء في العيادة</label>
-            <div class="calc-slider-wrap">
-              <input type="range" min="1" max="10" value="3" id="s-docs">
-              <span class="calc-val" id="v-docs">3</span>
-            </div>
-          </div>
-          <div class="calc-input-group">
-            <label>رسائل واتساب يومياً (تقديراً)</label>
-            <div class="calc-slider-wrap">
-              <input type="range" min="5" max="80" value="25" id="s-msgs">
-              <span class="calc-val" id="v-msgs">25</span>
-            </div>
-          </div>
-          <div class="calc-input-group">
-            <label>مواعيد تُحجز يدوياً أسبوعياً</label>
-            <div class="calc-slider-wrap">
-              <input type="range" min="5" max="100" value="30" id="s-appts">
-              <span class="calc-val" id="v-appts">30</span>
-            </div>
-          </div>
-          <div class="calc-input-group">
-            <label>تذكيرات تُرسَل يدوياً أسبوعياً</label>
-            <div class="calc-slider-wrap">
-              <input type="range" min="0" max="60" value="20" id="s-reminders">
-              <span class="calc-val" id="v-reminders">20</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="calc-output">
-          <div class="calc-output-label">ما يُزيله Qudozen شهرياً</div>
-          <div class="output-row">
-            <div class="output-metric" id="o-hours">—</div>
-            <div class="output-metric-label">ساعة من العمل الإداري المتكرر</div>
-          </div>
-          <hr class="output-divider">
-          <div class="output-row-sm">
-            <span class="output-row-sm-label">تحولات السياق المُزالة</span>
-            <span class="output-row-sm-val" id="o-switches">—</span>
-          </div>
-          <div class="output-row-sm">
-            <span class="output-row-sm-label">مواعيد فائتة مُسترجعة</span>
-            <span class="output-row-sm-val" id="o-missed">—</span>
-          </div>
-          <div class="output-row-sm">
-            <span class="output-row-sm-label">نقاط احتكاك مُذابة</span>
-            <span class="output-row-sm-val" id="o-friction">—</span>
-          </div>
-          <hr class="output-divider">
-          <div class="output-row-sm">
-            <span class="output-row-sm-label" style="color:var(--text)">التكلفة الشهرية</span>
-            <span class="output-row-sm-val" style="color:var(--sand)" id="o-cost">299 ر.س</span>
           </div>
         </div>
       </div>
@@ -1238,420 +524,327 @@
   </div>
 </section>
 
-<!-- ═══════ PRICING ═══════ -->
+<!-- ════════════════════════════
+     PRICING
+════════════════════════════ -->
 <section id="pricing">
   <div class="inner">
-    <p class="lbl r">بنية تحتية تنمو معك</p>
-    <h2 class="r">ثلاث مراحل من الوعي</h2>
-    <p class="sub r">
-      لا أسعار مخفية. لا عروض مؤقتة. لا ضغط.
-      اختر المرحلة التي تعكس حجم تشغيلك.
-    </p>
+    <div class="section-head reveal">
+      <span class="tag">الاشتراك</span>
+      <h2>بنية تحتية تنمو معك</h2>
+    </div>
 
-    <div class="pricing-grid">
-
-      <!-- الوعي -->
-      <div class="plan r d1">
-        <div class="plan-ar">الوعي</div>
-        <div class="plan-en">Awareness</div>
-        <div class="plan-for">لعيادات الطبيب الواحد والمنشآت الناشئة التي تبدأ رحلة الأتمتة.</div>
-        <div class="plan-price-row">
-          <span class="plan-num">299</span>
-          <span class="plan-curr">ر.س</span>
-        </div>
-        <div class="plan-period" style="margin-bottom:32px">شهرياً · بدون رسوم إعداد</div>
-        <hr class="plan-divider">
-        <ul class="plan-features">
-          <li>استقبال ذكي على واتساب — 24/7</li>
-          <li>حجز وإلغاء وتعديل المواعيد</li>
-          <li>تذكيرات آلية قبل الموعد</li>
-          <li>عربي + إنجليزي بالكامل</li>
-          <li>لوحة تحكم أساسية</li>
-          <li>إعداد في أقل من يوم</li>
+    <div class="price-grid">
+      <div class="glass price-card reveal">
+        <span class="price-tag">Awareness</span>
+        <div class="price-amt">299 <span>SAR</span></div>
+        <div class="price-desc">للممارسين الذين يحتاجون لاستيفاء الوعي الأساسي</div>
+        <ul class="price-list">
+          <li>مساعد استقبال 24/7</li>
+          <li>تنسيق مواعيد آلي</li>
+          <li>دعم اللغتين (Layers 1)</li>
+          <li>بنية تحتية آمنة</li>
         </ul>
-        <a href="https://wa.me/966500000000" class="plan-cta plan-cta-teal">ابدأ مجاناً — 14 يوم</a>
+        <a href="javascript:toggleChat()" class="btn btn-secondary" style="width: 100%;">تحول الآن</a>
       </div>
 
-      <!-- النظام — featured -->
-      <div class="plan featured r d2" style="position:relative">
-        <div class="plan-ar">النظام</div>
-        <div class="plan-en">System</div>
-        <div class="plan-for">للعيادات المتنامية ذات الكراسي المتعددة التي تحتاج تنسيقاً متكاملاً.</div>
-        <div class="plan-price-row">
-          <span class="plan-num sand">499</span>
-          <span class="plan-curr">ر.س</span>
-        </div>
-        <div class="plan-setup">+ <span>699 ر.س</span> رسوم تفعيل وتدريب وتخصيص (مرة واحدة)</div>
-        <hr class="plan-divider">
-        <ul class="plan-features sand">
-          <li>كل ما في مرحلة الوعي</li>
-          <li>تنسيق متكامل للطاقم والموارد</li>
-          <li>سير عمل استباقي وتنبيهات مبكرة</li>
-          <li>تحليلات أنماط متقدمة</li>
-          <li>إدارة حمل عمل الأطباء</li>
-          <li>تقارير أسبوعية للطاقم</li>
-          <li>تخصيص شخصية النظام وصوته</li>
-          <li>فريق مخصص للإعداد والتدريب</li>
+      <div class="glass price-card reveal" style="border-color: var(--teal);">
+        <span class="price-tag">System</span>
+        <div class="price-amt">499 <span>SAR</span></div>
+        <div style="font-size: 12px; color: var(--aqua); margin: -10px 0 10px;">+ 699 SAR رسوم تأسيس البنية التحتية</div>
+        <div class="price-desc">نظام التشغيل الذاتي الكامل للمنشآت المتنامية</div>
+        <ul class="price-list">
+          <li>كل مميزات Awareness</li>
+          <li>تنسيق الموارد وذكاء التوزيع</li>
+          <li>طبقة Evolution للتعلم المستمر</li>
+          <li>تكامل سيادي مع أنظمة العيادة</li>
         </ul>
-        <a href="https://wa.me/966500000000" class="plan-cta plan-cta-sand">ابدأ التحول</a>
+        <a href="javascript:toggleChat()" class="btn btn-primary" style="width: 100%;">اعتمـاد النظام</a>
       </div>
 
-      <!-- السوارم -->
-      <div class="plan r d3">
-        <div class="plan-ar">السوارم</div>
-        <div class="plan-en">Swarm</div>
-        <div class="plan-for">للمجموعات الطبية والمراكز متعددة الفروع التي تبني شبكة ذكاء موحدة.</div>
-        <div class="plan-price-row" style="margin-bottom:32px">
-          <span class="plan-num" style="font-size:32px;color:var(--muted)">تسعير مخصص</span>
-        </div>
-        <hr class="plan-divider">
-        <ul class="plan-features">
-          <li>كل ما في مرحلة النظام</li>
-          <li>طبقة وعي موحدة عبر المواقع</li>
-          <li>ذكاء مشترك يتعلم من كل فرع</li>
-          <li>مركز قيادة مركزي</li>
-          <li>جاهزية للتوسع: صيدلية، مختبر، عيادة عامة</li>
-          <li>SLA مخصص وضمان أداء</li>
-          <li>فريق هندسي مخصص</li>
+      <div class="glass price-card reveal">
+        <span class="price-tag">Swarm</span>
+        <div class="price-amt">Custom</div>
+        <div class="price-desc">للمجموعات الطبية وسلاسل العيادات الضخمة</div>
+        <ul class="price-list">
+          <li>ربط متعدد المرافق</li>
+          <li>بنية تحتية موحدة</li>
+          <li>تقارير تحليلية مركزية</li>
+          <li>مدير نجاح مخصص</li>
         </ul>
-        <a href="https://wa.me/966500000000" class="plan-cta plan-cta-outline">تحدث مع الفريق</a>
+        <a href="#" class="btn btn-secondary" style="width: 100%;">تواصل معنا</a>
       </div>
-
     </div>
   </div>
 </section>
 
-<!-- ═══════ FUTURE — Swarm ═══════ -->
-<section id="future">
+<!-- ════════════════════════════
+     SWARM NODE MAP
+════════════════════════════ -->
+<section id="swarm" style="background: rgba(13, 148, 136, 0.03);">
   <div class="inner">
-    <p class="lbl r">شبكة المنشآت الذكية</p>
-    <h2 class="r">عيادتك ليست عميلاً<br>هي جزء من وعي أكبر</h2>
-
-    <div class="swarm-layout">
-      <div class="future-text">
-        <div class="future-item r d1">
-          <div class="future-dot"></div>
-          <div>
-            <h3>العقدة الحالية: الاستقبال الطبي</h3>
-            <p>
-              كل عيادة تنضم تُثري الشبكة. الأنماط التي يتعلمها النظام في الرياض
-              تُحسّن الاستجابة في جدة. الذكاء الجماعي يُقوّي كل عقدة فردية.
-            </p>
-          </div>
+    <div class="section-head reveal">
+      <span class="tag">المستقبل</span>
+      <h2>Growth Swarm</h2>
+      <p class="subhead">نظام توزيع الأحمال الذكي الذي يسمح لعيادتك بالتمدد في مدن متعددة ككيان واحد متصل.</p>
+    </div>
+    
+      <div class="dash-wrap glass reveal" style="height: 300px; display: flex; align-items: center; justify-content: center;">
+      <div style="text-align: center;">
+        <div style="font-size: 14px; color: var(--muted); margin-bottom: 20px;">خريطة العقد التلقائية — Swarm OS</div>
+        <div style="display: flex; gap: 20px; align-items: center; justify-content: center;">
+          <div class="floating" style="width: 12px; height: 12px; border-radius: 50%; background: var(--aqua); box-shadow: 0 0 20px var(--aqua);"></div>
+          <div style="width: 60px; height: 1px; background: var(--border);"></div>
+          <div class="floating" style="width: 12px; height: 12px; border-radius: 50%; background: var(--teal); animation-delay: 2s;"></div>
+          <div style="width: 60px; height: 1px; background: var(--border);"></div>
+          <div class="floating" style="width: 12px; height: 12px; border-radius: 50%; background: var(--muted); opacity: 0.3; animation-delay: 4s;"></div>
         </div>
-        <div class="future-item r d2">
-          <div class="future-dot sand"></div>
-          <div>
-            <h3>العقد القادمة</h3>
-            <p>
-              صيدلية: إدارة المخزون والصرف.
-              مختبر: جدولة التحاليل والنتائج.
-              عيادة عامة: تنسيق الإحالات والمتابعة.
-              تشخيصات: حجز الأشعة والتقارير.
-            </p>
-          </div>
-        </div>
-        <div class="future-item r d3">
-          <div class="future-dot coral"></div>
-          <div>
-            <h3>طبقة الوعي الموحد</h3>
-            <p>
-              منشآتك لا تتحدث مع بعضها — تفهم بعضها.
-              مريض في عيادتك يحتاج مختبراً؟ النظام يُنسّق، يُحجز، يُخطر.
-              بدون مكالمات. بدون تأخير.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Node Map -->
-      <div class="node-map r d3">
-        <svg class="node-lines" viewBox="0 0 360 380" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Lines from center (dental) to nodes -->
-          <line x1="180" y1="190" x2="180" y2="70"  stroke="rgba(13,148,136,0.25)" stroke-width="1" stroke-dasharray="4 6"/>
-          <line x1="180" y1="190" x2="295" y2="150" stroke="rgba(13,148,136,0.15)" stroke-width="1" stroke-dasharray="4 6"/>
-          <line x1="180" y1="190" x2="295" y2="260" stroke="rgba(13,148,136,0.12)" stroke-width="1" stroke-dasharray="4 6"/>
-          <line x1="180" y1="190" x2="75"  y2="260" stroke="rgba(13,148,136,0.12)" stroke-width="1" stroke-dasharray="4 6"/>
-          <line x1="180" y1="190" x2="75"  y2="150" stroke="rgba(13,148,136,0.1)"  stroke-width="1" stroke-dasharray="4 6"/>
-          <line x1="180" y1="190" x2="180" y2="320" stroke="rgba(13,148,136,0.1)"  stroke-width="1" stroke-dasharray="4 6"/>
-        </svg>
-
-        <!-- Center: Dental (active) -->
-        <div class="node active" style="top:165px;left:150px">
-          <div class="node-circle">🦷</div>
-          <div class="node-label">عيادة أسنان</div>
-        </div>
-        <!-- Future nodes -->
-        <div class="node" style="top:38px;left:148px">
-          <div class="node-circle">💊</div>
-          <div class="node-label">صيدلية</div>
-        </div>
-        <div class="node" style="top:118px;left:265px">
-          <div class="node-circle">🧪</div>
-          <div class="node-label">مختبر</div>
-        </div>
-        <div class="node" style="top:230px;left:265px">
-          <div class="node-circle">🏥</div>
-          <div class="node-label">عيادة عامة</div>
-        </div>
-        <div class="node" style="top:230px;left:25px">
-          <div class="node-circle">🔬</div>
-          <div class="node-label">تشخيصات</div>
-        </div>
-        <div class="node" style="top:118px;left:25px">
-          <div class="node-circle">📋</div>
-          <div class="node-label">تحاليل</div>
-        </div>
-        <div class="node" style="top:295px;left:148px">
-          <div class="node-circle">+</div>
-          <div class="node-label">قادم</div>
-        </div>
+        <div style="margin-top: 30px; font-size: 12px; color: var(--aqua);">تحجيم الوعي عبر الشبكة...</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════ TRUST ═══════ -->
-<section id="trust">
-  <div class="inner">
-    <p class="lbl-sand lbl r">أمان. خصوصية. سيادة.</p>
-    <h2 class="r">حماية تتدفق —<br>لا تتحصّن</h2>
-    <p class="sub r">
-      بيانات مرضاك لا تغادر المنطقة.
-      لا نماذج تُدرَّب على سجلاتهم. لا مشاركة. لا اتفاقيات بالطباعة الصغيرة.
-    </p>
-
-    <div class="trust-grid">
-      <div class="trust-card r d1">
-        <div class="trust-shield">
-          <svg viewBox="0 0 56 64" fill="none">
-            <path d="M28 2 L52 12 L52 34 C52 48 40 58 28 62 C16 58 4 48 4 34 L4 12 Z"
-              fill="rgba(13,148,136,0.08)" stroke="rgba(13,148,136,0.3)" stroke-width="1.5"/>
-            <path d="M28 8 L46 16 L46 34 C46 45 37 53 28 57 C19 53 10 45 10 34 L10 16 Z"
-              fill="rgba(13,148,136,0.05)" stroke="rgba(94,234,212,0.2)" stroke-width="1"/>
-            <circle cx="28" cy="32" r="7" fill="rgba(13,148,136,0.3)" stroke="var(--aqua)" stroke-width="1"/>
-          </svg>
-        </div>
-        <h3>استضافة سعودية</h3>
-        <p>البيانات تبقى داخل المملكة. متوافق مع متطلبات هيئة الاتصالات وحوكمة البيانات الصحية.</p>
-      </div>
-      <div class="trust-card r d2">
-        <div class="trust-shield">
-          <svg viewBox="0 0 56 64" fill="none">
-            <path d="M28 2 L52 12 L52 34 C52 48 40 58 28 62 C16 58 4 48 4 34 L4 12 Z"
-              fill="rgba(212,165,116,0.06)" stroke="rgba(212,165,116,0.25)" stroke-width="1.5"/>
-            <path d="M20 32 L25 37 L36 26" stroke="var(--sand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <h3>لا تدريب على بياناتك</h3>
-        <p>محادثات مرضاك لا تُغذّي أي نموذج. كل بيانات العيادة ملكك الحصري — لا تشارك، لا استخدام خارجي.</p>
-      </div>
-      <div class="trust-card r d3">
-        <div class="trust-shield">
-          <svg viewBox="0 0 56 64" fill="none">
-            <path d="M28 2 L52 12 L52 34 C52 48 40 58 28 62 C16 58 4 48 4 34 L4 12 Z"
-              fill="rgba(94,234,212,0.05)" stroke="rgba(94,234,212,0.2)" stroke-width="1.5"/>
-            <rect x="20" y="24" width="16" height="14" rx="2" fill="rgba(94,234,212,0.15)" stroke="var(--aqua)" stroke-width="1"/>
-            <path d="M22 24 L22 20 C22 16 34 16 34 20 L34 24" stroke="var(--aqua)" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h3>مسارات تدقيق كاملة</h3>
-        <p>كل إجراء، كل رد، كل تحويل — مُسجَّل وموثَّق. تعرف دائماً ما فعله النظام ولماذا.</p>
-      </div>
-      <div class="trust-card r d4">
-        <div class="trust-shield">
-          <svg viewBox="0 0 56 64" fill="none">
-            <path d="M28 2 L52 12 L52 34 C52 48 40 58 28 62 C16 58 4 48 4 34 L4 12 Z"
-              fill="rgba(224,122,95,0.05)" stroke="rgba(224,122,95,0.2)" stroke-width="1.5"/>
-            <circle cx="28" cy="34" r="9" fill="none" stroke="var(--coral)" stroke-width="1.5"/>
-            <path d="M28 25 L28 34 L34 34" stroke="var(--coral)" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h3>تشغيل مستمر</h3>
-        <p>99.8% وقت تشغيل خلال 2025. تحديثات تُطبَّق في الخلفية. لا توقف، لا إشعارات مزعجة.</p>
-      </div>
-    </div>
-
-    <div class="trust-quote r">
-      <p>
-        "<strong>نحن نتولى التعقيد</strong> —
-        لتتفرغ أنت لما جئت تفعله:<br>
-        الرعاية الحقيقية للمرضى."
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════ FOOTER ═══════ -->
+<!-- ════════════════════════════
+     FOOTER
+════════════════════════════ -->
 <footer>
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div class="footer-brand">
-        <a href="/growth/dashboard" class="logo" dir="ltr" style="text-decoration:none;color:inherit">Qudo<span>zen</span></a>
-        <p>نظام التشغيل الذاتي للعيادات. وعي واحد يدير كل شيء.</p>
+  <div class="inner">
+    <div class="foot-grid">
+      <div>
+        <a href="#" class="logo">Qudo<span>zen</span></a>
+        <p style="color: var(--muted); font-size: 13px; margin-top: 20px;">نظام التشغيل الذاتي للمنشآت الحديثة. بنية تحتية سيادية مصّممة بمقاييس عالمية في المملكة العربية السعودية.</p>
       </div>
-      <div class="footer-cols">
-        <div class="footer-col">
-          <h4>النظام</h4>
-          <a href="#problem">التعقيد</a>
-          <a href="#system">الطبقات الثلاث</a>
-          <a href="#dashboard">مركز القيادة</a>
-          <a href="#future">شبكة المنشآت</a>
-        </div>
-        <div class="footer-col">
-          <h4>البنية التحتية</h4>
-          <a href="#pricing">الوعي — 299 ر.س</a>
-          <a href="#pricing">النظام — 499 ر.س</a>
-          <a href="#pricing">السوارم — تخصيص</a>
-        </div>
-        <div class="footer-col">
-          <h4>التواصل</h4>
-          <a href="https://wa.me/966500000000">واتساب</a>
-          <a href="/growth/dashboard">لوحة التحكم</a>
-        </div>
+      <div class="foot-links">
+        <div class="foot-title">الروابط</div>
+        <a href="#system">النظام</a>
+        <a href="#dashboard">نبض التشغيل</a>
+        <a href="#pricing">الأسعار</a>
+        <a href="/growth/dashboard">لوحة الإدارة</a>
+      </div>
+      <div class="foot-links">
+        <div class="foot-title">قانوني</div>
+        <a href="#">سياسة الخصوصية</a>
+        <a href="#">الشروط والأحكام</a>
       </div>
     </div>
-    <div class="footer-bottom">
-      <p dir="ltr">© 2025 Qudozen. All rights reserved.</p>
-      <p>مبني في المملكة العربية السعودية</p>
+    <div style="text-align: center; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 30px;">
+      © 2026 Qudozen. جميع الحقوق محفوظة.
     </div>
   </div>
 </footer>
 
-<!-- ═══════ SCRIPTS ═══════ -->
+<div id="chat-fab">
+  <button class="chat-fab-btn" onclick="toggleChat()">
+    <span class="chat-fab-dot"></span>
+    تحدث مع النظام
+  </button>
+</div>
+
+<div id="chat-window" class="glass">
+  <div class="chat-topbar">
+    <div class="chat-topbar-info">
+      <div class="chat-avatar">Q</div>
+      <div>
+        <div class="chat-name">نظام Qudozen</div>
+        <div class="chat-online">متصل حياً</div>
+      </div>
+    </div>
+    <button class="chat-x" onclick="toggleChat()">×</button>
+  </div>
+  <div class="chat-crumb" id="chat-crumb">البداية</div>
+  <div class="chat-msgs" id="chat-msgs"></div>
+  <div class="chat-opts" id="chat-opts"></div>
+  <div class="chat-nav">
+    <button class="cnav" onclick="resetChat()">إعادة الضبط</button>
+    <button class="cnav" onclick="selectOption('contact')">تحدث مع إنسان</button>
+  </div>
+</div>
+
 <script>
-/* ── Ocean Canvas — bioluminescent liquid ── */
-(function(){
-  const c = document.getElementById('ocean');
-  const ctx = c.getContext('2d');
-  let W, H, blobs;
+  // ════════════════════════════
+  // REVEAL ANIMATIONS
+  // ════════════════════════════
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+      }
+    });
+  }, { threshold: 0.1 });
 
-  const PALETTE = [
-    { r:13,  g:148, b:136 }, // teal
-    { r:94,  g:234, b:212 }, // aqua
-    { r:212, g:165, b:116 }, // sand
-    { r:13,  g:148, b:136 }, // teal again — weight
-  ];
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-  function mkBlob(i) {
-    const col = PALETTE[i % PALETTE.length];
-    return {
-      x: Math.random() * W,
-      y: Math.random() * H,
-      r: 200 + Math.random() * 280,
-      vx: (Math.random() - 0.5) * 0.18,
-      vy: (Math.random() - 0.5) * 0.14,
-      phase: Math.random() * Math.PI * 2,
-      freq: 0.0006 + Math.random() * 0.0004,
-      col,
-      alpha: 0.06 + Math.random() * 0.08,
-    };
-  }
-
-  function init() {
-    W = c.width  = window.innerWidth;
-    H = c.height = window.innerHeight;
-    blobs = Array.from({ length: 7 }, (_, i) => mkBlob(i));
-  }
-
-  let t = 0;
-  function draw() {
-    t++;
-    ctx.clearRect(0, 0, W, H);
-    for (const b of blobs) {
-      b.x += b.vx + Math.sin(t * b.freq + b.phase) * 0.6;
-      b.y += b.vy + Math.cos(t * b.freq + b.phase) * 0.5;
-      if (b.x < -b.r)   b.x = W + b.r;
-      if (b.x > W + b.r) b.x = -b.r;
-      if (b.y < -b.r)   b.y = H + b.r;
-      if (b.y > H + b.r) b.y = -b.r;
-
-      const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-      const {r, g:gb, b:bb} = b.col;
-      g.addColorStop(0,   `rgba(${r},${gb},${bb},${b.alpha})`);
-      g.addColorStop(0.5, `rgba(${r},${gb},${bb},${b.alpha * 0.3})`);
-      g.addColorStop(1,   `rgba(${r},${gb},${bb},0)`);
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-      ctx.fillStyle = g;
-      ctx.fill();
+  // ════════════════════════════
+  // NAV SCROLL EFFECT
+  // ════════════════════════════
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('navbar');
+    if (window.scrollY > 50) {
+      nav.classList.add('scrolled');
+    } else {
+      nav.classList.remove('scrolled');
     }
-    requestAnimationFrame(draw);
-  }
-
-  window.addEventListener('resize', init);
-  init();
-  requestAnimationFrame(draw);
-})();
-
-/* ── Scroll Reveal ── */
-(function(){
-  const io = new IntersectionObserver(entries =>
-    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('on'); }),
-    { threshold: 0.1 }
-  );
-  document.querySelectorAll('.r').forEach(el => io.observe(el));
-})();
-
-/* ── Slider range fill + calc ── */
-(function(){
-  function pct(input) {
-    const min = +input.min, max = +input.max, val = +input.value;
-    return ((val - min) / (max - min) * 100).toFixed(1) + '%';
-  }
-
-  function updateCalc() {
-    const docs      = +document.getElementById('s-docs').value;
-    const msgs      = +document.getElementById('s-msgs').value;
-    const appts     = +document.getElementById('s-appts').value;
-    const reminders = +document.getElementById('s-reminders').value;
-
-    // hours per month eliminated
-    const msgsH      = msgs * 30 * (2/60);        // 2 min per message
-    const apptsH      = appts * 4 * (8/60);        // 8 min per appt across 4 weeks
-    const remindersH  = reminders * 4 * (3/60);    // 3 min per reminder
-    const totalH      = Math.round(msgsH + apptsH + remindersH);
-
-    // context switches (each manual task = context switch)
-    const switches = Math.round(msgs * 30 * 0.6 + appts * 4 * 2);
-
-    // missed appts recovered (estimated)
-    const missed = Math.round(appts * 4 * 0.12); // 12% would have been missed
-
-    // friction points
-    const friction = Math.round(totalH * 1.8);
-
-    document.getElementById('o-hours').textContent   = totalH;
-    document.getElementById('o-switches').textContent = switches;
-    document.getElementById('o-missed').textContent   = missed;
-    document.getElementById('o-friction').textContent  = friction;
-    document.getElementById('o-cost').textContent     = docs >= 5 ? '499 ر.س' : '299 ر.س';
-  }
-
-  ['s-docs','s-msgs','s-appts','s-reminders'].forEach(id => {
-    const input = document.getElementById(id);
-    const valEl = document.getElementById('v-' + id.split('-')[1]);
-    function sync() {
-      valEl.textContent = input.value;
-      input.style.setProperty('--pct', pct(input));
-      updateCalc();
-    }
-    input.addEventListener('input', sync);
-    sync();
   });
-})();
 
-/* ── Live dashboard ticker ── */
-(function(){
-  const el = document.getElementById('resp-num');
-  const bar = document.getElementById('resp-bar');
-  if (!el) return;
-  setInterval(() => {
-    const v = 38 + Math.floor(Math.random() * 30);
-    el.textContent = v;
-    bar.style.width = Math.max(60, 100 - v) + '%';
-  }, 4000);
-})();
+  // Dashboard Ticker Logic
+  function updateDashboard() {
+    const loadBar = document.getElementById('load-bar');
+    const loadVal = document.getElementById('load-val');
+    const conscBar = document.getElementById('consc-bar');
+    const conscVal = document.getElementById('consc-val');
+    const trustBar = document.getElementById('trust-bar');
+    const trustVal = document.getElementById('trust-val');
+
+    if (loadBar) {
+      let v = 10 + Math.floor(Math.random() * 25); 
+      loadBar.style.width = v + '%';
+      loadVal.textContent = v + '%';
+    }
+    if (conscBar) {
+      let c = 94 + (Math.random() * 2).toFixed(1);
+      conscBar.style.width = c + '%';
+      conscVal.textContent = c + '%';
+    }
+    if (trustBar) {
+      let t = 99 + (Math.random() * 0.9).toFixed(1);
+      trustBar.style.width = t + '%';
+      trustVal.textContent = t + '%';
+    }
+  }
+  setInterval(updateDashboard, 4000);
+  updateDashboard();
+
+  // ════════════════════════════
+  // CONTACT FLOW (CHAT)
+  // ════════════════════════════
+  const chatMsgs = document.getElementById('chat-msgs');
+  const chatOpts = document.getElementById('chat-opts');
+  const chatCrumb = document.getElementById('chat-crumb');
+  const chatWindow = document.getElementById('chat-window');
+
+  const flow = {
+    start: {
+      text: "أهلاً بك في وعي Qudozen. كيف يمكن لهذا النظام خدمتك اليوم؟",
+      opts: [
+        { text: "أريد فهم الطبقات الثلاث", next: "understanding" },
+        { text: "أواجه مشكلة تقنية", next: "support" },
+        { text: "أريد الاشتراك (عيادة جديدة)", next: "onboarding" },
+        { text: "أنا عميل حالي (لوحة التحكم)", next: "dashboard_links" },
+        { text: "تواصل مباشر مع إنسان", next: "direct" }
+      ]
+    },
+    // Path 1: Understanding
+    understanding: {
+      text: "النظام يعمل عبر 3 طبقات:\n1. الاستقبال (Reception)\n2. التنسيق (Coordination)\n3. التطور (Evolution)\nأي طبقة تود التعمق فيها؟",
+      opts: [
+        { text: "طبقة الاستقبال الذكي", next: "layer1" },
+        { text: "طبقة التنسيق الآلي", next: "layer2" },
+        { text: "التعلم المستمر (Evolution)", next: "layer3" },
+        { text: "عد للبداية", next: "start" }
+      ]
+    },
+    layer1: { text: "الاستقبال: يرد النظام في 3 ثوانٍ على WhatsApp، يحجز المواعيد، ويزيل ضغط المكالمات تماماً.", opts: [{ text: "فهمت، أريد الاشتراك", next: "onboarding" }, { text: "عودة", next: "understanding" }] },
+    layer2: { text: "التنسيق: يربط الأطباء بالموارد ويمنع التعارضات. موظف الاستقبال يتحول لمشرف بدلاً من مُدخل بيانات.", opts: [{ text: "فهمت، أريد الاشتراك", next: "onboarding" }, { text: "عودة", next: "understanding" }] },
+    layer3: { text: "التطور: النظام يحلل أنماط عيادتك ويقترح تحسينات، ويصبح أسرع وأدق مع كل محادثة.", opts: [{ text: "فهمت، أريد الاشتراك", next: "onboarding" }, { text: "عودة", next: "understanding" }] },
+
+    // Path 2: Support
+    support: {
+      text: "نعتذر عن الإزعاج. ما نوع المشكلة؟",
+      opts: [
+        { text: "النظام لا يستجيب", next: "direct" },
+        { text: "خطأ في مزامنة المواعيد", next: "direct" },
+        { text: "تحديث الإعدادات", next: "direct" },
+        { text: "أخرى", next: "direct" }
+      ]
+    },
+
+    // Path 3: Onboarding
+    onboarding: {
+      text: "الاشتراك يبدأ من 299 SAR أو 499 SAR + رسوم تأسيس.\nما هو حجم منشأتك؟",
+      opts: [
+        { text: "طبيب واحد / عيادة ناشئة", next: "direct" },
+        { text: "مركز طبي (2-5 أطباء)", next: "direct" },
+        { text: "مجموعة طبية (Swarm)", next: "direct" }
+      ]
+    },
+
+    // Path 4: Client
+    dashboard_links: {
+      text: "يمكنك الوصول لأدواتك هنا:",
+      opts: [
+        { text: "لوحة التحكم الحية", url: "/growth/dashboard" },
+        { text: "تحديث الفواتير", next: "direct" },
+        { text: "إعدادات العيادة", next: "direct" },
+        { text: "عودة", next: "start" }
+      ]
+    },
+
+    // Path 5: Direct
+    direct: {
+      text: "سيقوم أحد خبراء البنية التحتية لدينا بالرد عليك خلال 4 ساعات كحد أقصى. تواصل معنا الآن عبر WhatsApp.",
+      opts: [
+        { text: "فتح WhatsApp", url: "https://wa.me/14155238886?text=مرحبا+Qudozen+طلب+مساعدة" },
+        { text: "عد للبداية", next: "start" }
+      ]
+    }
+  };
+
+  function toggleChat() {
+    chatWindow.classList.toggle('open');
+    if (chatWindow.classList.contains('open') && chatMsgs.innerHTML === "") {
+      renderStep('start');
+    }
+  }
+
+  function renderStep(stepId) {
+    const step = flow[stepId];
+    chatCrumb.textContent = `المسار: ${stepId === 'start' ? 'البداية' : stepId}`;
+    
+    // Add bot message
+    const botDiv = document.createElement('div');
+    botDiv.className = 'cmsg cmsg-bot';
+    botDiv.textContent = step.text;
+    chatMsgs.appendChild(botDiv);
+    chatMsgs.scrollTop = chatMsgs.scrollHeight;
+
+    // Render options
+    chatOpts.innerHTML = "";
+    step.opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'copt';
+      btn.textContent = opt.text;
+      btn.onclick = () => {
+        if (opt.url) {
+          window.open(opt.url, '_blank');
+        } else {
+          addUserMsg(opt.text);
+          setTimeout(() => renderStep(opt.next), 600);
+        }
+      };
+      chatOpts.appendChild(btn);
+    });
+  }
+
+  function addUserMsg(text) {
+    const userDiv = document.createElement('div');
+    userDiv.className = 'cmsg cmsg-user';
+    userDiv.textContent = text;
+    chatMsgs.appendChild(userDiv);
+    chatMsgs.scrollTop = chatMsgs.scrollHeight;
+    chatOpts.innerHTML = '<div class="chat-typing-ind"><span></span><span></span><span></span></div>';
+  }
+
+  function resetChat() {
+    chatMsgs.innerHTML = "";
+    renderStep('start');
+  }
+
+  function selectOption(id) {
+    if (id === 'contact') {
+      window.open("https://wa.me/14155238886", "_blank");
+    }
+  }
 </script>
 </body>
 </html>
