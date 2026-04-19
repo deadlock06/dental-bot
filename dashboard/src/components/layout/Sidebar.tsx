@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Building2, Calendar, Users, Stethoscope,
-  BarChart3, Settings, ChevronLeft, ChevronRight, Zap, X
+  BarChart3, Settings, ChevronLeft, ChevronRight, Zap, X, Target
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { to: '/dashboard/clinics', icon: Building2, label: 'Clinics' },
   { to: '/dashboard/appointments', icon: Calendar, label: 'Appointments' },
   { to: '/dashboard/patients', icon: Users, label: 'Patients' },
+  { to: '/dashboard/leads', icon: Target, label: 'Growth Swarm' },
   { to: '/dashboard/doctors', icon: Stethoscope, label: 'Doctors' },
   { to: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/dashboard/settings', icon: Settings, label: 'Settings' },

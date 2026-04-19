@@ -111,3 +111,18 @@ export type AppointmentStatus = 'confirmed' | 'pending' | 'cancelled' | 'complet
 export type DoctorDay = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
 export type ClinicPlan = 'basic' | 'pro';
 export type Period = '7d' | '30d' | '90d';
+
+export interface Lead {
+  id: string;
+  phone: string;
+  name?: string;
+  source: string;
+  category: string;
+  status: 'new' | 'contacted' | 'appointment_booked' | 'lost' | 'opt_out';
+  confidence_score: number;
+  last_contacted_at?: string;
+  created_at: string;
+  metadata?: any;
+}
+
+export type LeadStatus = 'new' | 'contacted' | 'appointment_booked' | 'lost' | 'opt_out';

@@ -11,6 +11,7 @@ import Patients from './pages/Patients';
 import Doctors from './pages/Doctors';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
+import Leads from './pages/Leads';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +40,7 @@ export default function App() {
               <Route path="clinics" element={<Clinics />} />
               <Route path="appointments" element={<Appointments />} />
               <Route path="patients" element={<Patients />} />
+              <Route path="leads" element={<Leads />} />
               <Route path="doctors" element={<Doctors />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="settings" element={<Settings />} />

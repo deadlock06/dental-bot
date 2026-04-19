@@ -207,3 +207,57 @@ export const MOCK_DASHBOARD_STATS: DashboardStats = {
     { hour: '5 PM', count: 7 },
   ],
 };
+
+export const MOCK_LEADS: any[] = [
+  {
+    id: 'lead-1',
+    phone: '966501112223',
+    name: 'Ahmed Al-Farsi',
+    source: 'Instagram Ad',
+    category: 'Dental Implants',
+    status: 'new',
+    confidence_score: 92,
+    created_at: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: 'lead-2',
+    phone: '966504445556',
+    name: 'Sarah Wilson',
+    source: 'Google Search',
+    category: 'Invisalign',
+    status: 'contacted',
+    confidence_score: 85,
+    created_at: new Date(Date.now() - 7200000).toISOString(),
+    last_contacted_at: new Date(Date.now() - 1200000).toISOString(),
+  },
+  {
+    id: 'lead-3',
+    phone: '966507778889',
+    name: 'Khalid Mohammed',
+    source: 'Facebook Campaign',
+    category: 'General Checkup',
+    status: 'appointment_booked',
+    confidence_score: 98,
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: 'lead-4',
+    phone: '966509990001',
+    name: 'Emma Thompson',
+    source: 'Referral',
+    category: 'Teeth Whitening',
+    status: 'lost',
+    confidence_score: 45,
+    created_at: new Date(Date.now() - 172800000).toISOString(),
+  },
+  {
+    id: 'lead-5',
+    phone: '966501239876',
+    name: 'Yousef Nasser',
+    source: 'Direct WhatsApp',
+    category: 'Emergency Pain',
+    status: 'new',
+    confidence_score: 100,
+    created_at: new Date(Date.now() - 600000).toISOString(),
+  }
+];
