@@ -652,13 +652,13 @@ router.get('/dashboard', basicAuth, async (req, res) => {
   </div>
 
   <div class="actions">
-    ${s.new > 0 || s.review > 0 ? `<button class="btn btn-primary" onclick="sendBatch()">📤 Send Batch (5)</button>` : '<button class="btn btn-secondary" disabled>📤 No New Leads</button>'}
-    ${s.messaged > 0 || s.bumped1 > 0 ? `<button class="btn btn-warning" onclick="runFollowUps()">🔁 Run Follow-ups</button>` : ''}
+    ${s.new > 0 || s.review > 0 ? '<button class="btn btn-primary" onclick="sendBatch()">📤 Send Batch (5)</button>' : '<button class="btn btn-secondary" disabled>📤 No New Leads</button>'}
+    ${s.messaged > 0 || s.bumped1 > 0 ? '<button class="btn btn-warning" onclick="runFollowUps()">🔁 Run Follow-ups</button>' : ''}
     <button class="btn btn-success" onclick="scoutIndeed()">🔍 Scout Indeed</button>
     <button class="btn btn-secondary" onclick="window.location.reload()">↺ Refresh</button>
   </div>
 
-  ${s.review > 0 ? `<div class="section-title">⚠️ Needs Review (${s.review})</div>` : ''}
+  ${s.review > 0 ? '<div class="section-title">⚠️ Needs Review (' + s.review + ')</div>' : ''}
 
   <div class="filter-bar">
     <select onchange="filterByStatus(this.value)">

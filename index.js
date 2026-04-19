@@ -193,7 +193,7 @@ function parseDateToISO(dateStr) {
 
 app.post('/send-reminders', async (req, res) => {
   res.sendStatus(200);
-
+  try {
     const { getAppointmentsDueTomorrow, getAppointmentsDueInOneHour, getAppointmentsDueFollowUp } = require('./db');
     
     // Fetch specifically what we need for this run
