@@ -575,6 +575,16 @@ router.get('/dashboard', basicAuth, async (req, res) => {
 
   console.log('[dashboard] Loaded — ' + all.length + ' leads');
 
+  const needsReviewTitle = s.review > 0 ? `<div class="section-title">⚠️ Needs Review (${s.review})</div>` : '';
+  const actionsHtml = `
+    ${s.new > 0 || s.review > 0 ? '<button class="btn btn-primary" onclick="sendBatch()">📤 Send Batch (5)</button>' : '<button class="btn btn-secondary" disabled>📤 No New Leads</button>'}
+    ${s.messaged > 0 || s.bumped1 > 0 ? '<button class="btn btn-warning" onclick="runFollowUps()">🔁 Run Follow-ups</button>' : ''}
+    <button class="btn btn-success" onclick="scoutIndeed()">🔍 Scout Indeed</button>
+    <button class="btn btn-secondary" onclick="window.location.reload()">↺ Refresh</button>
+  `;
+  const tableContent = rows || '<tr><td colspan="8" style="text-align:center;padding:40px;color:#8b949e">No leads yet</td></tr>';
+  const displayDate = new Date().toLocaleDateString('en-GB');
+
   res.send(`<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -631,7 +641,7 @@ router.get('/dashboard', basicAuth, async (req, res) => {
 <div class="topbar">
   <div>
     <h1>🚀 Anti-Gravity Dashboard</h1>
-    <div class="sub">Growth Swarm V2.5 — ${new Date().toLocaleDateString('en-GB')}</div>
+    <div class="sub">Growth Swarm V2.5 — ${displayDate}</div>
   </div>
   <div style="display:flex;gap:8px">
     <a href="/growth/room?clinic=Demo&city=Riyadh" target="_blank" class="btn btn-secondary" style="text-decoration:none;font-size:12px">Ghost Room</a>
@@ -652,13 +662,10 @@ router.get('/dashboard', basicAuth, async (req, res) => {
   </div>
 
   <div class="actions">
-    ${s.new > 0 || s.review > 0 ? '<button class="btn btn-primary" onclick="sendBatch()">📤 Send Batch (5)</button>' : '<button class="btn btn-secondary" disabled>📤 No New Leads</button>'}
-    ${s.messaged > 0 || s.bumped1 > 0 ? '<button class="btn btn-warning" onclick="runFollowUps()">🔁 Run Follow-ups</button>' : ''}
-    <button class="btn btn-success" onclick="scoutIndeed()">🔍 Scout Indeed</button>
-    <button class="btn btn-secondary" onclick="window.location.reload()">↺ Refresh</button>
+    ${actionsHtml}
   </div>
 
-  ${s.review > 0 ? '<div class="section-title">⚠️ Needs Review (' + s.review + ')</div>' : ''}
+  ${needsReviewTitle}
 
   <div class="filter-bar">
     <select onchange="filterByStatus(this.value)">
@@ -680,7 +687,7 @@ router.get('/dashboard', basicAuth, async (req, res) => {
         <th>العيادة</th><th>Business</th><th>City</th><th>Status</th>
         <th>Score</th><th>Pain</th><th>Last Contact</th><th>Actions</th>
       </tr></thead>
-      <tbody>${rows || '<tr><td colspan="8" style="text-align:center;padding:40px;color:#8b949e">No leads yet</td></tr>'}</tbody>
+      <tbody>${tableContent}</tbody>
     </table>
   </div>
   <div style="margin-top:40px; text-align:center; color:#4b5563; font-size:11px;">
