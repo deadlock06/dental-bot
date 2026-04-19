@@ -1,5 +1,5 @@
 const { getPatient, insertPatient, savePatient, saveAppointment, getAppointment, updateAppointment, checkDuplicateBooking } = require('./db');
-const { sendMessage, sendMainMenu, sendPropertyTypeMenu, sendDoctorMenu, sendTimeSlotMenu, sendInteractiveList } = require('./whatsapp');
+const { sendMessage, sendMainMenu, sendTreatmentMenu, sendDoctorMenu, sendTimeSlotMenu, sendInteractiveList } = require('./whatsapp');
 const { detectIntent, extractDate, extractTimeSlot } = require('./ai');
 const { withMonitor, validateFlowState, logError } = require('./monitor');
 
@@ -56,27 +56,27 @@ function menuEN(clinicOrName) {
   const name = typeof clinicOrName === 'string' ? clinicOrName : (clinicOrName?.name || 'Our Clinic');
   console.log('[Menu] Clinic name:', name);
   const cfg  = typeof clinicOrName === 'object' ? clinicOrName?.config : null;
-  const welcome       = cfg?.messages?.welcome_en       || `Welcome to ${name}! 🏠✨`;
+  const welcome       = cfg?.messages?.welcome_en       || `Welcome to ${name}! 🦷✨`;
   const showReschedule = cfg?.features?.reschedule       !== false;
   const showCancel     = cfg?.features?.cancel           !== false;
-  let menu = `${welcome}\nI'm your AI real estate assistant, available 24/7.\nHow can I help you today?\n\n1️⃣ Book viewing\n2️⃣ My appointment\n`;
+  let menu = `${welcome}\nI'm your AI dental assistant, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment\n2️⃣ My appointment\n`;
   if (showReschedule) menu += `3️⃣ Reschedule\n`;
   if (showCancel)     menu += `4️⃣ Cancel appointment\n`;
-  menu += `5️⃣ Our listings\n6️⃣ Meet Our Agents 🤝\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍💼 (type 10)\n\n💡 Tap a number or tell me what you need 😊`;
+  menu += `5️⃣ Our services\n6️⃣ Meet Our Doctors 👨‍⚕️\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍⚕️ (type 10)\n\n💡 Tap a number or tell me what you need 😊`;
   return menu;
 }
 
 function menuAR(clinicOrName) {
-  const name = typeof clinicOrName === 'string' ? clinicOrName : (clinicOrName?.name || 'وكالتنا');
+  const name = typeof clinicOrName === 'string' ? clinicOrName : (clinicOrName?.name || 'عيادتنا');
   console.log('[Menu] Clinic name:', name);
   const cfg  = typeof clinicOrName === 'object' ? clinicOrName?.config : null;
-  const welcome       = cfg?.messages?.welcome_ar       || `أهلاً وسهلاً بك في ${name}! 🏠✨`;
+  const welcome       = cfg?.messages?.welcome_ar       || `أهلاً وسهلاً بك في ${name}! 🦷✨`;
   const showReschedule = cfg?.features?.reschedule       !== false;
   const showCancel     = cfg?.features?.cancel           !== false;
-  let menu = `${welcome}\nأنا مساعدك الذكي للعقارات، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز معاينة\n2️⃣ موعدي الحالي\n`;
+  let menu = `${welcome}\nأنا مساعدك الذكي، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد\n2️⃣ موعدي الحالي\n`;
   if (showReschedule) menu += `3️⃣ إعادة جدولة\n`;
   if (showCancel)     menu += `4️⃣ إلغاء الموعد\n`;
-  menu += `5️⃣ عقاراتنا\n6️⃣ تعرف على وكلائنا 🤝\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم الوكالة ⭐\n🔟 التحدث مع الفريق 👩‍💼 (اكتب 10)\n\n💡 اضغط رقماً أو أخبرني بما تحتاج 😊`;
+  menu += `5️⃣ خدماتنا\n6️⃣ تعرف على أطبائنا 👨‍⚕️\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️ (اكتب 10)\n\n💡 اضغط رقماً أو أخبرني بما تحتاج 😊`;
   return menu;
 }
 
@@ -549,8 +549,8 @@ async function getClinicDoctors(cl) {
         name_ar:          s.doctor_name,
         degree:           '',
         degree_ar:        '',
-        specialization:   daysShort ? `${daysShort}, ${startFmt}–${endFmt}` : 'General Consultation',
-        specialization_ar: daysArStr ? `${daysArStr}، ${startFmt}–${endFmt}` : 'استشارة عامة',
+        specialization:   daysShort ? `${daysShort}, ${startFmt}–${endFmt}` : 'General Dentistry',
+        specialization_ar: daysArStr ? `${daysArStr}، ${startFmt}–${endFmt}` : 'طب أسنان عام',
         available:        `${startFmt}–${endFmt}`,
         available_ar:     `${startFmt}–${endFmt}`
       };
@@ -562,22 +562,31 @@ async function getClinicDoctors(cl) {
 }
 
 // ─────────────────────────────────────────────
-// Property type mapping
+// Treatment mapping
 // ─────────────────────────────────────────────
-function mapPropertyType(input) {
+function mapTreatment(input) {
   const s = String(input).trim().toLowerCase();
   if (/^[1-8]$/.test(s)) {
-    return ['Apartment', 'Villa', 'Studio', 'Townhouse', 'Office', 'Warehouse', 'Land', 'Other'][parseInt(s) - 1];
+    return ['Cleaning & Polishing', 'Fillings', 'Braces & Orthodontics', 'Teeth Whitening', 'Extraction', 'Dental Implants', 'Root Canal', 'Other'][parseInt(s) - 1];
   }
-  if (/apartment|شقة/i.test(s))           return 'Apartment';
-  if (/villa|فيلا/i.test(s))              return 'Villa';
-  if (/studio|استوديو/i.test(s))          return 'Studio';
-  if (/townhouse|تاون هاوس/i.test(s))     return 'Townhouse';
-  if (/office|مكتب/i.test(s))             return 'Office';
-  if (/warehouse|مستودع/i.test(s))        return 'Warehouse';
-  if (/land|أرض/i.test(s))               return 'Land';
-  if (/^(apartment|villa|studio|townhouse|office|warehouse|land|other)$/i.test(s)) return input;
-  if (/أخرى/i.test(s))                    return 'Other';
+  if (/clean|polish|تنظيف|تلميع|جرم/i.test(s))       return 'Cleaning & Polishing';
+  if (/fill|cavity|حشو|تسوس/i.test(s))               return 'Fillings';
+  if (/brace|orthodon|تقويم/i.test(s))               return 'Braces & Orthodontics';
+  if (/whiten|bleach|تبييض/i.test(s))                return 'Teeth Whitening';
+  if (/extract|pull|remov.*tooth|خلع|قلع/i.test(s))  return 'Extraction';
+  if (/implant|زراعة/i.test(s))                      return 'Dental Implants';
+  if (/root canal|nerve|عصب|جذر/i.test(s))           return 'Root Canal';
+  if (/cleaning & polishing|fillings|braces & orthodontics|teeth whitening|extraction|dental implants|root canal|^other$/i.test(s)) return input; // already clean
+  // Arabic menu labels → English
+  if (/تنظيف وتلميع/i.test(s))    return 'Cleaning & Polishing';
+  if (/حشوات/i.test(s))           return 'Fillings';
+  if (/تقويم الأسنان/i.test(s))   return 'Braces & Orthodontics';
+  if (/تبييض الأسنان/i.test(s))   return 'Teeth Whitening';
+  if (/خلع/i.test(s))             return 'Extraction';
+  if (/زراعة أسنان/i.test(s))     return 'Dental Implants';
+  if (/علاج العصب/i.test(s))      return 'Root Canal';
+  if (/أخرى/i.test(s))            return 'Other';
+  // Unknown free text
   return `Other: ${String(input).trim()}`;
 }
 
@@ -623,11 +632,11 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
   if (step === 1) {
     const rawName = val.trim();
 
-    // Reject: property inquiry words entered instead of a name
-    if (/apartment|villa|studio|office|rent|buy|sell|شقة|فيلا|إيجار|بيع|شراء/i.test(rawName)) {
+    // Reject: symptom/pain words entered instead of a name
+    if (/يوجع|ألم|وجع|pain|hurt|ache|toothache|cavity|tooth/i.test(rawName)) {
       return sendMessage(phone, ar
-        ? 'يبدو أنك تبحث عن عقار 😊 لنبدأ الحجز — ما اسمك الكريم؟'
-        : "Sounds like you're looking for a property 😊 Let's get you booked — what's your full name?"
+        ? 'يبدو أن عندك ألم 😊 لنبدأ الحجز — ما اسمك الكريم؟'
+        : "Sounds like you have a dental issue 😊 Let's get you booked — what's your full name?"
       );
     }
     // Reject: too short or a number
@@ -657,14 +666,14 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     }
     fd.phone = phone;
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
-    return sendMessage(phone, propertyTypeMenuMsg(ar));
+    return sendMessage(phone, treatmentMenuMsg(ar));
   }
 
   // Step 21 — Custom phone entry
   if (step === 21) {
     fd.phone = val;
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
-    return sendMessage(phone, propertyTypeMenuMsg(ar));
+    return sendMessage(phone, treatmentMenuMsg(ar));
   }
 
   // Step 3 — Treatment type
@@ -673,11 +682,11 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     const source = (!isNaN(parseInt(rawMsg)) && parseInt(rawMsg) >= 1 && parseInt(rawMsg) <= 8)
       ? rawMsg                          // number input → mapTreatment handles it
       : (extractedValue || rawMsg);     // AI value or free text
-    fd.treatment = mapPropertyType(source);
+    fd.treatment = mapTreatment(source);
     await savePatient(phone, { ...patient, flow_step: 4, flow_data: fd });
     return sendMessage(phone, ar
-      ? 'هل لديك ملاحظات أو متطلبات خاصة؟ (اختياري)\n\n💡 اكتب ملاحظتك أو أرسل *skip* للتخطي\n0️⃣ القائمة الرئيسية'
-      : 'Any notes or special requirements? (optional)\n\n💡 Type your note or send *skip* to continue\n0️⃣ Main menu'
+      ? 'هل لديك ملاحظات أو وصف للمشكلة؟ (اختياري)\n\n💡 اكتب ملاحظتك أو أرسل *skip* للتخطي\n0️⃣ القائمة الرئيسية'
+      : 'Any notes or description of your issue? (optional)\n\n💡 Type your note or send *skip* to continue\n0️⃣ Main menu'
     );
   }
 
@@ -1187,7 +1196,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
         const staffTime = fd.time_slot;
         const doctorLine = fd.doctor_name ? `\n👨‍⚕️ Doctor: ${fd.doctor_name}` : '';
         await sendMessage(cl.staff_phone,
-          `🏠 New Viewing Request!\n━━━━━━━━━━━━━━\n👤 Client: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n🔧 Property Type: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}${doctorLine}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${staffTime}\n━━━━━━━━━━━━━━\nBooked via WhatsApp AI ✅`
+          `🦷 New Booking Alert!\n━━━━━━━━━━━━━━\n👤 Patient: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n🔧 Treatment: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}${doctorLine}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${staffTime}\n━━━━━━━━━━━━━━\nBooked via WhatsApp AI ✅`
         );
       }
       console.log('[TRACE] Step 8 Execution: point D - Setting up Reminder');
@@ -1207,8 +1216,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       setTimeout(async () => {
         try {
           const msg = reminderAr
-            ? `⏰ *تذكير بموعدك!* 🏠\n\nمرحباً ${reminderName}،\nتم تأكيد موعدك بنجاح:\n📅 ${reminderDate}\n⏰ ${reminderTime}\n🏢 ${reminderClinic}\n\nنتطلع لرؤيتك! 😊`
-            : `⏰ *Appointment Reminder!* 🏠\n\nHi ${reminderName},\nYour appointment is confirmed:\n📅 ${reminderDate}\n⏰ ${reminderTime}\n🏢 ${reminderClinic}\n\nWe look forward to seeing you! 😊`;
+            ? `⏰ *تذكير بموعدك!* 🦷\n\nمرحباً ${reminderName}،\nتم تأكيد موعدك بنجاح:\n📅 ${reminderDate}\n⏰ ${reminderTime}\n🏥 ${reminderClinic}\n\nنتطلع لرؤيتك! 😊`
+            : `⏰ *Appointment Reminder!* 🦷\n\nHi ${reminderName},\nYour appointment is confirmed:\n📅 ${reminderDate}\n⏰ ${reminderTime}\n🏥 ${reminderClinic}\n\nWe look forward to seeing you! 😊`;
           await sendMessage(reminderPhone, msg);
           console.log(`[Reminder] ✅ 3-min post-booking reminder sent to: ${reminderPhone}`);
         } catch (e) {
@@ -1228,8 +1237,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       // This guarantees the patient always receives their confirmation message.
       // If sendMessage throws, the patient remains in step 8 and can retry.
       await sendMessage(phone, ar
-        ? `🎉 *تم تأكيد موعدك!*\n\n📅 ${confirmDate}\n⏰ ${confirmTime}\n🏢 ${cl.name}\n🏠 ${confirmTreatment}${doctorConfirmLine}\n\nسنرسل لك تذكيراً قبل موعدك. نراك قريباً! 😊\n\n💡 اكتب *help* في أي وقت لرؤية خياراتك\n0️⃣ القائمة الرئيسية`
-        : `🎉 *Appointment Confirmed!*\n\n📅 ${fd.preferred_date}\n⏰ ${fd.time_slot}\n🏢 ${cl.name}\n🏠 ${fd.treatment}${doctorConfirmLine}\n\nWe'll send you a reminder before your appointment. See you then! 😊\n\n💡 Type *help* anytime to see your options\n0️⃣ Main menu`
+        ? `🎉 *تم تأكيد موعدك!*\n\n📅 ${confirmDate}\n⏰ ${confirmTime}\n🏥 ${cl.name}\n🦷 ${confirmTreatment}${doctorConfirmLine}\n\nسنرسل لك تذكيراً قبل موعدك. نراك قريباً! 😊\n\n💡 اكتب *help* في أي وقت لرؤية خياراتك\n0️⃣ القائمة الرئيسية`
+        : `🎉 *Appointment Confirmed!*\n\n📅 ${fd.preferred_date}\n⏰ ${fd.time_slot}\n🏥 ${cl.name}\n🦷 ${fd.treatment}${doctorConfirmLine}\n\nWe'll send you a reminder before your appointment. See you then! 😊\n\n💡 Type *help* anytime to see your options\n0️⃣ Main menu`
       );
 
       // Now safe to clear flow — confirmation is already delivered
@@ -1339,8 +1348,8 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
       setTimeout(async () => {
         try {
           const msg = reminderAr
-            ? `⏰ *تذكير بموعدك!* 🏠\n\nمرحباً ${fd.name}،\nتم تأكيد موعدك بنجاح:\n📅 ${fd.new_date}\n⏰ ${fd.new_slot}\n🏢 ${cl.name}\n\nنتطلع لرؤيتك! 😊`
-            : `⏰ *Appointment Reminder!* 🏠\n\nHi ${fd.name},\nYour appointment is confirmed:\n📅 ${fd.new_date}\n⏰ ${fd.new_slot}\n🏢 ${cl.name}\n\nWe look forward to seeing you! 😊`;
+            ? `⏰ *تذكير بموعدك!* 🦷\n\nمرحباً ${fd.name}،\nتم تأكيد موعدك بنجاح:\n📅 ${fd.new_date}\n⏰ ${fd.new_slot}\n🏥 ${cl.name}\n\nنتطلع لرؤيتك! 😊`
+            : `⏰ *Appointment Reminder!* 🦷\n\nHi ${fd.name},\nYour appointment is confirmed:\n📅 ${fd.new_date}\n⏰ ${fd.new_slot}\n🏥 ${cl.name}\n\nWe look forward to seeing you! 😊`;
           await sendMessage(reminderPhone, msg);
           console.log(`[Reminder] ✅ 3-min post-booking reminder sent to: ${reminderPhone} (Reschedule)`);
         } catch (e) {
@@ -1493,8 +1502,8 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
       await savePatient(phone, { ...patient, current_flow: 'my_appointment', flow_step: 1, flow_data: { appointment_id: appt.id } });
       const apptTimeDisplay = ar ? toArabicTime(appt.time_slot) : appt.time_slot;
       return sendMessage(phone, ar
-        ? `📋 موعدك القادم:\n\n👤 الاسم: ${appt.name}\n🏠 نوع العقار: ${appt.treatment}\n📅 التاريخ: ${appt.preferred_date}\n⏰ الوقت: ${apptTimeDisplay}\n🏢 الوكالة: ${cl.name}\n📊 الحالة: مؤكد ✅\n\nهل تريد تغيير شيء؟\n1️⃣ إعادة جدولة\n2️⃣ إلغاء الموعد\n3️⃣ العودة للقائمة\n\n💡 اضغط رقماً للمتابعة`
-        : `📋 Your upcoming appointment:\n\n👤 Name: ${appt.name}\n🏠 Property Type: ${appt.treatment}\n📅 Date: ${appt.preferred_date}\n⏰ Time: ${appt.time_slot}\n🏢 Agency: ${cl.name}\n📊 Status: Confirmed ✅\n\nNeed to change anything?\n1️⃣ Reschedule\n2️⃣ Cancel\n3️⃣ Back to menu\n\n💡 Tap a number to continue`
+        ? `📋 موعدك القادم:\n\n👤 الاسم: ${appt.name}\n🦷 العلاج: ${appt.treatment}\n📅 التاريخ: ${appt.preferred_date}\n⏰ الوقت: ${apptTimeDisplay}\n🏥 العيادة: ${cl.name}\n📊 الحالة: مؤكد ✅\n\nهل تريد تغيير شيء؟\n1️⃣ إعادة جدولة\n2️⃣ إلغاء الموعد\n3️⃣ العودة للقائمة\n\n💡 اضغط رقماً للمتابعة`
+        : `📋 Your upcoming appointment:\n\n👤 Name: ${appt.name}\n🦷 Treatment: ${appt.treatment}\n📅 Date: ${appt.preferred_date}\n⏰ Time: ${appt.time_slot}\n🏥 Clinic: ${cl.name}\n📊 Status: Confirmed ✅\n\nNeed to change anything?\n1️⃣ Reschedule\n2️⃣ Cancel\n3️⃣ Back to menu\n\n💡 Tap a number to continue`
       );
     }
 
@@ -1581,8 +1590,8 @@ function helpMsgEN(cl) {
   let msg = `Here's how I can help you 😊\n\n📱 *Just type a number:*\n1. Book a new appointment\n2. View your current appointment\n`;
   if (showReschedule) msg += `3. Reschedule your appointment\n`;
   if (showCancel)     msg += `4. Cancel your appointment\n`;
-  msg += `5. See our listings\n6. Meet our agents\n7. View prices\n8. Get our location\n9. Leave a review\n10. Talk to our staff\n\n`;
-  msg += `💬 *Or just tell me what you need:*\n- 'I want to view an apartment' → I'll book you in\n- 'How much for a villa?' → I'll show prices\n- 'Where are you?' → I'll share location\n- 'Cancel my appointment' → I'll handle it\n\nType 0 anytime to return to main menu 😊`;
+  msg += `5. See our services\n6. Meet our doctors\n7. View prices\n8. Get our location\n9. Leave a review\n10. Talk to our staff\n\n`;
+  msg += `💬 *Or just tell me what you need:*\n- 'I have a toothache' → I'll book you in\n- 'How much for braces?' → I'll show prices\n- 'Where are you?' → I'll share location\n- 'Cancel my appointment' → I'll handle it\n\nType 0 anytime to return to main menu 😊`;
   return msg;
 }
 
@@ -1592,21 +1601,21 @@ function helpMsgAR(cl) {
   let msg = `إليك كيف يمكنني مساعدتك 😊\n\n📱 *اكتب رقماً فقط:*\n1. حجز موعد جديد\n2. عرض موعدك الحالي\n`;
   if (showReschedule) msg += `3. إعادة جدولة الموعد\n`;
   if (showCancel)     msg += `4. إلغاء الموعد\n`;
-  msg += `5. عقاراتنا\n6. تعرف على وكلائنا\n7. الأسعار\n8. موقعنا\n9. تقييم الوكالة\n10. التحدث مع الفريق\n\n`;
-  msg += `💬 *أو أخبرني بما تحتاج:*\n- 'أبغى أشوف شقة' ← سأحجز لك معاينة\n- 'كم سعر الفيلا؟' ← سأعرض الأسعار\n- 'وين مكتبكم؟' ← سأشارك الموقع\n- 'أبغى ألغي موعدي' ← سأتولى الأمر\n\nاكتب 0 في أي وقت للعودة للقائمة الرئيسية 😊`;
+  msg += `5. خدماتنا\n6. تعرف على أطبائنا\n7. الأسعار\n8. موقعنا\n9. تقييم العيادة\n10. التحدث مع الفريق\n\n`;
+  msg += `💬 *أو أخبرني بما تحتاج:*\n- 'سني يوجعني' ← سأحجز لك موعداً\n- 'كم سعر التقويم؟' ← سأعرض الأسعار\n- 'وين العيادة؟' ← سأشارك الموقع\n- 'أبغى ألغي موعدي' ← سأتولى الأمر\n\nاكتب 0 في أي وقت للعودة للقائمة الرئيسية 😊`;
   return msg;
 }
 
-// Arabic property type lookup
+// Arabic treatment name lookup (BUG 5)
 const TREATMENT_MAP_AR = {
-  'Apartment':  'شقة',
-  'Villa':      'فيلا',
-  'Studio':     'استوديو',
-  'Townhouse':  'تاون هاوس',
-  'Office':     'مكتب',
-  'Warehouse':  'مستودع',
-  'Land':       'أرض',
-  'Other':      'أخرى'
+  'Cleaning & Polishing': 'تنظيف وتلميع',
+  'Fillings':             'حشوات',
+  'Braces & Orthodontics':'تقويم الأسنان',
+  'Teeth Whitening':      'تبييض الأسنان',
+  'Extraction':           'خلع',
+  'Dental Implants':      'زراعة أسنان',
+  'Root Canal':           'علاج العصب',
+  'Other':                'أخرى'
 };
 
 // Convert any "H:MM AM/PM" time string to Arabic "H:MM صباحاً/مساءً"
@@ -1640,40 +1649,40 @@ function bookingSummaryMsg(ar, fd, phone, cl) {
   const displayTreatment = ar ? (TREATMENT_MAP_AR[fd.treatment] || fd.treatment) : fd.treatment;
   const displayDate      = ar ? toArabicDate(fd.preferred_date) : fd.preferred_date;
   return ar
-    ? `✅ *ملخص الحجز*\n\n👤 *الاسم:* ${fd.name}\n📱 *الهاتف:* ${fd.phone || phone}\n🏠 *نوع العقار:* ${displayTreatment}\n📝 *الملاحظات:* ${notes}\n🤝 *الوكيل:* ${doctorDisplay}\n📅 *التاريخ:* ${displayDate}\n⏰ *الوقت:* ${displayTime}\n🏢 *الوكالة:* ${cl.name}\n\nهل كل شيء صحيح؟\n1️⃣ نعم، أؤكد الحجز ✅\n2️⃣ لا، أريد تغيير شيء\n\n💡 اضغط 1 للتأكيد أو 2 للعودة`
-    : `✅ *Booking Summary*\n\n👤 *Name:* ${fd.name}\n📱 *Phone:* ${fd.phone || phone}\n🏠 *Property Type:* ${fd.treatment}\n📝 *Notes:* ${notes}\n🤝 *Agent:* ${fd.doctor_name || 'No preference'}\n📅 *Date:* ${fd.preferred_date}\n⏰ *Time:* ${fd.time_slot}\n🏢 *Agency:* ${cl.name}\n\nDoes everything look correct?\n1️⃣ Yes, confirm booking ✅\n2️⃣ No, make changes\n\n💡 Tap 1 to confirm or 2 to go back`;
+    ? `✅ *ملخص الحجز*\n\n👤 *الاسم:* ${fd.name}\n📱 *الهاتف:* ${fd.phone || phone}\n🦷 *العلاج:* ${displayTreatment}\n📝 *الملاحظات:* ${notes}\n👨‍⚕️ *الطبيب:* ${doctorDisplay}\n📅 *التاريخ:* ${displayDate}\n⏰ *الوقت:* ${displayTime}\n🏥 *العيادة:* ${cl.name}\n\nهل كل شيء صحيح؟\n1️⃣ نعم، أؤكد الحجز ✅\n2️⃣ لا، أريد تغيير شيء\n\n💡 اضغط 1 للتأكيد أو 2 للعودة`
+    : `✅ *Booking Summary*\n\n👤 *Name:* ${fd.name}\n📱 *Phone:* ${fd.phone || phone}\n🦷 *Treatment:* ${fd.treatment}\n📝 *Notes:* ${notes}\n👨‍⚕️ *Doctor:* ${fd.doctor_name || 'No preference'}\n📅 *Date:* ${fd.preferred_date}\n⏰ *Time:* ${fd.time_slot}\n🏥 *Clinic:* ${cl.name}\n\nDoes everything look correct?\n1️⃣ Yes, confirm booking ✅\n2️⃣ No, make changes\n\n💡 Tap 1 to confirm or 2 to go back`;
 }
 
 function doctorSelectionMsg(ar, doctors) {
   const lines = doctors.map((doc, i) => ar
-    ? `${i + 1}. ${doc.name_ar || doc.name}\n⭐ التخصص: ${doc.specialization_ar || doc.specialization}\n📅 متاح: ${doc.available_ar || doc.available}`
-    : `${i + 1}. ${doc.name}\n⭐ Specialization: ${doc.specialization}\n📅 Available: ${doc.available}`
+    ? `${i + 1}. د. ${doc.name_ar || doc.name}\n🎓 الدرجة: ${doc.degree_ar || doc.degree}\n⭐ التخصص: ${doc.specialization_ar || doc.specialization}\n📅 متاح: ${doc.available_ar || doc.available}`
+    : `${i + 1}. Dr. ${doc.name}\n🎓 Degree: ${doc.degree}\n⭐ Specialization: ${doc.specialization}\n📅 Available: ${doc.available}`
   );
   return ar
-    ? `🤝 فريقنا:\n\n${lines.join('\n\n')}\n\n💡 اضغط رقماً للحجز مع وكيل محدد أو اضغط *0* للمتابعة بدون تحديد`
-    : `🤝 Our Team:\n\n${lines.join('\n\n')}\n\n💡 Tap a number to book with a specific agent, or press *0* to skip`;
+    ? `👨‍⚕️ فريقنا الطبي:\n\n${lines.join('\n\n')}\n\n💡 اضغط رقماً للحجز مع طبيب محدد أو اضغط *0* للمتابعة بدون تحديد`
+    : `👨‍⚕️ Our Dental Team:\n\n${lines.join('\n\n')}\n\n💡 Tap a number to book with a specific doctor, or press *0* to skip`;
 }
 
 function doctorsMsg(ar, cl) {
   const doctors = cl.doctors || [];
   if (!doctors.length) {
     return ar
-      ? 'سيتم إضافة معلومات الوكلاء قريباً.\n1️⃣ حجز معاينة\n2️⃣ العودة للقائمة'
-      : 'Agent information will be available soon.\n1️⃣ Book a viewing\n2️⃣ Back to menu';
+      ? 'سيتم إضافة معلومات الأطباء قريباً.\n1️⃣ حجز موعد\n2️⃣ العودة للقائمة'
+      : 'Doctor information will be available soon.\n1️⃣ Book appointment\n2️⃣ Back to menu';
   }
   const lines = doctors.map((doc, i) => ar
-    ? `${i + 1}. ${doc.name_ar || doc.name}\n⭐ التخصص: ${doc.specialization_ar || doc.specialization}\n📅 متاح: ${doc.available_ar || doc.available}`
-    : `${i + 1}. ${doc.name}\n⭐ Specialization: ${doc.specialization}\n📅 Available: ${doc.available}`
+    ? `${i + 1}. د. ${doc.name_ar || doc.name}\n🎓 الدرجة: ${doc.degree_ar || doc.degree}\n⭐ التخصص: ${doc.specialization_ar || doc.specialization}\n📅 متاح: ${doc.available_ar || doc.available}`
+    : `${i + 1}. Dr. ${doc.name}\n🎓 Degree: ${doc.degree}\n⭐ Specialization: ${doc.specialization}\n📅 Available: ${doc.available}`
   );
   return ar
-    ? `🤝 فريقنا:\n\n${lines.join('\n\n')}\n\n💡 اضغط رقماً للحجز مع وكيل محدد أو اضغط 0 للقائمة الرئيسية`
-    : `🤝 Our Team:\n\n${lines.join('\n\n')}\n\n💡 Tap a number to book or 0 for main menu`;
+    ? `👨‍⚕️ فريقنا الطبي:\n\n${lines.join('\n\n')}\n\n💡 اضغط رقماً للحجز مع طبيب محدد أو اضغط 0 للقائمة الرئيسية`
+    : `👨‍⚕️ Our Dental Team:\n\n${lines.join('\n\n')}\n\n💡 Tap a number to book or 0 for main menu`;
 }
 
-function propertyTypeMenuMsg(ar) {
+function treatmentMenuMsg(ar) {
   return ar
-    ? 'ما نوع العقار الذي تبحث عنه؟\n\n1. شقة 🏢\n2. فيلا 🏡\n3. استوديو 🛏️\n4. تاون هاوس 🏘️\n5. مكتب 🏢\n6. مستودع 🏭\n7. أرض 🌍\n8. أخرى / غير متأكد\n\n💡 اضغط رقماً للاختيار\n0️⃣ القائمة الرئيسية'
-    : 'What type of property are you looking for?\n\n1. Apartment 🏢\n2. Villa 🏡\n3. Studio 🛏️\n4. Townhouse 🏘️\n5. Office 🏢\n6. Warehouse 🏭\n7. Land 🌍\n8. Other / Not sure\n\n💡 Tap a number to choose\n0️⃣ Main menu';
+    ? 'ما نوع العلاج الذي تحتاجه؟\n\n1. تنظيف وتلميع 🦷\n2. حشوات\n3. تقويم الأسنان 📐\n4. تبييض الأسنان ⚪\n5. خلع\n6. زراعة أسنان 🔬\n7. علاج العصب 🏥\n8. أخرى / غير متأكد\n\n💡 اضغط رقماً للاختيار\n0️⃣ القائمة الرئيسية'
+    : 'What type of treatment do you need?\n\n1. Cleaning & Polishing 🦷\n2. Fillings\n3. Braces & Orthodontics 📐\n4. Teeth Whitening ⚪\n5. Extraction\n6. Dental Implants 🔬\n7. Root Canal 🏥\n8. Other / Not sure\n\n💡 Tap a number to choose\n0️⃣ Main menu';
 }
 
 function timeSlotMsg(ar) {
@@ -1684,14 +1693,14 @@ function timeSlotMsg(ar) {
 
 function servicesMsg(ar) {
   return ar
-    ? '🏠 عقاراتنا:\n\n🏢 شقق للإيجار والبيع\n🏡 فلل فاخرة\n🛏️ استوديوهات\n🏘️ تاون هاوس\n🏢 مكاتب تجارية\n🏭 مستودعات وصناعي\n🌍 قطع أراضي\n🔑 إدارة عقارات\n📊 استشارات عقارية\n💼 توثيق وتسجيل\n\n💡 اضغط 1 للحجز أو 0 للقائمة الرئيسية'
-    : '🏠 Our Listings:\n\n🏢 Apartments for rent & sale\n🏡 Luxury villas\n🛏️ Studio units\n🏘️ Townhouses\n🏢 Commercial offices\n🏭 Warehouses & industrial\n🌍 Land plots\n🔑 Property management\n📊 Real estate consulting\n💼 Documentation & registration\n\n💡 Tap 1 to book or 0 for main menu';
+    ? '🦷 خدماتنا:\n\n✨ تنظيف وتلميع الأسنان\n🔧 الحشوات والترميم\n📐 تقويم الأسنان\n⚪ تبييض الأسنان\n🔬 زراعة الأسنان\n❌ خلع الأسنان\n🏥 علاج العصب\n👶 طب أسنان الأطفال\n🦷 القشور والتيجان\n😁 ابتسامة هوليوود\n\n💡 اضغط 1 للحجز أو 0 للقائمة الرئيسية'
+    : '🦷 Our Services:\n\n✨ Cleaning & Polishing\n🔧 Fillings & Restorations\n📐 Braces & Orthodontics\n⚪ Teeth Whitening\n🔬 Dental Implants\n❌ Extractions\n🏥 Root Canal Treatment\n👶 Pediatric Dentistry\n🦷 Veneers & Crowns\n😁 Smile Makeover\n\n💡 Tap 1 to book or 0 for main menu';
 }
 
 function pricesMsg(ar) {
   return ar
-    ? '💰 أسعار عقاراتنا التقريبية:\n\n🏢 شقة (إيجار): 15,000 – 60,000 ريال/سنة\n🏡 فيلا (إيجار): 60,000 – 200,000 ريال/سنة\n🛏️ استوديو: 12,000 – 25,000 ريال/سنة\n🏢 مكتب: 20,000 – 100,000 ريال/سنة\n🏘️ تاون هاوس: 40,000 – 120,000 ريال/سنة\n🌍 أرض: حسب الموقع والمساحة\n\n📌 الأسعار النهائية تُحدد بعد التفاوض.\n\n💡 اضغط 1 للحجز أو 0 للقائمة الرئيسية'
-    : '💰 Our Approximate Prices:\n\n🏢 Apartment (rent): 15,000 – 60,000 SAR/yr\n🏡 Villa (rent): 60,000 – 200,000 SAR/yr\n🛏️ Studio: 12,000 – 25,000 SAR/yr\n🏢 Office: 20,000 – 100,000 SAR/yr\n🏘️ Townhouse: 40,000 – 120,000 SAR/yr\n🌍 Land: Varies by location & area\n\n📌 Final prices depend on negotiation.\n\n💡 Tap 1 to book or 0 for main menu';
+    ? '💰 أسعارنا التقريبية:\n\n✨ تنظيف: 150-250 ريال\n🔧 حشوة: 200-400 ريال\n⚪ تبييض: 800-1,500 ريال\n📐 تقويم: 3,000-8,000 ريال\n🔬 زراعة: 3,500-6,000 ريال\n🏥 علاج عصب: 800-1,500 ريال\n🦷 قشرة: 800-1,200 ريال للسن\n\n📌 الأسعار النهائية تُحدد بعد الفحص.\n\n💡 اضغط 1 للحجز أو 0 للقائمة الرئيسية'
+    : '💰 Our Approximate Prices:\n\n✨ Cleaning: 150-250 SAR\n🔧 Filling: 200-400 SAR\n⚪ Whitening: 800-1,500 SAR\n📐 Braces: 3,000-8,000 SAR\n🔬 Implant: 3,500-6,000 SAR\n🏥 Root Canal: 800-1,500 SAR\n🦷 Veneer: 800-1,200 SAR per tooth\n\n📌 Final prices confirmed after examination.\n\n💡 Tap 1 to book or 0 for main menu';
 }
 
 function locationMsg(ar, cl) {
@@ -1702,8 +1711,8 @@ function locationMsg(ar, cl) {
 
 function reviewMsg(ar, cl) {
   return ar
-    ? `⭐ شكراً لاختيارك وكالتنا!\nرأيك يعني لنا الكثير 🙏\n\nيرجى تقييمنا على Google من هنا:\n${cl.review_link || 'https://g.page/r/your-review-link'}\n\nلن يأخذ منك سوى دقيقة واحدة وسيساعد العملاء الآخرين 😊\n\n0️⃣ القائمة الرئيسية`
-    : `⭐ Thank you for choosing us!\nYour feedback means everything to us 🙏\n\nPlease leave us a Google review here:\n${cl.review_link || 'https://g.page/r/your-review-link'}\n\nIt only takes 1 minute and helps other clients find us 😊\n\n0️⃣ Main menu`;
+    ? `⭐ شكراً لاختيارك عيادتنا!\nرأيك يعني لنا الكثير 🙏\n\nيرجى تقييمنا على Google من هنا:\n${cl.review_link || 'https://g.page/r/your-review-link'}\n\nلن يأخذ منك سوى دقيقة واحدة وسيساعد المرضى الآخرين 😊\n\n0️⃣ القائمة الرئيسية`
+    : `⭐ Thank you for choosing us!\nYour feedback means everything to us 🙏\n\nPlease leave us a Google review here:\n${cl.review_link || 'https://g.page/r/your-review-link'}\n\nIt only takes 1 minute and helps other patients find us 😊\n\n0️⃣ Main menu`;
 }
 
 function staffMsg(ar) {

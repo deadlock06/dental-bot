@@ -22,8 +22,8 @@ app.use('/growth', growthRouter);
 process.on('uncaughtException',  (err) => console.error('[CRASH] uncaughtException:', err));
 process.on('unhandledRejection', (err) => console.error('[CRASH] unhandledRejection:', err));
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-console.log(`[Boot] 🏠 Real Estate Bot starting — ${new Date().toISOString()}`);
-console.log('[Boot] Qudozen Real Estate AI — WhatsApp powered');
+console.log(`[Boot] 🦷 Dental Bot starting — ${new Date().toISOString()}`);
+console.log('[Boot] Fixes: slot-409, NL-atomic-lock, save-rollback, no-show, cleanup-cron');
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
 
@@ -151,7 +151,7 @@ app.post('/webhook', async (req, res) => {
     const botPhone = botPhoneRaw.replace(/^whatsapp:/i, '').replace(/^\+/, '');
     const clinic   = await getClinic(botPhone);
     console.log(`[Webhook] botPhone="${botPhone}" (raw="${botPhoneRaw}") clinic=${clinic ? clinic.name : 'NOT FOUND'}`);
-    if (!clinic) console.error(`[Webhook] ⚠️ Agency not found for botPhone="${botPhone}" — check WHATSAPP_PHONE_ID env var and clinics.whatsapp_number in DB`);
+    if (!clinic) console.error(`[Webhook] ⚠️ Clinic not found for botPhone="${botPhone}" — check WHATSAPP_PHONE_ID env var and clinics.whatsapp_number in DB`);
 
     await handleMessage(patientPhone, messageText, clinic);
 
@@ -216,8 +216,8 @@ app.post('/send-reminders', async (req, res) => {
       // ── 24h reminder
       if (apptDateISO === tomorrowISO && !appt.reminder_sent_24h) {
         const msg = ar
-          ? `🔔 تذكير بالموعد!\nمرحباً ${appt.name}، لديك موعد غداً:\n📅 ${appt.preferred_date} الساعة ⏰ ${appt.time_slot}\n🏢 ${clinicName}\n🏠 نوع العقار: ${appt.treatment}\n\nنراك قريباً! إذا أردت إعادة الجدولة، أرسل 'إعادة جدولة' 😊`
-          : `🔔 Appointment Reminder!\nHi ${appt.name}, you have an appointment tomorrow:\n📅 ${appt.preferred_date} at ⏰ ${appt.time_slot}\n🏢 ${clinicName}\n🏠 Property Type: ${appt.treatment}\n\nSee you then! Reply 'reschedule' if you need to change it 😊`;
+          ? `🔔 تذكير بالموعد!\nمرحباً ${appt.name}، لديك موعد غداً:\n📅 ${appt.preferred_date} الساعة ⏰ ${appt.time_slot}\n🏥 ${clinicName}\n🦷 العلاج: ${appt.treatment}\n\nنراك قريباً! إذا أردت إعادة الجدولة، أرسل 'إعادة جدولة' 😊`
+          : `🔔 Appointment Reminder!\nHi ${appt.name}, you have an appointment tomorrow:\n📅 ${appt.preferred_date} at ⏰ ${appt.time_slot}\n🏥 ${clinicName}\n🦷 Treatment: ${appt.treatment}\n\nSee you then! Reply 'reschedule' if you need to change it 😊`;
         await sendMessage(appt.phone, msg);
         await updateAppointment(appt.id, { reminder_sent_24h: true });
         console.log(`[Reminders] 24h sent to ${appt.phone} (${ar ? 'AR' : 'EN'})`);
@@ -237,8 +237,8 @@ app.post('/send-reminders', async (req, res) => {
           const diffMin = (slotTime - now) / 60000;
           if (diffMin >= 30 && diffMin <= 90) {
             const msg = ar
-              ? `⏰ موعدك بعد ساعة واحدة!\n📅 اليوم الساعة ${appt.time_slot}\n🏢 ${clinicName}\nنتطلع لرؤيتك! 🏠`
-              : `⏰ Your appointment is in 1 hour!\n📅 Today at ${appt.time_slot}\n🏢 ${clinicName}\nWe're looking forward to seeing you! 🏠`;
+              ? `⏰ موعدك بعد ساعة واحدة!\n📅 اليوم الساعة ${appt.time_slot}\n🏥 ${clinicName}\nنتطلع لرؤيتك! 🦷`
+              : `⏰ Your appointment is in 1 hour!\n📅 Today at ${appt.time_slot}\n🏥 ${clinicName}\nWe're looking forward to seeing you! 🦷`;
             await sendMessage(appt.phone, msg);
             await updateAppointment(appt.id, { reminder_sent_1h: true });
             console.log(`[Reminders] 1h sent to ${appt.phone} (${ar ? 'AR' : 'EN'})`);
@@ -249,8 +249,8 @@ app.post('/send-reminders', async (req, res) => {
       // ── Follow-up (day after appointment)
       if (apptDateISO === yesterdayISO && !appt.follow_up_sent) {
         const msg = ar
-          ? `😊 مرحباً ${appt.name}! كيف كانت معاينتك لنا؟\nنأمل أن كل شيء سار بشكل رائع!\nيسعدنا سماع رأيك:\n⭐ ${reviewLink}\n\nلا تتردد في مراسلتنا في أي وقت 🏠`
-          : `😊 Hi ${appt.name}! How was your viewing with us?\nWe hope everything went well!\nWe'd love to hear your feedback:\n⭐ ${reviewLink}\n\nFeel free to message us anytime 🏠`;
+          ? `😊 مرحباً ${appt.name}! كيف كانت زيارتك لنا؟\nنأمل أن كل شيء سار بشكل رائع!\nيسعدنا سماع رأيك:\n⭐ ${reviewLink}\n\nلا تتردد في مراسلتنا في أي وقت 🦷`
+          : `😊 Hi ${appt.name}! How was your visit with us?\nWe hope everything went well!\nWe'd love to hear your feedback:\n⭐ ${reviewLink}\n\nFeel free to message us anytime 🦷`;
         await sendMessage(appt.phone, msg);
         await updateAppointment(appt.id, { follow_up_sent: true, status: 'completed' });
         console.log(`[Reminders] Follow-up sent to ${appt.phone} (${ar ? 'AR' : 'EN'})`);

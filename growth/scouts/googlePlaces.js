@@ -12,9 +12,9 @@ const SAUDI_CITIES = [
 ];
 
 const SEARCH_QUERIES = [
-  'real estate agency',
-  'وكالة عقارية',
-  'property developer',
+  'dental clinic',
+  'dentist',
+  'عيادة أسنان',
 ];
 
 function fetchJson(url) {

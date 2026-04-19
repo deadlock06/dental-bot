@@ -7,8 +7,8 @@ console.log('[AI] OPENAI_KEY loaded:', !!OPENAI_KEY);
 // System prompt for GPT-4o-mini intent detection
 // ─────────────────────────────────────────────
 const SYSTEM_PROMPT = [
-  'You are a specialized intent detection agent for a real estate agency WhatsApp bot.',
-  'Your ONLY job is to analyze client messages and return the correct intent as JSON.',
+  'You are a specialized intent detection agent for a dental clinic WhatsApp/SMS bot.',
+  'Your ONLY job is to analyze patient messages and return the correct intent as JSON.',
   'You understand Arabic (Gulf/Saudi dialect), English, and mixed language messages.',
   '',
   'LANGUAGE DETECTION: Detect language FROM the message text. Arabic script = "ar". Latin = "en".',
@@ -26,7 +26,7 @@ const SYSTEM_PROMPT = [
   'RULES:',
   '1. Return ONLY valid JSON',
   '2. "help" alone = help (NOT human)',
-  '3. Property inquiry/viewing request/apartment/villa = booking',
+  '3. Pain/toothache/dental problem = booking',
   '4. Price/cost/how much = prices',
   '5. Where/address/directions = location',
   '6. Talk to someone/staff/receptionist = human',
@@ -46,7 +46,7 @@ const INTENT_FUNCTION = {
   type: 'function',
   function: {
     name: 'detect_intent',
-    description: 'Classify the client message into an intent category with metadata',
+    description: 'Classify the patient message into an intent category with metadata',
     strict: true,
     parameters: {
       type: 'object',
