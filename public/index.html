@@ -3,25 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Qudozen — البنية التحتية للذكاء الاصطناعي لعيادات الأسنان. يستقبل مرضاك، يحجز مواعيدهم، ويتابعهم — 24/7 بالعربي والإنجليزي.">
-  <title>Qudozen — الذكاء الاصطناعي الذي يدير عيادتك</title>
+  <meta name="description" content="Qudozen — نظام التشغيل الذاتي للعيادات. من الاستقبال إلى التنسيق. وعي واحد يدير كل شيء.">
+  <title>Qudozen — نظام التشغيل الذاتي للعيادات</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:       #0B1120;
-      --surface:  #0F1A2E;
-      --surface2: #132035;
+      --bg:       #080E1A;
+      --surface:  #0C1520;
+      --surface2: #101D2E;
       --teal:     #0D9488;
       --teal-lt:  #14B8A6;
-      --gold:     #F59E0B;
-      --gold-lt:  #FCD34D;
+      --teal-dim: rgba(13,148,136,0.12);
+      --sand:     #D4A574;
+      --sand-dim: rgba(212,165,116,0.12);
+      --coral:    #E07A5F;
+      --coral-dim:rgba(224,122,95,0.1);
       --aqua:     #5EEAD4;
-      --aqua-dim: rgba(94,234,212,0.15);
-      --border:   rgba(94,234,212,0.12);
-      --text:     #E2EDF7;
-      --muted:    #7A9BB5;
-      --dim:      #4A6880;
+      --aqua-dim: rgba(94,234,212,0.08);
+      --border:   rgba(94,234,212,0.09);
+      --border-sand: rgba(212,165,116,0.18);
+      --text:     #D8E8F0;
+      --text-dim: #A0BBC8;
+      --muted:    #607A8A;
+      --deep:     #3A5568;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,814 +36,1201 @@
       font-family: 'Tajawal', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.7;
+      line-height: 1.75;
       overflow-x: hidden;
     }
 
-    /* ── SCROLLBAR ── */
-    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 2px; opacity: 0.5; }
 
-    /* ── LIQUID CANVAS ── */
-    #liquid-canvas {
+    /* ── CANVAS ── */
+    #ocean {
       position: fixed; inset: 0; z-index: 0;
-      pointer-events: none; opacity: 0.55;
+      pointer-events: none;
     }
 
     /* ── NAV ── */
     nav {
       position: fixed; top: 0; inset-inline: 0; z-index: 100;
-      background: rgba(11,17,32,0.8);
-      backdrop-filter: blur(24px);
+      background: rgba(8,14,26,0.75);
+      backdrop-filter: blur(28px) saturate(1.4);
       border-bottom: 1px solid var(--border);
-      height: 68px;
+      height: 64px;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 32px;
+      padding: 0 40px;
     }
-    .nav-logo {
-      font-size: 22px; font-weight: 900; letter-spacing: -0.5px;
+    .logo {
+      font-size: 20px; font-weight: 900; letter-spacing: -0.5px;
       color: var(--text); text-decoration: none;
     }
-    .nav-logo span { color: var(--aqua); }
-    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .logo span { color: var(--aqua); }
+    .nav-links { display: flex; gap: 36px; align-items: center; }
     .nav-links a {
       color: var(--muted); font-size: 14px; text-decoration: none;
-      transition: color .25s;
+      transition: color 0.6s;
     }
     .nav-links a:hover { color: var(--aqua); }
     .nav-cta {
-      background: linear-gradient(135deg, var(--gold), #E08E00);
-      color: #0B1120; font-weight: 800; font-size: 14px;
-      padding: 10px 24px; border-radius: 10px; text-decoration: none;
-      transition: opacity .2s, transform .2s;
-      white-space: nowrap;
+      background: rgba(13,148,136,0.15);
+      border: 1px solid rgba(13,148,136,0.3);
+      color: var(--aqua); font-weight: 700; font-size: 14px;
+      padding: 9px 22px; border-radius: 10px; text-decoration: none;
+      transition: background 0.6s, border-color 0.6s;
     }
-    .nav-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+    .nav-cta:hover { background: rgba(13,148,136,0.25); border-color: rgba(13,148,136,0.5); }
 
-    /* ── SECTIONS BASE ── */
+    /* ── LAYOUT ── */
     section { position: relative; z-index: 1; }
+    .inner { max-width: 1080px; margin: 0 auto; padding: 110px 28px; }
+    .inner-narrow { max-width: 720px; margin: 0 auto; padding: 110px 28px; }
 
-    /* ── HERO ── */
+    .lbl {
+      font-size: 11px; font-weight: 700; letter-spacing: 4px;
+      color: var(--teal); text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .lbl-sand { color: var(--sand); }
+
+    h2 {
+      font-size: clamp(32px, 4.5vw, 58px);
+      font-weight: 900; line-height: 1.18;
+      letter-spacing: -0.5px;
+      margin-bottom: 22px;
+    }
+    .sub {
+      font-size: clamp(15px, 1.8vw, 19px);
+      color: var(--text-dim);
+      max-width: 580px;
+      line-height: 1.8;
+    }
+
+    /* ── REVEAL ── */
+    .r {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity 0.9s ease, transform 0.9s ease;
+    }
+    .r.on { opacity: 1; transform: translateY(0); }
+    .r.d1 { transition-delay: 0.1s; }
+    .r.d2 { transition-delay: 0.22s; }
+    .r.d3 { transition-delay: 0.34s; }
+    .r.d4 { transition-delay: 0.46s; }
+    .r.d5 { transition-delay: 0.58s; }
+
+    /* ════════════════════════════
+       HERO
+    ════════════════════════════ */
     #hero {
       min-height: 100vh;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       text-align: center;
-      padding: 120px 24px 80px;
-      overflow: hidden;
+      padding: 100px 28px 80px;
     }
 
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(94,234,212,0.08);
+    .hero-signal {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: rgba(13,148,136,0.07);
       border: 1px solid var(--border);
-      border-radius: 40px;
-      padding: 8px 20px;
-      font-size: 13px; color: var(--aqua);
-      margin-bottom: 40px;
-      backdrop-filter: blur(12px);
+      border-radius: 40px; padding: 9px 22px;
+      font-size: 13px; color: var(--muted);
+      margin-bottom: 52px;
+      letter-spacing: 0.3px;
     }
-    .hero-badge .dot {
+    .hero-signal .pulse {
       width: 7px; height: 7px; border-radius: 50%;
-      background: var(--aqua);
-      animation: pulse-dot 2s ease-in-out infinite;
+      background: var(--teal);
+      animation: breathe 8s ease-in-out infinite;
     }
 
-    .hero-headline {
-      font-size: clamp(40px, 6vw, 80px);
-      font-weight: 900;
-      line-height: 1.15;
-      letter-spacing: -1px;
-      max-width: 900px;
+    .hero-h1 {
+      font-size: clamp(44px, 7vw, 88px);
+      font-weight: 900; line-height: 1.1;
+      letter-spacing: -1.5px;
       margin-bottom: 28px;
     }
-    .hero-headline .hl-teal { color: var(--aqua); }
-    .hero-headline .hl-gold { color: var(--gold); }
+    .hero-h1 em { font-style: normal; color: var(--aqua); }
+    .hero-h1 .sand { color: var(--sand); }
 
     .hero-sub {
-      font-size: clamp(16px, 2vw, 22px);
-      color: var(--muted);
-      max-width: 620px;
-      margin-bottom: 52px;
-      font-weight: 400;
+      font-size: clamp(17px, 2vw, 22px);
+      color: var(--text-dim);
+      max-width: 560px;
+      margin: 0 auto 56px;
+      line-height: 1.8;
+      font-weight: 300;
     }
 
     .hero-actions {
-      display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
-      margin-bottom: 72px;
+      display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+      margin-bottom: 80px;
     }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--gold) 0%, #D97706 100%);
-      color: #0B1120; font-weight: 800; font-size: 17px;
-      padding: 16px 40px; border-radius: 14px; text-decoration: none;
-      transition: transform .2s, box-shadow .2s;
-      box-shadow: 0 0 32px rgba(245,158,11,0.3);
+    .btn-sand {
+      background: var(--sand);
+      color: #080E1A; font-weight: 800; font-size: 16px;
+      padding: 15px 38px; border-radius: 12px; text-decoration: none;
+      transition: opacity 0.6s, transform 0.6s;
     }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 40px rgba(245,158,11,0.45);
-    }
-    .btn-ghost {
-      background: rgba(94,234,212,0.07);
+    .btn-sand:hover { opacity: 0.85; transform: translateY(-2px); }
+    .btn-outline {
+      background: transparent;
       border: 1px solid var(--border);
-      color: var(--aqua); font-weight: 600; font-size: 16px;
-      padding: 15px 36px; border-radius: 14px; text-decoration: none;
-      backdrop-filter: blur(12px);
-      transition: background .2s, transform .2s;
+      color: var(--text-dim); font-size: 15px; font-weight: 500;
+      padding: 14px 32px; border-radius: 12px; text-decoration: none;
+      transition: border-color 0.6s, color 0.6s;
     }
-    .btn-ghost:hover { background: rgba(94,234,212,0.13); transform: translateY(-1px); }
+    .btn-outline:hover { border-color: rgba(94,234,212,0.3); color: var(--aqua); }
 
-    .hero-stats {
-      display: flex; gap: 48px; flex-wrap: wrap; justify-content: center;
+    .hero-pillars {
+      display: flex; gap: 40px; justify-content: center; flex-wrap: wrap;
     }
-    .hero-stat { text-align: center; }
-    .hero-stat-num {
-      font-size: 36px; font-weight: 900; color: var(--aqua);
-      line-height: 1;
+    .hero-pillar { text-align: center; }
+    .hero-pillar-word {
+      font-size: 14px; font-weight: 700; color: var(--aqua);
+      letter-spacing: 1px;
     }
-    .hero-stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
-
-    /* ── LIQUID ORB (hero decoration) ── */
-    .liquid-orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      pointer-events: none;
-      animation: float-orb 14s ease-in-out infinite;
+    .hero-pillar-desc {
+      font-size: 12px; color: var(--muted); margin-top: 3px;
     }
-    .orb-1 {
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, rgba(13,148,136,0.25) 0%, transparent 70%);
-      top: -100px; right: -100px;
-    }
-    .orb-2 {
-      width: 400px; height: 400px;
-      background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);
-      bottom: 0; left: -80px;
-      animation-delay: -7s;
-    }
-    .orb-3 {
-      width: 280px; height: 280px;
-      background: radial-gradient(circle, rgba(94,234,212,0.18) 0%, transparent 70%);
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      animation-delay: -3.5s;
+    .hero-sep {
+      color: var(--deep); font-size: 20px; align-self: center;
+      margin-top: -6px;
     }
 
-    /* ── SECTION LAYOUT ── */
-    .section-inner {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 100px 24px;
-    }
-    .section-label {
-      font-size: 12px; font-weight: 700; letter-spacing: 3px;
-      color: var(--teal); text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-    .section-title {
-      font-size: clamp(28px, 4vw, 52px);
-      font-weight: 900; line-height: 1.2;
-      margin-bottom: 20px;
-    }
-    .section-sub {
-      font-size: 18px; color: var(--muted); max-width: 600px;
-      margin-bottom: 64px;
+    /* ════════════════════════════
+       PROBLEM
+    ════════════════════════════ */
+    #problem {
+      background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
     }
 
-    /* ── PROBLEM SECTION ── */
-    #problem { background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%); }
-
-    .pain-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-    }
-    .pain-card {
-      background: rgba(15,26,46,0.7);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 32px;
-      backdrop-filter: blur(20px);
-      transition: border-color .3s, transform .3s;
-    }
-    .pain-card:hover {
-      border-color: rgba(94,234,212,0.3);
-      transform: translateY(-4px);
-    }
-    .pain-icon {
-      font-size: 36px; margin-bottom: 16px; display: block;
-    }
-    .pain-card h3 {
-      font-size: 20px; font-weight: 700; margin-bottom: 10px;
-      color: var(--text);
-    }
-    .pain-card p { font-size: 15px; color: var(--muted); line-height: 1.6; }
-    .pain-cost {
-      margin-top: 16px;
-      display: inline-block;
-      background: rgba(245,158,11,0.1);
-      border: 1px solid rgba(245,158,11,0.25);
-      color: var(--gold);
-      font-size: 13px; font-weight: 700;
-      padding: 4px 12px; border-radius: 20px;
-    }
-
-    /* ── ECOSYSTEM ── */
-    #ecosystem { background: var(--surface); }
-
-    .ecosystem-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
-    }
-    .eco-card {
-      position: relative;
-      background: rgba(11,17,32,0.6);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 40px 28px;
-      backdrop-filter: blur(40px);
-      overflow: hidden;
-      transition: transform .3s, border-color .3s;
-    }
-    .eco-card:hover { transform: translateY(-6px); border-color: rgba(94,234,212,0.35); }
-    .eco-card::before {
-      content: '';
-      position: absolute; top: 0; inset-inline-start: 0;
-      width: 100%; height: 2px;
-      background: linear-gradient(90deg, transparent, var(--teal), transparent);
-      opacity: 0;
-      transition: opacity .3s;
-    }
-    .eco-card:hover::before { opacity: 1; }
-    .eco-num {
-      font-size: 48px; font-weight: 900; line-height: 1;
-      background: linear-gradient(135deg, var(--aqua), var(--teal));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 16px;
-    }
-    .eco-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
-    .eco-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
-
-    /* ── CURRENT MANIFESTATION (how it works) ── */
-    #how {
-      background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
-    }
-
-    .steps-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 60px;
-      align-items: center;
-    }
-    .steps-list { display: flex; flex-direction: column; gap: 0; }
-    .step-item {
-      display: flex; gap: 20px;
-      padding: 28px 0;
-      border-bottom: 1px solid var(--border);
-      cursor: default;
-      transition: opacity .3s;
-    }
-    .step-item:last-child { border-bottom: none; }
-    .step-num {
-      flex-shrink: 0;
-      width: 44px; height: 44px;
-      border-radius: 12px;
-      background: var(--aqua-dim);
-      border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 900; font-size: 16px; color: var(--aqua);
-    }
-    .step-content h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
-    .step-content p { font-size: 14px; color: var(--muted); }
-
-    /* Chat preview */
-    .chat-preview {
-      background: rgba(15,26,46,0.8);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      padding: 32px;
-      backdrop-filter: blur(40px);
-      box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 0 80px rgba(13,148,136,0.07);
-    }
-    .chat-header {
-      display: flex; align-items: center; gap: 12px;
-      margin-bottom: 24px; padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
-    }
-    .chat-avatar {
-      width: 44px; height: 44px; border-radius: 14px;
-      background: linear-gradient(135deg, var(--teal), var(--aqua));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; flex-shrink: 0;
-    }
-    .chat-name { font-size: 15px; font-weight: 700; }
-    .chat-status { font-size: 12px; color: #4ade80; margin-top: 2px; }
-
-    .chat-messages { display: flex; flex-direction: column; gap: 14px; }
-    .msg {
-      max-width: 85%;
-      padding: 12px 16px;
-      border-radius: 18px;
-      font-size: 14px; line-height: 1.5;
-      animation: msg-appear 0.4s ease both;
-    }
-    .msg-bot {
-      background: rgba(13,148,136,0.15);
-      border: 1px solid rgba(13,148,136,0.25);
-      border-end-start-radius: 4px;
-      align-self: flex-start;
-      color: var(--text);
-    }
-    .msg-user {
-      background: linear-gradient(135deg, var(--gold) 0%, #D97706 100%);
-      color: #0B1120; font-weight: 600;
-      border-end-end-radius: 4px;
-      align-self: flex-end;
-    }
-    .msg-time { font-size: 11px; color: var(--dim); margin-top: 4px; }
-    .msg-options {
-      display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
-    }
-    .msg-opt {
-      background: rgba(94,234,212,0.08);
-      border: 1px solid var(--border);
-      color: var(--aqua); font-size: 13px;
-      padding: 6px 14px; border-radius: 20px;
-      cursor: pointer; transition: background .2s;
-    }
-    .msg-opt:hover { background: rgba(94,234,212,0.18); }
-    .typing-indicator {
-      display: flex; gap: 5px; align-items: center;
-      padding: 14px 18px;
-      background: rgba(13,148,136,0.1);
-      border: 1px solid rgba(13,148,136,0.2);
-      border-radius: 18px; border-end-start-radius: 4px;
-      width: fit-content;
-    }
-    .typing-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--teal);
-      animation: typing 1.2s ease-in-out infinite;
-    }
-    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-    /* ── TRUST ── */
-    #trust { background: var(--bg); }
-
-    .trust-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-    }
-    .trust-card {
-      background: rgba(15,26,46,0.6);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 32px 24px;
-      text-align: center;
-      backdrop-filter: blur(20px);
-      transition: border-color .3s, transform .3s;
-    }
-    .trust-card:hover { border-color: rgba(94,234,212,0.3); transform: translateY(-4px); }
-    .trust-num {
-      font-size: 44px; font-weight: 900;
-      color: var(--gold);
-      line-height: 1;
-    }
-    .trust-card p { font-size: 14px; color: var(--muted); margin-top: 8px; }
-
-    .testimonials {
+    .problem-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
-      margin-top: 48px;
+      gap: 20px;
+      margin-top: 56px;
     }
-    .testi-card {
-      background: rgba(15,26,46,0.7);
+    .problem-card {
+      background: rgba(12,21,32,0.8);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 28px;
+      border-radius: 22px;
+      padding: 36px 28px;
       backdrop-filter: blur(20px);
+      transition: border-color 0.6s, transform 0.6s;
     }
-    .testi-stars { color: var(--gold); font-size: 18px; margin-bottom: 14px; }
-    .testi-text { font-size: 15px; color: var(--text); line-height: 1.7; margin-bottom: 20px; }
-    .testi-author { display: flex; align-items: center; gap: 12px; }
-    .testi-avatar {
-      width: 42px; height: 42px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--teal), var(--gold));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; font-weight: 700; color: #fff; flex-shrink: 0;
+    .problem-card:hover {
+      border-color: rgba(94,234,212,0.2);
+      transform: translateY(-3px);
     }
-    .testi-name { font-size: 14px; font-weight: 700; }
-    .testi-role { font-size: 12px; color: var(--muted); }
+    .problem-icon {
+      font-size: 28px; margin-bottom: 18px;
+      display: block; opacity: 0.8;
+    }
+    .problem-card h3 {
+      font-size: 18px; font-weight: 700;
+      margin-bottom: 10px; color: var(--text);
+    }
+    .problem-card p {
+      font-size: 14px; color: var(--muted); line-height: 1.7;
+    }
+    .problem-card .signal {
+      margin-top: 18px;
+      display: inline-block;
+      background: var(--coral-dim);
+      border: 1px solid rgba(224,122,95,0.2);
+      color: var(--coral);
+      font-size: 12px; font-weight: 600;
+      padding: 5px 12px; border-radius: 20px;
+    }
 
-    /* ── PRICING ── */
-    #pricing {
-      background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 50%, var(--bg) 100%);
+    /* ════════════════════════════
+       SYSTEM — Three Layers
+    ════════════════════════════ */
+    #system { background: var(--surface); }
+
+    .system-layout {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 80px;
+      align-items: center;
+      margin-top: 64px;
     }
+
+    .layer-list { display: flex; flex-direction: column; gap: 0; }
+    .layer-item {
+      display: flex; gap: 22px;
+      padding: 30px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: default;
+      transition: opacity 0.6s;
+    }
+    .layer-item:last-child { border-bottom: none; }
+    .layer-indicator {
+      flex-shrink: 0;
+      width: 48px;
+    }
+    .layer-ring {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--teal);
+      margin-top: 4px;
+      position: relative;
+      transition: border-color 0.6s;
+    }
+    .layer-ring::after {
+      content: '';
+      position: absolute; inset: 4px;
+      border-radius: 50%;
+      background: var(--teal);
+      opacity: 0.4;
+      animation: breathe 8s ease-in-out infinite;
+    }
+    .layer-item:nth-child(2) .layer-ring { border-color: var(--sand); }
+    .layer-item:nth-child(2) .layer-ring::after { background: var(--sand); animation-delay: -2.6s; }
+    .layer-item:nth-child(3) .layer-ring { border-color: var(--aqua); }
+    .layer-item:nth-child(3) .layer-ring::after { background: var(--aqua); animation-delay: -5.3s; }
+
+    .layer-body h3 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .layer-body .layer-ar { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+    .layer-body p { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+
+    /* Concentric rings visualization */
+    .rings-visual {
+      position: relative;
+      width: 420px; height: 420px;
+      flex-shrink: 0;
+    }
+    .ring-svg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+    }
+    .ring-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    .ring-center-label {
+      font-size: 13px; font-weight: 700; color: var(--aqua);
+      letter-spacing: 2px; text-transform: uppercase;
+    }
+    .ring-center-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* ════════════════════════════
+       DASHBOARD PREVIEW
+    ════════════════════════════ */
+    #dashboard { background: var(--bg); }
+
+    .dash-frame {
+      background: rgba(12,21,32,0.9);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      overflow: hidden;
+      backdrop-filter: blur(40px);
+      box-shadow: 0 40px 120px rgba(0,0,0,0.5), 0 0 100px rgba(13,148,136,0.04);
+      margin-top: 56px;
+    }
+    .dash-topbar {
+      background: rgba(8,14,26,0.9);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .dash-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+    .d-red   { background: rgba(224,122,95,0.4); }
+    .d-sand  { background: rgba(212,165,116,0.4); }
+    .d-teal  { background: rgba(13,148,136,0.5); }
+    .dash-title {
+      font-size: 13px; color: var(--muted); margin-right: auto;
+      letter-spacing: 1px;
+    }
+    .dash-status {
+      font-size: 12px; color: var(--teal);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .dash-status::before {
+      content: '';
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--teal);
+      animation: breathe 8s ease-in-out infinite;
+    }
+
+    .dash-body {
+      display: grid;
+      grid-template-columns: 200px 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .dash-cell {
+      background: var(--surface);
+      padding: 28px 24px;
+    }
+    .dash-cell-label {
+      font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 16px;
+    }
+
+    /* Facility state */
+    .facility-state {
+      grid-row: 1 / 3;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .state-orb-wrap {
+      display: flex; justify-content: center; align-items: center;
+      height: 140px;
+      position: relative;
+    }
+    .state-orb {
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 40%, var(--teal-lt), var(--teal), #063935);
+      box-shadow: 0 0 40px rgba(13,148,136,0.3), 0 0 80px rgba(13,148,136,0.1);
+      animation: orb-breathe 8s ease-in-out infinite;
+    }
+    .state-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(13,148,136,0.2);
+      animation: ring-expand 8s ease-in-out infinite;
+    }
+    .state-ring-1 { width: 110px; height: 110px; }
+    .state-ring-2 { width: 130px; height: 130px; animation-delay: 1.5s; }
+    .state-ring-3 { width: 150px; height: 150px; animation-delay: 3s; }
+
+    .state-label { text-align: center; font-size: 14px; font-weight: 700; color: var(--teal-lt); }
+    .state-desc  { text-align: center; font-size: 12px; color: var(--muted); }
+
+    .state-signals { display: flex; flex-direction: column; gap: 8px; }
+    .signal-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px;
+    }
+    .signal-key { color: var(--muted); }
+    .signal-val { color: var(--text); font-weight: 600; }
+    .signal-val.sand { color: var(--sand); }
+    .signal-val.teal { color: var(--aqua); }
+
+    /* Metrics */
+    .dash-metric {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .metric-num {
+      font-size: 40px; font-weight: 900; line-height: 1;
+      color: var(--text);
+    }
+    .metric-unit { font-size: 16px; color: var(--muted); font-weight: 400; }
+    .metric-bar-wrap {
+      height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px;
+      margin-top: 8px; overflow: hidden;
+    }
+    .metric-bar {
+      height: 100%; border-radius: 2px;
+      background: var(--teal);
+      transition: width 1.5s ease;
+    }
+    .metric-label { font-size: 12px; color: var(--muted); }
+
+    /* Predictive signals */
+    .pred-list { display: flex; flex-direction: column; gap: 10px; }
+    .pred-item {
+      background: var(--sand-dim);
+      border: 1px solid var(--border-sand);
+      border-radius: 10px; padding: 12px 14px;
+      font-size: 13px;
+    }
+    .pred-item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .pred-item-title { color: var(--text); font-weight: 600; }
+    .pred-item-time  { font-size: 11px; color: var(--sand); }
+    .pred-item-desc  { font-size: 12px; color: var(--muted); }
+
+    /* Conversations */
+    .conv-list { display: flex; flex-direction: column; gap: 8px; }
+    .conv-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px; border-radius: 10px;
+      background: rgba(255,255,255,0.02);
+    }
+    .conv-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+      animation: breathe 8s ease-in-out infinite;
+    }
+    .conv-dot.active { background: var(--teal); }
+    .conv-dot.wait   { background: var(--sand); animation-delay: -4s; }
+    .conv-name { font-size: 13px; color: var(--text); flex: 1; }
+    .conv-state { font-size: 11px; color: var(--muted); }
+    .conv-time  { font-size: 11px; color: var(--deep); }
+
+    /* ════════════════════════════
+       OPERATIONAL LOAD CALCULATOR
+    ════════════════════════════ */
+    #calculator {
+      background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
+    }
+
+    .calc-frame {
+      background: rgba(12,21,32,0.8);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px;
+      backdrop-filter: blur(30px);
+      margin-top: 56px;
+    }
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+    .calc-inputs { display: flex; flex-direction: column; gap: 32px; }
+
+    .calc-input-group label {
+      display: block;
+      font-size: 14px; color: var(--text-dim); margin-bottom: 12px;
+    }
+    .calc-slider-wrap {
+      display: flex; align-items: center; gap: 16px;
+    }
+    input[type=range] {
+      flex: 1; -webkit-appearance: none; appearance: none;
+      height: 4px; border-radius: 2px;
+      background: linear-gradient(to left, var(--teal) var(--pct, 50%), rgba(255,255,255,0.07) var(--pct, 50%));
+      outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 12px rgba(13,148,136,0.4);
+      transition: transform 0.3s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    .calc-val {
+      font-size: 18px; font-weight: 700;
+      color: var(--sand); min-width: 42px; text-align: center;
+    }
+
+    .calc-output { display: flex; flex-direction: column; gap: 20px; }
+    .calc-output-label {
+      font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .output-row {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .output-metric {
+      font-size: 48px; font-weight: 900; line-height: 1;
+      color: var(--aqua);
+    }
+    .output-metric-label { font-size: 14px; color: var(--text-dim); }
+    .output-divider { border: none; border-top: 1px solid var(--border); }
+
+    .output-row-sm {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .output-row-sm-label { font-size: 14px; color: var(--muted); }
+    .output-row-sm-val   { font-size: 18px; font-weight: 700; color: var(--text); }
+
+    /* ════════════════════════════
+       PRICING
+    ════════════════════════════ */
+    #pricing { background: var(--surface); }
 
     .pricing-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 28px;
-      max-width: 780px;
-      margin: 0 auto;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 64px;
     }
-    .plan-card {
-      background: rgba(15,26,46,0.8);
+    .plan {
+      background: rgba(8,14,26,0.7);
       border: 1px solid var(--border);
-      border-radius: 28px;
-      padding: 40px 32px;
-      backdrop-filter: blur(40px);
-      transition: transform .3s, border-color .3s, box-shadow .3s;
-      position: relative;
-      overflow: hidden;
+      border-radius: 24px;
+      padding: 36px 28px;
+      backdrop-filter: blur(30px);
+      transition: transform 0.6s, border-color 0.6s;
+      display: flex; flex-direction: column;
     }
-    .plan-card.featured {
-      border-color: rgba(245,158,11,0.4);
-      box-shadow: 0 0 60px rgba(245,158,11,0.1);
+    .plan:hover { transform: translateY(-4px); }
+
+    /* subtle visual weight on النظام */
+    .plan.featured {
+      border-color: rgba(212,165,116,0.25);
+      background: rgba(10,18,28,0.9);
+      box-shadow: 0 0 80px rgba(212,165,116,0.05);
     }
-    .plan-card.featured::before {
+    .plan.featured::before {
       content: '';
       position: absolute; top: 0; inset-inline: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--sand), transparent);
+      border-radius: 24px 24px 0 0;
     }
-    .plan-card:hover { transform: translateY(-6px); }
-    .plan-badge {
-      display: inline-block;
-      background: linear-gradient(135deg, var(--gold), #D97706);
-      color: #0B1120; font-size: 12px; font-weight: 800;
-      padding: 4px 14px; border-radius: 20px;
-      margin-bottom: 20px;
+
+    .plan-ar {
+      font-size: 26px; font-weight: 900; margin-bottom: 3px;
     }
-    .plan-name { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
-    .plan-desc { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
-    .plan-price {
+    .plan-en {
+      font-size: 13px; color: var(--muted); letter-spacing: 2px;
+      text-transform: uppercase; margin-bottom: 24px;
+    }
+    .plan-for {
+      font-size: 13px; color: var(--text-dim);
+      margin-bottom: 28px; line-height: 1.6;
+    }
+    .plan-price-row {
       display: flex; align-items: baseline; gap: 6px;
-      margin-bottom: 32px;
+      margin-bottom: 8px;
     }
-    .plan-amount {
-      font-size: 56px; font-weight: 900;
-      color: var(--gold); line-height: 1;
+    .plan-num {
+      font-size: 52px; font-weight: 900; line-height: 1;
+      color: var(--text);
     }
-    .plan-currency { font-size: 18px; color: var(--muted); }
-    .plan-period { font-size: 14px; color: var(--dim); }
-    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 14px; margin-bottom: 36px; }
+    .plan-num.sand { color: var(--sand); }
+    .plan-curr { font-size: 16px; color: var(--muted); }
+    .plan-period { font-size: 13px; color: var(--deep); }
+    .plan-setup {
+      font-size: 13px; color: var(--muted); margin-bottom: 32px;
+    }
+    .plan-setup span { color: var(--sand); }
+
+    .plan-divider {
+      border: none; border-top: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .plan-features {
+      list-style: none; display: flex; flex-direction: column;
+      gap: 12px; margin-bottom: 36px; flex: 1;
+    }
     .plan-features li {
       display: flex; gap: 10px; align-items: flex-start;
-      font-size: 15px; color: var(--text);
+      font-size: 14px; color: var(--text-dim);
     }
     .plan-features li::before {
-      content: '✓';
-      color: var(--aqua); font-weight: 700; flex-shrink: 0;
-      margin-top: 2px;
+      content: '—';
+      color: var(--teal); flex-shrink: 0;
+      margin-top: 1px; font-weight: 300;
     }
+    .plan-features.sand li::before { color: var(--sand); }
+
     .plan-cta {
-      display: block; text-align: center;
-      padding: 15px; border-radius: 14px;
-      font-weight: 700; font-size: 16px; text-decoration: none;
-      transition: opacity .2s, transform .2s;
+      display: block; text-align: center; text-decoration: none;
+      padding: 14px; border-radius: 12px;
+      font-weight: 700; font-size: 15px;
+      transition: opacity 0.6s, transform 0.6s;
     }
-    .plan-cta-primary {
-      background: linear-gradient(135deg, var(--gold), #D97706);
-      color: #0B1120;
-      box-shadow: 0 4px 24px rgba(245,158,11,0.25);
-    }
-    .plan-cta-ghost {
-      background: var(--aqua-dim);
-      border: 1px solid var(--border);
+    .plan-cta:hover { opacity: 0.8; transform: translateY(-1px); }
+    .plan-cta-teal {
+      background: var(--teal-dim);
+      border: 1px solid rgba(13,148,136,0.25);
       color: var(--aqua);
     }
-    .plan-cta:hover { opacity: 0.88; transform: translateY(-1px); }
-
-    /* ── FUTURE VISION ── */
-    #vision {
-      background: var(--bg);
-      overflow: hidden;
+    .plan-cta-sand {
+      background: var(--sand);
+      color: #080E1A;
     }
-    .vision-inner {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 120px 24px;
-      text-align: center;
+    .plan-cta-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* ════════════════════════════
+       FUTURE — Swarm
+    ════════════════════════════ */
+    #future { background: var(--bg); }
+
+    .swarm-layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 80px;
+      align-items: center;
+      margin-top: 64px;
+    }
+
+    .node-map {
+      width: 360px; height: 380px;
+      position: relative; flex-shrink: 0;
+    }
+    .node {
+      position: absolute;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 6px;
+      cursor: default;
+    }
+    .node-circle {
+      width: 52px; height: 52px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      border: 1px solid var(--border);
+      background: rgba(12,21,32,0.9);
+      transition: border-color 0.6s, box-shadow 0.6s;
+    }
+    .node.active .node-circle {
+      border-color: rgba(13,148,136,0.4);
+      box-shadow: 0 0 24px rgba(13,148,136,0.15);
+    }
+    .node-label {
+      font-size: 12px; color: var(--muted); text-align: center;
+      font-weight: 600;
+    }
+    .node.active .node-label { color: var(--teal-lt); }
+
+    /* SVG connecting lines drawn by JS */
+    .node-lines { position: absolute; inset: 0; pointer-events: none; }
+
+    .future-text { display: flex; flex-direction: column; gap: 24px; }
+    .future-item { display: flex; gap: 16px; align-items: flex-start; }
+    .future-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--teal); flex-shrink: 0; margin-top: 8px;
+      animation: breathe 8s ease-in-out infinite;
+    }
+    .future-dot.sand { background: var(--sand); animation-delay: -2.6s; }
+    .future-dot.coral { background: var(--coral); animation-delay: -5.3s; }
+    .future-item h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .future-item p  { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+    /* ════════════════════════════
+       TRUST
+    ════════════════════════════ */
+    #trust {
+      background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
+    }
+
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-top: 56px;
+    }
+    .trust-card {
+      background: rgba(12,21,32,0.8);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 36px 28px;
+      backdrop-filter: blur(20px);
+      transition: border-color 0.6s, transform 0.6s;
+    }
+    .trust-card:hover {
+      border-color: rgba(94,234,212,0.2);
+      transform: translateY(-3px);
+    }
+
+    /* liquid shield visual */
+    .trust-shield {
+      width: 56px; height: 64px; margin-bottom: 20px;
       position: relative;
     }
-    .vision-glow {
-      position: absolute;
-      width: 600px; height: 600px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(13,148,136,0.1) 0%, transparent 70%);
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-    .vision-inner .section-title { font-size: clamp(32px, 5vw, 60px); }
-    .vision-sub {
-      font-size: 18px; color: var(--muted); line-height: 1.8;
-      max-width: 560px; margin: 0 auto 48px;
-    }
-    .vision-features {
-      display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
-      margin-bottom: 52px;
-    }
-    .vision-chip {
-      background: rgba(94,234,212,0.07);
-      border: 1px solid var(--border);
-      color: var(--aqua); font-size: 14px;
-      padding: 10px 20px; border-radius: 40px;
-      backdrop-filter: blur(12px);
-    }
+    .trust-shield svg { width: 100%; height: 100%; }
 
-    /* ── FOOTER ── */
+    .trust-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+    .trust-card p  { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+    .trust-quote {
+      margin-top: 60px;
+      text-align: center;
+      padding: 40px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: rgba(12,21,32,0.5);
+      backdrop-filter: blur(20px);
+    }
+    .trust-quote p {
+      font-size: clamp(16px, 2vw, 22px);
+      color: var(--text-dim);
+      font-weight: 300; line-height: 1.9;
+      max-width: 600px; margin: 0 auto;
+    }
+    .trust-quote strong { color: var(--aqua); font-weight: 700; }
+
+    /* ════════════════════════════
+       FOOTER
+    ════════════════════════════ */
     footer {
       background: var(--surface);
       border-top: 1px solid var(--border);
-      padding: 48px 32px 32px;
+      padding: 52px 40px 36px;
     }
     .footer-inner {
-      max-width: 1100px; margin: 0 auto;
-      display: flex; flex-direction: column; gap: 32px;
+      max-width: 1080px; margin: 0 auto;
+      display: flex; flex-direction: column; gap: 36px;
     }
     .footer-top {
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      flex-wrap: wrap; gap: 24px;
     }
-    .footer-brand .nav-logo { font-size: 24px; }
-    .footer-brand p { font-size: 13px; color: var(--muted); margin-top: 6px; max-width: 280px; }
-    .footer-links { display: flex; gap: 28px; flex-wrap: wrap; }
-    .footer-links a { color: var(--dim); font-size: 14px; text-decoration: none; transition: color .2s; }
-    .footer-links a:hover { color: var(--aqua); }
+    .footer-brand p {
+      font-size: 14px; color: var(--muted); margin-top: 10px;
+      max-width: 280px; line-height: 1.7;
+    }
+    .footer-cols { display: flex; gap: 60px; flex-wrap: wrap; }
+    .footer-col h4 {
+      font-size: 12px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--teal);
+      margin-bottom: 16px;
+    }
+    .footer-col a {
+      display: block; color: var(--muted); font-size: 14px;
+      text-decoration: none; margin-bottom: 10px;
+      transition: color 0.6s;
+    }
+    .footer-col a:hover { color: var(--aqua); }
     .footer-bottom {
       border-top: 1px solid var(--border);
-      padding-top: 24px;
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+      padding-top: 28px;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 12px;
     }
-    .footer-bottom p { font-size: 13px; color: var(--dim); }
+    .footer-bottom p { font-size: 13px; color: var(--deep); }
 
-    /* ── DIVIDER ── */
-    .wave-divider {
-      width: 100%; height: 60px;
-      background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
+    /* ════════════════════════════
+       ANIMATIONS
+    ════════════════════════════ */
+    @keyframes breathe {
+      0%, 100% { opacity: 1;   transform: scale(1); }
+      50%       { opacity: 0.35; transform: scale(0.75); }
     }
-
-    /* ── ANIMATIONS ── */
-    @keyframes float-orb {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33%       { transform: translate(30px, -20px) scale(1.05); }
-      66%       { transform: translate(-15px, 25px) scale(0.97); }
+    @keyframes orb-breathe {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(13,148,136,0.3), 0 0 80px rgba(13,148,136,0.1); }
+      50%       { transform: scale(1.08); box-shadow: 0 0 60px rgba(13,148,136,0.4), 0 0 120px rgba(13,148,136,0.15); }
     }
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.4; transform: scale(0.7); }
+    @keyframes ring-expand {
+      0%, 100% { transform: scale(1); opacity: 0.3; }
+      50%       { transform: scale(1.06); opacity: 0.12; }
     }
-    @keyframes typing {
-      0%, 100% { opacity: 0.3; transform: translateY(0); }
-      50%       { opacity: 1; transform: translateY(-4px); }
+    @keyframes rotate-slow {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
     }
-    @keyframes msg-appear {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fade-in-up {
-      from { opacity: 0; transform: translateY(32px); }
-      to   { opacity: 1; transform: translateY(0); }
+    @keyframes rotate-slow-r {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(-360deg); }
     }
 
-    /* scroll reveal */
-    .reveal {
-      opacity: 0; transform: translateY(28px);
-      transition: opacity .7s ease, transform .7s ease;
-    }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-    .reveal-d1 { transition-delay: .1s; }
-    .reveal-d2 { transition-delay: .2s; }
-    .reveal-d3 { transition-delay: .3s; }
-    .reveal-d4 { transition-delay: .4s; }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 768px) {
+    /* ════════════════════════════
+       RESPONSIVE
+    ════════════════════════════ */
+    @media (max-width: 900px) {
+      .system-layout  { grid-template-columns: 1fr; }
+      .rings-visual    { display: none; }
+      .swarm-layout    { grid-template-columns: 1fr; }
+      .node-map        { display: none; }
+      .pricing-grid    { grid-template-columns: 1fr; }
+      .calc-grid       { grid-template-columns: 1fr; }
+      .dash-body       { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto; }
+      .facility-state  { grid-row: auto; grid-column: 1 / 3; }
       nav { padding: 0 20px; }
       .nav-links { display: none; }
-      .steps-container { grid-template-columns: 1fr; }
-      .chat-preview { display: none; }
-      .footer-top { flex-direction: column; }
+      .inner, .inner-narrow { padding: 80px 20px; }
     }
   </style>
 </head>
 <body>
 
-<!-- LIQUID CANVAS BACKGROUND -->
-<canvas id="liquid-canvas"></canvas>
+<canvas id="ocean"></canvas>
 
-<!-- ═══ NAV ═══ -->
+<!-- ═══════ NAV ═══════ -->
 <nav>
-  <a href="/growth/dashboard" class="nav-logo" dir="ltr" style="text-decoration:none;color:inherit">
-    Qudo<span>zen</span>
-  </a>
+  <a href="/growth/dashboard" class="logo" dir="ltr">Qudo<span>zen</span></a>
   <div class="nav-links">
-    <a href="#problem">المشكلة</a>
-    <a href="#ecosystem">النظام</a>
-    <a href="#how">كيف يعمل</a>
-    <a href="#pricing">الأسعار</a>
+    <a href="#problem">التعقيد</a>
+    <a href="#system">النظام</a>
+    <a href="#dashboard">مركز القيادة</a>
+    <a href="#pricing">البنية التحتية</a>
   </div>
-  <a href="https://wa.me/966500000000" class="nav-cta" dir="ltr">ابدأ مجاناً</a>
+  <a href="https://wa.me/966500000000" class="nav-cta" dir="ltr">تحدث معنا</a>
 </nav>
 
-<!-- ═══ HERO ═══ -->
+<!-- ═══════ HERO ═══════ -->
 <section id="hero">
-  <div class="liquid-orb orb-1"></div>
-  <div class="liquid-orb orb-2"></div>
-  <div class="liquid-orb orb-3"></div>
-
-  <div class="hero-badge">
-    <span class="dot"></span>
-    مُشغَّل الآن في عيادات سعودية
+  <div class="hero-signal r">
+    <span class="pulse"></span>
+    نظام التشغيل الذاتي للعيادات
   </div>
 
-  <h1 class="hero-headline">
-    الذكاء الاصطناعي<br>
-    الذي <span class="hl-teal">يدير عيادتك</span><br>
-    <span class="hl-gold">وأنت نائم</span>
+  <h1 class="hero-h1 r">
+    وعي واحد<br>
+    <em>يدير كل شيء</em>
   </h1>
 
-  <p class="hero-sub">
-    مساعد استقبال ذكي يرد على مرضاك، يحجز مواعيدهم، ويتابعهم —
-    على واتساب، 24/7، بالعربي والإنجليزي.
+  <p class="hero-sub r">
+    من الاستقبال إلى التنسيق.<br>
+    لا تعقيد. لا متابعة. لا قلق.
   </p>
 
-  <div class="hero-actions">
-    <a href="https://wa.me/966500000000" class="btn-primary">ابدأ التحول ←</a>
-    <a href="#ecosystem" class="btn-ghost">استكشف النظام</a>
+  <div class="hero-actions r">
+    <a href="https://wa.me/966500000000" class="btn-sand">ابدأ التحول</a>
+    <a href="#system" class="btn-outline">استكشف النظام</a>
   </div>
 
-  <div class="hero-stats">
-    <div class="hero-stat">
-      <div class="hero-stat-num">24/7</div>
-      <div class="hero-stat-label">استقبال لا يتوقف</div>
+  <div class="hero-pillars r">
+    <div class="hero-pillar">
+      <div class="hero-pillar-word">الاستقبال</div>
+      <div class="hero-pillar-desc">واجهة المريض</div>
     </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">90 ثانية</div>
-      <div class="hero-stat-label">متوسط وقت الرد</div>
+    <div class="hero-sep">·</div>
+    <div class="hero-pillar">
+      <div class="hero-pillar-word">التنسيق</div>
+      <div class="hero-pillar-desc">إدارة الموارد</div>
     </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">+47%</div>
-      <div class="hero-stat-label">تحويل المرضى الجدد</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">299 ر.س</div>
-      <div class="hero-stat-label">شهرياً فقط</div>
+    <div class="hero-sep">·</div>
+    <div class="hero-pillar">
+      <div class="hero-pillar-word">التعلم</div>
+      <div class="hero-pillar-desc">تحسين مستمر</div>
     </div>
   </div>
 </section>
 
-<!-- ═══ PROBLEM ═══ -->
+<!-- ═══════ PROBLEM ═══════ -->
 <section id="problem">
-  <div class="section-inner">
-    <p class="section-label reveal">المشكلة الحقيقية</p>
-    <h2 class="section-title reveal">عيادتك تخسر مرضى<br>كل يوم — وأنت لا تعرف</h2>
-    <p class="section-sub reveal">
-      ثلاثة مشاكل صامتة تستنزف إيراداتك وسمعتك.
+  <div class="inner">
+    <p class="lbl r">المشكلة</p>
+    <h2 class="r">التعقيد يقتل التركيز</h2>
+    <p class="sub r">
+      طاقم العيادة لا يخسر وقتاً — يخسر حضوراً.
+      كل تحويل يدوي، كل رسالة لم تُرَد، كل تنسيق فائت
+      يستهلك انتباهاً كان يُصرف في الرعاية.
     </p>
 
-    <div class="pain-grid">
-      <div class="pain-card reveal reveal-d1">
-        <span class="pain-icon">🌙</span>
-        <h3>مرضى يطلبون مواعيد بعد ساعات العمل</h3>
-        <p>70% من الاستفسارات تأتي في المساء وعطلات نهاية الأسبوع. بدون رد فوري، يذهبون للعيادة المنافسة.</p>
-        <span class="pain-cost">خسارة مرضاء ≈ 12,400 ر.س / شهر</span>
+    <div class="problem-grid">
+      <div class="problem-card r d1">
+        <span class="problem-icon">🌐</span>
+        <h3>أدوات مفككة</h3>
+        <p>
+          واتساب هنا، التقويم هناك، السجل في مكان آخر.
+          موظف الاستقبال يعيش في سبع شاشات ويعطيك خمسة أخطاء.
+        </p>
+        <span class="signal">تبديل سياق × 34 / يوم</span>
       </div>
-      <div class="pain-card reveal reveal-d2">
-        <span class="pain-icon">📵</span>
-        <h3>موظف الاستقبال غير متاح دائماً</h3>
-        <p>مريض يتصل، لا أحد يرد. يرسل واتساب، لا رد. النتيجة: يحجز في مكان آخر. لا يعود.</p>
-        <span class="pain-cost">معدل الانتظار 4.2 ساعة</span>
+      <div class="problem-card r d2">
+        <span class="problem-icon">🌙</span>
+        <h3>ساعات خارج الدوام</h3>
+        <p>
+          المريض يكتب الساعة 11 ليلاً. لا أحد يرد.
+          لا يعاود الاتصال — يجد مكاناً آخر.
+          لم تخسر صفقة. خسرت علاقة.
+        </p>
+        <span class="signal">حضور منقطع 14 ساعة / يوم</span>
       </div>
-      <div class="pain-card reveal reveal-d3">
-        <span class="pain-icon">⭐</span>
-        <h3>تقييمات ضعيفة بسبب تجربة الاستقبال</h3>
-        <p>تجربة الاستقبال تشكّل 40% من تقييم المريض النهائي. الرد البطيء يُفقد النجوم قبل الجلسة.</p>
-        <span class="pain-cost">كل نجمة ناقصة = -22% مرضى جدد</span>
+      <div class="problem-card r d3">
+        <span class="problem-icon">🔁</span>
+        <h3>عمل يدوي متكرر</h3>
+        <p>
+          تأكيد المواعيد. إرسال التذكيرات. إعادة الجدولة.
+          مهام لا تحتاج تفكيراً — لكنها تستهلك الطاقة
+          التي كانت تُصرف في تطوير الممارسة.
+        </p>
+        <span class="signal">3.2 ساعة / يوم على المهام المتكررة</span>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══ ECOSYSTEM ═══ -->
-<section id="ecosystem">
-  <div class="section-inner">
-    <p class="section-label reveal">طبقات الوعي الأربع</p>
-    <h2 class="section-title reveal">نظام بيئي متكامل —<br>لا مجرد بوت</h2>
-    <p class="section-sub reveal">
-      أربع طبقات من الذكاء تعمل معاً بصمت لتنمو عيادتك وتُبهر مرضاك.
+<!-- ═══════ SYSTEM — Three Layers ═══════ -->
+<section id="system">
+  <div class="inner">
+    <p class="lbl r">ثلاث طبقات من الوعي</p>
+    <h2 class="r">هذا ليس برنامجاً<br>هذا نظام تشغيل</h2>
+
+    <div class="system-layout">
+      <div class="layer-list r">
+        <div class="layer-item">
+          <div class="layer-indicator">
+            <div class="layer-ring"></div>
+          </div>
+          <div class="layer-body">
+            <h3>الاستقبال</h3>
+            <div class="layer-ar">Reception — Patient Interface</div>
+            <p>
+              يرد على المريض فوراً. يحجز. يُذكّر. يُجيب على أسئلة الخدمات
+              والأسعار والأطباء — بالعربي والإنجليزي، 24 ساعة، دون أخطاء.
+              الطبقة التي يراها المريض. ويثق بها.
+            </p>
+          </div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-indicator">
+            <div class="layer-ring"></div>
+          </div>
+          <div class="layer-body">
+            <h3>التنسيق</h3>
+            <div class="layer-ar">Coordination — Operational Layer</div>
+            <p>
+              يُنظّم الأطباء والمواعيد والموارد. يكتشف التعارضات قبل حدوثها.
+              يُبلغ الطاقم بالتغييرات. يُحرر موظف الاستقبال من إدارة
+              الفوضى — ليتفرغ للرعاية.
+            </p>
+          </div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-indicator">
+            <div class="layer-ring"></div>
+          </div>
+          <div class="layer-body">
+            <h3>التعلم</h3>
+            <div class="layer-ar">Evolution — Intelligence Layer</div>
+            <p>
+              يُحلل الأنماط. يتوقع الأوقات الساخنة. يُحسّن ردوده بناءً
+              على كل محادثة. كل أسبوع، النظام أذكى من الأسبوع الماضي.
+              بدون تدخل منك.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Concentric Rings -->
+      <div class="rings-visual r d3">
+        <svg class="ring-svg" viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Outer ring — التعلم -->
+          <circle cx="210" cy="210" r="190" stroke="rgba(94,234,212,0.12)" stroke-width="1"/>
+          <circle cx="210" cy="210" r="190" stroke="url(#grad-aqua)" stroke-width="1.5"
+            stroke-dasharray="6 18"
+            style="animation: rotate-slow 40s linear infinite; transform-origin: 210px 210px;"/>
+          <!-- Mid ring — التنسيق -->
+          <circle cx="210" cy="210" r="135" stroke="rgba(212,165,116,0.15)" stroke-width="1"/>
+          <circle cx="210" cy="210" r="135" stroke="url(#grad-sand)" stroke-width="1.5"
+            stroke-dasharray="4 14"
+            style="animation: rotate-slow-r 28s linear infinite; transform-origin: 210px 210px;"/>
+          <!-- Inner ring — الاستقبال -->
+          <circle cx="210" cy="210" r="78" stroke="rgba(13,148,136,0.2)" stroke-width="1"/>
+          <circle cx="210" cy="210" r="78" stroke="url(#grad-teal)" stroke-width="2"
+            stroke-dasharray="3 10"
+            style="animation: rotate-slow 18s linear infinite; transform-origin: 210px 210px;"/>
+          <!-- Center glow -->
+          <circle cx="210" cy="210" r="28" fill="rgba(13,148,136,0.15)"/>
+          <circle cx="210" cy="210" r="14" fill="rgba(13,148,136,0.4)"/>
+          <!-- Node dots on rings -->
+          <circle cx="210" cy="20" r="4" fill="rgba(94,234,212,0.5)"/>
+          <circle cx="380" cy="280" r="4" fill="rgba(94,234,212,0.4)"/>
+          <circle cx="70"  cy="280" r="4" fill="rgba(94,234,212,0.3)"/>
+          <circle cx="210" cy="75" r="3" fill="rgba(212,165,116,0.5)"/>
+          <circle cx="328" cy="278" r="3" fill="rgba(212,165,116,0.4)"/>
+          <circle cx="92"  cy="278" r="3" fill="rgba(212,165,116,0.3)"/>
+          <defs>
+            <linearGradient id="grad-teal" x1="0" y1="0" x2="420" y2="420" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#0D9488"/>
+              <stop offset="1" stop-color="#5EEAD4"/>
+            </linearGradient>
+            <linearGradient id="grad-sand" x1="0" y1="0" x2="420" y2="420" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#D4A574"/>
+              <stop offset="1" stop-color="#E07A5F" stop-opacity="0.5"/>
+            </linearGradient>
+            <linearGradient id="grad-aqua" x1="0" y1="0" x2="420" y2="420" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#5EEAD4" stop-opacity="0.6"/>
+              <stop offset="1" stop-color="#0D9488" stop-opacity="0.3"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-center-label">وعي حي</div>
+          <div class="ring-center-sub">Live Awareness</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ DASHBOARD PREVIEW ═══════ -->
+<section id="dashboard">
+  <div class="inner">
+    <p class="lbl r">مركز القيادة</p>
+    <h2 class="r">وعي عملياتي — لا إسقاطات مالية</h2>
+    <p class="sub r">
+      لا أرقام للزهو. أرقام للوعي الظرفي.
+      ما يحدث الآن. ما سيحدث خلال 30 دقيقة.
+      ما يحتاج انتباهك — وما لا يحتاجه.
     </p>
 
-    <div class="ecosystem-grid">
-      <div class="eco-card reveal reveal-d1">
-        <div class="eco-num">01</div>
-        <h3>الاستقبال الذكي</h3>
-        <p>يرد على مرضاك فوراً بالعربي أو الإنجليزي، يحجز المواعيد، ويُرسل تذكيرات آلية — كل ذلك على واتساب.</p>
-      </div>
-      <div class="eco-card reveal reveal-d2">
-        <div class="eco-num">02</div>
-        <h3>محرك النمو</h3>
-        <p>يكتشف عيادات تبحث عن موظفين أو عيادات بتقييم ضعيف، ويُرسل رسائل تسويقية مُخصصة تلقائياً.</p>
-      </div>
-      <div class="eco-card reveal reveal-d3">
-        <div class="eco-num">03</div>
-        <h3>التحليل والتعلم</h3>
-        <p>يُحلل أنماط الحجز، يُحدد أوقات الذروة، ويُقترح تحسينات — لوحة تحكم حية في متناول يدك.</p>
-      </div>
-      <div class="eco-card reveal reveal-d4">
-        <div class="eco-num">04</div>
-        <h3>التسليم البشري</h3>
-        <p>حين يحتاج المريض لموظف حقيقي، يُحوّل المحادثة في اللحظة المناسبة — بسلاسة، بدون انقطاع.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ HOW IT WORKS ═══ -->
-<section id="how">
-  <div class="section-inner">
-    <p class="section-label reveal">كيف يعمل</p>
-    <h2 class="section-title reveal">خمس خطوات من الإعداد<br>إلى الاستقلالية الكاملة</h2>
-
-    <div class="steps-container">
-      <div class="steps-list reveal">
-        <div class="step-item">
-          <div class="step-num">1</div>
-          <div class="step-content">
-            <h3>توصيل واتساب</h3>
-            <p>نربط رقم عيادتك بمنصة Twilio خلال 15 دقيقة. لا تغيير في رقمك الحالي.</p>
-          </div>
-        </div>
-        <div class="step-item">
-          <div class="step-num">2</div>
-          <div class="step-content">
-            <h3>إدخال معلومات العيادة</h3>
-            <p>أوقات العمل، الأطباء، الخدمات، الأسعار — مرة واحدة، والنظام يحفظها كلها.</p>
-          </div>
-        </div>
-        <div class="step-item">
-          <div class="step-num">3</div>
-          <div class="step-content">
-            <h3>البوت يبدأ الاستقبال</h3>
-            <p>فوراً يرد على المرضى، يعرض القائمة، يقترح أوقاتاً، ويُكمل الحجز.</p>
-          </div>
-        </div>
-        <div class="step-item">
-          <div class="step-num">4</div>
-          <div class="step-content">
-            <h3>تذكيرات آلية</h3>
-            <p>رسالة قبل 24 ساعة وأخرى قبل ساعة من الموعد. تقليل الغياب بنسبة 40%.</p>
-          </div>
-        </div>
-        <div class="step-item">
-          <div class="step-num">5</div>
-          <div class="step-content">
-            <h3>لوحة تحكم حية</h3>
-            <p>تتابع كل المحادثات والحجوزات والتقارير من هاتفك في أي وقت.</p>
-          </div>
-        </div>
+    <div class="dash-frame r">
+      <div class="dash-topbar">
+        <div class="dash-dot d-red"></div>
+        <div class="dash-dot d-sand"></div>
+        <div class="dash-dot d-teal"></div>
+        <span class="dash-title">Qudozen — مركز القيادة</span>
+        <span class="dash-status">النظام نشط</span>
       </div>
 
-      <!-- Chat Demo -->
-      <div class="chat-preview reveal reveal-d2">
-        <div class="chat-header">
-          <div class="chat-avatar">🦷</div>
-          <div>
-            <div class="chat-name" dir="rtl">مساعد عيادة النور</div>
-            <div class="chat-status" dir="ltr">● Online</div>
+      <div class="dash-body">
+
+        <!-- Facility State -->
+        <div class="dash-cell facility-state">
+          <div class="dash-cell-label">الوعي الحي</div>
+          <div class="state-orb-wrap">
+            <div class="state-ring state-ring-3"></div>
+            <div class="state-ring state-ring-2"></div>
+            <div class="state-ring state-ring-1"></div>
+            <div class="state-orb"></div>
           </div>
-        </div>
-        <div class="chat-messages" id="chat-demo">
-          <div class="msg msg-bot">
-            أهلاً! 😊 أنا مساعد عيادة النور الذكي. كيف أقدر أساعدك اليوم؟
-            <div class="msg-options">
-              <span class="msg-opt">📅 حجز موعد</span>
-              <span class="msg-opt">🦷 خدماتنا</span>
-              <span class="msg-opt">💰 الأسعار</span>
+          <div class="state-label">هادئ ومنتج</div>
+          <div class="state-desc" style="margin-bottom:20px">Calm / Productive</div>
+
+          <div class="state-signals">
+            <div class="signal-row">
+              <span class="signal-key">ثقة النظام</span>
+              <span class="signal-val teal">96%</span>
+            </div>
+            <div class="signal-row">
+              <span class="signal-key">الحمل المعرفي</span>
+              <span class="signal-val">منخفض</span>
+            </div>
+            <div class="signal-row">
+              <span class="signal-key">تدخلات يدوية</span>
+              <span class="signal-val">2 اليوم</span>
+            </div>
+            <div class="signal-row">
+              <span class="signal-key">حالة الشبكة</span>
+              <span class="signal-val teal">متصل</span>
             </div>
           </div>
-          <div class="msg msg-user">حجز موعد</div>
-          <div class="msg msg-bot">
-            رائع! ✨ ما نوع العلاج الذي تحتاجه؟
-            <div class="msg-options">
-              <span class="msg-opt">تنظيف وتلميع</span>
-              <span class="msg-opt">حشوات</span>
-              <span class="msg-opt">تبييض</span>
+        </div>
+
+        <!-- Response Time -->
+        <div class="dash-cell">
+          <div class="dash-cell-label">متوسط وقت الرد</div>
+          <div class="dash-metric">
+            <div class="metric-num"><span id="resp-num">47</span><span class="metric-unit"> ث</span></div>
+            <div class="metric-bar-wrap"><div class="metric-bar" id="resp-bar" style="width:85%;background:var(--teal)"></div></div>
+            <div class="metric-label">الهدف: أقل من 90 ث · الأداء: ممتاز</div>
+          </div>
+        </div>
+
+        <!-- Resolution Rate -->
+        <div class="dash-cell">
+          <div class="dash-cell-label">معدل الحل الذاتي</div>
+          <div class="dash-metric">
+            <div class="metric-num"><span>94</span><span class="metric-unit">%</span></div>
+            <div class="metric-bar-wrap"><div class="metric-bar" style="width:94%;background:var(--teal-lt)"></div></div>
+            <div class="metric-label">من المحادثات تُحل دون تدخل بشري</div>
+          </div>
+        </div>
+
+        <!-- Predictive Signals -->
+        <div class="dash-cell">
+          <div class="dash-cell-label">إشارات استباقية</div>
+          <div class="pred-list">
+            <div class="pred-item">
+              <div class="pred-item-top">
+                <span class="pred-item-title">موعدان متزامنان</span>
+                <span class="pred-item-time">خلال 28 دقيقة</span>
+              </div>
+              <div class="pred-item-desc">د. أحمد — مريضان في نفس الفترة، راجع الجدول</div>
+            </div>
+            <div class="pred-item">
+              <div class="pred-item-top">
+                <span class="pred-item-title">ذروة متوقعة</span>
+                <span class="pred-item-time">11:30 — 13:00</span>
+              </div>
+              <div class="pred-item-desc">استناداً لنمط الثلاثاء — 6 استفسارات متوقعة</div>
             </div>
           </div>
-          <div class="msg msg-user">تنظيف وتلميع</div>
-          <div class="typing-indicator">
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
+        </div>
+
+        <!-- Active Conversations -->
+        <div class="dash-cell">
+          <div class="dash-cell-label">المحادثات الجارية</div>
+          <div class="conv-list">
+            <div class="conv-item">
+              <div class="conv-dot active"></div>
+              <div class="conv-name">محمد ع.</div>
+              <div class="conv-state">حجز · خطوة 3/4</div>
+              <div class="conv-time">منذ 2 د</div>
+            </div>
+            <div class="conv-item">
+              <div class="conv-dot active"></div>
+              <div class="conv-name">سارة ك.</div>
+              <div class="conv-state">استفسار خدمات</div>
+              <div class="conv-time">منذ 4 د</div>
+            </div>
+            <div class="conv-item">
+              <div class="conv-dot wait"></div>
+              <div class="conv-name">أحمد م.</div>
+              <div class="conv-state">انتظار تأكيد</div>
+              <div class="conv-time">منذ 8 د</div>
+            </div>
+            <div class="conv-item">
+              <div class="conv-dot active"></div>
+              <div class="conv-name">نورة ف.</div>
+              <div class="conv-state">إعادة جدولة</div>
+              <div class="conv-time">منذ 11 د</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /dash-body -->
+    </div><!-- /dash-frame -->
+  </div>
+</section>
+
+<!-- ═══════ OPERATIONAL LOAD CALCULATOR ═══════ -->
+<section id="calculator">
+  <div class="inner">
+    <p class="lbl r">حاسبة العبء التشغيلي</p>
+    <h2 class="r">كم تُنفق من طاقتك<br>على ما لا يستحقها؟</h2>
+    <p class="sub r">
+      ليست خسارة مالية. خسارة حضور.
+      احسب الساعات والتحولات السياقية التي يُزيلها Qudozen من يومك.
+    </p>
+
+    <div class="calc-frame r">
+      <div class="calc-grid">
+        <div class="calc-inputs">
+          <div class="calc-input-group">
+            <label>عدد الأطباء في العيادة</label>
+            <div class="calc-slider-wrap">
+              <input type="range" min="1" max="10" value="3" id="s-docs">
+              <span class="calc-val" id="v-docs">3</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>رسائل واتساب يومياً (تقديراً)</label>
+            <div class="calc-slider-wrap">
+              <input type="range" min="5" max="80" value="25" id="s-msgs">
+              <span class="calc-val" id="v-msgs">25</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>مواعيد تُحجز يدوياً أسبوعياً</label>
+            <div class="calc-slider-wrap">
+              <input type="range" min="5" max="100" value="30" id="s-appts">
+              <span class="calc-val" id="v-appts">30</span>
+            </div>
+          </div>
+          <div class="calc-input-group">
+            <label>تذكيرات تُرسَل يدوياً أسبوعياً</label>
+            <div class="calc-slider-wrap">
+              <input type="range" min="0" max="60" value="20" id="s-reminders">
+              <span class="calc-val" id="v-reminders">20</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-output">
+          <div class="calc-output-label">ما يُزيله Qudozen شهرياً</div>
+          <div class="output-row">
+            <div class="output-metric" id="o-hours">—</div>
+            <div class="output-metric-label">ساعة من العمل الإداري المتكرر</div>
+          </div>
+          <hr class="output-divider">
+          <div class="output-row-sm">
+            <span class="output-row-sm-label">تحولات السياق المُزالة</span>
+            <span class="output-row-sm-val" id="o-switches">—</span>
+          </div>
+          <div class="output-row-sm">
+            <span class="output-row-sm-label">مواعيد فائتة مُسترجعة</span>
+            <span class="output-row-sm-val" id="o-missed">—</span>
+          </div>
+          <div class="output-row-sm">
+            <span class="output-row-sm-label">نقاط احتكاك مُذابة</span>
+            <span class="output-row-sm-val" id="o-friction">—</span>
+          </div>
+          <hr class="output-divider">
+          <div class="output-row-sm">
+            <span class="output-row-sm-label" style="color:var(--text)">التكلفة الشهرية</span>
+            <span class="output-row-sm-val" style="color:var(--sand)" id="o-cost">299 ر.س</span>
           </div>
         </div>
       </div>
@@ -846,312 +1238,420 @@
   </div>
 </section>
 
-<!-- ═══ TRUST ═══ -->
-<section id="trust">
-  <div class="section-inner">
-    <p class="section-label reveal">الثقة والحضور</p>
-    <h2 class="section-title reveal">أرقام تتكلم<br>عن نفسها</h2>
-
-    <div class="trust-grid">
-      <div class="trust-card reveal reveal-d1">
-        <div class="trust-num">+47</div>
-        <p>عيادة تستخدم النظام في السعودية</p>
-      </div>
-      <div class="trust-card reveal reveal-d2">
-        <div class="trust-num">4.9</div>
-        <p>متوسط تقييم العيادات بعد 3 أشهر</p>
-      </div>
-      <div class="trust-card reveal reveal-d3">
-        <div class="trust-num">12k+</div>
-        <p>محادثة مكتملة هذا الشهر</p>
-      </div>
-      <div class="trust-card reveal reveal-d4">
-        <div class="trust-num">99.8%</div>
-        <p>وقت تشغيل الخدمة خلال 2025</p>
-      </div>
-    </div>
-
-    <div class="testimonials">
-      <div class="testi-card reveal reveal-d1">
-        <div class="testi-stars">★★★★★</div>
-        <p class="testi-text">
-          "قبل Qudozen كنا نفقد 30% من الاستفسارات بعد ساعات العمل. الآن البوت يحجز حتى الساعة 2 فجراً وأنا نائم."
-        </p>
-        <div class="testi-author">
-          <div class="testi-avatar">ع</div>
-          <div>
-            <div class="testi-name">د. عبدالله المطيري</div>
-            <div class="testi-role">عيادة المطيري — الرياض</div>
-          </div>
-        </div>
-      </div>
-      <div class="testi-card reveal reveal-d2">
-        <div class="testi-stars">★★★★★</div>
-        <p class="testi-text">
-          "الإعداد استغرق 20 دقيقة فقط. المريض الأول حجز بنفس الليلة. الاستثمار عاد خلال أسبوع."
-        </p>
-        <div class="testi-author">
-          <div class="testi-avatar">س</div>
-          <div>
-            <div class="testi-name">د. سارة الأحمدي</div>
-            <div class="testi-role">مركز ابتسامة — جدة</div>
-          </div>
-        </div>
-      </div>
-      <div class="testi-card reveal reveal-d3">
-        <div class="testi-stars">★★★★★</div>
-        <p class="testi-text">
-          "وفّرت 4,500 ريال شهرياً في رواتب الاستقبال. والمرضى يقولون الرد أسرع وأكثر احترافاً!"
-        </p>
-        <div class="testi-author">
-          <div class="testi-avatar">م</div>
-          <div>
-            <div class="testi-name">د. محمد الشمري</div>
-            <div class="testi-role">عيادة الشمري — الدمام</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ PRICING ═══ -->
+<!-- ═══════ PRICING ═══════ -->
 <section id="pricing">
-  <div class="section-inner">
-    <p class="section-label reveal" style="text-align:center">الأسعار</p>
-    <h2 class="section-title reveal" style="text-align:center">شفافية تامة.<br>لا رسوم مخفية.</h2>
-    <p class="section-sub reveal" style="text-align:center;margin:0 auto 64px">
-      ابدأ اليوم، ألغِ في أي وقت.
+  <div class="inner">
+    <p class="lbl r">بنية تحتية تنمو معك</p>
+    <h2 class="r">ثلاث مراحل من الوعي</h2>
+    <p class="sub r">
+      لا أسعار مخفية. لا عروض مؤقتة. لا ضغط.
+      اختر المرحلة التي تعكس حجم تشغيلك.
     </p>
 
     <div class="pricing-grid">
-      <!-- Starter -->
-      <div class="plan-card reveal reveal-d1">
-        <div class="plan-name">الأساسي</div>
-        <div class="plan-desc">لعيادة واحدة تبدأ رحلتها</div>
-        <div class="plan-price">
-          <span class="plan-amount">299</span>
-          <span class="plan-currency">ر.س</span>
-          <span class="plan-period">/ شهر</span>
+
+      <!-- الوعي -->
+      <div class="plan r d1">
+        <div class="plan-ar">الوعي</div>
+        <div class="plan-en">Awareness</div>
+        <div class="plan-for">لعيادات الطبيب الواحد والمنشآت الناشئة التي تبدأ رحلة الأتمتة.</div>
+        <div class="plan-price-row">
+          <span class="plan-num">299</span>
+          <span class="plan-curr">ر.س</span>
         </div>
+        <div class="plan-period" style="margin-bottom:32px">شهرياً · بدون رسوم إعداد</div>
+        <hr class="plan-divider">
         <ul class="plan-features">
-          <li>استقبال واتساب 24/7</li>
+          <li>استقبال ذكي على واتساب — 24/7</li>
           <li>حجز وإلغاء وتعديل المواعيد</li>
-          <li>تذكيرات آلية للمرضى</li>
-          <li>عربي + إنجليزي</li>
+          <li>تذكيرات آلية قبل الموعد</li>
+          <li>عربي + إنجليزي بالكامل</li>
           <li>لوحة تحكم أساسية</li>
-          <li>دعم عبر واتساب</li>
+          <li>إعداد في أقل من يوم</li>
         </ul>
-        <a href="https://wa.me/966500000000" class="plan-cta plan-cta-ghost">ابدأ مجاناً 14 يوم</a>
+        <a href="https://wa.me/966500000000" class="plan-cta plan-cta-teal">ابدأ مجاناً — 14 يوم</a>
       </div>
 
-      <!-- Pro -->
-      <div class="plan-card featured reveal reveal-d2">
-        <span class="plan-badge">الأكثر طلباً</span>
-        <div class="plan-name">المحترف</div>
-        <div class="plan-desc">للعيادات الجادة في النمو</div>
-        <div class="plan-price">
-          <span class="plan-amount">799</span>
-          <span class="plan-currency">ر.س</span>
-          <span class="plan-period">/ شهر</span>
+      <!-- النظام — featured -->
+      <div class="plan featured r d2" style="position:relative">
+        <div class="plan-ar">النظام</div>
+        <div class="plan-en">System</div>
+        <div class="plan-for">للعيادات المتنامية ذات الكراسي المتعددة التي تحتاج تنسيقاً متكاملاً.</div>
+        <div class="plan-price-row">
+          <span class="plan-num sand">499</span>
+          <span class="plan-curr">ر.س</span>
         </div>
-        <ul class="plan-features">
-          <li>كل مميزات الأساسي</li>
-          <li>محرك النمو الذكي</li>
-          <li>تحليلات متقدمة</li>
-          <li>تقارير أسبوعية</li>
-          <li>تخصيص شخصية البوت</li>
-          <li>أولوية الدعم الفني</li>
-          <li>فريق مخصص للإعداد</li>
+        <div class="plan-setup">+ <span>699 ر.س</span> رسوم تفعيل وتدريب وتخصيص (مرة واحدة)</div>
+        <hr class="plan-divider">
+        <ul class="plan-features sand">
+          <li>كل ما في مرحلة الوعي</li>
+          <li>تنسيق متكامل للطاقم والموارد</li>
+          <li>سير عمل استباقي وتنبيهات مبكرة</li>
+          <li>تحليلات أنماط متقدمة</li>
+          <li>إدارة حمل عمل الأطباء</li>
+          <li>تقارير أسبوعية للطاقم</li>
+          <li>تخصيص شخصية النظام وصوته</li>
+          <li>فريق مخصص للإعداد والتدريب</li>
         </ul>
-        <a href="https://wa.me/966500000000" class="plan-cta plan-cta-primary">ابدأ التحول</a>
+        <a href="https://wa.me/966500000000" class="plan-cta plan-cta-sand">ابدأ التحول</a>
+      </div>
+
+      <!-- السوارم -->
+      <div class="plan r d3">
+        <div class="plan-ar">السوارم</div>
+        <div class="plan-en">Swarm</div>
+        <div class="plan-for">للمجموعات الطبية والمراكز متعددة الفروع التي تبني شبكة ذكاء موحدة.</div>
+        <div class="plan-price-row" style="margin-bottom:32px">
+          <span class="plan-num" style="font-size:32px;color:var(--muted)">تسعير مخصص</span>
+        </div>
+        <hr class="plan-divider">
+        <ul class="plan-features">
+          <li>كل ما في مرحلة النظام</li>
+          <li>طبقة وعي موحدة عبر المواقع</li>
+          <li>ذكاء مشترك يتعلم من كل فرع</li>
+          <li>مركز قيادة مركزي</li>
+          <li>جاهزية للتوسع: صيدلية، مختبر، عيادة عامة</li>
+          <li>SLA مخصص وضمان أداء</li>
+          <li>فريق هندسي مخصص</li>
+        </ul>
+        <a href="https://wa.me/966500000000" class="plan-cta plan-cta-outline">تحدث مع الفريق</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FUTURE — Swarm ═══════ -->
+<section id="future">
+  <div class="inner">
+    <p class="lbl r">شبكة المنشآت الذكية</p>
+    <h2 class="r">عيادتك ليست عميلاً<br>هي جزء من وعي أكبر</h2>
+
+    <div class="swarm-layout">
+      <div class="future-text">
+        <div class="future-item r d1">
+          <div class="future-dot"></div>
+          <div>
+            <h3>العقدة الحالية: الاستقبال الطبي</h3>
+            <p>
+              كل عيادة تنضم تُثري الشبكة. الأنماط التي يتعلمها النظام في الرياض
+              تُحسّن الاستجابة في جدة. الذكاء الجماعي يُقوّي كل عقدة فردية.
+            </p>
+          </div>
+        </div>
+        <div class="future-item r d2">
+          <div class="future-dot sand"></div>
+          <div>
+            <h3>العقد القادمة</h3>
+            <p>
+              صيدلية: إدارة المخزون والصرف.
+              مختبر: جدولة التحاليل والنتائج.
+              عيادة عامة: تنسيق الإحالات والمتابعة.
+              تشخيصات: حجز الأشعة والتقارير.
+            </p>
+          </div>
+        </div>
+        <div class="future-item r d3">
+          <div class="future-dot coral"></div>
+          <div>
+            <h3>طبقة الوعي الموحد</h3>
+            <p>
+              منشآتك لا تتحدث مع بعضها — تفهم بعضها.
+              مريض في عيادتك يحتاج مختبراً؟ النظام يُنسّق، يُحجز، يُخطر.
+              بدون مكالمات. بدون تأخير.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node Map -->
+      <div class="node-map r d3">
+        <svg class="node-lines" viewBox="0 0 360 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Lines from center (dental) to nodes -->
+          <line x1="180" y1="190" x2="180" y2="70"  stroke="rgba(13,148,136,0.25)" stroke-width="1" stroke-dasharray="4 6"/>
+          <line x1="180" y1="190" x2="295" y2="150" stroke="rgba(13,148,136,0.15)" stroke-width="1" stroke-dasharray="4 6"/>
+          <line x1="180" y1="190" x2="295" y2="260" stroke="rgba(13,148,136,0.12)" stroke-width="1" stroke-dasharray="4 6"/>
+          <line x1="180" y1="190" x2="75"  y2="260" stroke="rgba(13,148,136,0.12)" stroke-width="1" stroke-dasharray="4 6"/>
+          <line x1="180" y1="190" x2="75"  y2="150" stroke="rgba(13,148,136,0.1)"  stroke-width="1" stroke-dasharray="4 6"/>
+          <line x1="180" y1="190" x2="180" y2="320" stroke="rgba(13,148,136,0.1)"  stroke-width="1" stroke-dasharray="4 6"/>
+        </svg>
+
+        <!-- Center: Dental (active) -->
+        <div class="node active" style="top:165px;left:150px">
+          <div class="node-circle">🦷</div>
+          <div class="node-label">عيادة أسنان</div>
+        </div>
+        <!-- Future nodes -->
+        <div class="node" style="top:38px;left:148px">
+          <div class="node-circle">💊</div>
+          <div class="node-label">صيدلية</div>
+        </div>
+        <div class="node" style="top:118px;left:265px">
+          <div class="node-circle">🧪</div>
+          <div class="node-label">مختبر</div>
+        </div>
+        <div class="node" style="top:230px;left:265px">
+          <div class="node-circle">🏥</div>
+          <div class="node-label">عيادة عامة</div>
+        </div>
+        <div class="node" style="top:230px;left:25px">
+          <div class="node-circle">🔬</div>
+          <div class="node-label">تشخيصات</div>
+        </div>
+        <div class="node" style="top:118px;left:25px">
+          <div class="node-circle">📋</div>
+          <div class="node-label">تحاليل</div>
+        </div>
+        <div class="node" style="top:295px;left:148px">
+          <div class="node-circle">+</div>
+          <div class="node-label">قادم</div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ═══ FUTURE VISION ═══ -->
-<section id="vision">
-  <div class="vision-inner">
-    <div class="vision-glow"></div>
-
-    <p class="section-label reveal" style="text-align:center">المستقبل</p>
-    <h2 class="section-title reveal" style="text-align:center">
-      هذا مجرد<br>
-      <span style="color:var(--aqua)">البداية</span>
-    </h2>
-
-    <p class="vision-sub reveal">
-      نبني البنية التحتية للذكاء الاصطناعي لرعاية صحة الفم في الخليج.
-      ليس مجرد برنامج — منظومة تتعلم وتتطور مع كل عيادة.
+<!-- ═══════ TRUST ═══════ -->
+<section id="trust">
+  <div class="inner">
+    <p class="lbl-sand lbl r">أمان. خصوصية. سيادة.</p>
+    <h2 class="r">حماية تتدفق —<br>لا تتحصّن</h2>
+    <p class="sub r">
+      بيانات مرضاك لا تغادر المنطقة.
+      لا نماذج تُدرَّب على سجلاتهم. لا مشاركة. لا اتفاقيات بالطباعة الصغيرة.
     </p>
 
-    <div class="vision-features reveal">
-      <span class="vision-chip">🔮 تشخيص ذكي بالصور</span>
-      <span class="vision-chip">📊 تحليل بيانات المريض</span>
-      <span class="vision-chip">🌐 شبكة عيادات متصلة</span>
-      <span class="vision-chip">💳 دفع مدمج في المحادثة</span>
-      <span class="vision-chip">🤝 إحالات بين العيادات</span>
+    <div class="trust-grid">
+      <div class="trust-card r d1">
+        <div class="trust-shield">
+          <svg viewBox="0 0 56 64" fill="none">
+            <path d="M28 2 L52 12 L52 34 C52 48 40 58 28 62 C16 58 4 48 4 34 L4 12 Z"
+              fill="rgba(13,148,136,0.08)" stroke="rgba(13,148,136,0.3)" stroke-width="1.5"/>
+            <path d="M28 8 L46 16 L46 34 C46 45 37 53 28 57 C19 53 10 45 10 34 L10 16 Z"
+              fill="rgba(13,148,136,0.05)" stroke="rgba(94,234,212,0.2)" stroke-width="1"/>
+            <circle cx="28" cy="32" r="7" fill="rgba(13,148,136,0.3)" stroke="var(--aqua)" stroke-width="1"/>
+          </svg>
+        </div>
+        <h3>استضافة سعودية</h3>
+        <p>البيانات تبقى داخل المملكة. متوافق مع متطلبات هيئة الاتصالات وحوكمة البيانات الصحية.</p>
+      </div>
+      <div class="trust-card r d2">
+        <div class="trust-shield">
+          <svg viewBox="0 0 56 64" fill="none">
+            <path d="M28 2 L52 12 L52 34 C52 48 40 58 28 62 C16 58 4 48 4 34 L4 12 Z"
+              fill="rgba(212,165,116,0.06)" stroke="rgba(212,165,116,0.25)" stroke-width="1.5"/>
+            <path d="M20 32 L25 37 L36 26" stroke="var(--sand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3>لا تدريب على بياناتك</h3>
+        <p>محادثات مرضاك لا تُغذّي أي نموذج. كل بيانات العيادة ملكك الحصري — لا تشارك، لا استخدام خارجي.</p>
+      </div>
+      <div class="trust-card r d3">
+        <div class="trust-shield">
+          <svg viewBox="0 0 56 64" fill="none">
+            <path d="M28 2 L52 12 L52 34 C52 48 40 58 28 62 C16 58 4 48 4 34 L4 12 Z"
+              fill="rgba(94,234,212,0.05)" stroke="rgba(94,234,212,0.2)" stroke-width="1.5"/>
+            <rect x="20" y="24" width="16" height="14" rx="2" fill="rgba(94,234,212,0.15)" stroke="var(--aqua)" stroke-width="1"/>
+            <path d="M22 24 L22 20 C22 16 34 16 34 20 L34 24" stroke="var(--aqua)" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3>مسارات تدقيق كاملة</h3>
+        <p>كل إجراء، كل رد، كل تحويل — مُسجَّل وموثَّق. تعرف دائماً ما فعله النظام ولماذا.</p>
+      </div>
+      <div class="trust-card r d4">
+        <div class="trust-shield">
+          <svg viewBox="0 0 56 64" fill="none">
+            <path d="M28 2 L52 12 L52 34 C52 48 40 58 28 62 C16 58 4 48 4 34 L4 12 Z"
+              fill="rgba(224,122,95,0.05)" stroke="rgba(224,122,95,0.2)" stroke-width="1.5"/>
+            <circle cx="28" cy="34" r="9" fill="none" stroke="var(--coral)" stroke-width="1.5"/>
+            <path d="M28 25 L28 34 L34 34" stroke="var(--coral)" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3>تشغيل مستمر</h3>
+        <p>99.8% وقت تشغيل خلال 2025. تحديثات تُطبَّق في الخلفية. لا توقف، لا إشعارات مزعجة.</p>
+      </div>
     </div>
 
-    <div class="reveal">
-      <a href="https://wa.me/966500000000" class="btn-primary" style="font-size:18px;padding:18px 48px;">
-        انضم للعيادات الرائدة ←
-      </a>
+    <div class="trust-quote r">
+      <p>
+        "<strong>نحن نتولى التعقيد</strong> —
+        لتتفرغ أنت لما جئت تفعله:<br>
+        الرعاية الحقيقية للمرضى."
+      </p>
     </div>
   </div>
 </section>
 
-<!-- ═══ FOOTER ═══ -->
+<!-- ═══════ FOOTER ═══════ -->
 <footer>
   <div class="footer-inner">
     <div class="footer-top">
       <div class="footer-brand">
-        <a href="/growth/dashboard" class="nav-logo" dir="ltr" style="text-decoration:none;color:inherit">
-          Qudo<span>zen</span>
-        </a>
-        <p>الذكاء الاصطناعي الذي يدير عيادتك ويُنمّيها — 24/7.</p>
+        <a href="/growth/dashboard" class="logo" dir="ltr" style="text-decoration:none;color:inherit">Qudo<span>zen</span></a>
+        <p>نظام التشغيل الذاتي للعيادات. وعي واحد يدير كل شيء.</p>
       </div>
-      <div class="footer-links">
-        <a href="#problem">المشكلة</a>
-        <a href="#ecosystem">النظام</a>
-        <a href="#how">كيف يعمل</a>
-        <a href="#trust">آراء العملاء</a>
-        <a href="#pricing">الأسعار</a>
-        <a href="/growth/dashboard">لوحة التحكم</a>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h4>النظام</h4>
+          <a href="#problem">التعقيد</a>
+          <a href="#system">الطبقات الثلاث</a>
+          <a href="#dashboard">مركز القيادة</a>
+          <a href="#future">شبكة المنشآت</a>
+        </div>
+        <div class="footer-col">
+          <h4>البنية التحتية</h4>
+          <a href="#pricing">الوعي — 299 ر.س</a>
+          <a href="#pricing">النظام — 499 ر.س</a>
+          <a href="#pricing">السوارم — تخصيص</a>
+        </div>
+        <div class="footer-col">
+          <h4>التواصل</h4>
+          <a href="https://wa.me/966500000000">واتساب</a>
+          <a href="/growth/dashboard">لوحة التحكم</a>
+        </div>
       </div>
     </div>
     <div class="footer-bottom">
       <p dir="ltr">© 2025 Qudozen. All rights reserved.</p>
-      <p>مصنوع بـ ♥ للعيادات السعودية</p>
+      <p>مبني في المملكة العربية السعودية</p>
     </div>
   </div>
 </footer>
 
-<!-- ═══ SCRIPTS ═══ -->
+<!-- ═══════ SCRIPTS ═══════ -->
 <script>
-  /* ── Liquid Canvas ── */
-  (function() {
-    const canvas = document.getElementById('liquid-canvas');
-    const ctx = canvas.getContext('2d');
-    let W, H, blobs;
+/* ── Ocean Canvas — bioluminescent liquid ── */
+(function(){
+  const c = document.getElementById('ocean');
+  const ctx = c.getContext('2d');
+  let W, H, blobs;
 
-    function resize() {
-      W = canvas.width  = window.innerWidth;
-      H = canvas.height = window.innerHeight;
+  const PALETTE = [
+    { r:13,  g:148, b:136 }, // teal
+    { r:94,  g:234, b:212 }, // aqua
+    { r:212, g:165, b:116 }, // sand
+    { r:13,  g:148, b:136 }, // teal again — weight
+  ];
+
+  function mkBlob(i) {
+    const col = PALETTE[i % PALETTE.length];
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: 200 + Math.random() * 280,
+      vx: (Math.random() - 0.5) * 0.18,
+      vy: (Math.random() - 0.5) * 0.14,
+      phase: Math.random() * Math.PI * 2,
+      freq: 0.0006 + Math.random() * 0.0004,
+      col,
+      alpha: 0.06 + Math.random() * 0.08,
+    };
+  }
+
+  function init() {
+    W = c.width  = window.innerWidth;
+    H = c.height = window.innerHeight;
+    blobs = Array.from({ length: 7 }, (_, i) => mkBlob(i));
+  }
+
+  let t = 0;
+  function draw() {
+    t++;
+    ctx.clearRect(0, 0, W, H);
+    for (const b of blobs) {
+      b.x += b.vx + Math.sin(t * b.freq + b.phase) * 0.6;
+      b.y += b.vy + Math.cos(t * b.freq + b.phase) * 0.5;
+      if (b.x < -b.r)   b.x = W + b.r;
+      if (b.x > W + b.r) b.x = -b.r;
+      if (b.y < -b.r)   b.y = H + b.r;
+      if (b.y > H + b.r) b.y = -b.r;
+
+      const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+      const {r, g:gb, b:bb} = b.col;
+      g.addColorStop(0,   `rgba(${r},${gb},${bb},${b.alpha})`);
+      g.addColorStop(0.5, `rgba(${r},${gb},${bb},${b.alpha * 0.3})`);
+      g.addColorStop(1,   `rgba(${r},${gb},${bb},0)`);
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fillStyle = g;
+      ctx.fill();
     }
-
-    function mkBlob() {
-      return {
-        x: Math.random() * W,
-        y: Math.random() * H,
-        r: 180 + Math.random() * 220,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        hue: Math.random() < 0.5 ? 'teal' : 'gold',
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.004 + Math.random() * 0.004,
-      };
-    }
-
-    function init() {
-      resize();
-      blobs = Array.from({ length: 6 }, mkBlob);
-    }
-
-    function draw(t) {
-      ctx.clearRect(0, 0, W, H);
-      for (const b of blobs) {
-        b.x += b.vx + Math.sin(t * b.speed + b.phase) * 0.5;
-        b.y += b.vy + Math.cos(t * b.speed + b.phase) * 0.4;
-        if (b.x < -b.r)  b.x = W + b.r;
-        if (b.x > W + b.r) b.x = -b.r;
-        if (b.y < -b.r)  b.y = H + b.r;
-        if (b.y > H + b.r) b.y = -b.r;
-
-        const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-        if (b.hue === 'teal') {
-          g.addColorStop(0, 'rgba(13,148,136,0.18)');
-          g.addColorStop(1, 'rgba(13,148,136,0)');
-        } else {
-          g.addColorStop(0, 'rgba(245,158,11,0.08)');
-          g.addColorStop(1, 'rgba(245,158,11,0)');
-        }
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-        ctx.fillStyle = g;
-        ctx.fill();
-      }
-      requestAnimationFrame(draw);
-    }
-
-    window.addEventListener('resize', resize);
-    init();
     requestAnimationFrame(draw);
-  })();
+  }
 
-  /* ── Scroll Reveal ── */
-  (function() {
-    const els = document.querySelectorAll('.reveal');
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
-    }, { threshold: 0.12 });
-    els.forEach(el => io.observe(el));
-  })();
+  window.addEventListener('resize', init);
+  init();
+  requestAnimationFrame(draw);
+})();
 
-  /* ── Animated Chat Demo ── */
-  (function() {
-    const container = document.getElementById('chat-demo');
-    if (!container) return;
+/* ── Scroll Reveal ── */
+(function(){
+  const io = new IntersectionObserver(entries =>
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('on'); }),
+    { threshold: 0.1 }
+  );
+  document.querySelectorAll('.r').forEach(el => io.observe(el));
+})();
 
-    const messages = [
-      { type: 'bot', text: 'ممتاز! 🗓️ اختر الطبيب المناسب لك:', delay: 1200, options: ['د. أحمد السالم', 'د. نورة المالك', 'أي طبيب متاح'] },
-      { type: 'user', text: 'د. أحمد السالم', delay: 2600 },
-      { type: 'bot', text: 'رائع! الأوقات المتاحة غداً الأحد:', delay: 4000, options: ['9:00 ص', '11:30 ص', '3:00 م', '5:30 م'] },
-      { type: 'user', text: '11:30 ص', delay: 5400 },
-      { type: 'bot', text: '✅ تم الحجز! موعدك:\n📅 الأحد 11:30 ص\n👨‍⚕️ د. أحمد السالم\n🦷 تنظيف وتلميع\n\nستصلك رسالة تذكير قبل 24 ساعة.', delay: 6800 },
-    ];
+/* ── Slider range fill + calc ── */
+(function(){
+  function pct(input) {
+    const min = +input.min, max = +input.max, val = +input.value;
+    return ((val - min) / (max - min) * 100).toFixed(1) + '%';
+  }
 
-    let idx = 0;
-    function addMessage() {
-      if (idx >= messages.length) return;
-      const m = messages[idx++];
+  function updateCalc() {
+    const docs      = +document.getElementById('s-docs').value;
+    const msgs      = +document.getElementById('s-msgs').value;
+    const appts     = +document.getElementById('s-appts').value;
+    const reminders = +document.getElementById('s-reminders').value;
 
-      const typing = document.createElement('div');
-      typing.className = 'typing-indicator';
-      typing.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+    // hours per month eliminated
+    const msgsH      = msgs * 30 * (2/60);        // 2 min per message
+    const apptsH      = appts * 4 * (8/60);        // 8 min per appt across 4 weeks
+    const remindersH  = reminders * 4 * (3/60);    // 3 min per reminder
+    const totalH      = Math.round(msgsH + apptsH + remindersH);
 
-      setTimeout(() => {
-        if (m.type === 'bot') { container.appendChild(typing); }
-        setTimeout(() => {
-          if (m.type === 'bot') typing.remove();
-          const el = document.createElement('div');
-          el.className = `msg msg-${m.type}`;
-          el.style.whiteSpace = 'pre-line';
-          el.textContent = m.text;
-          if (m.options) {
-            const opts = document.createElement('div');
-            opts.className = 'msg-options';
-            m.options.forEach(o => {
-              const span = document.createElement('span');
-              span.className = 'msg-opt'; span.textContent = o;
-              opts.appendChild(span);
-            });
-            el.appendChild(opts);
-          }
-          container.appendChild(el);
-          container.scrollTop = container.scrollHeight;
-          setTimeout(addMessage, 800);
-        }, m.type === 'bot' ? 900 : 100);
-      }, m.delay - (idx > 1 ? messages[idx - 2].delay : 0));
+    // context switches (each manual task = context switch)
+    const switches = Math.round(msgs * 30 * 0.6 + appts * 4 * 2);
+
+    // missed appts recovered (estimated)
+    const missed = Math.round(appts * 4 * 0.12); // 12% would have been missed
+
+    // friction points
+    const friction = Math.round(totalH * 1.8);
+
+    document.getElementById('o-hours').textContent   = totalH;
+    document.getElementById('o-switches').textContent = switches;
+    document.getElementById('o-missed').textContent   = missed;
+    document.getElementById('o-friction').textContent  = friction;
+    document.getElementById('o-cost').textContent     = docs >= 5 ? '499 ر.س' : '299 ر.س';
+  }
+
+  ['s-docs','s-msgs','s-appts','s-reminders'].forEach(id => {
+    const input = document.getElementById(id);
+    const valEl = document.getElementById('v-' + id.split('-')[1]);
+    function sync() {
+      valEl.textContent = input.value;
+      input.style.setProperty('--pct', pct(input));
+      updateCalc();
     }
+    input.addEventListener('input', sync);
+    sync();
+  });
+})();
 
-    const io2 = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) { addMessage(); io2.disconnect(); }
-    }, { threshold: 0.4 });
-    const preview = document.querySelector('.chat-preview');
-    if (preview) io2.observe(preview);
-  })();
+/* ── Live dashboard ticker ── */
+(function(){
+  const el = document.getElementById('resp-num');
+  const bar = document.getElementById('resp-bar');
+  if (!el) return;
+  setInterval(() => {
+    const v = 38 + Math.floor(Math.random() * 30);
+    el.textContent = v;
+    bar.style.width = Math.max(60, 100 - v) + '%';
+  }, 4000);
+})();
 </script>
 </body>
 </html>
