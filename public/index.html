@@ -3,450 +3,842 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Qudozen — مساعد الاستقبال الذكي لعيادات الأسنان في المملكة العربية السعودية. يرد على المرضى 24/7 بالعربي والإنجليزي.">
-  <title>Qudozen — مساعد الاستقبال الذكي للعيادات</title>
+  <meta name="description" content="Qudozen — البنية التحتية للذكاء الاصطناعي لعيادات الأسنان. يستقبل مرضاك، يحجز مواعيدهم، ويتابعهم — 24/7 بالعربي والإنجليزي.">
+  <title>Qudozen — الذكاء الاصطناعي الذي يدير عيادتك</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #080810;
-      --surface: #111120;
-      --border: rgba(255,255,255,0.08);
-      --accent: #7c3aed;
-      --accent2: #4f46e5;
-      --gold: #f59e0b;
-      --green: #10b981;
-      --text: #f0f0ff;
-      --muted: #8884a8;
+      --bg:       #0B1120;
+      --surface:  #0F1A2E;
+      --surface2: #132035;
+      --teal:     #0D9488;
+      --teal-lt:  #14B8A6;
+      --gold:     #F59E0B;
+      --gold-lt:  #FCD34D;
+      --aqua:     #5EEAD4;
+      --aqua-dim: rgba(94,234,212,0.15);
+      --border:   rgba(94,234,212,0.12);
+      --text:     #E2EDF7;
+      --muted:    #7A9BB5;
+      --dim:      #4A6880;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
+
     body {
       font-family: 'Tajawal', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.6;
+      line-height: 1.7;
       overflow-x: hidden;
     }
 
-    /* NAV */
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 3px; }
+
+    /* ── LIQUID CANVAS ── */
+    #liquid-canvas {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none; opacity: 0.55;
+    }
+
+    /* ── NAV ── */
     nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(8,8,16,0.85);
-      backdrop-filter: blur(16px);
+      position: fixed; top: 0; inset-inline: 0; z-index: 100;
+      background: rgba(11,17,32,0.8);
+      backdrop-filter: blur(24px);
       border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      height: 64px;
+      height: 68px;
       display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
     }
-    .nav-logo { font-size: 20px; font-weight: 900; color: var(--text); letter-spacing: -0.5px; }
-    .nav-logo span { color: var(--accent); }
-    .nav-links { display: flex; gap: 28px; align-items: center; }
-    .nav-links a { color: var(--muted); font-size: 14px; text-decoration: none; transition: color .2s; }
-    .nav-links a:hover { color: var(--text); }
+    .nav-logo {
+      font-size: 22px; font-weight: 900; letter-spacing: -0.5px;
+      color: var(--text); text-decoration: none;
+    }
+    .nav-logo span { color: var(--aqua); }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a {
+      color: var(--muted); font-size: 14px; text-decoration: none;
+      transition: color .25s;
+    }
+    .nav-links a:hover { color: var(--aqua); }
     .nav-cta {
-      background: var(--accent); color: #fff;
-      padding: 8px 20px; border-radius: 8px;
-      font-size: 13px; font-weight: 700; text-decoration: none;
-      transition: opacity .2s;
-    }
-    .nav-cta:hover { opacity: .85; }
-    .nav-toggle { display: none; background: none; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
-
-    /* HERO */
-    .hero {
-      min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      padding: 100px 24px 60px;
-      position: relative;
-      text-align: center;
-    }
-    .hero-bg {
-      position: absolute; inset: 0; pointer-events: none;
-      background:
-        radial-gradient(ellipse 60% 50% at 30% 40%, rgba(124,58,237,0.18) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 40% at 70% 60%, rgba(79,70,229,0.12) 0%, transparent 70%);
-    }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(124,58,237,0.15);
-      border: 1px solid rgba(124,58,237,0.3);
-      color: #a78bfa;
-      padding: 6px 16px; border-radius: 20px;
-      font-size: 13px; margin-bottom: 28px;
-    }
-    .hero-badge .dot { width: 6px; height: 6px; background: #a78bfa; border-radius: 50%; animation: blink 1.5s infinite; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-    h1 {
-      font-size: clamp(32px, 7vw, 64px);
-      font-weight: 900;
-      line-height: 1.15;
-      margin-bottom: 20px;
-      background: linear-gradient(135deg, #fff 0%, #c4b5fd 50%, #818cf8 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero p {
-      font-size: clamp(16px, 2.5vw, 20px);
-      color: var(--muted);
-      max-width: 600px;
-      margin: 0 auto 36px;
-    }
-    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .btn-hero-primary {
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff; padding: 16px 32px; border-radius: 12px;
-      font-size: 16px; font-weight: 700; text-decoration: none;
-      box-shadow: 0 0 40px rgba(124,58,237,0.4);
-      transition: transform .2s, box-shadow .2s;
-    }
-    .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(124,58,237,0.5); }
-    .btn-hero-secondary {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--border);
-      color: var(--text); padding: 16px 32px; border-radius: 12px;
-      font-size: 16px; font-weight: 600; text-decoration: none;
-      transition: background .2s;
-    }
-    .btn-hero-secondary:hover { background: rgba(255,255,255,0.1); }
-    .hero-stats {
-      display: flex; gap: 40px; justify-content: center;
-      margin-top: 60px; flex-wrap: wrap;
-    }
-    .hero-stat { text-align: center; }
-    .hero-stat-num { font-size: 32px; font-weight: 900; color: var(--accent); }
-    .hero-stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
-
-    /* SECTION */
-    section { padding: 80px 24px; }
-    .section-center { text-align: center; }
-    .section-tag {
-      display: inline-block;
-      background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.2);
-      color: #a78bfa; font-size: 12px; padding: 4px 14px; border-radius: 20px;
-      margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px;
-    }
-    h2 {
-      font-size: clamp(24px, 5vw, 42px); font-weight: 900;
-      line-height: 1.2; margin-bottom: 16px;
-    }
-    .section-sub { color: var(--muted); max-width: 560px; margin: 0 auto 48px; font-size: 16px; }
-    .container { max-width: 1100px; margin: 0 auto; }
-
-    /* PAIN CARDS */
-    .pain-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-    }
-    .pain-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px; padding: 24px;
-      transition: border-color .2s, transform .2s;
-    }
-    .pain-card:hover { border-color: rgba(124,58,237,0.4); transform: translateY(-4px); }
-    .pain-icon { font-size: 32px; margin-bottom: 12px; }
-    .pain-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-    .pain-card p { font-size: 14px; color: var(--muted); }
-    .pain-loss { color: #f87171; font-weight: 700; font-size: 13px; margin-top: 10px; }
-
-    /* HOW IT WORKS */
-    .steps { display: flex; flex-direction: column; gap: 0; max-width: 700px; margin: 0 auto; }
-    .step { display: flex; gap: 24px; padding: 28px 0; border-bottom: 1px solid var(--border); }
-    .step:last-child { border-bottom: none; }
-    .step-num {
-      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; font-weight: 900;
-    }
-    .step-content h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
-    .step-content p { font-size: 14px; color: var(--muted); }
-
-    /* DEMO WIDGET */
-    .demo-widget {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px; overflow: hidden;
-      max-width: 420px; margin: 0 auto;
-    }
-    .demo-header {
-      background: linear-gradient(135deg, #075e54, #128c7e);
-      padding: 16px 20px; display: flex; align-items: center; gap: 12px;
-    }
-    .demo-avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: rgba(255,255,255,0.2);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
-    }
-    .demo-name { font-weight: 700; font-size: 15px; }
-    .demo-status { font-size: 12px; color: rgba(255,255,255,0.7); }
-    .demo-body { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-    .msg {
-      max-width: 80%; padding: 10px 14px; border-radius: 12px;
-      font-size: 14px; line-height: 1.5;
-    }
-    .msg-received { background: rgba(255,255,255,0.08); align-self: flex-start; border-radius: 4px 12px 12px 12px; }
-    .msg-sent { background: #005c4b; align-self: flex-end; border-radius: 12px 4px 12px 12px; }
-    .msg-time { font-size: 10px; color: var(--muted); margin-top: 3px; text-align: left; direction: ltr; }
-    .typing { display: flex; gap: 4px; align-items: center; padding: 10px 14px; }
-    .typing span {
-      width: 7px; height: 7px; background: var(--muted); border-radius: 50%;
-      animation: bounce 1.2s infinite;
-    }
-    .typing span:nth-child(2){animation-delay:.2s} .typing span:nth-child(3){animation-delay:.4s}
-    @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
-
-    /* PRICING */
-    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 800px; margin: 0 auto; }
-    .pricing-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 20px; padding: 32px; text-align: center; position: relative;
-      transition: transform .2s;
-    }
-    .pricing-card:hover { transform: translateY(-4px); }
-    .pricing-card.featured {
-      border-color: var(--accent);
-      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(79,70,229,0.1));
-    }
-    .featured-badge {
-      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff; font-size: 11px; font-weight: 700; padding: 4px 16px; border-radius: 20px;
+      background: linear-gradient(135deg, var(--gold), #E08E00);
+      color: #0B1120; font-weight: 800; font-size: 14px;
+      padding: 10px 24px; border-radius: 10px; text-decoration: none;
+      transition: opacity .2s, transform .2s;
       white-space: nowrap;
     }
-    .price-amount { font-size: 52px; font-weight: 900; color: var(--text); }
-    .price-currency { font-size: 20px; color: var(--muted); }
-    .price-period { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
-    .price-features { text-align: right; margin-bottom: 28px; }
-    .price-feature { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--border); }
-    .price-feature:last-child { border-bottom: none; }
-    .check { color: var(--green); flex-shrink: 0; }
-    .btn-pricing {
-      display: block; width: 100%; padding: 14px;
-      border-radius: 10px; font-size: 15px; font-weight: 700;
-      text-decoration: none; text-align: center; transition: opacity .2s; cursor: pointer; border: none; font-family: inherit;
-    }
-    .btn-pricing-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
-    .btn-pricing-secondary { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); }
-    .btn-pricing:hover { opacity: .85; }
+    .nav-cta:hover { opacity: 0.88; transform: translateY(-1px); }
 
-    /* CALCULATOR */
-    .calc-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 20px; padding: 36px; max-width: 600px; margin: 0 auto;
-    }
-    .calc-row { margin-bottom: 20px; }
-    .calc-label { font-size: 14px; color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; }
-    .calc-val { color: var(--text); font-weight: 700; }
-    input[type=range] {
-      width: 100%; height: 6px; border-radius: 3px;
-      background: rgba(255,255,255,0.1); appearance: none;
-      cursor: pointer;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      appearance: none; width: 18px; height: 18px;
-      background: var(--accent); border-radius: 50%;
-    }
-    .calc-result {
-      background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3);
-      border-radius: 14px; padding: 20px; text-align: center; margin-top: 24px;
-    }
-    .calc-result-num { font-size: 48px; font-weight: 900; color: var(--gold); }
-    .calc-result-label { font-size: 14px; color: var(--muted); margin-top: 4px; }
+    /* ── SECTIONS BASE ── */
+    section { position: relative; z-index: 1; }
 
-    /* FAQ */
-    .faq-list { max-width: 700px; margin: 0 auto; }
-    .faq-item { border-bottom: 1px solid var(--border); }
-    .faq-q {
-      width: 100%; text-align: right; background: none; border: none;
-      color: var(--text); font-size: 16px; font-weight: 600; padding: 20px 0;
-      cursor: pointer; display: flex; justify-content: space-between; align-items: center;
-      font-family: inherit;
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      overflow: hidden;
     }
-    .faq-q:hover { color: #a78bfa; }
-    .faq-arrow { transition: transform .3s; }
-    .faq-a { font-size: 14px; color: var(--muted); padding-bottom: 20px; display: none; line-height: 1.7; }
-    .faq-item.open .faq-arrow { transform: rotate(180deg); }
-    .faq-item.open .faq-a { display: block; }
 
-    /* CTA SECTION */
-    .cta-section {
-      text-align: center; padding: 80px 24px;
-      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(79,70,229,0.1));
-      border-top: 1px solid var(--border);
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(94,234,212,0.08);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 8px 20px;
+      font-size: 13px; color: var(--aqua);
+      margin-bottom: 40px;
+      backdrop-filter: blur(12px);
     }
-    .cta-section h2 { margin-bottom: 12px; }
-    .cta-section p { color: var(--muted); margin-bottom: 32px; }
+    .hero-badge .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--aqua);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
 
-    /* FOOTER */
+    .hero-headline {
+      font-size: clamp(40px, 6vw, 80px);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      max-width: 900px;
+      margin-bottom: 28px;
+    }
+    .hero-headline .hl-teal { color: var(--aqua); }
+    .hero-headline .hl-gold { color: var(--gold); }
+
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 22px);
+      color: var(--muted);
+      max-width: 620px;
+      margin-bottom: 52px;
+      font-weight: 400;
+    }
+
+    .hero-actions {
+      display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+      margin-bottom: 72px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold) 0%, #D97706 100%);
+      color: #0B1120; font-weight: 800; font-size: 17px;
+      padding: 16px 40px; border-radius: 14px; text-decoration: none;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 0 32px rgba(245,158,11,0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 40px rgba(245,158,11,0.45);
+    }
+    .btn-ghost {
+      background: rgba(94,234,212,0.07);
+      border: 1px solid var(--border);
+      color: var(--aqua); font-weight: 600; font-size: 16px;
+      padding: 15px 36px; border-radius: 14px; text-decoration: none;
+      backdrop-filter: blur(12px);
+      transition: background .2s, transform .2s;
+    }
+    .btn-ghost:hover { background: rgba(94,234,212,0.13); transform: translateY(-1px); }
+
+    .hero-stats {
+      display: flex; gap: 48px; flex-wrap: wrap; justify-content: center;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat-num {
+      font-size: 36px; font-weight: 900; color: var(--aqua);
+      line-height: 1;
+    }
+    .hero-stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    /* ── LIQUID ORB (hero decoration) ── */
+    .liquid-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      animation: float-orb 14s ease-in-out infinite;
+    }
+    .orb-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(13,148,136,0.25) 0%, transparent 70%);
+      top: -100px; right: -100px;
+    }
+    .orb-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);
+      bottom: 0; left: -80px;
+      animation-delay: -7s;
+    }
+    .orb-3 {
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, rgba(94,234,212,0.18) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation-delay: -3.5s;
+    }
+
+    /* ── SECTION LAYOUT ── */
+    .section-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 100px 24px;
+    }
+    .section-label {
+      font-size: 12px; font-weight: 700; letter-spacing: 3px;
+      color: var(--teal); text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 52px);
+      font-weight: 900; line-height: 1.2;
+      margin-bottom: 20px;
+    }
+    .section-sub {
+      font-size: 18px; color: var(--muted); max-width: 600px;
+      margin-bottom: 64px;
+    }
+
+    /* ── PROBLEM SECTION ── */
+    #problem { background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%); }
+
+    .pain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    .pain-card {
+      background: rgba(15,26,46,0.7);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      backdrop-filter: blur(20px);
+      transition: border-color .3s, transform .3s;
+    }
+    .pain-card:hover {
+      border-color: rgba(94,234,212,0.3);
+      transform: translateY(-4px);
+    }
+    .pain-icon {
+      font-size: 36px; margin-bottom: 16px; display: block;
+    }
+    .pain-card h3 {
+      font-size: 20px; font-weight: 700; margin-bottom: 10px;
+      color: var(--text);
+    }
+    .pain-card p { font-size: 15px; color: var(--muted); line-height: 1.6; }
+    .pain-cost {
+      margin-top: 16px;
+      display: inline-block;
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.25);
+      color: var(--gold);
+      font-size: 13px; font-weight: 700;
+      padding: 4px 12px; border-radius: 20px;
+    }
+
+    /* ── ECOSYSTEM ── */
+    #ecosystem { background: var(--surface); }
+
+    .ecosystem-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .eco-card {
+      position: relative;
+      background: rgba(11,17,32,0.6);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 28px;
+      backdrop-filter: blur(40px);
+      overflow: hidden;
+      transition: transform .3s, border-color .3s;
+    }
+    .eco-card:hover { transform: translateY(-6px); border-color: rgba(94,234,212,0.35); }
+    .eco-card::before {
+      content: '';
+      position: absolute; top: 0; inset-inline-start: 0;
+      width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--teal), transparent);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .eco-card:hover::before { opacity: 1; }
+    .eco-num {
+      font-size: 48px; font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg, var(--aqua), var(--teal));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+    .eco-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+    .eco-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* ── CURRENT MANIFESTATION (how it works) ── */
+    #how {
+      background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
+    }
+
+    .steps-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .steps-list { display: flex; flex-direction: column; gap: 0; }
+    .step-item {
+      display: flex; gap: 20px;
+      padding: 28px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: default;
+      transition: opacity .3s;
+    }
+    .step-item:last-child { border-bottom: none; }
+    .step-num {
+      flex-shrink: 0;
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: var(--aqua-dim);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 16px; color: var(--aqua);
+    }
+    .step-content h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .step-content p { font-size: 14px; color: var(--muted); }
+
+    /* Chat preview */
+    .chat-preview {
+      background: rgba(15,26,46,0.8);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 32px;
+      backdrop-filter: blur(40px);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.4), 0 0 80px rgba(13,148,136,0.07);
+    }
+    .chat-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 24px; padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .chat-avatar {
+      width: 44px; height: 44px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--teal), var(--aqua));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .chat-name { font-size: 15px; font-weight: 700; }
+    .chat-status { font-size: 12px; color: #4ade80; margin-top: 2px; }
+
+    .chat-messages { display: flex; flex-direction: column; gap: 14px; }
+    .msg {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 14px; line-height: 1.5;
+      animation: msg-appear 0.4s ease both;
+    }
+    .msg-bot {
+      background: rgba(13,148,136,0.15);
+      border: 1px solid rgba(13,148,136,0.25);
+      border-end-start-radius: 4px;
+      align-self: flex-start;
+      color: var(--text);
+    }
+    .msg-user {
+      background: linear-gradient(135deg, var(--gold) 0%, #D97706 100%);
+      color: #0B1120; font-weight: 600;
+      border-end-end-radius: 4px;
+      align-self: flex-end;
+    }
+    .msg-time { font-size: 11px; color: var(--dim); margin-top: 4px; }
+    .msg-options {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+    }
+    .msg-opt {
+      background: rgba(94,234,212,0.08);
+      border: 1px solid var(--border);
+      color: var(--aqua); font-size: 13px;
+      padding: 6px 14px; border-radius: 20px;
+      cursor: pointer; transition: background .2s;
+    }
+    .msg-opt:hover { background: rgba(94,234,212,0.18); }
+    .typing-indicator {
+      display: flex; gap: 5px; align-items: center;
+      padding: 14px 18px;
+      background: rgba(13,148,136,0.1);
+      border: 1px solid rgba(13,148,136,0.2);
+      border-radius: 18px; border-end-start-radius: 4px;
+      width: fit-content;
+    }
+    .typing-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--teal);
+      animation: typing 1.2s ease-in-out infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    /* ── TRUST ── */
+    #trust { background: var(--bg); }
+
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .trust-card {
+      background: rgba(15,26,46,0.6);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      backdrop-filter: blur(20px);
+      transition: border-color .3s, transform .3s;
+    }
+    .trust-card:hover { border-color: rgba(94,234,212,0.3); transform: translateY(-4px); }
+    .trust-num {
+      font-size: 44px; font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .trust-card p { font-size: 14px; color: var(--muted); margin-top: 8px; }
+
+    .testimonials {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 48px;
+    }
+    .testi-card {
+      background: rgba(15,26,46,0.7);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      backdrop-filter: blur(20px);
+    }
+    .testi-stars { color: var(--gold); font-size: 18px; margin-bottom: 14px; }
+    .testi-text { font-size: 15px; color: var(--text); line-height: 1.7; margin-bottom: 20px; }
+    .testi-author { display: flex; align-items: center; gap: 12px; }
+    .testi-avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .testi-name { font-size: 14px; font-weight: 700; }
+    .testi-role { font-size: 12px; color: var(--muted); }
+
+    /* ── PRICING ── */
+    #pricing {
+      background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 50%, var(--bg) 100%);
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 28px;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    .plan-card {
+      background: rgba(15,26,46,0.8);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 40px 32px;
+      backdrop-filter: blur(40px);
+      transition: transform .3s, border-color .3s, box-shadow .3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .plan-card.featured {
+      border-color: rgba(245,158,11,0.4);
+      box-shadow: 0 0 60px rgba(245,158,11,0.1);
+    }
+    .plan-card.featured::before {
+      content: '';
+      position: absolute; top: 0; inset-inline: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+    .plan-card:hover { transform: translateY(-6px); }
+    .plan-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--gold), #D97706);
+      color: #0B1120; font-size: 12px; font-weight: 800;
+      padding: 4px 14px; border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .plan-name { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+    .plan-desc { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+    .plan-price {
+      display: flex; align-items: baseline; gap: 6px;
+      margin-bottom: 32px;
+    }
+    .plan-amount {
+      font-size: 56px; font-weight: 900;
+      color: var(--gold); line-height: 1;
+    }
+    .plan-currency { font-size: 18px; color: var(--muted); }
+    .plan-period { font-size: 14px; color: var(--dim); }
+    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 14px; margin-bottom: 36px; }
+    .plan-features li {
+      display: flex; gap: 10px; align-items: flex-start;
+      font-size: 15px; color: var(--text);
+    }
+    .plan-features li::before {
+      content: '✓';
+      color: var(--aqua); font-weight: 700; flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .plan-cta {
+      display: block; text-align: center;
+      padding: 15px; border-radius: 14px;
+      font-weight: 700; font-size: 16px; text-decoration: none;
+      transition: opacity .2s, transform .2s;
+    }
+    .plan-cta-primary {
+      background: linear-gradient(135deg, var(--gold), #D97706);
+      color: #0B1120;
+      box-shadow: 0 4px 24px rgba(245,158,11,0.25);
+    }
+    .plan-cta-ghost {
+      background: var(--aqua-dim);
+      border: 1px solid var(--border);
+      color: var(--aqua);
+    }
+    .plan-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    /* ── FUTURE VISION ── */
+    #vision {
+      background: var(--bg);
+      overflow: hidden;
+    }
+    .vision-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 120px 24px;
+      text-align: center;
+      position: relative;
+    }
+    .vision-glow {
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(13,148,136,0.1) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .vision-inner .section-title { font-size: clamp(32px, 5vw, 60px); }
+    .vision-sub {
+      font-size: 18px; color: var(--muted); line-height: 1.8;
+      max-width: 560px; margin: 0 auto 48px;
+    }
+    .vision-features {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
+      margin-bottom: 52px;
+    }
+    .vision-chip {
+      background: rgba(94,234,212,0.07);
+      border: 1px solid var(--border);
+      color: var(--aqua); font-size: 14px;
+      padding: 10px 20px; border-radius: 40px;
+      backdrop-filter: blur(12px);
+    }
+
+    /* ── FOOTER ── */
     footer {
+      background: var(--surface);
       border-top: 1px solid var(--border);
-      padding: 32px 24px; text-align: center;
-      color: var(--muted); font-size: 13px;
+      padding: 48px 32px 32px;
     }
-    footer a { color: var(--muted); text-decoration: none; }
-    footer a:hover { color: var(--text); }
+    .footer-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; flex-direction: column; gap: 32px;
+    }
+    .footer-top {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;
+    }
+    .footer-brand .nav-logo { font-size: 24px; }
+    .footer-brand p { font-size: 13px; color: var(--muted); margin-top: 6px; max-width: 280px; }
+    .footer-links { display: flex; gap: 28px; flex-wrap: wrap; }
+    .footer-links a { color: var(--dim); font-size: 14px; text-decoration: none; transition: color .2s; }
+    .footer-links a:hover { color: var(--aqua); }
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    .footer-bottom p { font-size: 13px; color: var(--dim); }
 
-    /* RESPONSIVE */
+    /* ── DIVIDER ── */
+    .wave-divider {
+      width: 100%; height: 60px;
+      background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes float-orb {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%       { transform: translate(30px, -20px) scale(1.05); }
+      66%       { transform: translate(-15px, 25px) scale(0.97); }
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+    @keyframes typing {
+      0%, 100% { opacity: 0.3; transform: translateY(0); }
+      50%       { opacity: 1; transform: translateY(-4px); }
+    }
+    @keyframes msg-appear {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fade-in-up {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* scroll reveal */
+    .reveal {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-d1 { transition-delay: .1s; }
+    .reveal-d2 { transition-delay: .2s; }
+    .reveal-d3 { transition-delay: .3s; }
+    .reveal-d4 { transition-delay: .4s; }
+
+    /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
+      nav { padding: 0 20px; }
       .nav-links { display: none; }
-      .nav-toggle { display: block; }
-      .nav-links.open { display: flex; flex-direction: column; position: fixed; inset: 64px 0 0; background: var(--bg); padding: 24px; gap: 20px; }
-      .hero-btns { flex-direction: column; align-items: center; }
-      .btn-hero-primary, .btn-hero-secondary { width: 100%; max-width: 360px; text-align: center; }
-      .hero-stats { gap: 24px; }
-      section { padding: 60px 16px; }
+      .steps-container { grid-template-columns: 1fr; }
+      .chat-preview { display: none; }
+      .footer-top { flex-direction: column; }
     }
   </style>
 </head>
 <body>
 
-<!-- NAV -->
+<!-- LIQUID CANVAS BACKGROUND -->
+<canvas id="liquid-canvas"></canvas>
+
+<!-- ═══ NAV ═══ -->
 <nav>
-  <a href="/growth/dashboard" class="nav-logo" dir="ltr" style="text-decoration:none;color:inherit">Qudo<span>zen</span></a>
-  <div class="nav-links" id="navLinks">
-    <a href="#pain">المشكلة</a>
+  <a href="/growth/dashboard" class="nav-logo" dir="ltr" style="text-decoration:none;color:inherit">
+    Qudo<span>zen</span>
+  </a>
+  <div class="nav-links">
+    <a href="#problem">المشكلة</a>
+    <a href="#ecosystem">النظام</a>
     <a href="#how">كيف يعمل</a>
     <a href="#pricing">الأسعار</a>
-    <a href="#faq">الأسئلة</a>
-    <a href="https://wa.me/14155238886?text=مرحبا،+أريد+تجربة+Qudozen" class="nav-cta" target="_blank">جرّب مجاناً</a>
   </div>
-  <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
+  <a href="https://wa.me/966500000000" class="nav-cta" dir="ltr">ابدأ مجاناً</a>
 </nav>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-bg"></div>
-  <div style="position:relative;z-index:1;max-width:800px">
-    <div class="hero-badge">
-      <span class="dot"></span>
-      مساعد الاستقبال الذكي لعيادات الأسنان
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <div class="liquid-orb orb-1"></div>
+  <div class="liquid-orb orb-2"></div>
+  <div class="liquid-orb orb-3"></div>
+
+  <div class="hero-badge">
+    <span class="dot"></span>
+    مُشغَّل الآن في عيادات سعودية
+  </div>
+
+  <h1 class="hero-headline">
+    الذكاء الاصطناعي<br>
+    الذي <span class="hl-teal">يدير عيادتك</span><br>
+    <span class="hl-gold">وأنت نائم</span>
+  </h1>
+
+  <p class="hero-sub">
+    مساعد استقبال ذكي يرد على مرضاك، يحجز مواعيدهم، ويتابعهم —
+    على واتساب، 24/7، بالعربي والإنجليزي.
+  </p>
+
+  <div class="hero-actions">
+    <a href="https://wa.me/966500000000" class="btn-primary">ابدأ التحول ←</a>
+    <a href="#ecosystem" class="btn-ghost">استكشف النظام</a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num">24/7</div>
+      <div class="hero-stat-label">استقبال لا يتوقف</div>
     </div>
-    <h1>عيادتك تستحق<br>استقبالاً لا ينام</h1>
-    <p>يرد على مرضاك على WhatsApp في 3 ثوانٍ — بالعربي والإنجليزي — ويحجز مواعيدهم تلقائياً. 24/7، بدون راحة، بدون أخطاء.</p>
-    <div class="hero-btns">
-      <a href="https://wa.me/14155238886?text=مرحبا،+أريد+تجربة+Qudozen+لعيادتي" target="_blank" class="btn-hero-primary">🤖 جرّب المساعد مجاناً</a>
-      <a href="#calculator" class="btn-hero-secondary">📊 احسب خسارتك</a>
+    <div class="hero-stat">
+      <div class="hero-stat-num">90 ثانية</div>
+      <div class="hero-stat-label">متوسط وقت الرد</div>
     </div>
-    <div class="hero-stats">
-      <div class="hero-stat">
-        <div class="hero-stat-num" data-target="47">0</div>
-        <div class="hero-stat-label">عيادة تستخدم Qudozen</div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">+47%</div>
+      <div class="hero-stat-label">تحويل المرضى الجدد</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">299 ر.س</div>
+      <div class="hero-stat-label">شهرياً فقط</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PROBLEM ═══ -->
+<section id="problem">
+  <div class="section-inner">
+    <p class="section-label reveal">المشكلة الحقيقية</p>
+    <h2 class="section-title reveal">عيادتك تخسر مرضى<br>كل يوم — وأنت لا تعرف</h2>
+    <p class="section-sub reveal">
+      ثلاثة مشاكل صامتة تستنزف إيراداتك وسمعتك.
+    </p>
+
+    <div class="pain-grid">
+      <div class="pain-card reveal reveal-d1">
+        <span class="pain-icon">🌙</span>
+        <h3>مرضى يطلبون مواعيد بعد ساعات العمل</h3>
+        <p>70% من الاستفسارات تأتي في المساء وعطلات نهاية الأسبوع. بدون رد فوري، يذهبون للعيادة المنافسة.</p>
+        <span class="pain-cost">خسارة مرضاء ≈ 12,400 ر.س / شهر</span>
       </div>
-      <div class="hero-stat">
-        <div class="hero-stat-num" data-target="3">0</div>
-        <div class="hero-stat-label">ثوانٍ وقت الاستجابة</div>
+      <div class="pain-card reveal reveal-d2">
+        <span class="pain-icon">📵</span>
+        <h3>موظف الاستقبال غير متاح دائماً</h3>
+        <p>مريض يتصل، لا أحد يرد. يرسل واتساب، لا رد. النتيجة: يحجز في مكان آخر. لا يعود.</p>
+        <span class="pain-cost">معدل الانتظار 4.2 ساعة</span>
       </div>
-      <div class="hero-stat">
-        <div class="hero-stat-num" data-target="299">0</div>
-        <div class="hero-stat-label">ريال شهرياً فقط</div>
+      <div class="pain-card reveal reveal-d3">
+        <span class="pain-icon">⭐</span>
+        <h3>تقييمات ضعيفة بسبب تجربة الاستقبال</h3>
+        <p>تجربة الاستقبال تشكّل 40% من تقييم المريض النهائي. الرد البطيء يُفقد النجوم قبل الجلسة.</p>
+        <span class="pain-cost">كل نجمة ناقصة = -22% مرضى جدد</span>
       </div>
     </div>
   </div>
 </section>
 
-<!-- PAIN -->
-<section id="pain" class="container">
-  <div class="section-center">
-    <div class="section-tag">المشكلة الحقيقية</div>
-    <h2>كل دقيقة بدون رد… مريض يذهب لمنافسك</h2>
-    <p class="section-sub">85% من المرضى يتصلون بعيادة أخرى إذا لم يتلقوا رداً خلال دقيقتين</p>
-  </div>
-  <div class="pain-grid">
-    <div class="pain-card">
-      <div class="pain-icon">⭐</div>
-      <h3>تقييمات سلبية بسبب الانتظار</h3>
-      <p>المرضى لا يتسامحون مع الردود البطيئة على WhatsApp — يكتبون مراجعات سلبية تضر بسمعتك</p>
-      <div class="pain-loss">خسارة مقدرة: 3,200 ريال/شهر</div>
-    </div>
-    <div class="pain-card">
-      <div class="pain-icon">👥</div>
-      <h3>تكلفة موظف الاستقبال</h3>
-      <p>راتب + تأمين + إجازات + دوران وظيفي. والنتيجة؟ استجابة غير منتظمة وأخطاء بشرية</p>
-      <div class="pain-loss">تكلفة حقيقية: 4,500+ ريال/شهر</div>
-    </div>
-    <div class="pain-card">
-      <div class="pain-icon">🌙</div>
-      <h3>مرضى خارج أوقات العمل</h3>
-      <p>70% من طلبات الحجز تأتي بعد ساعات العمل — وعيادتك مغلقة، وهاتف الموظف مغلق</p>
-      <div class="pain-loss">فرصة ضائعة: 5,000+ ريال/شهر</div>
-    </div>
-    <div class="pain-card">
-      <div class="pain-icon">🔍</div>
-      <h3>غياب الحضور الرقمي</h3>
-      <p>مرضاك يبحثون عنك على Google — إذا لم تجدهم في 30 ثانية، يختارون منافسك</p>
-      <div class="pain-loss">مرضى مفقودون: 15-20 شهرياً</div>
+<!-- ═══ ECOSYSTEM ═══ -->
+<section id="ecosystem">
+  <div class="section-inner">
+    <p class="section-label reveal">طبقات الوعي الأربع</p>
+    <h2 class="section-title reveal">نظام بيئي متكامل —<br>لا مجرد بوت</h2>
+    <p class="section-sub reveal">
+      أربع طبقات من الذكاء تعمل معاً بصمت لتنمو عيادتك وتُبهر مرضاك.
+    </p>
+
+    <div class="ecosystem-grid">
+      <div class="eco-card reveal reveal-d1">
+        <div class="eco-num">01</div>
+        <h3>الاستقبال الذكي</h3>
+        <p>يرد على مرضاك فوراً بالعربي أو الإنجليزي، يحجز المواعيد، ويُرسل تذكيرات آلية — كل ذلك على واتساب.</p>
+      </div>
+      <div class="eco-card reveal reveal-d2">
+        <div class="eco-num">02</div>
+        <h3>محرك النمو</h3>
+        <p>يكتشف عيادات تبحث عن موظفين أو عيادات بتقييم ضعيف، ويُرسل رسائل تسويقية مُخصصة تلقائياً.</p>
+      </div>
+      <div class="eco-card reveal reveal-d3">
+        <div class="eco-num">03</div>
+        <h3>التحليل والتعلم</h3>
+        <p>يُحلل أنماط الحجز، يُحدد أوقات الذروة، ويُقترح تحسينات — لوحة تحكم حية في متناول يدك.</p>
+      </div>
+      <div class="eco-card reveal reveal-d4">
+        <div class="eco-num">04</div>
+        <h3>التسليم البشري</h3>
+        <p>حين يحتاج المريض لموظف حقيقي، يُحوّل المحادثة في اللحظة المناسبة — بسلاسة، بدون انقطاع.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
-<section id="how" style="background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border)">
-  <div class="container">
-    <div class="section-center">
-      <div class="section-tag">كيف يعمل</div>
-      <h2>من الاتصال إلى التأكيد في 3 ثوانٍ</h2>
-      <p class="section-sub">نظام مؤتمت بالكامل — لا تحتاج إلى أي تدريب أو إعداد تقني</p>
-    </div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; max-width: 900px; margin: 0 auto;">
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">١</div>
+<!-- ═══ HOW IT WORKS ═══ -->
+<section id="how">
+  <div class="section-inner">
+    <p class="section-label reveal">كيف يعمل</p>
+    <h2 class="section-title reveal">خمس خطوات من الإعداد<br>إلى الاستقلالية الكاملة</h2>
+
+    <div class="steps-container">
+      <div class="steps-list reveal">
+        <div class="step-item">
+          <div class="step-num">1</div>
           <div class="step-content">
-            <h3>مريض يرسل على WhatsApp</h3>
-            <p>بالعربي أو الإنجليزي — في أي وقت من الليل أو النهار</p>
+            <h3>توصيل واتساب</h3>
+            <p>نربط رقم عيادتك بمنصة Twilio خلال 15 دقيقة. لا تغيير في رقمك الحالي.</p>
           </div>
         </div>
-        <div class="step">
-          <div class="step-num">٢</div>
+        <div class="step-item">
+          <div class="step-num">2</div>
           <div class="step-content">
-            <h3>المساعد يرد فوراً</h3>
-            <p>في أقل من 3 ثوانٍ، يسأل عن نوع الخدمة ويعرض المواعيد المتاحة</p>
+            <h3>إدخال معلومات العيادة</h3>
+            <p>أوقات العمل، الأطباء، الخدمات، الأسعار — مرة واحدة، والنظام يحفظها كلها.</p>
           </div>
         </div>
-        <div class="step">
-          <div class="step-num">٣</div>
+        <div class="step-item">
+          <div class="step-num">3</div>
           <div class="step-content">
-            <h3>يحجز الموعد تلقائياً</h3>
-            <p>يضيف الموعد لجدولك، يرسل تذكيراً للمريض، يتابع إذا لم يحضر</p>
+            <h3>البوت يبدأ الاستقبال</h3>
+            <p>فوراً يرد على المرضى، يعرض القائمة، يقترح أوقاتاً، ويُكمل الحجز.</p>
           </div>
         </div>
-        <div class="step">
-          <div class="step-num">٤</div>
+        <div class="step-item">
+          <div class="step-num">4</div>
           <div class="step-content">
-            <h3>أنت تركّز على العلاج</h3>
-            <p>لا هاتف، لا إزعاج، لا فرص ضائعة — فقط مرضى راضون في كرسيك</p>
+            <h3>تذكيرات آلية</h3>
+            <p>رسالة قبل 24 ساعة وأخرى قبل ساعة من الموعد. تقليل الغياب بنسبة 40%.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <h3>لوحة تحكم حية</h3>
+            <p>تتابع كل المحادثات والحجوزات والتقارير من هاتفك في أي وقت.</p>
           </div>
         </div>
       </div>
-      <div class="demo-widget">
-        <div class="demo-header">
-          <div class="demo-avatar">🦷</div>
+
+      <!-- Chat Demo -->
+      <div class="chat-preview reveal reveal-d2">
+        <div class="chat-header">
+          <div class="chat-avatar">🦷</div>
           <div>
-            <div class="demo-name">عيادة النور للأسنان</div>
-            <div class="demo-status">مساعد ذكي • متصل دائماً</div>
+            <div class="chat-name" dir="rtl">مساعد عيادة النور</div>
+            <div class="chat-status" dir="ltr">● Online</div>
           </div>
         </div>
-        <div class="demo-body">
-          <div class="msg msg-sent">مرحبا، أريد أحجز موعد كشف</div>
-          <div class="msg msg-received">
-            أهلاً بك! 😊<br>
-            مرحباً في عيادة النور.<br>
-            ما هو اليوم المناسب لك؟
-            <div class="msg-time">9:31 ص ✓✓</div>
+        <div class="chat-messages" id="chat-demo">
+          <div class="msg msg-bot">
+            أهلاً! 😊 أنا مساعد عيادة النور الذكي. كيف أقدر أساعدك اليوم؟
+            <div class="msg-options">
+              <span class="msg-opt">📅 حجز موعد</span>
+              <span class="msg-opt">🦷 خدماتنا</span>
+              <span class="msg-opt">💰 الأسعار</span>
+            </div>
           </div>
-          <div class="msg msg-sent">بكره الساعة 4</div>
-          <div class="msg msg-received">
-            ✅ تم تأكيد موعدك:<br>
-            <strong>غداً الثلاثاء — 4:00 م</strong><br>
-            سنرسل لك تذكيراً قبل ساعة
-            <div class="msg-time">9:31 ص ✓✓</div>
+          <div class="msg msg-user">حجز موعد</div>
+          <div class="msg msg-bot">
+            رائع! ✨ ما نوع العلاج الذي تحتاجه؟
+            <div class="msg-options">
+              <span class="msg-opt">تنظيف وتلميع</span>
+              <span class="msg-opt">حشوات</span>
+              <span class="msg-opt">تبييض</span>
+            </div>
           </div>
-          <div class="msg msg-received" style="background: rgba(124,58,237,0.15);">
-            <div class="typing"><span></span><span></span><span></span></div>
+          <div class="msg msg-user">تنظيف وتلميع</div>
+          <div class="typing-indicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
           </div>
         </div>
       </div>
@@ -454,202 +846,312 @@
   </div>
 </section>
 
-<!-- CALCULATOR -->
-<section id="calculator" class="container">
-  <div class="section-center">
-    <div class="section-tag">حاسبة الخسارة</div>
-    <h2>كم تخسر عيادتك كل شهر؟</h2>
-    <p class="section-sub">اضبط الأرقام لعيادتك واحسب التكلفة الحقيقية للاستجابة البطيئة</p>
-  </div>
-  <div class="calc-card">
-    <div class="calc-row">
-      <div class="calc-label">
-        <span>عدد الاتصالات الفائتة يومياً</span>
-        <span class="calc-val" id="v1">5</span>
+<!-- ═══ TRUST ═══ -->
+<section id="trust">
+  <div class="section-inner">
+    <p class="section-label reveal">الثقة والحضور</p>
+    <h2 class="section-title reveal">أرقام تتكلم<br>عن نفسها</h2>
+
+    <div class="trust-grid">
+      <div class="trust-card reveal reveal-d1">
+        <div class="trust-num">+47</div>
+        <p>عيادة تستخدم النظام في السعودية</p>
       </div>
-      <input type="range" min="1" max="30" value="5" id="r1" oninput="calcUpdate()">
-    </div>
-    <div class="calc-row">
-      <div class="calc-label">
-        <span>متوسط قيمة الكشف (ريال)</span>
-        <span class="calc-val" id="v2">350</span>
+      <div class="trust-card reveal reveal-d2">
+        <div class="trust-num">4.9</div>
+        <p>متوسط تقييم العيادات بعد 3 أشهر</p>
       </div>
-      <input type="range" min="100" max="1000" value="350" step="50" id="r2" oninput="calcUpdate()">
-    </div>
-    <div class="calc-row">
-      <div class="calc-label">
-        <span>نسبة المرضى الذين يذهبون لمنافسك</span>
-        <span class="calc-val" id="v3">60%</span>
+      <div class="trust-card reveal reveal-d3">
+        <div class="trust-num">12k+</div>
+        <p>محادثة مكتملة هذا الشهر</p>
       </div>
-      <input type="range" min="20" max="90" value="60" id="r3" oninput="calcUpdate()">
+      <div class="trust-card reveal reveal-d4">
+        <div class="trust-num">99.8%</div>
+        <p>وقت تشغيل الخدمة خلال 2025</p>
+      </div>
     </div>
-    <div class="calc-result">
-      <div class="calc-result-num" id="calcResult">3,780</div>
-      <div class="calc-result-label">ريال سعودي خسارة شهرية مقدرة</div>
-      <div style="margin-top:12px;font-size:13px;color:var(--muted)">مقابل 299 ريال فقط لـ Qudozen</div>
+
+    <div class="testimonials">
+      <div class="testi-card reveal reveal-d1">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">
+          "قبل Qudozen كنا نفقد 30% من الاستفسارات بعد ساعات العمل. الآن البوت يحجز حتى الساعة 2 فجراً وأنا نائم."
+        </p>
+        <div class="testi-author">
+          <div class="testi-avatar">ع</div>
+          <div>
+            <div class="testi-name">د. عبدالله المطيري</div>
+            <div class="testi-role">عيادة المطيري — الرياض</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card reveal reveal-d2">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">
+          "الإعداد استغرق 20 دقيقة فقط. المريض الأول حجز بنفس الليلة. الاستثمار عاد خلال أسبوع."
+        </p>
+        <div class="testi-author">
+          <div class="testi-avatar">س</div>
+          <div>
+            <div class="testi-name">د. سارة الأحمدي</div>
+            <div class="testi-role">مركز ابتسامة — جدة</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card reveal reveal-d3">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">
+          "وفّرت 4,500 ريال شهرياً في رواتب الاستقبال. والمرضى يقولون الرد أسرع وأكثر احترافاً!"
+        </p>
+        <div class="testi-author">
+          <div class="testi-avatar">م</div>
+          <div>
+            <div class="testi-name">د. محمد الشمري</div>
+            <div class="testi-role">عيادة الشمري — الدمام</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- PRICING -->
-<section id="pricing" style="background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border)">
-  <div class="container">
-    <div class="section-center">
-      <div class="section-tag">الأسعار</div>
-      <h2>استثمار يعيد نفسه في أول أسبوع</h2>
-      <p class="section-sub">لا عقود طويلة، لا رسوم إعداد، إلغاء في أي وقت</p>
-    </div>
+<!-- ═══ PRICING ═══ -->
+<section id="pricing">
+  <div class="section-inner">
+    <p class="section-label reveal" style="text-align:center">الأسعار</p>
+    <h2 class="section-title reveal" style="text-align:center">شفافية تامة.<br>لا رسوم مخفية.</h2>
+    <p class="section-sub reveal" style="text-align:center;margin:0 auto 64px">
+      ابدأ اليوم، ألغِ في أي وقت.
+    </p>
+
     <div class="pricing-grid">
-      <div class="pricing-card">
-        <div class="price-amount">299 <span class="price-currency">ريال</span></div>
-        <div class="price-period">شهرياً • يُجدد تلقائياً</div>
-        <div class="price-features">
-          <div class="price-feature"><span class="check">✓</span><span>ردود فورية 24/7 على WhatsApp</span></div>
-          <div class="price-feature"><span class="check">✓</span><span>حجز المواعيد تلقائياً</span></div>
-          <div class="price-feature"><span class="check">✓</span><span>عربي وإنجليزي</span></div>
-          <div class="price-feature"><span class="check">✓</span><span>تذكيرات المواعيد</span></div>
-          <div class="price-feature"><span class="check">✓</span><span>لوحة تحكم للإدارة</span></div>
-          <div class="price-feature"><span class="check">✓</span><span>إعداد خلال 24 ساعة</span></div>
+      <!-- Starter -->
+      <div class="plan-card reveal reveal-d1">
+        <div class="plan-name">الأساسي</div>
+        <div class="plan-desc">لعيادة واحدة تبدأ رحلتها</div>
+        <div class="plan-price">
+          <span class="plan-amount">299</span>
+          <span class="plan-currency">ر.س</span>
+          <span class="plan-period">/ شهر</span>
         </div>
-        <a href="https://wa.me/14155238886?text=أريد+الاشتراك+في+Qudozen" target="_blank" class="btn-pricing btn-pricing-primary">ابدأ الآن</a>
+        <ul class="plan-features">
+          <li>استقبال واتساب 24/7</li>
+          <li>حجز وإلغاء وتعديل المواعيد</li>
+          <li>تذكيرات آلية للمرضى</li>
+          <li>عربي + إنجليزي</li>
+          <li>لوحة تحكم أساسية</li>
+          <li>دعم عبر واتساب</li>
+        </ul>
+        <a href="https://wa.me/966500000000" class="plan-cta plan-cta-ghost">ابدأ مجاناً 14 يوم</a>
       </div>
-      <div class="pricing-card featured">
-        <div class="featured-badge">🏆 الأكثر قيمة</div>
-        <div class="price-amount">799 <span class="price-currency">ريال</span></div>
-        <div class="price-period">ربع سنوي • وفّر 98 ريال</div>
-        <div class="price-features">
-          <div class="price-feature"><span class="check">✓</span><span>كل مميزات الخطة الشهرية</span></div>
-          <div class="price-feature"><span class="check">✓</span><span>أولوية في الدعم الفني</span></div>
-          <div class="price-feature"><span class="check">✓</span><span>تخصيص شخصية المساعد</span></div>
-          <div class="price-feature"><span class="check">✓</span><span>تقارير شهرية تفصيلية</span></div>
-          <div class="price-feature"><span class="check">✓</span><span>تكامل مع نظام العيادة</span></div>
-          <div class="price-feature"><span class="check">✓</span><span>مدير حساب مخصص</span></div>
-        </div>
-        <a href="https://wa.me/14155238886?text=أريد+الخطة+الربع+سنوية+لـ+Qudozen" target="_blank" class="btn-pricing btn-pricing-primary">اختر هذه الخطة</a>
-      </div>
-    </div>
-    <p style="text-align:center;color:var(--muted);font-size:13px;margin-top:24px">هل تحتاج عرضاً خاصاً لأكثر من عيادة؟ <a href="https://wa.me/14155238886?text=أريد+عرضاً+لمجموعة+عيادات" style="color:#a78bfa;text-decoration:none" target="_blank">تواصل معنا</a></p>
-  </div>
-</section>
 
-<!-- FAQ -->
-<section id="faq" class="container">
-  <div class="section-center">
-    <div class="section-tag">الأسئلة الشائعة</div>
-    <h2>كل ما تريد معرفته</h2>
-  </div>
-  <div class="faq-list">
-    <div class="faq-item open">
-      <button class="faq-q" onclick="toggleFaq(this)">
-        <span>كيف يتعامل المساعد مع المرضى الغاضبين؟</span>
-        <span class="faq-arrow">▼</span>
-      </button>
-      <div class="faq-a">المساعد مبرمج للتعامل بصبر مع جميع أنواع الرسائل. إذا تصاعد الأمر، يُحوّل المحادثة فوراً إليك مع ملخص كامل للسياق.</div>
-    </div>
-    <div class="faq-item">
-      <button class="faq-q" onclick="toggleFaq(this)">
-        <span>هل يمكن تخصيص شخصية المساعد باسم عيادتي؟</span>
-        <span class="faq-arrow">▼</span>
-      </button>
-      <div class="faq-a">نعم تماماً. المساعد يُقدّم نفسه باسم عيادتك ويحمل هويتها البصرية في الرسائل. المريض يشعر أنه يتحدث مع فريقك مباشرة.</div>
-    </div>
-    <div class="faq-item">
-      <button class="faq-q" onclick="toggleFaq(this)">
-        <span>ماذا يحدث إذا سأل المريض سؤالاً لا يعرفه المساعد؟</span>
-        <span class="faq-arrow">▼</span>
-      </button>
-      <div class="faq-a">يعتذر بأدب، يعطي المريض رقم هاتف العيادة للاستفسارات المعقدة، ويُرسل لك إشعاراً فورياً للمتابعة.</div>
-    </div>
-    <div class="faq-item">
-      <button class="faq-q" onclick="toggleFaq(this)">
-        <span>كم يستغرق الإعداد؟</span>
-        <span class="faq-arrow">▼</span>
-      </button>
-      <div class="faq-a">24 ساعة فقط من تأكيد الاشتراك. نحتاج منك: رقم WhatsApp العيادة، اسمها، وأوقات العمل. نتولى الباقي.</div>
-    </div>
-    <div class="faq-item">
-      <button class="faq-q" onclick="toggleFaq(this)">
-        <span>هل بياناتي ومعلومات مرضاي آمنة؟</span>
-        <span class="faq-arrow">▼</span>
-      </button>
-      <div class="faq-a">البيانات مشفرة وتُخزّن على خوادم في الخليج. لا نشارك أي معلومات مع أطراف ثالثة. نلتزم بسياسة الخصوصية السعودية.</div>
+      <!-- Pro -->
+      <div class="plan-card featured reveal reveal-d2">
+        <span class="plan-badge">الأكثر طلباً</span>
+        <div class="plan-name">المحترف</div>
+        <div class="plan-desc">للعيادات الجادة في النمو</div>
+        <div class="plan-price">
+          <span class="plan-amount">799</span>
+          <span class="plan-currency">ر.س</span>
+          <span class="plan-period">/ شهر</span>
+        </div>
+        <ul class="plan-features">
+          <li>كل مميزات الأساسي</li>
+          <li>محرك النمو الذكي</li>
+          <li>تحليلات متقدمة</li>
+          <li>تقارير أسبوعية</li>
+          <li>تخصيص شخصية البوت</li>
+          <li>أولوية الدعم الفني</li>
+          <li>فريق مخصص للإعداد</li>
+        </ul>
+        <a href="https://wa.me/966500000000" class="plan-cta plan-cta-primary">ابدأ التحول</a>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- CTA -->
-<div class="cta-section">
-  <div class="section-tag">ابدأ اليوم</div>
-  <h2>عيادتك تستحق أفضل</h2>
-  <p>انضم لـ 47 عيادة تستقبل مرضاها بذكاء اصطناعي. إعداد مجاني، لا عقود، إلغاء في أي وقت.</p>
-  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-    <a href="https://wa.me/14155238886?text=مرحبا،+أريد+تجربة+Qudozen+مجاناً" target="_blank" class="btn-hero-primary">💬 تحدث معنا على WhatsApp</a>
-    <a href="#calculator" class="btn-hero-secondary">📊 احسب خسارتك أولاً</a>
-  </div>
-</div>
+<!-- ═══ FUTURE VISION ═══ -->
+<section id="vision">
+  <div class="vision-inner">
+    <div class="vision-glow"></div>
 
-<!-- FOOTER -->
+    <p class="section-label reveal" style="text-align:center">المستقبل</p>
+    <h2 class="section-title reveal" style="text-align:center">
+      هذا مجرد<br>
+      <span style="color:var(--aqua)">البداية</span>
+    </h2>
+
+    <p class="vision-sub reveal">
+      نبني البنية التحتية للذكاء الاصطناعي لرعاية صحة الفم في الخليج.
+      ليس مجرد برنامج — منظومة تتعلم وتتطور مع كل عيادة.
+    </p>
+
+    <div class="vision-features reveal">
+      <span class="vision-chip">🔮 تشخيص ذكي بالصور</span>
+      <span class="vision-chip">📊 تحليل بيانات المريض</span>
+      <span class="vision-chip">🌐 شبكة عيادات متصلة</span>
+      <span class="vision-chip">💳 دفع مدمج في المحادثة</span>
+      <span class="vision-chip">🤝 إحالات بين العيادات</span>
+    </div>
+
+    <div class="reveal">
+      <a href="https://wa.me/966500000000" class="btn-primary" style="font-size:18px;padding:18px 48px;">
+        انضم للعيادات الرائدة ←
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
 <footer>
-  <div style="margin-bottom:16px">
-    <span class="nav-logo" dir="ltr">Qudo<span style="color:var(--accent)">zen</span></span>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="/growth/dashboard" class="nav-logo" dir="ltr" style="text-decoration:none;color:inherit">
+          Qudo<span>zen</span>
+        </a>
+        <p>الذكاء الاصطناعي الذي يدير عيادتك ويُنمّيها — 24/7.</p>
+      </div>
+      <div class="footer-links">
+        <a href="#problem">المشكلة</a>
+        <a href="#ecosystem">النظام</a>
+        <a href="#how">كيف يعمل</a>
+        <a href="#trust">آراء العملاء</a>
+        <a href="#pricing">الأسعار</a>
+        <a href="/growth/dashboard">لوحة التحكم</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p dir="ltr">© 2025 Qudozen. All rights reserved.</p>
+      <p>مصنوع بـ ♥ للعيادات السعودية</p>
+    </div>
   </div>
-  <div style="display:flex;gap:24px;justify-content:center;margin-bottom:16px;flex-wrap:wrap">
-    <a href="#pain">المشكلة</a>
-    <a href="#how">كيف يعمل</a>
-    <a href="#pricing">الأسعار</a>
-    <a href="#faq">الأسئلة</a>
-    <a href="/growth/dashboard">لوحة الإدارة</a>
-  </div>
-  <div>© 2026 Qudozen. جميع الحقوق محفوظة.</div>
 </footer>
 
+<!-- ═══ SCRIPTS ═══ -->
 <script>
-  // Count-up
-  function countUp(el, target, duration) {
-    let start = null;
-    const step = ts => {
-      if (!start) start = ts;
-      const p = Math.min((ts - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - p, 3);
-      el.textContent = Math.round(ease * target);
-      if (p < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        const el = e.target;
-        countUp(el, parseInt(el.dataset.target), 1200);
-        io.unobserve(el);
+  /* ── Liquid Canvas ── */
+  (function() {
+    const canvas = document.getElementById('liquid-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, blobs;
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+
+    function mkBlob() {
+      return {
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: 180 + Math.random() * 220,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        hue: Math.random() < 0.5 ? 'teal' : 'gold',
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.004 + Math.random() * 0.004,
+      };
+    }
+
+    function init() {
+      resize();
+      blobs = Array.from({ length: 6 }, mkBlob);
+    }
+
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+      for (const b of blobs) {
+        b.x += b.vx + Math.sin(t * b.speed + b.phase) * 0.5;
+        b.y += b.vy + Math.cos(t * b.speed + b.phase) * 0.4;
+        if (b.x < -b.r)  b.x = W + b.r;
+        if (b.x > W + b.r) b.x = -b.r;
+        if (b.y < -b.r)  b.y = H + b.r;
+        if (b.y > H + b.r) b.y = -b.r;
+
+        const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+        if (b.hue === 'teal') {
+          g.addColorStop(0, 'rgba(13,148,136,0.18)');
+          g.addColorStop(1, 'rgba(13,148,136,0)');
+        } else {
+          g.addColorStop(0, 'rgba(245,158,11,0.08)');
+          g.addColorStop(1, 'rgba(245,158,11,0)');
+        }
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
       }
-    });
-  }, { threshold: 0.5 });
-  document.querySelectorAll('[data-target]').forEach(el => io.observe(el));
+      requestAnimationFrame(draw);
+    }
 
-  // Calculator
-  function calcUpdate() {
-    const missed   = parseInt(document.getElementById('r1').value);
-    const value    = parseInt(document.getElementById('r2').value);
-    const pct      = parseInt(document.getElementById('r3').value) / 100;
-    document.getElementById('v1').textContent = missed;
-    document.getElementById('v2').textContent = value;
-    document.getElementById('v3').textContent = parseInt(document.getElementById('r3').value) + '%';
-    const monthly = Math.round(missed * 30 * value * pct);
-    document.getElementById('calcResult').textContent = monthly.toLocaleString('ar-SA');
-  }
-  calcUpdate();
+    window.addEventListener('resize', resize);
+    init();
+    requestAnimationFrame(draw);
+  })();
 
-  // FAQ
-  function toggleFaq(btn) {
-    const item = btn.closest('.faq-item');
-    item.classList.toggle('open');
-  }
+  /* ── Scroll Reveal ── */
+  (function() {
+    const els = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+    }, { threshold: 0.12 });
+    els.forEach(el => io.observe(el));
+  })();
 
-  // Mobile nav
-  document.getElementById('navToggle').addEventListener('click', () => {
-    document.getElementById('navLinks').classList.toggle('open');
-  });
+  /* ── Animated Chat Demo ── */
+  (function() {
+    const container = document.getElementById('chat-demo');
+    if (!container) return;
+
+    const messages = [
+      { type: 'bot', text: 'ممتاز! 🗓️ اختر الطبيب المناسب لك:', delay: 1200, options: ['د. أحمد السالم', 'د. نورة المالك', 'أي طبيب متاح'] },
+      { type: 'user', text: 'د. أحمد السالم', delay: 2600 },
+      { type: 'bot', text: 'رائع! الأوقات المتاحة غداً الأحد:', delay: 4000, options: ['9:00 ص', '11:30 ص', '3:00 م', '5:30 م'] },
+      { type: 'user', text: '11:30 ص', delay: 5400 },
+      { type: 'bot', text: '✅ تم الحجز! موعدك:\n📅 الأحد 11:30 ص\n👨‍⚕️ د. أحمد السالم\n🦷 تنظيف وتلميع\n\nستصلك رسالة تذكير قبل 24 ساعة.', delay: 6800 },
+    ];
+
+    let idx = 0;
+    function addMessage() {
+      if (idx >= messages.length) return;
+      const m = messages[idx++];
+
+      const typing = document.createElement('div');
+      typing.className = 'typing-indicator';
+      typing.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+
+      setTimeout(() => {
+        if (m.type === 'bot') { container.appendChild(typing); }
+        setTimeout(() => {
+          if (m.type === 'bot') typing.remove();
+          const el = document.createElement('div');
+          el.className = `msg msg-${m.type}`;
+          el.style.whiteSpace = 'pre-line';
+          el.textContent = m.text;
+          if (m.options) {
+            const opts = document.createElement('div');
+            opts.className = 'msg-options';
+            m.options.forEach(o => {
+              const span = document.createElement('span');
+              span.className = 'msg-opt'; span.textContent = o;
+              opts.appendChild(span);
+            });
+            el.appendChild(opts);
+          }
+          container.appendChild(el);
+          container.scrollTop = container.scrollHeight;
+          setTimeout(addMessage, 800);
+        }, m.type === 'bot' ? 900 : 100);
+      }, m.delay - (idx > 1 ? messages[idx - 2].delay : 0));
+    }
+
+    const io2 = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) { addMessage(); io2.disconnect(); }
+    }, { threshold: 0.4 });
+    const preview = document.querySelector('.chat-preview');
+    if (preview) io2.observe(preview);
+  })();
 </script>
 </body>
 </html>
