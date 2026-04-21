@@ -448,31 +448,43 @@
             <div class="space-y-3" id="stepGuide">
               <div class="step-item flex items-center gap-3 opacity-40" data-step="1">
                 <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
-                <span class="text-sm text-gray-400">اللغة / Language</span>
+                <span class="text-sm text-gray-400">Language Pivot</span>
               </div>
               <div class="step-item flex items-center gap-3 opacity-40" data-step="2">
                 <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
-                <span class="text-sm text-gray-400">القائمة الرئيسية / Menu</span>
+                <span class="text-sm text-gray-400">Smart Menu</span>
               </div>
               <div class="step-item flex items-center gap-3 opacity-40" data-step="3">
                 <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
-                <span class="text-sm text-gray-400">معلوماتك / Your Info</span>
+                <span class="text-sm text-gray-400">Identity Intake</span>
               </div>
               <div class="step-item flex items-center gap-3 opacity-40" data-step="4">
                 <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">4</div>
-                <span class="text-sm text-gray-400">الخدمة / Service</span>
+                <span class="text-sm text-gray-400">Phone Matrix</span>
               </div>
               <div class="step-item flex items-center gap-3 opacity-40" data-step="5">
                 <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">5</div>
-                <span class="text-sm text-gray-400">الطبيب / Doctor</span>
+                <span class="text-sm text-gray-400">Clinical Triage</span>
               </div>
               <div class="step-item flex items-center gap-3 opacity-40" data-step="6">
                 <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">6</div>
-                <span class="text-sm text-gray-400">الوقت / Slot</span>
+                <span class="text-sm text-gray-400">Symptom Intake</span>
               </div>
               <div class="step-item flex items-center gap-3 opacity-40" data-step="7">
+                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">7</div>
+                <span class="text-sm text-gray-400">Specialist Match</span>
+              </div>
+              <div class="step-item flex items-center gap-3 opacity-40" data-step="8">
+                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">8</div>
+                <span class="text-sm text-gray-400">Temporal Logic</span>
+              </div>
+              <div class="step-item flex items-center gap-3 opacity-40" data-step="9">
+                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">9</div>
+                <span class="text-sm text-gray-400">Atomic Slotting</span>
+              </div>
+              <div class="step-item flex items-center gap-3 opacity-40" data-step="10">
                 <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0 text-gold border-gold/40">✓</div>
-                <span class="text-sm text-gray-400">التأكيد / Confirm</span>
+                <span class="text-sm text-gray-400">Autonomous Evolution</span>
               </div>
             </div>
           </div>
@@ -764,7 +776,7 @@ const MESSAGES = {
       treatment: "اختر نوع الخدمة: 🦷\n\n1️⃣ تنظيف وتلميع 🦷\n2️⃣ حشوات\n3️⃣ تقويم الأسنان 📐\n4️⃣ تبييض الأسنان ⚪\n5️⃣ خلع\n6️⃣ زراعة أسنان 🔬\n7️⃣ علاج العصب 🏥\n8️⃣ أخرى / غير متأكد\n\n💡 اضغط رقماً أو اختر من القائمة",
       notes: "هل لديك ملاحظات أو وصف للحالة؟ (اختياري)\n\n💡 اكتب ملاحظتك أو أرسل *0* للتخطي\n0️⃣ تخطي الخطوة",
       doctor: "اختر الطبيب المفضل: 👨‍⚕️\n\n1️⃣ د. أحمد (أخصائي زراعة)\n2️⃣ د. سارة (أخصائية تقويم)\n3️⃣ أي طبيب متاح\n\n💡 اضغط رقماً للاختيار",
-      date: (doc) => `متى تفضل موعدك مع ${doc}؟ 📅\n\n1️⃣ غداً (الثلاثاء)\n2️⃣ الأربعاء\n3️⃣ الخميس\n4️⃣ الأسبوع القادم\n\n💡 اضغط رقماً أو اكتب أي تاريخ مثل "بكرة"`,
+      date: (doc) => `متى تفضل موعدك ${doc}؟ 📅\n\n1️⃣ غداً (الثلاثاء)\n2️⃣ الأربعاء\n3️⃣ الخميس\n4️⃣ الأسبوع القادم\n\n💡 اضغط رقماً أو اكتب أي تاريخ مثل "بكرة"`,
       slot: (date) => `الأوقات المتاحة لهذا اليوم (${date}): 📋\n\n1️⃣ 10:00 صباحاً\n2️⃣ 12:00 مساءً\n3️⃣ 04:00 مساءً\n4️⃣ 06:30 مساءً\n\n💡 اختر الوقت المناسب لك`,
       securing: "🔒 جاري تأمين موعدك...\nتحقق من التعارضات في التقويم...",
       confirmed: "✅ *تم الحجز بنجاح!* 🎉",
@@ -864,8 +876,8 @@ const getSim = () => ({
 function setProgress(n) {
   const { progress, stepLbl } = getSim();
   if(!progress) return;
-  progress.style.width = ((n / 7) * 100) + '%';
-  stepLbl.textContent  = (simData.lang === 'ar' ? 'المرحلة ' : 'Phase ') + Math.min(n, 7) + ' / 7';
+  progress.style.width = ((n / 10) * 100) + '%';
+  stepLbl.textContent  = (simData.lang === 'ar' ? 'المرحلة ' : 'Phase ') + Math.min(n, 10) + ' / 10';
   document.querySelectorAll('.step-item').forEach(el => {
     const s = parseInt(el.dataset.step);
     if (s < n) el.querySelector('div').style.cssText='background:#0D9488;border-color:#0D9488;color:white;opacity:1';
@@ -1001,7 +1013,7 @@ async function nextStep(ui) {
       simData.lang = (u==='en' || u.includes('1') || u.includes('en')) ? 'en' : 'ar';
       m = MESSAGES[simData.lang];
       simStep = 1; 
-      setProgress(1);
+      setProgress(2);
       await addBotBubble(m.menu);
       return setReplies([
         {label: m.lang==='en'?'1️⃣ Book Appt':'1️⃣ حجز موعد', value:'1'},
@@ -1035,46 +1047,51 @@ async function nextStep(ui) {
 async function processBooking(ui, m) {
   const b = m.bookingSteps;
   switch(simStep) {
-    case 2: simStep = 3; setProgress(2); await addBotBubble(b.name); enableInput(); break;
-    case 3: simData.name = ui; simStep = 4; await addBotBubble(b.phone(simData.phone)); setReplies([{label:'1️⃣ Yes', value:'1'}, {label:'2️⃣ No', value:'2'}]); break;
+    case 2: simStep = 3; setProgress(3); await addBotBubble(b.name); enableInput(); break;
+    case 3: 
+      simData.name = ui; simStep = 4; setProgress(4); 
+      await addBotBubble(b.phone(simData.phone)); 
+      setReplies([{label:m.lang==='en'?'1️⃣ Yes':'1️⃣ نعم', value:'1'}, {label:m.lang==='en'?'2️⃣ No':'2️⃣ لا', value:'2'}]); 
+      break;
     case 4: 
-      if (ui==='1') { simStep = 5; await addBotBubble(b.treatment); setReplies([{label:'1️⃣ Cleaning', value:'1'}, {label:'2️⃣ Filling', value:'2'}]); }
+      if (ui==='1') { simStep = 5; setProgress(5); await addBotBubble(b.treatment); setReplies([{label:m.lang==='en'?'1️⃣ Cleaning':'1️⃣ تنظيف', value:'1'}, {label:m.lang==='en'?'2️⃣ Filling':'2️⃣ حشوات', value:'2'}]); }
       else { simStep = 44; await addBotBubble(b.phoneReq); enableInput(); }
       break;
-    case 44: simData.phone = ui; simStep = 5; await addBotBubble(b.treatment); setReplies([{label:'1️⃣ Cleaning', value:'1'}, {label:'2️⃣ Filling', value:'2'}]); break;
+    case 44: simData.phone = ui; simStep = 5; setProgress(5); await addBotBubble(b.treatment); setReplies([{label:m.lang==='en'?'1️⃣ Cleaning':'1️⃣ تنظيف', value:'1'}, {label:m.lang==='en'?'2️⃣ Filling':'2️⃣ حشوات', value:'2'}]); break;
     case 5: 
-      // Capture treatment text from dictionary if number used
-      if (ui==='1') simData.treatment = m.bookingSteps.treatment.split('\n')[2].replace('1️⃣ ','');
-      else if (ui==='2') simData.treatment = m.bookingSteps.treatment.split('\n')[3].replace('2️⃣ ','');
-      else simData.treatment = ui; 
-      simStep = 6; 
+      simData.treatment = ui==='1' ? (m.lang==='en'?'Cleaning':'تنظيف') : ui==='2' ? (m.lang==='en'?'Filling':'حشوات') : ui;
+      simStep = 6; setProgress(6);
       await addBotBubble(b.notes); 
       setReplies([{label: m.lang==='ar'?'0️⃣ تخطي':'0️⃣ Skip', value:'__skip__'}]); 
       break;
     case 6: 
-      // Step 6 handles notes. Either user sent text or clicked '__skip__'
       simData.notes = (ui === '__skip__' || ui === '0') ? '' : ui;
-      simStep = 7; 
+      simStep = 7; setProgress(7);
       await addBotBubble(b.doctor); 
-      setReplies([{label:'1️⃣ Dr. Ahmed', value:'1'}, {label:'2️⃣ Dr. Sarah', value:'2'}, {label: m.lang==='ar'?'3️⃣ أي طبيب':'3️⃣ Any Doctor', value:'3'}]); 
+      setReplies([{label:m.lang==='en'?'1️⃣ Dr. Ahmed':'1️⃣ د. أحمد', value:'1'}, {label:m.lang==='en'?'2️⃣ Dr. Sarah':'2️⃣ د. سارة', value:'2'}, {label: m.lang==='ar'?'3️⃣ أي طبيب':'3️⃣ Any Doctor', value:'3'}]); 
       break;
     case 7: 
-      if (ui==='1') simData.doctor = 'Dr. Ahmed';
-      else if (ui==='2') simData.doctor = 'Dr. Sarah';
+      if (ui==='1') simData.doctor = m.lang==='en'?'Dr. Ahmed':'د. أحمد';
+      else if (ui==='2') simData.doctor = m.lang==='en'?'Dr. Sarah':'د. سارة';
       else simData.doctor = m.lang==='ar'?'أي طبيب متاح':'Any doctor';
-      simStep = 8; 
+      simStep = 8; setProgress(8);
       await addBotBubble(b.date(simData.doctor)); 
       setReplies([{label: m.lang==='ar'?'1️⃣ غداً':'1️⃣ Tomorrow', value:'1'}, {label: m.lang==='ar'?'2️⃣ الأربعاء':'2️⃣ Wednesday', value:'2'}]); 
       break;
-    case 8: simData.date = ui==='1'?'Tomorrow':'Wednesday'; simStep = 9; await addBotBubble(b.slot(simData.date)); setReplies([{label:'1️⃣ 10:00 AM', value:'1'}, {label:'2️⃣ 04:00 PM', value:'2'}]); break;
+    case 8: 
+      simData.date = ui==='1'?(m.lang==='en'?'Tomorrow':'غداً'):(m.lang==='en'?'Wednesday':'الأربعاء'); 
+      simStep = 9; setProgress(9);
+      await addBotBubble(b.slot(simData.date)); 
+      setReplies([{label: m.lang==='en'?'1️⃣ 10:00 AM':'1️⃣ 10:00 صباحاً', value:'1'}, {label:m.lang==='en'?'2️⃣ 04:00 PM':'2️⃣ 04:00 مساءً', value:'2'}]); 
+      break;
     case 9: 
-      simData.slot = ui==='1'?'10:00 AM':'04:00 PM'; simData.booked = true;
+      simData.slot = ui==='1'?(m.lang==='en'?'10:00 AM':'10:00 صباحاً'):(m.lang==='en'?'04:00 PM':'04:00 مساءً'); 
+      simData.booked = true; simStep = 10; setProgress(10);
       await addBotBubble(b.securing);
       await addBotBubble(b.confirmed + "\n\n" + b.summary(simData));
       updateDashboardData(m);
-      simFlow = ''; simStep = 1;
-      setReplies([{label: '0️⃣ Main Menu', value:'0'}]);
-      // Trigger Autonomous Reminder preview after delay
+      simFlow = ''; 
+      setReplies([{label: m.lang==='en'?'0️⃣ Main Menu':'0️⃣ القائمة الرئيسية', value:'0'}]);
       setTimeout(() => triggerAutonomousReminder(m), 4000);
       break;
   }
