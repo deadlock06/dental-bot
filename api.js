@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const crypto = require('crypto');
 const router = express.Router();
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -10,6 +11,19 @@ const headers = {
   Authorization: `Bearer ${SUPABASE_KEY}`,
   'Content-Type': 'application/json',
 };
+
+// POST /api/auth/login — dashboard login against env credentials
+router.post('/auth/login', (req, res) => {
+  const { email, password } = req.body || {};
+  const validUser = process.env.ADMIN_USER || 'admin';
+  const validPass = process.env.ADMIN_PASS || 'changeme_before_deploy';
+  if (email === validUser && password === validPass) {
+    const token = crypto.randomBytes(32).toString('hex');
+    res.json({ token, user: { id: 'admin-1', email: validUser, name: 'Jake', role: 'admin' } });
+  } else {
+    res.status(401).json({ error: 'Invalid credentials' });
+  }
+});
 
 // GET /api/dashboard/stats
 router.get('/dashboard/stats', async (req, res) => {
@@ -47,12 +61,66 @@ router.get('/dashboard/stats', async (req, res) => {
   }
 });
 
-// Mock additional routes to satisfy API Integration spec for Week 2
-router.get('/appointments', async (req, res) => res.json([]));
-router.get('/patients', async (req, res) => res.json([]));
+// GET /api/appointments — real appointments from Supabase
+router.get('/appointments', async (req, res) => {
+  try {
+    const { clinic_id, status, date } = req.query;
+    let url = `${SUPABASE_URL}/rest/v1/appointments?order=created_at.desc&limit=200&select=*`;
+    if (clinic_id) url += `&clinic_id=eq.${encodeURIComponent(clinic_id)}`;
+    if (status)    url += `&status=eq.${encodeURIComponent(status)}`;
+    if (date)      url += `&preferred_date_iso=eq.${encodeURIComponent(date)}`;
+    const r = await axios.get(url, { headers });
+    res.json(r.data || []);
+  } catch (e) {
+    console.error('[API] /appointments error:', e.message);
+    res.status(500).json({ error: 'Failed to fetch appointments' });
+  }
+});
+
+// GET /api/patients — real patients from Supabase
+router.get('/patients', async (req, res) => {
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/patients?order=updated_at.desc&limit=200&select=*`;
+    const r = await axios.get(url, { headers });
+    res.json(r.data || []);
+  } catch (e) {
+    console.error('[API] /patients error:', e.message);
+    res.status(500).json({ error: 'Failed to fetch patients' });
+  }
+});
+
+// GET /api/leads — real leads from Supabase
+router.get('/leads', async (req, res) => {
+  try {
+    const { status, min_score, limit = '100' } = req.query;
+    let url = `${SUPABASE_URL}/rest/v1/growth_leads_v2?order=confidence_score.desc&limit=${limit}&select=*`;
+    if (status && status !== 'All') url += `&status=eq.${encodeURIComponent(status)}`;
+    if (min_score) url += `&confidence_score=gte.${encodeURIComponent(min_score)}`;
+    const r = await axios.get(url, { headers: { ...headers, Prefer: 'count=exact' } });
+    const total = parseInt(r.headers['content-range']?.split('/')[1] || '0', 10);
+    res.json({ leads: r.data || [], total });
+  } catch (e) {
+    console.error('[API] /leads error:', e.message);
+    res.status(500).json({ error: 'Failed to fetch leads' });
+  }
+});
+
+// GET /api/doctors — real doctors from Supabase
+router.get('/doctors', async (req, res) => {
+  try {
+    const { clinic_id } = req.query;
+    let url = `${SUPABASE_URL}/rest/v1/doctor_schedules?order=doctor_name.asc&select=*`;
+    if (clinic_id) url += `&clinic_id=eq.${encodeURIComponent(clinic_id)}`;
+    const r = await axios.get(url, { headers });
+    res.json(r.data || []);
+  } catch (e) {
+    console.error('[API] /doctors error:', e.message);
+    res.status(500).json({ error: 'Failed to fetch doctors' });
+  }
+});
+
 router.post('/appointments', async (req, res) => res.json({ success: true }));
 router.put('/appointments/:id', async (req, res) => res.json({ success: true }));
-router.get('/doctors', async (req, res) => res.json([]));
 router.put('/doctors/:id/schedule', async (req, res) => res.json({ success: true }));
 // POST /api/sync-simulation
 router.post('/sync-simulation', async (req, res) => {
@@ -91,5 +159,46 @@ router.post('/sync-simulation', async (req, res) => {
 });
 
 router.get('/analytics', async (req, res) => res.json({}));
+
+// POST /api/ghost-dwell — Ghost Room dwell time tracking
+// ghost-room.html fires this when visitor hits 30s, 60s, 120s thresholds
+router.post('/ghost-dwell', async (req, res) => {
+  res.json({ ok: true });
+  try {
+    const { phone, clinic, city, pain, vertical, dwell_seconds, exited_via } = req.body;
+    if (!phone && !clinic) return;
+
+    const HIGH_INTENT_THRESHOLD = 60;
+
+    // Upsert into growth_leads_v2 if phone present
+    if (phone) {
+      await axios.post(`${SUPABASE_URL}/rest/v1/growth_leads_v2`, {
+        phone,
+        business_name: clinic || null,
+        city: city || null,
+        pain_signal: pain || null,
+        vertical: vertical || 'dental',
+        status: 'simulated',
+        updated_at: new Date().toISOString(),
+      }, {
+        headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' },
+      });
+    }
+
+    // Alert admin if high-intent (>60s dwell) and has not yet converted
+    if (dwell_seconds >= HIGH_INTENT_THRESHOLD) {
+      const adminPhone = process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null;
+      if (adminPhone) {
+        const { sendMessage } = require('./whatsapp');
+        const label = exited_via === 'whatsapp' ? '✅ ضغط واتساب' : exited_via === 'report' ? '📊 طلب تقرير' : `⏱ ${dwell_seconds}ث تصفح`;
+        await sendMessage(adminPhone,
+          `🔥 زيارة عالية النية — Ghost Room\n🏥 ${clinic || 'مجهول'} — ${city || '?'}\n${label}\n📱 ${phone || 'لا يوجد رقم'}\n— تابع الآن`
+        );
+      }
+    }
+  } catch (e) {
+    console.error('[Ghost Dwell] error:', e.message);
+  }
+});
 
 module.exports = router;

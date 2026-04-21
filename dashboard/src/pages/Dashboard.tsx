@@ -8,7 +8,8 @@ import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
-import { MOCK_DASHBOARD_STATS, MOCK_ACTIVITY } from '../lib/mockData';
+import { MOCK_ACTIVITY } from '../lib/mockData';
+import { useDashboardStats } from '../hooks/useSupabase';
 import { cn, formatCurrency } from '../lib/utils';
 
 const METRIC_CARDS = [
@@ -87,26 +88,28 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function Dashboard() {
-  const stats = MOCK_DASHBOARD_STATS;
-  // In a real app, we'd fetch these from /api/dashboard/stats?clinic_id=...
-  const [simulation, setSimulation] = React.useState<any>(null);
+  const { data: liveStats, loading: statsLoading } = useDashboardStats();
+  const [simulation] = React.useState<any>(null);
 
-  React.useEffect(() => {
-    // Check if this clinic has a simulation run stored
-    fetch('/api/dashboard/stats') // This currently returns mock + some simulated data
-      .then(res => res.json())
-      .then(data => {
-        if (data.simulation_data) setSimulation(data.simulation_data);
-      })
-      .catch(() => {});
-  }, []);
+  const stats = liveStats ?? {
+    appointments_today: 0,
+    pending: 0,
+    revenue: 0,
+    no_show_rate: 0,
+    new_patients: 0,
+    appointments_trend: [],
+    treatment_breakdown: [],
+    peak_hours: [],
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Dashboard {statsLoading && <span className="text-xs font-normal text-slate-400 ml-2">loading...</span>}
+          </h1>
           <p className="text-slate-500 text-sm mt-0.5">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>

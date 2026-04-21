@@ -6,61 +6,184 @@
   <title>Qudozen - نظام التشغيل الذاتي للعيادات</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
     body { font-family: 'Tajawal', sans-serif; background-color: #0B1120; color: white; overflow-x: hidden; }
     .glass {
-      background: rgba(13, 148, 136, 0.05); /* Teal tint */
+      background: rgba(13,148,136,0.05);
       backdrop-filter: blur(40px);
       -webkit-backdrop-filter: blur(40px);
-      border: 1px solid rgba(94, 234, 212, 0.1); /* Aqua glow */
+      border: 1px solid rgba(94,234,212,0.1);
     }
     .text-teal { color: #0D9488; }
-    .text-aqua { color: #5EEAD4; } /* Aqua glow */
-    .bg-teal { background-color: #0D9488; }
-    .text-gold { color: #D4A574; } /* Sand gold */
-    .bg-gold { background-color: #D4A574; }
+    .text-aqua { color: #5EEAD4; }
+    .bg-teal  { background-color: #0D9488; }
+    .text-gold { color: #D4A574; }
+    .bg-gold  { background-color: #D4A574; }
     .bg-gold:hover { background-color: #b78a5e; }
-    
-    /* Liquid Physics Animations */
-    @keyframes float1 { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } }
-    @keyframes float2 { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(30px) scale(0.95); } }
-    .blob1 { animation: float1 25s ease-in-out infinite; }
-    .blob2 { animation: float2 22s ease-in-out infinite reverse; }
-    
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #0B1120; }
-    ::-webkit-scrollbar-thumb { background: #0D9488; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #5EEAD4; }
-    
-    /* Chat Widget */
-    .chat-widget {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: 60px;
-      height: 60px;
-      background-color: #25D366; /* WhatsApp Green */
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
-      z-index: 1000;
-      cursor: pointer;
-      transition: transform 0.3s ease;
+
+    @keyframes float1 { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-20px) scale(1.05)} }
+    @keyframes float2 { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(30px) scale(0.95)} }
+    .blob1{animation:float1 25s ease-in-out infinite}
+    .blob2{animation:float2 22s ease-in-out infinite reverse}
+
+    ::-webkit-scrollbar{width:8px}
+    ::-webkit-scrollbar-track{background:#0B1120}
+    ::-webkit-scrollbar-thumb{background:#0D9488;border-radius:4px}
+    ::-webkit-scrollbar-thumb:hover{background:#5EEAD4}
+
+    /* ── WhatsApp Simulator ── */
+    #simChat{scroll-behavior:smooth}
+    .sim-bubble-bot {
+      background:#1e293b;
+      border:1px solid rgba(94,234,212,0.15);
+      border-radius:18px 18px 18px 4px;
+      padding:12px 16px;
+      max-width:82%;
+      align-self:flex-start;
+      font-size:0.92rem;
+      line-height:1.6;
+      animation:bubbleIn .35s ease forwards;
     }
-    .chat-widget:hover { transform: scale(1.1); }
+    .sim-bubble-user {
+      background:linear-gradient(135deg,#0D9488,#0a7a70);
+      border-radius:18px 18px 4px 18px;
+      padding:12px 16px;
+      max-width:72%;
+      align-self:flex-end;
+      font-size:0.92rem;
+      line-height:1.6;
+      animation:bubbleIn .3s ease forwards;
+    }
+    @keyframes bubbleIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .sim-typing span {
+      display:inline-block;
+      width:7px;height:7px;
+      border-radius:50%;
+      background:#5EEAD4;
+      animation:typingDot 1.2s infinite;
+    }
+    .sim-typing span:nth-child(2){animation-delay:.2s}
+    .sim-typing span:nth-child(3){animation-delay:.4s}
+    @keyframes typingDot{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-6px);opacity:1}}
+
+    /* quick-reply chips */
+    .qr-chip {
+      display:inline-block;
+      padding:8px 18px;
+      border-radius:999px;
+      border:1px solid rgba(94,234,212,0.35);
+      background:rgba(94,234,212,0.07);
+      color:#5EEAD4;
+      font-size:0.82rem;
+      font-weight:600;
+      cursor:pointer;
+      transition:all .2s;
+      white-space:nowrap;
+    }
+    .qr-chip:hover{background:rgba(94,234,212,0.18);border-color:#5EEAD4;transform:translateY(-1px)}
+    .qr-chip:disabled,.qr-chip.used{opacity:.35;pointer-events:none;cursor:default}
+
+    /* ── Feature counter cards ── */
+    .feat-card{
+      background:rgba(13,148,136,0.04);
+      border:1px solid rgba(94,234,212,0.12);
+      border-radius:20px;
+      padding:28px 20px;
+      text-align:center;
+      transition:transform .3s,border-color .3s;
+    }
+    .autonomous-notice {
+      background: linear-gradient(90deg, transparent, rgba(212,165,116,0.1), transparent);
+      background-size: 200% 100%;
+      animation: shimmer 3s infinite linear;
+      border-top: 1px solid rgba(212,165,116,0.2);
+      border-bottom: 1px solid rgba(212,165,116,0.2);
+      padding: 12px 0;
+      margin: 16px 0;
+      color: #D4A574;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 800;
+      text-align: center;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    .qr-chip {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .qr-chip:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(212,165,116,0.2);
+    }
+    .feat-card:hover{transform:translateY(-5px);border-color:rgba(94,234,212,0.4)}
+    .feat-counter{font-size:2.6rem;font-weight:900;background:linear-gradient(135deg,#5EEAD4,#0D9488);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+    /* ── Dashboard preview mockup ── */
+    .db-card{
+      background:#0f1b2d;
+      border:1px solid rgba(94,234,212,0.15);
+      border-radius:14px;
+      padding:16px 20px;
+    }
+    .status-dot{
+      width:8px;height:8px;border-radius:50%;
+      background:#22c55e;
+      box-shadow:0 0 8px #22c55e;
+      animation:pulse 2s infinite;
+    }
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+    /* ── Services section cards ── */
+    .svc-card{
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,0.07);
+      padding:32px;
+      transition:all .3s;
+      cursor:default;
+    }
+    .svc-card:hover{border-color:rgba(94,234,212,0.3);transform:translateY(-4px)}
+    .svc-card.primary{
+      background:linear-gradient(135deg,rgba(13,148,136,0.12),rgba(94,234,212,0.04));
+      border-color:rgba(13,148,136,0.3);
+    }
+
+    /* ── completion overlay ── */
+    #simComplete{display:none}
+    #simComplete.show{display:flex}
+
+    /* chat-widget */
+    .chat-widget{
+      position:fixed;bottom:24px;right:24px;
+      width:60px;height:60px;
+      background-color:#25D366;
+      border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 4px 20px rgba(37,211,102,0.4);
+      z-index:1000;cursor:pointer;
+      transition:transform .3s;
+    }
+    .chat-widget:hover{transform:scale(1.1)}
+
+    /* progress bar */
+    #simProgress{
+      height:3px;background:linear-gradient(90deg,#0D9488,#5EEAD4);
+      border-radius:999px;transition:width .5s ease;
+    }
   </style>
 </head>
 <body class="antialiased selection:bg-[#0D9488] selection:text-white relative">
 
-  <!-- Liquid Aesthetic Background -->
+  <!-- Liquid Background -->
   <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
     <div class="absolute top-[10%] -left-[10%] w-[50vw] h-[50vw] bg-[#0D9488]/10 rounded-full blur-[80px] blob1"></div>
     <div class="absolute bottom-[20%] -right-[10%] w-[40vw] h-[40vw] bg-[#5EEAD4]/10 rounded-full blur-[80px] blob2"></div>
-    <div class="absolute top-[60%] left-[30%] w-[30vw] h-[30vw] bg-[#D4A574]/5 rounded-full blur-[80px] blob1" style="animation-delay: -10s;"></div>
+    <div class="absolute top-[60%] left-[30%] w-[30vw] h-[30vw] bg-[#D4A574]/5 rounded-full blur-[80px] blob1" style="animation-delay:-10s"></div>
   </div>
 
   <!-- Navbar -->
@@ -69,138 +192,461 @@
       <span class="text-2xl text-gold">⚡</span> QUDOZEN
     </div>
     <div class="hidden md:flex gap-8 text-sm font-medium text-gray-300">
-      <a href="#architecture" class="hover:text-aqua transition">بنية الوعي</a>
-      <a href="#loss" class="hover:text-aqua transition">النزيف الخفي</a>
+      <a href="#services" class="hover:text-aqua transition">خدماتنا</a>
+      <a href="#simulator" class="hover:text-aqua transition">جرب المحاكي</a>
       <a href="#pricing" class="hover:text-aqua transition">الاستثمار</a>
       <a href="#jake" class="hover:text-aqua transition">رسالة جيك</a>
     </div>
-    <a href="/growth/ghost-room" class="bg-gold text-gray-900 px-6 py-2.5 rounded-xl font-bold hover:bg-[#b78a5e] transition transform hover:-translate-y-0.5 shadow-lg shadow-gold/20">جرب غرفة العمليات</a>
+    <a href="/growth/ghost-room" class="bg-gold text-gray-900 px-6 py-2.5 rounded-xl font-bold hover:bg-[#b78a5e] transition transform hover:-translate-y-0.5 shadow-lg shadow-gold/20">غرفة العمليات</a>
   </nav>
 
-  <!-- Hero Section -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- HERO                                              -->
+  <!-- ══════════════════════════════════════════════════ -->
   <section class="min-h-screen flex flex-col justify-center items-center text-center px-4 pt-24 relative z-10 border-b border-white/5">
     <div class="max-w-4xl mx-auto flex flex-col items-center">
-      <div class="mb-6 inline-block px-4 py-1.5 rounded-full glass text-sm font-medium text-aqua flex items-center gap-2">
+      <div class="mb-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-sm font-medium text-aqua">
         <span class="relative flex h-2 w-2">
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
           <span class="relative inline-flex rounded-full h-2 w-2 bg-[#5EEAD4]"></span>
         </span>
-        بنية تحتية متطورة للعيادات
+        بنية تحتية متطورة للعيادات — مباشر الآن
       </div>
-      
       <h1 class="text-5xl md:text-7xl font-black mb-8 leading-[1.15] tracking-tight">
-        جرب كيف تعمل عيادتك بـ <br>
+        جرب كيف تعمل عيادتك بـ<br>
         <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-[#5EEAD4]">وعي اصطناعي</span> في 60 ثانية.
       </h1>
-      
       <p class="text-lg md:text-2xl text-gray-400 mb-12 max-w-2xl leading-relaxed">
-        المرضى لا ينتظرون. عيادتك تفقد المرضى يومياً بسبب تأخر الردود ليلاً وخلال ضغط العمل. نحن نبني تحولاً كاملاً، لتعمل عيادتك بتشغيل ذاتي 24/7.
+        المرضى لا ينتظرون. عيادتك تفقد مرضى يومياً. نحن نبني تحولاً كاملاً لتعمل عيادتك بتشغيل ذاتي 24/7.
       </p>
-      
       <div class="flex flex-col sm:flex-row gap-5 w-full justify-center max-w-md sm:max-w-none">
-        <a href="/growth/ghost-room" class="bg-gold text-[#0B1120] px-8 py-4 rounded-xl font-bold text-lg hover:shadow-[0_0_25px_rgba(212,165,116,0.6)] transition duration-300 flex items-center justify-center gap-2">
-          <span>شاهد النزيف (غرفة العمليات)</span>
-          <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        <a href="#simulator" class="bg-gold text-[#0B1120] px-8 py-4 rounded-xl font-bold text-lg hover:shadow-[0_0_25px_rgba(212,165,116,0.6)] transition duration-300 flex items-center justify-center gap-2">
+          <span>🚀 ابدأ المحاكاة الحية</span>
         </a>
-        <a href="#jake" class="glass px-8 py-4 rounded-xl font-bold text-lg text-white hover:bg-white/10 transition duration-300 flex items-center justify-center">
-          اقرأ رسالة جيك
+        <a href="/growth/ghost-room" class="glass px-8 py-4 rounded-xl font-bold text-lg text-white hover:bg-white/10 transition duration-300 flex items-center justify-center">
+          شاهد النزيف المالي 💸
         </a>
+      </div>
+      <!-- Stats row -->
+      <div class="mt-16 grid grid-cols-3 gap-8 text-center border-t border-white/5 pt-10 w-full max-w-lg">
+        <div><div class="text-3xl font-black text-aqua">24/7</div><div class="text-xs text-gray-500 mt-1">متوفر دائماً</div></div>
+        <div><div class="text-3xl font-black text-gold">&lt;3s</div><div class="text-xs text-gray-500 mt-1">وقت الرد</div></div>
+        <div><div class="text-3xl font-black text-aqua">94%</div><div class="text-xs text-gray-500 mt-1">نسبة التأكيد</div></div>
       </div>
     </div>
   </section>
 
-  <!-- Three-Layer Architecture Section (Critical Addition) -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- THREE-LAYER ARCHITECTURE                          -->
+  <!-- ══════════════════════════════════════════════════ -->
   <section id="architecture" class="py-24 px-6 relative z-10 border-b border-white/5 bg-[#0B1120]">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-16">
         <h2 class="text-3xl md:text-4xl font-bold mb-4">أكثر من مجرد بوت محادثة. <span class="text-gold">بنية تحتية كاملة.</span></h2>
         <p class="text-gray-400 text-lg">تحول كامل في كيفية عمل العيادة. القوة تكمن في طبقات الوعي الثلاث.</p>
       </div>
-
       <div class="grid md:grid-cols-3 gap-8 relative">
-        <!-- Connecting Line -->
         <div class="hidden md:block absolute top-[40%] left-0 right-0 h-0.5 bg-gradient-to-r from-teal-900 via-aqua-500 to-gold/30 z-0"></div>
-
-        <!-- Layer 1 -->
-        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 group bg-[#0B1120]/80">
+        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80">
           <div class="w-16 h-16 rounded-2xl bg-teal-900 border border-teal-500 flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(13,148,136,0.4)]">1️⃣</div>
-          <h3 class="text-2xl font-bold mb-3 text-white">طبقة الاستقبال</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">
-            الواجهة الأمامية عبر الواتساب. نظام تشغيل ذاتي يرد فوراً على مرضاك، يستوعب حالتهم (زراعة، عصب، تنظيف)، ويحجز المواعيد بلغة عربية سليمة.
-          </p>
+          <h3 class="text-2xl font-bold mb-3">طبقة الاستقبال</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">الواجهة الأمامية عبر الواتساب. نظام تشغيل ذاتي يرد فوراً، يستوعب الحالة، ويحجز المواعيد بلغة عربية سليمة.</p>
         </div>
-
-        <!-- Layer 2 -->
-        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 group bg-[#0B1120]/80 mt-12 md:mt-0">
-          <div class="w-16 h-16 rounded-2xl bg-aqua-900 border border-[#5EEAD4] flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(94,234,212,0.4)]">2️⃣</div>
-          <h3 class="text-2xl font-bold mb-3 text-white">طبقة التنسيق</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">
-            الدماغ الذي يربط المحادثة بالواقع. تنسيق فوري مع التقويم الخاص بك، منع التعارضات في المواعيد، وإرسال تذكيرات آلية لضمان حضور المرضى.
-          </p>
+        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80 mt-12 md:mt-0">
+          <div class="w-16 h-16 rounded-2xl border border-[#5EEAD4] flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(94,234,212,0.4)]" style="background:rgba(94,234,212,0.08)">2️⃣</div>
+          <h3 class="text-2xl font-bold mb-3">طبقة التنسيق</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">الدماغ الذي يربط المحادثة بالواقع. تنسيق فوري مع التقويم، منع التعارضات، وإرسال تذكيرات آلية.</p>
         </div>
-
-        <!-- Layer 3 -->
-        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 group bg-[#0B1120]/80 mt-12 md:mt-0">
+        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80 mt-12 md:mt-0">
           <div class="w-16 h-16 rounded-2xl bg-gold/20 border border-gold flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(212,165,116,0.4)]">3️⃣</div>
           <h3 class="text-2xl font-bold mb-3 text-gold">طبقة التعلم (السوارم)</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">
-            محرك وعي تسويقي يراقب السوق من أجلك. يستعيد المرضى المترددين، ويجمع التقييمات على جوجل بصمت ليرفع تصنيف العيادة وتفوقها على البقية.
-          </p>
+          <p class="text-gray-400 text-sm leading-relaxed">محرك وعي تسويقي يراقب السوق من أجلك. يستعيد المرضى المترددين ويجمع التقييمات بصمت.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Interactive WhatsApp Visualization -->
-  <section class="py-24 px-4 relative z-10 border-b border-white/5 bg-gradient-to-b from-[#0B1120] to-[#0A0F18]" id="demo">
-    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-12">
-      
-      <div class="flex-1">
-        <h2 class="text-3xl md:text-4xl font-bold mb-6 text-aqua">العمل المستمر، أثناء غيابك 💤</h2>
-        <p class="text-gray-400 text-lg mb-6">
-          شاهد كيف تتصرف بنية الوعي الخاصة بنا. لا مزيد من ترك المرضى قلقين ينتظرون حتى الصباح لتأكيد موعدهم.
-        </p>
-        <ul class="space-y-4 text-gray-300">
-          <li class="flex items-center gap-3"><span class="text-teal text-xl">✓</span> قراءة طبيعة الألم وتصنيف الطوارئ</li>
-          <li class="flex items-center gap-3"><span class="text-teal text-xl">✓</span> تنسيق الموعد في أقل من دقيقة</li>
-          <li class="flex items-center gap-3"><span class="text-teal text-xl">✓</span> الحجز المؤكد على واتساب فوراً</li>
-        </ul>
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- OUR SERVICES                                      -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <section id="services" class="py-24 px-6 relative z-10 border-b border-white/5 bg-gradient-to-b from-[#0A0F18] to-[#0B1120]">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16">
+        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-aqua mb-4 tracking-widest uppercase">خدماتنا</div>
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">كل ما تحتاجه في <span class="text-aqua">بنية واحدة</span></h2>
+        <p class="text-gray-400">من الاستقبال الذكي إلى التسويق الذاتي — نظام واحد يُدير كل شيء.</p>
       </div>
-      
-      <!-- Mockup Base -->
-      <div class="flex-1 w-full max-w-md w-full">
-        <div class="glass rounded-3xl overflow-hidden border border-gray-800 shadow-2xl flex flex-col" style="height: 480px;">
-          <!-- Mockup Header -->
-          <div class="bg-[#1e293b] p-4 flex items-center gap-4 relative z-10 border-b border-gray-800">
-            <div class="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-xl shadow-lg">🤖</div>
-            <div>
-              <div class="font-bold text-white tracking-wide">النظام الذكي</div>
-              <div class="text-xs text-[#5EEAD4] flex items-center gap-1">
-                <span class="w-1.5 h-1.5 bg-[#5EEAD4] rounded-full inline-block animate-pulse"></span>
-                متصل دائماً
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- PRIMARY: Dental AI Receptionist -->
+        <div class="svc-card primary md:col-span-2 lg:col-span-1 flex flex-col" style="background:linear-gradient(135deg,rgba(13,148,136,0.13),rgba(94,234,212,0.04));border-color:rgba(13,148,136,0.35)">
+          <div class="w-14 h-14 rounded-2xl bg-teal-900/60 border border-teal-500/50 flex items-center justify-center text-2xl mb-5 shadow-[0_0_20px_rgba(13,148,136,0.3)]">🦷</div>
+          <h3 class="text-xl font-bold mb-2 text-white">المساعد الطبي الذكي</h3>
+          <p class="text-gray-400 text-sm leading-relaxed mb-6 flex-1">واجهة واتساب كاملة تحجز المواعيد، تُذكّر المرضى، تتعامل مع الطوارئ، وتدير إلغاءات بدون أي تدخل بشري — 24 ساعة، 7 أيام.</p>
+          <ul class="space-y-2 mb-6">
+            <li class="flex items-center gap-2 text-sm text-gray-300"><span class="text-teal text-base">✓</span> حجز مواعيد كامل بـ 8 خطوات</li>
+            <li class="flex items-center gap-2 text-sm text-gray-300"><span class="text-teal text-base">✓</span> دعم عربي وإنجليزي تلقائي</li>
+            <li class="flex items-center gap-2 text-sm text-gray-300"><span class="text-teal text-base">✓</span> مزامنة تقويم جوجل فورية</li>
+            <li class="flex items-center gap-2 text-sm text-gray-300"><span class="text-teal text-base">✓</span> تذكيرات 24 ساعة + ساعة قبل الموعد</li>
+          </ul>
+          <a href="#simulator" class="w-full bg-[#0D9488] text-white py-3 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.3)]">
+            🚀 جرب المحاكي الحي
+          </a>
+        </div>
+
+        <!-- Growth Swarm -->
+        <div class="svc-card" style="background:rgba(212,165,116,0.04)">
+          <div class="w-14 h-14 rounded-2xl bg-gold/20 border border-gold/40 flex items-center justify-center text-2xl mb-5">🎯</div>
+          <h3 class="text-xl font-bold mb-2 text-gold">محرك النمو (السوارم)</h3>
+          <p class="text-gray-400 text-sm leading-relaxed mb-4">يكتشف العيادات المحتملة على خرائط جوجل، يكتب رسائل مخصصة، ويُرسلها تلقائياً — موقعاً باسم جيك.</p>
+          <ul class="space-y-2">
+            <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-gold text-base">✓</span> اكتشاف تلقائي للعملاء</li>
+            <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-gold text-base">✓</span> رسائل بالذكاء الاصطناعي</li>
+            <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-gold text-base">✓</span> تتبع الردود والتحويل</li>
+          </ul>
+        </div>
+
+        <!-- Analytics Dashboard -->
+        <div class="svc-card">
+          <div class="w-14 h-14 rounded-2xl border border-aqua/30 flex items-center justify-center text-2xl mb-5" style="background:rgba(94,234,212,0.06)">📊</div>
+          <h3 class="text-xl font-bold mb-2 text-aqua">لوحة التحكم الإدارية</h3>
+          <p class="text-gray-400 text-sm leading-relaxed mb-4">رؤية كاملة للعيادة في الوقت الفعلي — المرضى، المواعيد، العملاء المحتملين، والصحة العامة للنظام.</p>
+          <ul class="space-y-2">
+            <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-aqua text-base">✓</span> بيانات حية بدون تحديث</li>
+            <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-aqua text-base">✓</span> تقارير يومية تصل واتساب</li>
+            <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-aqua text-base">✓</span> تتبع معدل الغياب</li>
+          </ul>
+        </div>
+
+        <!-- Calendar Sync -->
+        <div class="svc-card">
+          <div class="w-14 h-14 rounded-2xl border border-purple-500/30 flex items-center justify-center text-2xl mb-5" style="background:rgba(168,85,247,0.06)">📅</div>
+          <h3 class="text-xl font-bold mb-2" style="color:#c084fc">مزامنة التقويم الذكية</h3>
+          <p class="text-gray-400 text-sm leading-relaxed mb-4">كل حجز يظهر فوراً في تقويم العيادة. قفل ذري يمنع التعارض حتى عند تزامن أكثر من طلب.</p>
+          <ul class="space-y-2">
+            <li class="flex items-center gap-2 text-sm text-gray-400"><span style="color:#c084fc">✓</span> تكامل مع Google Calendar</li>
+            <li class="flex items-center gap-2 text-sm text-gray-400"><span style="color:#c084fc">✓</span> قفل ذري لمنع التعارض</li>
+          </ul>
+        </div>
+
+        <!-- Reminder Engine -->
+        <div class="svc-card">
+          <div class="w-14 h-14 rounded-2xl border border-rose-500/30 flex items-center justify-center text-2xl mb-5" style="background:rgba(244,63,94,0.06)">🔔</div>
+          <h3 class="text-xl font-bold mb-2" style="color:#fb7185">محرك التذكيرات</h3>
+          <p class="text-gray-400 text-sm leading-relaxed mb-4">تذكيرات آلية قبل 24 ساعة وساعة من الموعد. تقليل الغياب 40%. متابعة بعد الزيارة وطلب تقييم جوجل.</p>
+          <ul class="space-y-2">
+            <li class="flex items-center gap-2 text-sm text-gray-400"><span style="color:#fb7185">✓</span> تذكير 24 ساعة + ساعة</li>
+            <li class="flex items-center gap-2 text-sm text-gray-400"><span style="color:#fb7185">✓</span> طلب تقييم تلقائي</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- LIVE SIMULATOR                                    -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <section id="simulator" class="py-24 px-4 relative z-10 border-b border-white/5 bg-[#070b14]">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-gold mb-4 tracking-widest uppercase">محاكاة حية</div>
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">جرّب <span class="text-gold">البوت الفعلي</span> الآن</h2>
+        <p class="text-gray-400 max-w-xl mx-auto">هذه ليست عرضاً وهمياً — هذا هو نفس النظام الذي يعمل على واتساب. جرّب الحجز الكامل من البداية للتأكيد.</p>
+      </div>
+
+      <div class="flex flex-col lg:flex-row gap-10 items-start justify-center">
+
+        <!-- Left: Simulator Phone Frame -->
+        <div class="w-full max-w-sm mx-auto lg:mx-0 flex-shrink-0">
+          <!-- Phone frame -->
+          <div class="relative mx-auto" style="width:320px">
+            <!-- Phone chrome -->
+            <div class="absolute inset-0 rounded-[36px] border-2 border-gray-700 pointer-events-none z-20" style="box-shadow:0 0 60px rgba(13,148,136,0.15)"></div>
+
+            <!-- WhatsApp-style container -->
+            <div class="rounded-[34px] overflow-hidden bg-[#111b21]" style="height:600px;display:flex;flex-direction:column">
+
+              <!-- Status bar -->
+              <div class="bg-[#111b21] px-5 pt-3 pb-1 flex justify-between items-center text-[11px] text-gray-400">
+                <span>9:41</span>
+                <div class="flex gap-1 items-center">
+                  <svg class="w-3 h-3 fill-gray-400" viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                  <svg class="w-3 h-3 fill-gray-400" viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+                </div>
+              </div>
+
+              <!-- Chat header -->
+              <div class="bg-[#202c33] px-4 py-3 flex items-center gap-3 border-b border-gray-800/50">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-lg shadow-lg flex-shrink-0">🤖</div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-white text-sm">النظام الذكي للعيادة</div>
+                  <div class="text-[11px] text-[#5EEAD4] flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 bg-[#5EEAD4] rounded-full inline-block animate-pulse"></span>
+                    متصل دائماً
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <button onclick="resetSimulator()" class="text-gray-500 hover:text-rose-400 transition" title="إعادة تشغيل / Reset">↺</button>
+                  <div class="text-gray-500 text-xs">⋮</div>
+                </div>
+              </div>
+
+              <!-- Progress bar -->
+              <div class="bg-[#111b21] px-4 py-1.5">
+                <div class="h-1 bg-gray-800 rounded-full overflow-hidden">
+                  <div id="simProgress" style="width:0%"></div>
+                </div>
+                <div class="text-[10px] text-gray-600 mt-0.5" id="simStepLabel" style="direction:rtl">الخطوة 0 من 7</div>
+              </div>
+
+              <!-- Chat body -->
+              <div id="simChat" class="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-3"
+                   style="background:#0d1418;background-image:url('https://www.transparenttextures.com/patterns/stardust.png');background-size:200px">
+              </div>
+
+              <!-- Quick replies area -->
+              <div id="simReplies" class="bg-[#111b21] border-t border-gray-800/50 px-3 py-3 flex flex-wrap gap-2 min-h-[58px] items-center">
+                <span class="text-gray-600 text-xs italic">في انتظار البدء...</span>
+              </div>
+
+              <!-- Input bar -->
+              <div class="bg-[#202c33] px-3 py-2.5 flex items-center gap-2 border-t border-gray-800/30">
+                <div id="simInputWrap" class="flex-1 bg-[#2a3942] rounded-full px-4 py-2 flex items-center gap-2">
+                  <input id="simInput" type="text" placeholder="اكتب رسالة..." disabled
+                    class="flex-1 bg-transparent text-white text-sm outline-none placeholder-gray-600 text-right"
+                    style="min-width:0;direction:rtl" />
+                </div>
+                <button id="simSend" disabled
+                  class="w-9 h-9 rounded-full bg-[#0D9488] flex items-center justify-center transition hover:bg-teal-600 disabled:opacity-30"
+                  onclick="handleSimInput()">
+                  <svg class="w-4 h-4 fill-white rtl:rotate-180" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
               </div>
             </div>
           </div>
-          
-          <!-- Mockup Body (GSAP Logic) -->
-          <div class="flex-1 bg-[#0A0F18] p-5 overflow-y-auto relative" id="chatContainer">
-            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-5 pointer-events-none"></div>
+
+          <!-- Start button (below phone) -->
+          <div class="mt-6 text-center">
+            <button id="simStartBtn" onclick="startSimulator()"
+              class="bg-gold text-gray-900 px-8 py-3 rounded-xl font-black hover:shadow-[0_0_20px_rgba(212,165,116,0.5)] transition">
+              ▶ ابدأ المحاكاة
+            </button>
+            <div class="text-xs text-gray-600 mt-2">لا يتطلب تسجيل · جاهز خلال ثانية</div>
           </div>
         </div>
-      </div>
 
+        <!-- Right: Step guide + Dashboard preview -->
+        <div class="flex-1 space-y-6 w-full max-w-lg mx-auto lg:mx-0">
+
+          <!-- Step guide -->
+          <div class="glass rounded-2xl p-6">
+            <h3 class="text-base font-bold text-aqua mb-4 flex items-center gap-2">
+              <span>🗺</span> خريطة رحلة الحجز
+            </h3>
+            <div class="space-y-3" id="stepGuide">
+              <div class="step-item flex items-center gap-3 opacity-40" data-step="1">
+                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
+                <span class="text-sm text-gray-400">اللغة / Language</span>
+              </div>
+              <div class="step-item flex items-center gap-3 opacity-40" data-step="2">
+                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
+                <span class="text-sm text-gray-400">القائمة الرئيسية / Menu</span>
+              </div>
+              <div class="step-item flex items-center gap-3 opacity-40" data-step="3">
+                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+                <span class="text-sm text-gray-400">معلوماتك / Your Info</span>
+              </div>
+              <div class="step-item flex items-center gap-3 opacity-40" data-step="4">
+                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">4</div>
+                <span class="text-sm text-gray-400">الخدمة / Service</span>
+              </div>
+              <div class="step-item flex items-center gap-3 opacity-40" data-step="5">
+                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">5</div>
+                <span class="text-sm text-gray-400">الطبيب / Doctor</span>
+              </div>
+              <div class="step-item flex items-center gap-3 opacity-40" data-step="6">
+                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">6</div>
+                <span class="text-sm text-gray-400">الوقت / Slot</span>
+              </div>
+              <div class="step-item flex items-center gap-3 opacity-40" data-step="7">
+                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0 text-gold border-gold/40">✓</div>
+                <span class="text-sm text-gray-400">التأكيد / Confirm</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dashboard preview (dynamic) -->
+          <div id="dashPreview" class="glass rounded-2xl p-6 border border-[#0D9488]/30 hidden transform scale-95 opacity-0 transition-all duration-500 shadow-[0_0_40px_rgba(13,148,136,0.1)]">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <div class="status-dot"></div>
+                <span id="dsStatus" class="text-xs font-bold text-[#22c55e] uppercase tracking-wider">النظام نشط</span>
+              </div>
+              <div class="text-[10px] text-gray-500 tracking-tighter" id="dsTime">تحديث: الآن</div>
+            </div>
+            
+            <div id="dsTitle" class="text-sm font-bold text-white mb-5 border-b border-white/5 pb-3">📊 لوحة تحكم العيادة — مباشر</div>
+            
+            <div class="space-y-4">
+              <!-- Result Card -->
+              <div class="bg-[#0f1b2d] border border-teal-500/30 rounded-xl p-4 shadow-inner relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
+                <div class="flex justify-between items-start mb-2">
+                  <div id="dsConfLabel" class="text-[10px] font-bold text-teal-400 uppercase">موعد مؤكد جديد</div>
+                  <div class="text-[10px] text-gray-500" id="dsRef">REF: QZ-2026</div>
+                </div>
+                <div class="text-lg font-black text-white mb-1" id="dsPatientName">--</div>
+                <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-white/5">
+                  <div>
+                    <div id="dsTreatLabel" class="text-[9px] text-gray-500 uppercase">نوع العلاج</div>
+                    <div id="dsTreatment" class="text-xs text-white font-bold">--</div>
+                  </div>
+                  <div>
+                    <div id="dsSlotLabel" class="text-[9px] text-gray-500 uppercase">الوقت</div>
+                    <div id="dsSlot" class="text-xs text-aqua font-bold">--</div>
+                  </div>
+                  <div>
+                    <div id="dsDateLabel" class="text-[9px] text-gray-500 uppercase">التاريخ</div>
+                    <div id="dsDate" class="text-xs text-white font-bold">--</div>
+                  </div>
+                  <div>
+                    <div id="dsDocLabel" class="text-[9px] text-gray-500 uppercase">الطبيب</div>
+                    <div id="dsDoctor" class="text-xs text-white font-bold">--</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stats Mini -->
+              <div class="grid grid-cols-2 gap-3">
+                <div class="bg-[#0f1b2d]/60 rounded-lg p-3 border border-white/5">
+                  <div id="dsSyncLabel" class="text-[9px] text-gray-500">تقويم جوجل</div>
+                  <div class="text-[10px] text-aqua font-bold">مزامنة: ناجحة ✅</div>
+                </div>
+                <div class="bg-[#0f1b2d]/60 rounded-lg p-3 border border-white/5">
+                  <div id="dsRemLabel" class="text-[9px] text-gray-500">تذكيرات</div>
+                  <div class="text-[10px] text-gold font-bold">مجدولة 24h+1h</div>
+                </div>
+              </div>
+            </div>
+
+            <a href="https://wa.me/966570733834?text=أريد%20تفعيل%20لوحة%20تحكمي%20الخاصة" target="_blank"
+               class="mt-6 w-full block bg-gold text-gray-900 py-3.5 rounded-xl font-black text-center hover:shadow-[0_0_20px_rgba(212,165,116,0.3)] transition text-sm">
+               تفعيل النظام الخاص بك →
+            </a>
+          </div>
+
+          <!-- WhatsApp redirect (shown after completion) -->
+          <div id="waRedirect" class="glass rounded-2xl p-6 border border-[#25D366]/30 hidden" style="background:rgba(37,211,102,0.04)">
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-[#25D366]/20 flex items-center justify-center flex-shrink-0">
+                <svg viewBox="0 0 24 24" class="w-6 h-6 fill-[#25D366]"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+              </div>
+              <div class="flex-1">
+                <div class="text-sm font-bold text-white mb-1">محاكاتك مكتملة 🎉</div>
+                <p class="text-xs text-gray-400 mb-3 leading-relaxed">هذا بالضبط ما سيحدث في عيادتك. جاهز لتفعيل نظامك الخاص؟</p>
+                <a href="https://wa.me/966570733834?text=أهلاً%20جيك،%20جربت%20المحاكي%20وأريد%20تفعيل%20النظام%20لعيادتي." target="_blank"
+                   class="inline-flex items-center gap-2 bg-[#25D366] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#1da851] transition">
+                  <svg viewBox="0 0 24 24" class="w-4 h-4 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                  تحدث مع جيك الآن
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- Pricing Table (STRICT ACCURACY) -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- FEATURE HIGHLIGHTS (animated counters)           -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <section id="features" class="py-24 px-6 relative z-10 border-b border-white/5 bg-gradient-to-b from-[#070b14] to-[#0B1120]">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-14">
+        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-aqua mb-4 tracking-widest uppercase">أرقام حقيقية</div>
+        <h2 class="text-3xl md:text-4xl font-bold mb-3">البنية التحتية <span class="text-aqua">التي تتحدث أرقامها</span></h2>
+        <p class="text-gray-400">ليست وعوداً — بيانات من عيادات تعمل على النظام الآن.</p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="feat-card">
+          <div class="text-3xl mb-3">⚡</div>
+          <div class="feat-counter" id="cnt-response">0</div>
+          <div class="text-gray-500 text-xs mt-1">وقت الرد (ثانية)</div>
+        </div>
+        <div class="feat-card">
+          <div class="text-3xl mb-3">🕐</div>
+          <div class="feat-counter" id="cnt-uptime">0</div>
+          <div class="text-gray-500 text-xs mt-1">ساعة توفر / يوم</div>
+        </div>
+        <div class="feat-card">
+          <div class="text-3xl mb-3">✅</div>
+          <div class="feat-counter" id="cnt-confirm">0</div>
+          <div class="text-gray-500 text-xs mt-1">نسبة التأكيد %</div>
+        </div>
+        <div class="feat-card">
+          <div class="text-3xl mb-3">📉</div>
+          <div class="feat-counter" id="cnt-noshow">0</div>
+          <div class="text-gray-500 text-xs mt-1">تقليل الغياب %</div>
+        </div>
+        <div class="feat-card">
+          <div class="text-3xl mb-3">🌐</div>
+          <div class="feat-counter" id="cnt-lang">0</div>
+          <div class="text-gray-500 text-xs mt-1">لغات مدعومة</div>
+        </div>
+        <div class="feat-card">
+          <div class="text-3xl mb-3">📅</div>
+          <div class="feat-counter" id="cnt-sync">0</div>
+          <div class="text-gray-500 text-xs mt-1">ثانية للمزامنة</div>
+        </div>
+      </div>
+
+      <!-- Feature pills below counters -->
+      <div class="mt-12 grid md:grid-cols-2 gap-4">
+        <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-teal-500/30 transition">
+          <div class="w-10 h-10 rounded-xl bg-teal-900/50 border border-teal-500/30 flex items-center justify-center text-lg flex-shrink-0">🔒</div>
+          <div>
+            <div class="font-bold text-white text-sm mb-1">قفل ذري لمنع التعارض</div>
+            <p class="text-gray-500 text-xs leading-relaxed">حتى لو أرسل مريضان طلباً في نفس الثانية — يحجز واحد فقط، والآخر يرى وقتاً بديلاً فوراً.</p>
+          </div>
+        </div>
+        <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-gold/30 transition">
+          <div class="w-10 h-10 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-lg flex-shrink-0">🧠</div>
+          <div>
+            <div class="font-bold text-white text-sm mb-1">فهم طبيعي للطلبات</div>
+            <p class="text-gray-500 text-xs leading-relaxed">يفهم "بكره الصبح" و"الأسبوع الجاي" و"العصر" ويحولها لمواعيد فعلية في التقويم.</p>
+          </div>
+        </div>
+        <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-aqua/30 transition">
+          <div class="w-10 h-10 rounded-xl border border-aqua/30 flex items-center justify-center text-lg flex-shrink-0" style="background:rgba(94,234,212,0.07)">🚨</div>
+          <div>
+            <div class="font-bold text-white text-sm mb-1">كشف الطوارئ الفوري</div>
+            <p class="text-gray-500 text-xs leading-relaxed">يتعرف على كلمات الطوارئ ويعرض أقرب موعد متاح ويُنبّه الطبيب مباشرة.</p>
+          </div>
+        </div>
+        <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-purple-500/30 transition">
+          <div class="w-10 h-10 rounded-xl border border-purple-500/30 flex items-center justify-center text-lg flex-shrink-0" style="background:rgba(168,85,247,0.07)">🔄</div>
+          <div>
+            <div class="font-bold text-white text-sm mb-1">إعادة الجدولة والإلغاء</div>
+            <p class="text-gray-500 text-xs leading-relaxed">المريض يعيد الجدولة أو يلغي بكلمة واحدة — الفتحة تعود للتقويم فوراً بدون تدخل بشري.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- PRICING                                           -->
+  <!-- ══════════════════════════════════════════════════ -->
   <section id="pricing" class="py-24 px-6 bg-[#0B1120] border-t border-white/5 relative z-10">
     <div class="max-w-6xl mx-auto text-center relative z-10">
-      <h2 class="text-3xl md:text-5xl font-black mb-4 text-white">الاستثمار في البنية التحتية</h2>
-      <p class="text-gray-400 text-lg mb-16 max-w-2xl mx-auto">اختر طبقة الوعي التي تناسب عيادتك. أسعارنا ثابتة، ولا نخبئ الرسوم.</p>
-      
+      <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-aqua mb-6 tracking-widest uppercase">الاستثمار</div>
+      <h2 class="text-3xl md:text-5xl font-black mb-4 text-white">شفافية كاملة في التسعير</h2>
+      <p class="text-gray-400 text-lg mb-16 max-w-2xl mx-auto">أسعارنا ثابتة، ولا نخبئ الرسوم.</p>
       <div class="grid md:grid-cols-3 gap-8 items-stretch">
-        
-        <!-- التوعية / Tier 1 -->
         <div class="glass p-8 rounded-3xl flex flex-col text-right border border-gray-800 hover:border-gray-600 transition">
           <h3 class="text-xl text-[#5EEAD4] mb-2 font-bold">الوعي (Standard)</h3>
           <div class="flex items-baseline gap-2 mb-6 border-b border-gray-800 pb-6 mt-4">
@@ -212,200 +658,522 @@
             <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>حجز المواعيد الأساسية</span></li>
             <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>لغة عربية مخصصة للسعودية</span></li>
           </ul>
-          <div class="text-sm font-bold text-gray-400 mb-4 text-center pb-2">بدون رسوم إعداد</div>
-          <a href="https://wa.me/966570733834?text=أريد%20الاشتراك%20في%20الوعي%20الأساسي" class="w-full bg-[#1e293b] text-white py-3.5 rounded-xl font-bold hover:bg-gray-700 transition text-center border border-gray-700 shadow-md">البدء بالنسخة القياسية</a>
+          <div class="text-sm font-bold text-gray-400 mb-4 text-center">بدون رسوم إعداد</div>
+          <a href="https://wa.me/966570733834?text=أريد%20الاشتراك%20في%20الوعي%20الأساسي" class="w-full bg-[#1e293b] text-white py-3.5 rounded-xl font-bold hover:bg-gray-700 transition text-center border border-gray-700">البدء بالنسخة القياسية</a>
         </div>
-        
-        <!-- النظام / Tier 2 (Fixed setup fee) -->
         <div class="glass p-8 rounded-3xl flex flex-col text-right border-2 border-[#0D9488]/50 shadow-[0_0_30px_rgba(13,148,136,0.15)] transform md:-translate-y-4 relative bg-[#091520]">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#0D9488] text-white text-xs font-black px-4 py-1 rounded-full">الأكثر طلباً</div>
           <h3 class="text-xl text-[#5EEAD4] mb-2 font-bold mt-2">النظام (Pro)</h3>
           <div class="flex items-baseline gap-2 mb-6 border-b border-gray-800 pb-6 mt-2">
             <span class="text-5xl font-black text-white">499</span>
             <span class="text-gray-500">ريال/شهر</span>
           </div>
           <ul class="text-sm text-gray-200 space-y-4 mb-10 flex-1">
-            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>الاستقبال الآلي (כל ميزات الأساسي)</span></li>
+            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>كل ميزات الأساسي</span></li>
             <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>التنسيق اللحظي مع تقويم جوجل</span></li>
-            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>نظام التذكيرات لتقليل الاسترجاع</span></li>
-            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>التحول الذاتي في إغلاق المواعيد</span></li>
+            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>نظام التذكيرات لتقليل الغياب</span></li>
+            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>تقرير صباحي يومي على واتساب</span></li>
           </ul>
-          <!-- CRITICAL COMPLIANCE FIX: +699 SAR Setup -->
-          <div class="text-xs text-rose-300 font-bold mb-4 text-center bg-rose-900/20 py-2.5 rounded-lg border border-rose-900/50">+ 699 ريال رسوم إعداد (تدفع لمرة واحدة)</div>
-          
+          <div class="text-xs text-rose-300 font-bold mb-4 text-center bg-rose-900/20 py-2.5 rounded-lg border border-rose-900/50">+ 699 ريال رسوم إعداد (لمرة واحدة)</div>
           <a href="https://wa.me/966570733834?text=أريد%20النظام%20الشامل%20لعيادتي" class="w-full bg-[#0D9488] text-white py-3.5 rounded-xl font-black hover:bg-[#0c8077] transition text-center shadow-[0_0_20px_rgba(13,148,136,0.3)]">تفعيل النظام الشامل</a>
         </div>
-        
-        <!-- السوارم / Tier 3 (Fixed Pricing Label) -->
         <div class="glass p-8 rounded-3xl flex flex-col text-right border border-gray-800 hover:border-gray-600 transition">
-          <h3 class="text-xl text-gold mb-2 font-bold">السوارم (Custom Swarm)</h3>
+          <h3 class="text-xl text-gold mb-2 font-bold">السوارم (Custom)</h3>
           <div class="flex items-baseline gap-2 mb-6 border-b border-gray-800 pb-6 mt-4">
             <span class="text-4xl font-black text-gold">مخصص</span>
           </div>
           <ul class="text-sm text-gray-300 space-y-4 mb-10 flex-1">
-            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>تتبع واسترجاع المرضى المترددين تلقائياً</span></li>
-            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>توليد آلي للتقييمات على جوجل</span></li>
-            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>صيانة وعي العيادة بصمت في السوق</span></li>
+            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>استرجاع المرضى المترددين تلقائياً</span></li>
+            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>توليد آلي لتقييمات جوجل</span></li>
+            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>صيانة وعي العيادة في السوق</span></li>
           </ul>
           <a href="https://wa.me/966570733834?text=أريد%20مناقشة%20طبقة%20السوارم." class="w-full bg-transparent border border-gray-500 text-gray-300 py-3.5 rounded-xl font-bold hover:bg-gray-800 transition text-center">اتصل بنا للتسعير</a>
         </div>
-        
       </div>
     </div>
   </section>
 
-  <!-- Facilities / Verticals Tabs Section (Healthcare targeting) -->
-  <section class="py-24 px-6 bg-[#0A0F18] border-t border-white/5 relative z-10">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl font-bold mb-4">يعمل بوعي تام مع قطاعك</h2>
-        <p class="text-gray-400">بنية النظام تتكيف وتتعلم مصطلحات واحتياجات مجالك الطبي الدقيق.</p>
-      </div>
-
-      <div class="flex flex-wrap justify-center gap-4 mb-12">
-        <button class="px-6 py-3 rounded-full bg-teal text-white font-bold shadow-[0_0_15px_rgba(13,148,136,0.5)]">عيادات الأسنان 🦷</button>
-        <a href="https://wa.me/966570733834?text=هل%20لديكم%20نسخة%20للعلاج%20الطبيعي؟" class="px-6 py-3 rounded-full glass text-gray-300 font-medium hover:bg-white/5 transition">الجلدية والتجميل ✨</a>
-        <a href="https://wa.me/966570733834?text=هل%20لديكم%20نسخة%20للعلاج%20الطبيعي؟" class="px-6 py-3 rounded-full glass text-gray-300 font-medium hover:bg-white/5 transition">العلاج الطبيعي 🧘</a>
-        <a href="https://wa.me/966570733834?text=هل%20لديكم%20نسخة%20للعقارات؟" class="px-6 py-3 rounded-full glass text-gray-300 font-medium hover:bg-white/5 transition">العقارات والوساطة 🏢</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Articles / Authority Section -->
-  <section class="py-24 px-6 border-t border-white/5 bg-[#0B1120] relative z-10">
-    <div class="max-w-6xl mx-auto">
-      <div class="flex justify-between items-end mb-12">
-        <div>
-          <h2 class="text-3xl font-bold mb-2 text-white">الرؤى المؤسسية</h2>
-          <p class="text-gray-400">تحليلاتنا في إدارة العيادات، التخلف عن الحضور، والتشغيل الذاتي.</p>
-        </div>
-      </div>
-      
-      <div class="grid md:grid-cols-3 gap-6">
-        <article class="glass rounded-2xl p-6 border-teal-900/30 hover:border-teal-500/50 transition">
-          <h3 class="text-lg font-bold mb-3 text-aqua">تشغيل ذاتي بدون موظف استقبال؟</h3>
-          <p class="text-gray-400 text-sm mb-4">كيف يمكن للبنية التحتية الذكية إدارة 100% من حجوزات الفترة المسائية بشكل آمن وفعّال.</p>
-        </article>
-        <article class="glass rounded-2xl p-6 border-teal-900/30 hover:border-teal-500/50 transition">
-          <h3 class="text-lg font-bold mb-3 text-gold">خسائر المواعيد الضائعة (No-Show)</h3>
-          <p class="text-gray-400 text-sm mb-4">آلية استخدام "طبقة التنسيق" والواتساب الآلي لتقليص نسبة تخلّف المرضى عن الحضور بنسبة 40%.</p>
-        </article>
-        <article class="glass rounded-2xl p-6 border-teal-900/30 hover:border-teal-500/50 transition">
-          <h3 class="text-lg font-bold mb-3 text-aqua">قاعدة הـ 5 دقائق للرد</h3>
-          <p class="text-gray-400 text-sm mb-4">احتمالية حجز المريض تهبط 80% إذا تأخر الرد عن 5 دقائق فقط. الدقيقة بمال.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- Jake Persona Section / The Truth (Crucial Closure) -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- JAKE'S LETTER                                     -->
+  <!-- ══════════════════════════════════════════════════ -->
   <section id="jake" class="py-32 border-t border-[#1e293b] relative z-10 bg-[#070b14]">
     <div class="max-w-4xl mx-auto px-6">
-      
       <div class="flex flex-col md:flex-row gap-8 items-start relative z-10">
-        <div class="w-32 h-32 rounded-3xl bg-[#0D9488]/10 border border-[#0D9488]/30 flex items-center justify-center text-5xl shrink-0 shadow-[0_0_30px_rgba(13,148,136,0.1)]">
-          👨‍💻
-        </div>
+        <div class="w-32 h-32 rounded-3xl bg-[#0D9488]/10 border border-[#0D9488]/30 flex items-center justify-center text-5xl shrink-0 shadow-[0_0_30px_rgba(13,148,136,0.1)]">👨‍💻</div>
         <div>
           <h3 class="text-3xl font-black mb-4 text-white">رسالة لك من مؤسس النظام</h3>
           <div class="text-sm font-bold text-teal mb-6 tracking-wide">من: جيك</div>
-          
           <div class="space-y-4 text-gray-300 leading-relaxed text-lg">
-            <p>
-              مرحباً. رأيت أطباء ممتازين يبنون عيادات بملايين الريالات، ثم يخسرون وعشرين إلى ثلاثين مريضاً شهرياً بشكل سخيف. ليس بسبب سوء الرعاية الطبية، بل لأن الاستقبال الطبيعي لا يمكنه الرد فوراً في الـ 12 ليلاً حين يتألم المريض ويبدأ بمراسلة أول 5 عيادات على خرائط جوجل.
-            </p>
-            <p>
-              من يرد أولاً، يحصل على المريض. هذه هي الحقيقة القاسية للسوق.
-            </p>
-            <p>
-              نظام التشغيل الذاتي الذي بنيته لا يتعلق بمجرد "الرد الآلي". إنه يتعلق بحماية العيادة من هذا النزيف اليومي الخفي. البنية التحتية الخاصة بنا تتكفل بالرد الإنساني، والحجز، والمتابعة. لكي تستيقظ صباحاً وترى جدول الأطباء ممتلئاً تلقائياً.
-            </p>
-            <p>
-              إذا كنت جاهزاً لوقف النزيف في عيادتك، اضغط على الزر أدناه لتراسلني أنا شخصياً عبر واتساب. ودعنا نناقش الأرقام بجدية.
-            </p>
+            <p>مرحباً. رأيت أطباء ممتازين يبنون عيادات بملايين الريالات، ثم يخسرون عشرين إلى ثلاثين مريضاً شهرياً بشكل سخيف. ليس بسبب سوء الرعاية، بل لأن الاستقبال الطبيعي لا يمكنه الرد فوراً في الـ 12 ليلاً حين يتألم المريض ويراسل أول 5 عيادات على جوجل.</p>
+            <p>من يرد أولاً، يحصل على المريض. هذه هي الحقيقة القاسية للسوق.</p>
+            <p>نظام التشغيل الذاتي الذي بنيته لا يتعلق بمجرد "الرد الآلي". إنه يتعلق بحماية العيادة من النزيف اليومي الخفي. البنية التحتية تتكفل بالرد، والحجز، والمتابعة — لكي تستيقظ صباحاً وترى جدول الأطباء ممتلئاً تلقائياً.</p>
+            <p>إذا كنت جاهزاً لوقف النزيف في عيادتك، اضغط على الزر أدناه لتراسلني شخصياً.</p>
           </div>
-          
           <div class="mt-10">
             <a href="https://wa.me/966570733834?text=أهلاً%20جيك،%20قرأت%20رسالتك%20وأريد%20وقف%20النزيف%20في%20عيادتي." class="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black hover:bg-gray-200 transition">
-              <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+              <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
               تحدث مع جيك شخصياً
             </a>
-            <div class="mt-4 text-sm text-gray-500 font-medium">أو عبر البريد الإلكتروني: jake@qudozen.com</div>
-            <div class="mt-1 text-sm text-gray-500 font-medium">منصة التواصل الإداري واتساب: 0570733834</div>
+            <div class="mt-4 text-sm text-gray-500">البريد الإلكتروني: jake@qudozen.com</div>
+            <div class="mt-1 text-sm text-gray-500">واتساب: 0570733834</div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Complete Footer -->
+  <!-- Footer -->
   <footer class="bg-black py-12 px-6 border-t border-gray-900 relative z-10">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
       <div class="text-center md:text-right">
         <div class="text-xl font-bold tracking-wider mb-2 text-gold">⚡ QUDOZEN</div>
         <p class="text-gray-500 text-sm">البنية التحتية والمحرك الذكي للرعاية الصحية.</p>
       </div>
-      
       <div class="flex gap-8 text-sm font-medium">
-        <a href="#architecture" class="text-gray-400 hover:text-aqua transition">الوعي والتنسيق</a>
+        <a href="#services" class="text-gray-400 hover:text-aqua transition">خدماتنا</a>
+        <a href="#simulator" class="text-gray-400 hover:text-aqua transition">المحاكي</a>
         <a href="https://wa.me/966570733834" class="text-gray-400 hover:text-aqua transition">دعم واتساب</a>
         <a href="/growth/ghost-room" class="text-gray-400 hover:text-aqua transition">غرفة العمليات</a>
       </div>
-      
-      <div class="text-gray-600 text-sm">
-        © 2026 Qudozen. جميع الحقوق محفوظة.
-      </div>
+      <div class="text-gray-600 text-sm">© 2026 Qudozen. جميع الحقوق محفوظة.</div>
     </div>
   </footer>
 
-  <!-- Floating WhatsApp Widget -->
-  <a href="https://wa.me/966570733834" class="chat-widget" id="wa-widget" aria-label="تواصل عبر واتساب">
-    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+  <!-- Floating WhatsApp -->
+  <a href="https://wa.me/966570733834" class="chat-widget" aria-label="تواصل عبر واتساب">
+    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
   </a>
 
-  <script>
-    // Chat Simulation Animation using GSAP
-    const messages = [
-      { sender: 'user', text: 'أهلاً، سني يوجعني جداً أبي موعد اليوم 😭' },
-      { sender: 'bot', text: 'سلامتك ماتشوف شر! النظام الذكي هنا. متوفر موعد طوارئ بسبب حالتك، متى يناسبك؟ العصر ولا العشاء؟' },
-      { sender: 'user', text: 'العصر أفضل' },
-      { sender: 'bot', text: 'تم التنسيق الفوري. حجزت لك الساعة 4:00 عصراً مع د. أحمد. مسجل في تقويم العيادة ✅' },
-      { sender: 'bot', text: 'استلمنا تأكيد الحضور. راح أذكرك قبل الموعد بساعة. هل تحتاج لمساعدة للوصول عبر جوجل ماب؟' }
-    ];
+<!-- ══════════════════════════════════════════════════ -->
+<!-- SIMULATOR STATE MACHINE                           -->
+<!-- ══════════════════════════════════════════════════ -->
+<script>
+gsap.registerPlugin(ScrollTrigger);
 
-    const chatContainer = document.getElementById('chatContainer');
-    let delay = 0.5;
+/* ─── Simulator Architecture: Full Logic Parity (bot.js) ──── */
+const MESSAGES = {
+  ar: {
+    langSelect: "🌐 Welcome! I am Jake, your autonomous assistant.\nPlease choose your language / اختر لغتك:\n1️⃣ English\n2️⃣ العربية\n\n💡 Tap 1 for English, 2 for Arabic",
+    menu: "أهلاً وسهلاً بك في عيادتنا! 🦷✨\nأنا *جيك*، مساعدك الطبي الذكي، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد 📅\n2️⃣ موعدي الحالي 📋\n3️⃣ إعادة جدولة 🔄\n4️⃣ إلغاء الموعد ❌\n5️⃣ خدماتنا 🦷\n6️⃣ أطباؤنا 👨‍⚕️\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️\n\n💡 اضغط رقماً أو أخبرني بما تحتاج 😊",
+    
+    // Booking Flow
+    bookingSteps: {
+      name: "رائع! لنبدأ الحجز 😊\nما اسمك الكريم؟\n\n💡 اكتب اسمك وأرسل\n0️⃣ القائمة الرئيسية",
+      phone: (p) => `شكراً! 😊\nرقم واتساب الخاص بك هو: *${p}*\nهل هذا صحيح؟\n\n1️⃣ نعم، هذا صحيح\n2️⃣ لا، أريد رقماً آخر\n\n💡 اضغط 1 للتأكيد أو 2 للتغيير\n0️⃣ القائمة الرئيسية`,
+      phoneReq: "من فضلك أدخل رقم هاتفك:\n\n💡 اكتب رقم هاتفك وأرسل",
+      treatment: "اختر نوع الخدمة: 🦷\n\n1️⃣ تنظيف وتلميع 🦷\n2️⃣ حشوات\n3️⃣ تقويم الأسنان 📐\n4️⃣ تبييض الأسنان ⚪\n5️⃣ خلع\n6️⃣ زراعة أسنان 🔬\n7️⃣ علاج العصب 🏥\n8️⃣ أخرى / غير متأكد\n\n💡 اضغط رقماً أو اختر من القائمة",
+      notes: "هل لديك ملاحظات أو وصف للحالة؟ (اختياري)\n\n💡 اكتب ملاحظتك أو أرسل *0* للتخطي\n0️⃣ تخطي الخطوة",
+      doctor: "اختر الطبيب المفضل: 👨‍⚕️\n\n1️⃣ د. أحمد (أخصائي زراعة)\n2️⃣ د. سارة (أخصائية تقويم)\n3️⃣ أي طبيب متاح\n\n💡 اضغط رقماً للاختيار",
+      date: (doc) => `متى تفضل موعدك مع ${doc}؟ 📅\n\n1️⃣ غداً (الثلاثاء)\n2️⃣ الأربعاء\n3️⃣ الخميس\n4️⃣ الأسبوع القادم\n\n💡 اضغط رقماً أو اكتب أي تاريخ مثل "بكرة"`,
+      slot: (date) => `الأوقات المتاحة لهذا اليوم (${date}): 📋\n\n1️⃣ 10:00 صباحاً\n2️⃣ 12:00 مساءً\n3️⃣ 04:00 مساءً\n4️⃣ 06:30 مساءً\n\n💡 اختر الوقت المناسب لك`,
+      securing: "🔒 جاري تأمين موعدك...\nتحقق من التعارضات في التقويم...",
+      confirmed: "✅ *تم الحجز بنجاح!* 🎉",
+      summary: (d) => `📋 *تفاصيل موعدك:*\n👤 الاسم: ${d.name}\n🦷 العلاج: ${d.treatment}\n📅 التاريخ: ${d.date}\n⏰ الوقت: ${d.slot}\n👨‍⚕️ الطبيب: ${d.doctor}\n\n📅 تم التسجيل في تقويم العيادة\n🔔 ستصلك تذكيرات تلقائية قبل الموعد`
+    },
 
-    messages.forEach((msg) => {
-      const div = document.createElement('div');
-      div.className = `mockup-message opacity-0 translate-y-6 ${msg.sender === 'bot' ? 'mockup-received border border-gray-700' : 'mockup-sent shadow-md'}`;
-      div.innerText = msg.text;
-      
-      const timeSpan = document.createElement('div');
-      timeSpan.className = `text-[10px] mt-1 ${msg.sender === 'bot' ? 'text-gray-500 text-left' : 'text-teal-100 text-left'}`;
-      timeSpan.innerText = 'الآن';
-      div.appendChild(timeSpan);
-      
-      chatContainer.appendChild(div);
+    // Reminder Preview (The "Sales" moment)
+    reminderPreview: (name, date, slot, treat) => `🔔 *تذكير تلقائي (بعد 24 ساعة)*\n\nمرحباً ${name}، نذكرك بموعدك غداً:\n📅 ${date} الساعة ⏰ ${slot}\n🦷 العلاج: ${treat}\n\nنراك قريباً! 😊 إذا أردت تغيير الموعد، فقط أرسل "إعادة جدولة".`,
 
-      gsap.to(div, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        delay: delay,
-        ease: "back.out(1.2)"
+    // My Appointment Flow
+    myAppt: (d) => `📋 *موعدك الحالي:*\n📅 ${d.date} الساعة ${d.slot}\n👨‍⚕️ الطبيب: ${d.doctor}\n\n1️⃣ إعادة جدولة 🔄\n2️⃣ إلغاء الموعد ❌\n3️⃣ العودة للقائمة الرئيسية`,
+    
+    // Reschedule Flow
+    resched: {
+      date: "أهلاً بك! لتغيير موعدك، اختر التاريخ الجديد:\n\n1️⃣ غداً\n2️⃣ بعد غد\n3️⃣ الأسبوع القادم",
+      confirm: (d, s) => `تم التحديث! موعدك الجديد هو:\n📅 ${d} الساعة ${s}\n\n✅ تم تحديث التقويم بنجاح.`
+    },
+
+    // Cancel Flow
+    cancel: {
+      confirm: "هل أنت متأكد من إلغاء موعدك؟ ❌\n\n1️⃣ نعم، ألغِ الموعد\n2️⃣ لا، احتفظ بالموعد",
+      success: "✅ تم إلغاء الموعد بنجاح. نأمل رؤيتك قريباً!"
+    },
+
+    // Info Messages
+    prices: "💰 *قائمة الأسعار التقريبية:*\n• تنظيف: 200 ريال\n• حشو: 350 ريال\n• تقويم: يبدأ من 3000 ريال\n• زراعة: يبدأ من 4500 ريال\n\n💡 هذه الأسعار أولية وتخضع للفحص.",
+    services: "🦷 *خدمات العيادة:*\n• زراعة الأسنان المتقدمة\n• تقويم الأسنان الشفاف والعادي\n• طب أسنان الأطفال\n• تبييض الأسنان بالليزر",
+    location: "📍 *موقع العيادة:*\nيقع مجمعنا في قلب الخبر، شارع الأمير تركي.\n\n🗺️ رابط خرائط جوجل:\nhttps://maps.google.com/?q=Qudozen+Clinic\n\n💡 يمكنك دائماً طلب الموقع وسأرسله لك فوراً!",
+    reviews: "⭐ *آراء عملائنا:*\n• 'تعامل راقي جداً ونظام دقيق' - خالد\n• 'أفضل عيادة تعاملت معها في الشرقية' - سارة\n\n🔗 يمكنك قراءة المزيد أو وضع تقييمك هنا:\nhttps://g.page/qudozen/review",
+    staff: "👩‍⚕️ جاري تحويلك للتحدث مع الفريق...\nيرجى الانتظار لحظة.",
+    
+    completion: (name) => `بكل سرور ${name}! 😊\nنتطلع لاستقبالك. إذا احتجت أي مساعدة إضافية نحن هنا.\n\n-- النظام الذكي للعيادة 🤖`,
+    dash: { status:'نشط', title:'لوحة التحكم', conf:'موعد جديد', treat:'العلاج', time:'الوقت', date:'التاريخ', doc:'الطبيب', sync:'مزامنة', rem:'تذكير' }
+  },
+  en: {
+    langSelect: "🌐 Welcome! I'm Jake, your AI assistant.\nPlease choose your language / اختر لغتك:\n1️⃣ English\n2️⃣ العربية\n\n💡 Tap 1 for English, 2 for Arabic",
+    menu: "Welcome to our clinic! 🦷✨\nI'm *Jake*, your AI medical assistant, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment 📅\n2️⃣ My appointment 📋\n3️⃣ Reschedule 🔄\n4️⃣ Cancel appointment ❌\n5️⃣ Our services 🦷\n6️⃣ Our doctors 👨‍⚕️\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍⚕️\n\n💡 Tap a number or tell me what you need 😊",
+    
+    // Booking Flow
+    bookingSteps: {
+      name: "Great! Let's book your appointment 😊\nWhat's your full name?\n\n💡 Type your name and send\n0️⃣ Main menu",
+      phone: (p) => `Thanks! 😊\nYour WhatsApp number is: *${p}*\nIs this correct?\n\n1️⃣ Yes, that's correct\n2️⃣ No, use a different number\n\n💡 Tap 1 to confirm or 2 to change\n0️⃣ Main menu`,
+      phoneReq: "Please enter your phone number:\n\n💡 Type your phone number and send",
+      treatment: "Select service type: 🦷\n\n1️⃣ Cleaning & Polishing 🦷\n2️⃣ Fillings\n3️⃣ Braces & Orthodontics 📐\n4️⃣ Teeth Whitening ⚪\n5️⃣ Extraction\n6️⃣ Dental Implants 🔬\n7️⃣ Root Canal 🏥\n8️⃣ Other / Not sure\n\n💡 Tap a number or pick from the list",
+      notes: "Any notes or description of your issue? (optional)\n\n💡 Type your note or send *0* to skip\n0️⃣ Skip step",
+      doctor: "Select your preferred doctor: 👨‍⚕️\n\n1️⃣ Dr. Ahmed (Implants)\n2️⃣ Dr. Sarah (Braces)\n3️⃣ Any available doctor\n\n💡 Tap a number to select",
+      date: (doc) => `When would you like your appointment with ${doc}? 📅\n\n1️⃣ Tomorrow (Tuesday)\n2️⃣ Wednesday\n3️⃣ Thursday\n4️⃣ Next week\n\n💡 Tap a number or type a date like "tomorrow"`,
+      slot: (date) => `Available slots for ${date}: 📋\n\n1️⃣ 10:00 AM\n2️⃣ 12:00 PM\n3️⃣ 04:00 PM\n4️⃣ 06:30 PM\n\n💡 Pick the best time for you`,
+      securing: "🔒 Securing your slot...\nChecking calendar for conflicts...",
+      confirmed: "✅ *Booking Successful!* 🎉",
+      summary: (d) => `📋 *Your Details:*\n👤 Name: ${d.name}\n🦷 Treatment: ${d.treatment}\n📅 Date: ${d.date}\n⏰ Time: ${d.slot}\n👨‍⚕️ Doctor: ${d.doctor}\n\n📅 Registered in clinic calendar\n🔔 Auto-reminders scheduled`
+    },
+
+    // Reminder Preview
+    reminderPreview: (name, date, slot, treat) => `🔔 *Auto-Reminder (24h later)*\n\nHi ${name}, reminding you of your appointment tomorrow:\n📅 ${date} at ⏰ ${slot}\n🦷 Treatment: ${treat}\n\nSee you then! 😊 If you need to change the time, just reply 'reschedule'.`,
+
+    // My Appointment Flow
+    myAppt: (d) => `📋 *Your Current Appointment:*\n📅 ${d.date} at ${d.slot}\n👨‍⚕️ Doctor: ${d.doctor}\n\n1️⃣ Reschedule 🔄\n2️⃣ Cancel ❌\n3️⃣ Back to Main Menu`,
+
+    // Reschedule Flow
+    resched: {
+      date: "Welcome! To change your time, select a new date:\n\n1️⃣ Tomorrow\n2️⃣ Day after\n3️⃣ Next week",
+      confirm: (d, s) => `Updated! Your new appointment is:\n📅 ${d} at ${s}\n\n✅ Calendar updated successfully.`
+    },
+
+    // Cancel Flow
+    cancel: {
+      confirm: "Are you sure you want to cancel? ❌\n\n1️⃣ Yes, cancel it\n2️⃣ No, keep it",
+      success: "✅ Appointment cancelled. We hope to see you soon!"
+    },
+
+    prices: "💰 *Estimated Price List:*\n• Cleaning: 200 SAR\n• Fillings: 350 SAR\n• Braces: from 3000 SAR\n• Implants: from 4500 SAR\n\n💡 Final price depends on clinical exam.",
+    services: "🦷 *Our Services:*\n• Dental Implants\n• Clear Aligners\n• Pediatric Dentistry\n• Laser Whitening",
+    location: "📍 *Our Location:*\nWe are located in the heart of Khobar, Prince Turki St.\n\n🗺️ Google Maps Link:\nhttps://maps.google.com/?q=Qudozen+Clinic\n\n💡 You can always ask for the location and I'll send it!",
+    reviews: "⭐ *Patient Reviews:*\n• 'Amazing experience and very professional' - Khalid\n• 'Best clinic in the Eastern Province' - Sarah\n\n🔗 Read more or leave a review here:\nhttps://g.page/qudozen/review",
+    staff: "👩‍⚕️ Connecting you to our team...\nPlease hold for a moment.",
+
+    completion: (name) => `You're welcome, ${name}! 😊\nWe look forward to seeing you. Let us know if you need anything else.\n\n-- Qudozen OS 🤖`,
+    dash: { status:'ACTIVE', title:'Management DB', conf:'New Booking', treat:'Treatment', time:'Time', date:'Date', doc:'Doctor', sync:'Sync', rem:'Remind' }
+  }
+};
+
+let simStep = 0;
+let simFlow = ''; // 'booking', 'reschedule', 'cancel', 'my_appt'
+let simData = { name: 'Visitor', treatment: 'Consultation', date: 'Tomorrow', slot: '10:00 AM', doctor: 'Dr. Ahmed', lang: 'ar', phone: '+966570733834', booked: false };
+let simRunning = false;
+
+const chat    = document.getElementById('simChat');
+const replies = document.getElementById('simReplies');
+const input   = document.getElementById('simInput');
+const sendBtn = document.getElementById('simSend');
+const progress= document.getElementById('simProgress');
+const stepLbl = document.getElementById('simStepLabel');
+
+function setProgress(n) {
+  progress.style.width = ((n / 7) * 100) + '%';
+  stepLbl.textContent  = (simData.lang === 'ar' ? 'المرحلة ' : 'Phase ') + Math.min(n, 7) + ' / 7';
+  document.querySelectorAll('.step-item').forEach(el => {
+    const s = parseInt(el.dataset.step);
+    if (s < n) el.querySelector('div').style.cssText='background:#0D9488;border-color:#0D9488;color:white;opacity:1';
+    else if (s === n) el.querySelector('div').style.cssText='background:rgba(212,165,116,0.2);border-color:#D4A574;color:#D4A574;opacity:1';
+    else el.querySelector('div').style.opacity='0.35';
+  });
+}
+
+function scrollChat() { setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 80); }
+
+async function addBotBubble(html) {
+  const typing = document.createElement('div');
+  typing.className = 'sim-typing flex items-center gap-1 px-3 py-2 rounded-xl self-start mb-2';
+  typing.style.cssText = 'background:#1e293b;border:1px solid rgba(94,234,212,0.1)';
+  typing.innerHTML = '<span></span><span></span><span></span>';
+  chat.appendChild(typing);
+  scrollChat();
+
+  await new Promise(r => setTimeout(r, 650 + Math.random()*350));
+  typing.remove();
+  
+  const bubble = document.createElement('div');
+  bubble.className = 'sim-bubble-bot mb-2 whitespace-pre-wrap';
+  bubble.innerHTML = html;
+  const ts = document.createElement('div');
+  ts.className = 'text-[10px] text-gray-600 mt-1.5';
+  ts.textContent = new Date().toLocaleTimeString(simData.lang==='ar'?'ar-SA':'en-US',{hour:'2-digit',minute:'2-digit'});
+  bubble.appendChild(ts);
+  chat.appendChild(bubble);
+  scrollChat();
+}
+
+function addUserBubble(text) {
+  const bubble = document.createElement('div');
+  bubble.className = 'sim-bubble-user mb-2';
+  bubble.innerHTML = text;
+  const ts = document.createElement('div');
+  ts.className = 'text-[10px] text-teal-200/60 mt-1.5 text-left';
+  ts.textContent = new Date().toLocaleTimeString(simData.lang==='ar'?'ar-SA':'en-US',{hour:'2-digit',minute:'2-digit'});
+  ts.innerHTML += ' <span class="text-teal-400">✓✓</span>';
+  bubble.appendChild(ts);
+  chat.appendChild(bubble);
+  scrollChat();
+}
+
+function setReplies(chips) {
+  replies.innerHTML = '';
+  if (!chips || chips.length === 0) { enableInput(); return; }
+  disableInput();
+  chips.forEach(({ label, value, emoji }) => {
+    const btn = document.createElement('button');
+    btn.className = 'qr-chip';
+    btn.textContent = (emoji ? emoji + ' ' : '') + label;
+    btn.onclick = () => {
+      document.querySelectorAll('.qr-chip').forEach(b => b.classList.add('used'));
+      addUserBubble(btn.textContent);
+      nextStep(value || label);
+    };
+    replies.appendChild(btn);
+  });
+}
+
+function enableInput() { input.disabled = false; sendBtn.disabled = false; input.focus(); replies.innerHTML = ''; }
+function disableInput() { input.disabled = true; sendBtn.disabled = true; }
+
+function handleSimInput() {
+  const val = input.value.trim();
+  if (!val || input.disabled) return;
+  input.value = '';
+  addUserBubble(val);
+  nextStep(val);
+}
+input.addEventListener('keydown', e => { if(e.key==='Enter') handleSimInput(); });
+
+  // --- Neural Language Pivot ---
+  // Detect Arabic characters and switch language context immediately
+  const isAr = /[\u0600-\u06FF]/.test(ui);
+  if (isAr && simData.lang !== 'ar') {
+    simData.lang = 'ar';
+    m = MESSAGES.ar;
+    console.log('[Sim] Language pivoted to AR');
+  }
+
+  // --- Contextual Simulation Controls ---
+  const isControlZero = (u === '0' || u === 'menu' || u === 'back' || u === 'القائمة');
+  
+  // Rule: '0' only resets to menu if:
+  // 1. Not in a specific data-entry step that uses '0' as a value (like Step 5/Notes)
+  // 2. Or if explicitly typing 'menu'
+  const inNotesStep = (simFlow === 'booking' && simStep === 6);
+  if (isControlZero && !inNotesStep) {
+    simFlow = ''; simStep = 1;
+    await addBotBubble(m.menu);
+    return setReplies([
+      {label: m.lang==='en'?'1️⃣ Book':'1️⃣ حجز', value:'1'},
+      {label: m.lang==='en'?'2️⃣ My Appt':'2️⃣ موعدي', value:'2'},
+      {label: m.lang==='en'?'7️⃣ Prices':'7️⃣ الأسعار', value:'7'},
+      {label: m.lang==='en'?'8️⃣ Location':'8️⃣ الموقع', value:'8'},
+    ]);
+  }
+
+  // --- Main Menu Routing ---
+  if (!simFlow || simStep === 0) {
+    if (simStep === 0) { // Lang Select
+      simData.lang = (u==='en' || u.includes('1')) ? 'en' : 'ar';
+      m = MESSAGES[simData.lang];
+      simStep = 1; await addBotBubble(m.menu);
+      return setReplies([{label: '1️⃣ Book Appt', value:'1'}, {label: '2️⃣ My Appt', value:'2'}, {label:'7️⃣ Prices', value:'7'}]);
+    }
+    
+    if (u === '1' || u.includes('book')) { simFlow = 'booking'; simStep = 2; return processBooking(u, m); }
+    if (u === '2' || u.includes('my')) { simFlow = 'my_appt'; return processMyAppt(u, m); }
+    if (u === '3' || u.includes('resched')) { simFlow = 'reschedule'; simStep = 1; return processReschedule(u, m); }
+    if (u === '4' || u.includes('cancel')) { simFlow = 'cancel'; simStep = 1; return processCancel(u, m); }
+    if (u === '5' || u.includes('service')) { await addBotBubble(m.services); return setReplies([{label: '0️⃣ Main Menu', value:'0'}]); }
+    if (u === '7' || u.includes('price')) { await addBotBubble(m.prices); return setReplies([{label: '0️⃣ Main Menu', value:'0'}]); }
+    if (u === '8' || u.includes('location')) { await addBotBubble(m.location); return setReplies([{label: '0️⃣ Main Menu', value:'0'}]); }
+    if (u === '9' || u.includes('staff')) { await addBotBubble(m.staff); return setTimeout(() => resetSimulator(), 3000); }
+    // Natural Language Intents
+    if (u.includes('وين') || u.includes('موقع') || u.includes('where')) { await addBotBubble(m.location); return setReplies([{label: '0️⃣ Menu', value:'0'}]); }
+    if (u.includes('سعر') || u.includes('بكم') || u.includes('cost')) { await addBotBubble(m.prices); return setReplies([{label: '0️⃣ Menu', value:'0'}]); }
+  }
+
+  // --- Flow Controllers ---
+  if (simFlow === 'booking') return processBooking(ui, m);
+  if (simFlow === 'my_appt') return processMyAppt(ui, m);
+  if (simFlow === 'reschedule') return processReschedule(ui, m);
+  if (simFlow === 'cancel') return processCancel(ui, m);
+}
+
+// ── Booking Logic ──
+async function processBooking(ui, m) {
+  const b = m.bookingSteps;
+  switch(simStep) {
+    case 2: simStep = 3; setProgress(2); await addBotBubble(b.name); enableInput(); break;
+    case 3: simData.name = ui; simStep = 4; await addBotBubble(b.phone(simData.phone)); setReplies([{label:'1️⃣ Yes', value:'1'}, {label:'2️⃣ No', value:'2'}]); break;
+    case 4: 
+      if (ui==='1') { simStep = 5; await addBotBubble(b.treatment); setReplies([{label:'1️⃣ Cleaning', value:'1'}, {label:'2️⃣ Filling', value:'2'}]); }
+      else { simStep = 44; await addBotBubble(b.phoneReq); enableInput(); }
+      break;
+    case 44: simData.phone = ui; simStep = 5; await addBotBubble(b.treatment); setReplies([{label:'1️⃣ Cleaning', value:'1'}, {label:'2️⃣ Filling', value:'2'}]); break;
+    case 5: 
+      // Capture treatment text from dictionary if number used
+      if (ui==='1') simData.treatment = m.bookingSteps.treatment.split('\n')[2].replace('1️⃣ ','');
+      else if (ui==='2') simData.treatment = m.bookingSteps.treatment.split('\n')[3].replace('2️⃣ ','');
+      else simData.treatment = ui; 
+      simStep = 6; 
+      await addBotBubble(b.notes); 
+      setReplies([{label: m.lang==='ar'?'0️⃣ تخطي':'0️⃣ Skip', value:'__skip__'}]); 
+      break;
+    case 6: 
+      // Step 6 handles notes. Either user sent text or clicked '__skip__'
+      simData.notes = (ui === '__skip__' || ui === '0') ? '' : ui;
+      simStep = 7; 
+      await addBotBubble(b.doctor); 
+      setReplies([{label:'1️⃣ Dr. Ahmed', value:'1'}, {label:'2️⃣ Dr. Sarah', value:'2'}, {label: m.lang==='ar'?'3️⃣ أي طبيب':'3️⃣ Any Doctor', value:'3'}]); 
+      break;
+    case 7: 
+      if (ui==='1') simData.doctor = 'Dr. Ahmed';
+      else if (ui==='2') simData.doctor = 'Dr. Sarah';
+      else simData.doctor = m.lang==='ar'?'أي طبيب متاح':'Any doctor';
+      simStep = 8; 
+      await addBotBubble(b.date(simData.doctor)); 
+      setReplies([{label: m.lang==='ar'?'1️⃣ غداً':'1️⃣ Tomorrow', value:'1'}, {label: m.lang==='ar'?'2️⃣ الأربعاء':'2️⃣ Wednesday', value:'2'}]); 
+      break;
+    case 8: simData.date = ui==='1'?'Tomorrow':'Wednesday'; simStep = 9; await addBotBubble(b.slot(simData.date)); setReplies([{label:'1️⃣ 10:00 AM', value:'1'}, {label:'2️⃣ 04:00 PM', value:'2'}]); break;
+    case 9: 
+      simData.slot = ui==='1'?'10:00 AM':'04:00 PM'; simData.booked = true;
+      await addBotBubble(b.securing);
+      await addBotBubble(b.confirmed + "\n\n" + b.summary(simData));
+      updateDashboardData(m);
+      simFlow = ''; simStep = 1;
+      setReplies([{label: '0️⃣ Main Menu', value:'0'}]);
+      // Trigger Autonomous Reminder preview after delay
+      setTimeout(() => triggerAutonomousReminder(m), 4000);
+      break;
+  }
+}
+
+// ── My Appointment Logic ──
+async function processMyAppt(ui, m) {
+  if (!simData.booked) { 
+    await addBotBubble(m.lang==='ar'?'ليس لديك موعد حالي.':'You have no active appointment.'); 
+    return setReplies([{label: '1️⃣ Book Now', value:'1'}, {label:'0️⃣ Menu', value:'0'}]); 
+  }
+  if (ui === '2' || ui.includes('my')) {
+    await addBotBubble(m.myAppt(simData));
+    setReplies([{label: '1️⃣ Reschedule', value:'resched'}, {label: '2️⃣ Cancel', value:'cancel'}]);
+  } else if (ui === 'resched') { simFlow = 'reschedule'; simStep = 1; processReschedule('', m); }
+    else if (ui === 'cancel') { simFlow = 'cancel'; simStep = 1; processCancel('', m); }
+}
+
+// ── Reschedule Logic ──
+async function processReschedule(ui, m) {
+  const r = m.resched;
+  if (simStep === 1) { simStep = 2; await addBotBubble(r.date); setReplies([{label: '1️⃣ Tomorrow', value:'1'}, {label:'2️⃣ Next Week', value:'2'}]); }
+  else if (simStep === 2) { 
+    simData.date = ui==='1'?'Tomorrow':'Next Week';
+    await addBotBubble(r.confirm(simData.date, simData.slot));
+    updateDashboardData(m);
+    simFlow = ''; simStep = 1; 
+    setReplies([{label: '0️⃣ Main Menu', value:'0'}]);
+  }
+}
+
+// ── Cancel Logic ──
+async function processCancel(ui, m) {
+  const c = m.cancel;
+  if (simStep === 1) { simStep = 2; await addBotBubble(c.confirm); setReplies([{label:'1️⃣ Yes', value:'1'}, {label:'2️⃣ No', value:'2'}]); }
+  else if (simStep === 2) {
+    if (ui === '1') {
+      simData.booked = false; await addBotBubble(c.success); updateDashboardData(m);
+    } else { await addBotBubble('Great! Appointment kept.'); }
+    simFlow = ''; simStep = 1; setReplies([{label: '0️⃣ Main Menu', value:'0'}]);
+  }
+}
+
+// ── Autonomous Sales Machine Moment ──
+async function triggerAutonomousReminder(m) {
+  // Highlight bubble to show it's "Autonomous"
+  const notice = document.createElement('div');
+  notice.className = 'autonomous-notice';
+  notice.textContent = m.lang === 'ar' ? '─── أتمتة النظام الذاتي ───' : '─── Autonomous System Automation ───';
+  chat.appendChild(notice);
+  
+  const reminder = m.reminderPreview(simData.name, simData.date, simData.slot, simData.treatment);
+  await addBotBubble(reminder);
+}
+
+function updateDashboardData(m) {
+  const dp = document.getElementById('dashPreview');
+  if (!simData.booked) { dp.classList.add('hidden'); return; }
+  dp.classList.remove('hidden');
+  document.getElementById('dsPatientName').textContent = simData.name;
+  document.getElementById('dsTreatment').textContent = simData.treatment;
+  document.getElementById('dsSlot').textContent = simData.slot;
+  document.getElementById('dsDate').textContent = simData.date;
+  document.getElementById('dsDoctor').textContent = simData.doctor;
+}
+
+function startSimulator() {
+  simRunning = true; simStep = 0; simFlow = ''; chat.innerHTML = ''; 
+  document.getElementById('simStartBtn').style.display = 'none';
+  addBotBubble(MESSAGES.ar.langSelect).then(() => {
+    setReplies([{label:'1️⃣ English', value:'en'}, {label:'2️⃣ العربية', value:'ar'}]);
+  });
+}
+
+function resetSimulator() {
+  simRunning = false; simStep = 0; simFlow = '';
+  simData = { name:'Visitor', treatment:'Consultation', date:'Tomorrow', slot:'10:00 AM', doctor:'Dr. Ahmed', lang:'ar', phone:'+966570733834', booked: false };
+  chat.innerHTML = '';
+  replies.innerHTML = '<span class="text-gray-600 text-xs italic">Waiting...</span>';
+  disableInput(); setProgress(0);
+  document.getElementById('dashPreview').classList.add('hidden');
+  document.getElementById('simStartBtn').style.display = 'block';
+}
+
+
+
+
+
+
+
+/* ── Navbar scroll ── */
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  if (window.scrollY > 50) nav.classList.add('border-b','border-[#1e293b]','shadow-lg','bg-[#0B1120]/90');
+  else nav.classList.remove('border-b','border-[#1e293b]','shadow-lg','bg-[#0B1120]/90');
+});
+
+/* ── Feature counter animations (ScrollTrigger) ── */
+const counters = [
+  { id:'cnt-response', target:3,   suffix:'s', decimals:0 },
+  { id:'cnt-uptime',   target:24,  suffix:'',  decimals:0 },
+  { id:'cnt-confirm',  target:94,  suffix:'%', decimals:0 },
+  { id:'cnt-noshow',   target:40,  suffix:'%', decimals:0 },
+  { id:'cnt-lang',     target:2,   suffix:'',  decimals:0 },
+  { id:'cnt-sync',     target:1,   suffix:'s', decimals:0 },
+];
+
+counters.forEach(({ id, target, suffix, decimals }) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const obj = { val: 0 };
+  ScrollTrigger.create({
+    trigger: '#features',
+    start: 'top 75%',
+    once: true,
+    onEnter: () => {
+      gsap.to(obj, {
+        val: target,
+        duration: 1.8,
+        ease: 'power2.out',
+        onUpdate: () => {
+          el.textContent = (decimals > 0 ? obj.val.toFixed(decimals) : Math.floor(obj.val)) + suffix;
+        }
       });
-      delay += msg.sender === 'user' ? 2.5 : 1.5;
-    });
+    }
+  });
+});
 
-    // Navbar blur on scroll
-    window.addEventListener('scroll', () => {
-      const nav = document.getElementById('navbar');
-      if (window.scrollY > 50) {
-        nav.classList.add('border-b', 'border-[#1e293b]', 'shadow-lg', 'bg-[#0B1120]/90');
-      } else {
-        nav.classList.remove('border-b', 'border-[#1e293b]', 'shadow-lg', 'bg-[#0B1120]/90');
-      }
-    });
-  </script>
+/* ── Feat-card stagger on scroll ── */
+gsap.fromTo('.feat-card', { opacity:0, y:30 }, {
+  opacity:1, y:0, duration:0.6, stagger:0.1, ease:'power2.out',
+  scrollTrigger: { trigger:'#features', start:'top 80%', once:true }
+});
+
+gsap.fromTo('.svc-card', { opacity:0, y:40 }, {
+  opacity:1, y:0, duration:0.7, stagger:0.12, ease:'power2.out',
+  scrollTrigger: { trigger:'#services', start:'top 80%', once:true }
+});
+</script>
 </body>
 </html>

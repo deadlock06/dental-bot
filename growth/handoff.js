@@ -1,4 +1,4 @@
-const { buildGhostRoomUrl, detectLanguage: detectLeadLanguage } = require('./brain');
+const { getGhostRoomUrl, detectLanguage: detectLeadLanguage } = require('./brain');
 
 function detectIntent(message) {
   if (!message) return 'general';
@@ -22,7 +22,7 @@ function detectLanguage(message) {
 }
 
 function generateROIMessage(lead, lang) {
-  const url = buildGhostRoomUrl(lead);
+  const url = getGhostRoomUrl(lead);
   if (lang === 'ar') {
     return `بناءً على حساباتنا، التأخير في الرد يكلفك أكثر من ذكائنا الاصطناعي (299 ريال فقط/شهر). شاهده هنا: ${url}`;
   }

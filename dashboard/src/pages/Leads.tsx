@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Filter, Target, Zap, MessageSquare, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
-import { MOCK_LEADS } from '../lib/mockData';
+import { useLeads } from '../hooks/useSupabase';
+import type { LiveLead } from '../hooks/useSupabase';
 import { cn } from '../lib/utils';
-import type { Lead, LeadStatus } from '../types';
+import type { LeadStatus } from '../types';
 
 const STATUS_FILTERS: (LeadStatus | 'All')[] = ['All', 'new', 'contacted', 'appointment_booked', 'lost', 'opt_out'];
 
@@ -45,20 +46,23 @@ export default function Leads() {
   const [page, setPage] = useState(1);
   const PER_PAGE = 10;
 
+  const { data: allLeads, loading, total } = useLeads({ status: statusFilter });
+
   const filtered = useMemo(() => {
-    return MOCK_LEADS.filter(l => {
-      const matchSearch = !search ||
-        (l.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    return (allLeads as LiveLead[]).filter(l => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (l.name || '').toLowerCase().includes(q) ||
+        (l.business_name || '').toLowerCase().includes(q) ||
         l.phone.includes(search) ||
-        l.category.toLowerCase().includes(search.toLowerCase()) ||
-        l.source.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === 'All' || l.status === statusFilter;
-      return matchSearch && matchStatus;
-    }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [search, statusFilter]);
+        (l.city || '').toLowerCase().includes(q);
+    });
+  }, [allLeads, search]);
 
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const contacted = (allLeads as LiveLead[]).filter(l => l.status === 'contacted').length;
+  const converted = (allLeads as LiveLead[]).filter(l => l.status === 'appointment_booked').length;
 
   return (
     <div className="space-y-6">
@@ -87,8 +91,8 @@ export default function Leads() {
             <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">Total Leads</span>
             <Zap className="w-4 h-4 text-amber-500" />
           </div>
-          <div className="text-2xl font-bold text-slate-900">{MOCK_LEADS.length}</div>
-          <div className="text-xs text-blue-600 mt-1 font-medium">Synced with Supabase Growth v2</div>
+          <div className="text-2xl font-bold text-slate-900">{loading ? '…' : total}</div>
+          <div className="text-xs text-blue-600 mt-1 font-medium">Live from Supabase Growth v2</div>
         </div>
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between mb-2">
@@ -96,7 +100,7 @@ export default function Leads() {
             <MessageSquare className="w-4 h-4 text-blue-500" />
           </div>
           <div className="text-2xl font-bold text-slate-900">
-            {MOCK_LEADS.filter(l => l.status === 'contacted').length}
+            {loading ? '…' : contacted}
           </div>
           <div className="text-xs text-slate-400 mt-1">AI automated followup enabled</div>
         </div>
@@ -106,7 +110,7 @@ export default function Leads() {
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </div>
           <div className="text-2xl font-bold text-slate-900">
-            {Math.round((MOCK_LEADS.filter(l => l.status === 'appointment_booked').length / MOCK_LEADS.length) * 100)}%
+            {loading ? '…' : total > 0 ? `${Math.round((converted / total) * 100)}%` : '0%'}
           </div>
           <div className="text-xs text-emerald-600 mt-1 font-medium">Higher than market average</div>
         </div>
@@ -157,28 +161,33 @@ export default function Leads() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {paginated.map(lead => (
+              {paginated.map((lead: LiveLead) => (
                 <tr key={lead.id} className="hover:bg-blue-50/30 transition-colors group">
                   <td className="px-4 py-3">
-                    <div className="font-semibold text-slate-900">{lead.name || 'Anonymous Lead'}</div>
-                    <div className="text-xs text-slate-400 font-mono">{lead.phone}</div>
+                    <div className="font-semibold text-slate-900">{lead.business_name || lead.name || 'Unknown Business'}</div>
+                    <div className="text-xs text-slate-400 font-mono">{lead.phone} {lead.city ? `· ${lead.city}` : ''}</div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-slate-600 text-xs font-medium bg-slate-100 px-2 py-1 rounded">{lead.source}</span>
+                    <span className="text-slate-600 text-xs font-medium bg-slate-100 px-2 py-1 rounded">{lead.vertical || 'dental'}</span>
                   </td>
                   <td className="px-4 py-3 font-medium text-slate-700">
-                    {lead.category}
+                    {lead.pain_signal?.replace('_', ' ') || '—'}
                   </td>
                   <td className="px-4 py-3">
                     <ConfidenceScore score={lead.confidence_score} />
                   </td>
                   <td className="px-4 py-3">
-                    <StatusBadge status={lead.status} />
+                    <StatusBadge status={lead.status as LeadStatus} />
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button className="text-blue-500 hover:text-blue-700 font-bold text-xs uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
-                      Integrate →
-                    </button>
+                    <a
+                      href={`https://wa.me/${lead.phone.replace('+', '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-500 hover:text-blue-700 font-bold text-xs uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      WhatsApp →
+                    </a>
                   </td>
                 </tr>
               ))}
@@ -197,7 +206,7 @@ export default function Leads() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50/30">
             <span className="text-xs text-slate-400 font-medium">
-              Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}
+              Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filtered.length)} of {total}
             </span>
             <div className="flex items-center gap-1">
               <button

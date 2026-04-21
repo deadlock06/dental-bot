@@ -1,3 +1,7 @@
 node_modules/
 .env
 *.log
+credentials_b64.txt
+*.txt
+scratch/
+dist/

@@ -73,6 +73,31 @@ app.get('/webhook', (req, res) => {
 });
 
 // ─────────────────────────────────────────────
+// Twilio delivery status callbacks
+// POST /webhook/status — Twilio fires this for every message status update
+// ─────────────────────────────────────────────
+app.post('/webhook/status', async (req, res) => {
+  res.sendStatus(200);
+  try {
+    const { MessageSid, MessageStatus, To, ErrorCode, ErrorMessage } = req.body;
+    if (!MessageSid) return;
+    await growthSupabase.from('message_logs').upsert({
+      message_sid:   MessageSid,
+      to_phone:      (To || '').replace('whatsapp:', ''),
+      status:        MessageStatus || 'unknown',
+      error_code:    ErrorCode    || null,
+      error_message: ErrorMessage || null,
+      updated_at:    new Date().toISOString(),
+    }, { onConflict: 'message_sid' });
+    if (ErrorCode) {
+      console.warn(`[Delivery] ❌ ${MessageSid} failed to ${To}: ${ErrorCode} — ${ErrorMessage}`);
+    }
+  } catch (e) {
+    console.error('[Delivery] /webhook/status error:', e.message);
+  }
+});
+
+// ─────────────────────────────────────────────
 // Incoming WhatsApp messages
 // ─────────────────────────────────────────────
 // Incoming WhatsApp messages — Secured with Twilio Signature Verification
@@ -226,8 +251,8 @@ app.post('/send-reminders', async (req, res) => {
       // ── 24h reminder
       if (apptDateISO === tomorrowISO && !appt.reminder_sent_24h) {
         const msg = ar
-          ? `🔔 تذكير بالموعد!\nمرحباً ${appt.name}، لديك موعد غداً:\n📅 ${appt.preferred_date} الساعة ⏰ ${appt.time_slot}\n🏥 ${clinicName}\n🦷 العلاج: ${appt.treatment}\n\nنراك قريباً! إذا أردت إعادة الجدولة، أرسل 'إعادة جدولة' 😊`
-          : `🔔 Appointment Reminder!\nHi ${appt.name}, you have an appointment tomorrow:\n📅 ${appt.preferred_date} at ⏰ ${appt.time_slot}\n🏥 ${clinicName}\n🦷 Treatment: ${appt.treatment}\n\nSee you then! Reply 'reschedule' if you need to change it 😊`;
+          ? `🔔 تذكير بالموعد!\nمرحباً ${appt.name}، أنا *جيك*، أذكرك بموعدك غداً:\n📅 ${appt.preferred_date} الساعة ⏰ ${appt.time_slot}\n🏥 ${clinicName}\n🦷 العلاج: ${appt.treatment}\n\nنراك قريباً! إذا أردت إعادة الجدولة، أرسل 'إعادة جدولة' 😊`
+          : `🔔 Appointment Reminder!\nHi ${appt.name}, I'm *Jake*. Reminding you of your appointment tomorrow:\n📅 ${appt.preferred_date} at ⏰ ${appt.time_slot}\n🏥 ${clinicName}\n🦷 Treatment: ${appt.treatment}\n\nSee you then! Reply 'reschedule' if you need to change it 😊`;
         await sendMessage(appt.phone, msg);
         await updateAppointment(appt.id, { reminder_sent_24h: true });
         console.log(`[Reminders] 24h sent to ${appt.phone} (${ar ? 'AR' : 'EN'})`);
@@ -259,8 +284,8 @@ app.post('/send-reminders', async (req, res) => {
       // ── Follow-up (day after appointment)
       if (apptDateISO === yesterdayISO && !appt.follow_up_sent) {
         const msg = ar
-          ? `😊 مرحباً ${appt.name}! كيف كانت زيارتك لنا؟\nنأمل أن كل شيء سار بشكل رائع!\nيسعدنا سماع رأيك:\n⭐ ${reviewLink}\n\nلا تتردد في مراسلتنا في أي وقت 🦷`
-          : `😊 Hi ${appt.name}! How was your visit with us?\nWe hope everything went well!\nWe'd love to hear your feedback:\n⭐ ${reviewLink}\n\nFeel free to message us anytime 🦷`;
+          ? `😊 مرحباً ${appt.name}! أنا *جيك*، كيف كانت زيارتك لنا؟\nنأمل أن كل شيء سار بشكل رائع!\nيسعدنا سماع رأيك:\n⭐ ${reviewLink}\n\nلا تتردد في مراسلتنا في أي وقت 🦷`
+          : `😊 Hi ${appt.name}! I'm *Jake*. How was your visit with us?\nWe hope everything went well!\nWe'd love to hear your feedback:\n⭐ ${reviewLink}\n\nFeel free to message us anytime 🦷`;
         await sendMessage(appt.phone, msg);
         await updateAppointment(appt.id, { follow_up_sent: true, status: 'completed' });
         console.log(`[Reminders] Follow-up sent to ${appt.phone} (${ar ? 'AR' : 'EN'})`);
@@ -430,7 +455,42 @@ try {
     }
   });
 
-  console.log('[Cron] ✅ All schedulers started: reminders (30m) + cleanup (1h) + health (10m) + follow-ups (daily 9AM) + job scout (6h) + places scout (weekly) + auto-batch (daily 10AM)');
+  // ── Morning brief — daily 08:30 Saudi (05:30 UTC) ──
+  cron.schedule('30 5 * * *', async () => {
+    console.log('[Cron] Running morning brief...');
+    try {
+      const { DateTime } = require('luxon');
+      const todayISO = DateTime.now().setZone('Asia/Riyadh').toISODate();
+
+      const [{ count: apptCount }, { count: leadCount }] = await Promise.all([
+        growthSupabase.from('appointments').select('*', { count: 'exact', head: true })
+          .eq('preferred_date_iso', todayISO).neq('status', 'cancelled'),
+        growthSupabase.from('growth_leads_v2').select('*', { count: 'exact', head: true })
+          .eq('status', 'pending'),
+      ]);
+
+      const { data: newLeads } = await growthSupabase.from('growth_leads_v2')
+        .select('business_name, city, confidence_score')
+        .gte('created_at', new Date(Date.now() - 86400000).toISOString())
+        .order('confidence_score', { ascending: false })
+        .limit(5);
+
+      const topLeads = (newLeads || [])
+        .map(l => `• ${l.business_name || 'Unknown'} (${l.city || '?'}) — ${l.confidence_score}%`)
+        .join('\n') || 'لا يوجد';
+
+      const adminPhone = process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null;
+      if (!adminPhone) return;
+
+      const msg = `☀️ صباح الخير جيك — التقرير اليومي\n\n📅 مواعيد اليوم: ${apptCount || 0}\n🔥 عملاء محتملون بانتظار الإرسال: ${leadCount || 0}\n\n🏆 أفضل عملاء أمس:\n${topLeads}\n\n— النظام الذاتي`;
+      await sendMessage(adminPhone, msg);
+      console.log('[Cron] Morning brief sent to admin');
+    } catch (e) {
+      console.error('[Cron] Morning brief error:', e.message);
+    }
+  });
+
+  console.log('[Cron] ✅ All schedulers started: reminders (30m) + cleanup (1h) + health (10m) + follow-ups (daily 9AM) + job scout (6h) + places scout (weekly) + auto-batch (daily 10AM) + morning brief (08:30 SAR)');
 } catch (e) {
   console.log('[Cron] node-cron not available, reminders must be triggered manually');
 }

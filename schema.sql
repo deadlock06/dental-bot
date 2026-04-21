@@ -145,3 +145,23 @@ CREATE TABLE IF NOT EXISTS growth_leads_v2 (
 CREATE INDEX IF NOT EXISTS idx_growth_phone  ON growth_leads_v2(phone);
 CREATE INDEX IF NOT EXISTS idx_growth_status ON growth_leads_v2(status);
 CREATE INDEX IF NOT EXISTS idx_growth_score  ON growth_leads_v2(confidence_score DESC);
+
+-- ── Message Logs (delivery tracking) ─────────────────
+CREATE TABLE IF NOT EXISTS message_logs (
+  id               UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  message_sid      TEXT UNIQUE NOT NULL,
+  to_phone         TEXT NOT NULL,
+  from_phone       TEXT,
+  body             TEXT,
+  direction        TEXT DEFAULT 'outbound',
+  status           TEXT DEFAULT 'sent',
+  error_code       TEXT,
+  error_message    TEXT,
+  source           TEXT,
+  created_at       TIMESTAMPTZ DEFAULT now(),
+  updated_at       TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_message_logs_to_phone    ON message_logs(to_phone);
+CREATE INDEX IF NOT EXISTS idx_message_logs_status      ON message_logs(status);
+CREATE INDEX IF NOT EXISTS idx_message_logs_message_sid ON message_logs(message_sid);

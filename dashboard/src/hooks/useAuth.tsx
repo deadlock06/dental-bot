@@ -11,21 +11,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Demo credentials
-const DEMO_USER: User = {
-  id: 'user-1',
-  email: 'admin@deadlock.solutions',
-  name: 'Admin User',
-  role: 'admin',
-};
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('dl_token');
-    const savedUser = localStorage.getItem('dl_user');
+    const savedToken = localStorage.getItem('ag_token');
+    const savedUser = localStorage.getItem('ag_user');
     if (savedToken && savedUser) {
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
@@ -33,26 +25,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock auth — accept demo credentials
-    if (
-      (email === 'admin@deadlock.solutions' && password === 'admin123') ||
-      (email === 'demo' && password === 'demo')
-    ) {
-      const mockToken = 'mock_jwt_' + Date.now();
-      setToken(mockToken);
-      setUser(DEMO_USER);
-      localStorage.setItem('dl_token', mockToken);
-      localStorage.setItem('dl_user', JSON.stringify(DEMO_USER));
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) return false;
+      const { token: t, user: u } = await res.json();
+      setToken(t);
+      setUser(u);
+      localStorage.setItem('ag_token', t);
+      localStorage.setItem('ag_user', JSON.stringify(u));
       return true;
+    } catch {
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem('dl_token');
-    localStorage.removeItem('dl_user');
+    localStorage.removeItem('ag_token');
+    localStorage.removeItem('ag_user');
   };
 
   return (

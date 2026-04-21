@@ -190,6 +190,24 @@
       }
     });
 
+    // Dwell tracking — ping /api/ghost-dwell at 30s, 60s, 120s
+    const _dwellPhone = urlParams.get('phone') || null;
+    const _dwellData = { phone: _dwellPhone, clinic: clinicName, city, pain, vertical: 'dental' };
+    function pingDwell(seconds, exitedVia) {
+      fetch('/api/ghost-dwell', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ..._dwellData, dwell_seconds: seconds, exited_via: exitedVia || null }),
+      }).catch(() => {});
+    }
+    setTimeout(() => pingDwell(30),  30000);
+    setTimeout(() => pingDwell(60),  60000);
+    setTimeout(() => pingDwell(120), 120000);
+
+    // Track CTA exit intent
+    document.getElementById('jake-btn').addEventListener('click', () => pingDwell(0, 'whatsapp'));
+    document.getElementById('report-btn').addEventListener('click', () => pingDwell(0, 'report'));
+
   </script>
 </body>
 </html>
