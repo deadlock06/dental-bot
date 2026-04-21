@@ -852,14 +852,18 @@ let simFlow = ''; // 'booking', 'reschedule', 'cancel', 'my_appt'
 let simData = { name: 'Visitor', treatment: 'Consultation', date: 'Tomorrow', slot: '10:00 AM', doctor: 'Dr. Ahmed', lang: 'ar', phone: '+966570733834', booked: false };
 let simRunning = false;
 
-const chat    = document.getElementById('simChat');
-const replies = document.getElementById('simReplies');
-const input   = document.getElementById('simInput');
-const sendBtn = document.getElementById('simSend');
-const progress= document.getElementById('simProgress');
-const stepLbl = document.getElementById('simStepLabel');
+const getSim = () => ({
+  chat: document.getElementById('simChat'),
+  replies: document.getElementById('simReplies'),
+  input: document.getElementById('simInput'),
+  sendBtn: document.getElementById('simSend'),
+  progress: document.getElementById('simProgress'),
+  stepLbl: document.getElementById('simStepLabel')
+});
 
 function setProgress(n) {
+  const { progress, stepLbl } = getSim();
+  if(!progress) return;
   progress.style.width = ((n / 7) * 100) + '%';
   stepLbl.textContent  = (simData.lang === 'ar' ? 'المرحلة ' : 'Phase ') + Math.min(n, 7) + ' / 7';
   document.querySelectorAll('.step-item').forEach(el => {
@@ -870,9 +874,14 @@ function setProgress(n) {
   });
 }
 
-function scrollChat() { setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 80); }
+function scrollChat() { 
+  const { chat } = getSim();
+  if(chat) setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 80); 
+}
 
 async function addBotBubble(html) {
+  const { chat } = getSim();
+  if(!chat) return;
   const typing = document.createElement('div');
   typing.className = 'sim-typing flex items-center gap-1 px-3 py-2 rounded-xl self-start mb-2';
   typing.style.cssText = 'background:#1e293b;border:1px solid rgba(94,234,212,0.1)';
@@ -881,10 +890,10 @@ async function addBotBubble(html) {
   scrollChat();
 
   await new Promise(r => setTimeout(r, 650 + Math.random()*350));
-  typing.remove();
+  if(typing.parentNode) typing.remove();
   
   const bubble = document.createElement('div');
-  bubble.className = 'sim-bubble-bot mb-2 whitespace-pre-wrap';
+  bubble.className = 'sim-bubble-bot mb-2 whitespace-pre-wrap text-right';
   bubble.innerHTML = html;
   const ts = document.createElement('div');
   ts.className = 'text-[10px] text-gray-600 mt-1.5';
@@ -895,8 +904,10 @@ async function addBotBubble(html) {
 }
 
 function addUserBubble(text) {
+  const { chat } = getSim();
+  if(!chat) return;
   const bubble = document.createElement('div');
-  bubble.className = 'sim-bubble-user mb-2';
+  bubble.className = 'sim-bubble-user mb-2 text-right';
   bubble.innerHTML = text;
   const ts = document.createElement('div');
   ts.className = 'text-[10px] text-teal-200/60 mt-1.5 text-left';
@@ -908,6 +919,8 @@ function addUserBubble(text) {
 }
 
 function setReplies(chips) {
+  const { replies } = getSim();
+  if(!replies) return;
   replies.innerHTML = '';
   if (!chips || chips.length === 0) { enableInput(); return; }
   disableInput();
@@ -924,17 +937,34 @@ function setReplies(chips) {
   });
 }
 
-function enableInput() { input.disabled = false; sendBtn.disabled = false; input.focus(); replies.innerHTML = ''; }
-function disableInput() { input.disabled = true; sendBtn.disabled = true; }
+function enableInput() { 
+  const { input, sendBtn, replies } = getSim();
+  if(!input) return;
+  input.disabled = false; sendBtn.disabled = false; input.focus(); replies.innerHTML = ''; 
+}
+function disableInput() { 
+  const { input, sendBtn } = getSim();
+  if(!input) return;
+  input.disabled = true; sendBtn.disabled = true; 
+}
 
 function handleSimInput() {
+  const { input } = getSim();
+  if(!input) return;
   const val = input.value.trim();
   if (!val || input.disabled) return;
   input.value = '';
   addUserBubble(val);
   nextStep(val);
 }
-input.addEventListener('keydown', e => { if(e.key==='Enter') handleSimInput(); });
+if(document.getElementById('simInput')) {
+  document.getElementById('simInput').addEventListener('keydown', e => { if(e.key==='Enter') handleSimInput(); });
+}
+
+async function nextStep(ui) {
+  disableInput();
+  let m = MESSAGES[simData.lang];
+  const u = ui.toLowerCase();
 
   // --- Neural Language Pivot ---
   // Detect Arabic characters and switch language context immediately
@@ -944,6 +974,8 @@ input.addEventListener('keydown', e => { if(e.key==='Enter') handleSimInput(); }
     m = MESSAGES.ar;
     console.log('[Sim] Language pivoted to AR');
   }
+
+  const b = m.bookingSteps;
 
   // --- Contextual Simulation Controls ---
   const isControlZero = (u === '0' || u === 'menu' || u === 'back' || u === 'القائمة');
@@ -966,10 +998,17 @@ input.addEventListener('keydown', e => { if(e.key==='Enter') handleSimInput(); }
   // --- Main Menu Routing ---
   if (!simFlow || simStep === 0) {
     if (simStep === 0) { // Lang Select
-      simData.lang = (u==='en' || u.includes('1')) ? 'en' : 'ar';
+      simData.lang = (u==='en' || u.includes('1') || u.includes('en')) ? 'en' : 'ar';
       m = MESSAGES[simData.lang];
-      simStep = 1; await addBotBubble(m.menu);
-      return setReplies([{label: '1️⃣ Book Appt', value:'1'}, {label: '2️⃣ My Appt', value:'2'}, {label:'7️⃣ Prices', value:'7'}]);
+      simStep = 1; 
+      setProgress(1);
+      await addBotBubble(m.menu);
+      return setReplies([
+        {label: m.lang==='en'?'1️⃣ Book Appt':'1️⃣ حجز موعد', value:'1'},
+        {label: m.lang==='en'?'2️⃣ My Appt':'2️⃣ موعدي', value:'2'},
+        {label: m.lang==='en'?'7️⃣ Prices':'7️⃣ الأسعار', value:'7'},
+        {label: m.lang==='en'?'8️⃣ Location':'8️⃣ الموقع', value:'8'},
+      ]);
     }
     
     if (u === '1' || u.includes('book')) { simFlow = 'booking'; simStep = 2; return processBooking(u, m); }
@@ -1103,21 +1142,39 @@ function updateDashboardData(m) {
 }
 
 function startSimulator() {
-  simRunning = true; simStep = 0; simFlow = ''; chat.innerHTML = ''; 
-  document.getElementById('simStartBtn').style.display = 'none';
+  const { chat } = getSim();
+  simRunning = true; 
+  simStep = 0; 
+  simFlow = ''; 
+  simData = { name:'Visitor', treatment:'Consultation', date:'Tomorrow', slot:'10:00 AM', doctor:'Dr. Ahmed', lang:'ar', phone:'+966570733834', booked: false };
+  
+  // Ensure visibility
+  if(chat) {
+    chat.innerHTML = ''; 
+    // If the phone container was hidden, show it here
+    const phone = document.getElementById('simChat').closest('.rounded-[34px]');
+    if(phone) phone.style.opacity = '1';
+  }
+  
+  setProgress(0);
+  const startBtn = document.getElementById('simStartBtn');
+  if(startBtn) startBtn.style.display = 'none';
+  
+  console.log('[Sim] Starting with language select...');
   addBotBubble(MESSAGES.ar.langSelect).then(() => {
     setReplies([{label:'1️⃣ English', value:'en'}, {label:'2️⃣ العربية', value:'ar'}]);
   });
 }
 
 function resetSimulator() {
+  const { chat, replies } = getSim();
   simRunning = false; simStep = 0; simFlow = '';
   simData = { name:'Visitor', treatment:'Consultation', date:'Tomorrow', slot:'10:00 AM', doctor:'Dr. Ahmed', lang:'ar', phone:'+966570733834', booked: false };
-  chat.innerHTML = '';
-  replies.innerHTML = '<span class="text-gray-600 text-xs italic">Waiting...</span>';
+  if(chat) chat.innerHTML = '';
+  if(replies) replies.innerHTML = '<span class="text-gray-600 text-xs italic">Waiting...</span>';
   disableInput(); setProgress(0);
-  document.getElementById('dashPreview').classList.add('hidden');
-  document.getElementById('simStartBtn').style.display = 'block';
+  const startBtn = document.getElementById('simStartBtn');
+  if(startBtn) startBtn.style.display = 'block';
 }
 
 
