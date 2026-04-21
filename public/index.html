@@ -760,7 +760,7 @@
 <!-- SIMULATOR STATE MACHINE                           -->
 <!-- ══════════════════════════════════════════════════ -->
 <script>
-gsap.registerPlugin(ScrollTrigger);
+try { gsap.registerPlugin(ScrollTrigger); } catch(e) { console.warn('[GSAP] Not loaded:', e.message); }
 
 /* ─── Simulator Architecture: Full Logic Parity (bot.js) ──── */
 const MESSAGES = {
@@ -1204,10 +1204,13 @@ function resetSimulator() {
 /* ── Navbar scroll ── */
 window.addEventListener('scroll', () => {
   const nav = document.getElementById('navbar');
-  if (window.scrollY > 50) nav.classList.add('border-b','border-[#1e293b]','shadow-lg','bg-[#0B1120]/90');
-  else nav.classList.remove('border-b','border-[#1e293b]','shadow-lg','bg-[#0B1120]/90');
+  if (nav) {
+    if (window.scrollY > 50) nav.classList.add('border-b','border-[#1e293b]','shadow-lg','bg-[#0B1120]/90');
+    else nav.classList.remove('border-b','border-[#1e293b]','shadow-lg','bg-[#0B1120]/90');
+  }
 });
 
+try {
 /* ── Feature counter animations (ScrollTrigger) ── */
 const counters = [
   { id:'cnt-response', target:3,   suffix:'s', decimals:0 },
@@ -1249,6 +1252,7 @@ gsap.fromTo('.svc-card', { opacity:0, y:40 }, {
   opacity:1, y:0, duration:0.7, stagger:0.12, ease:'power2.out',
   scrollTrigger: { trigger:'#services', start:'top 80%', once:true }
 });
+} catch(e) { console.warn('[GSAP Animations] Skipped:', e.message); }
 </script>
 </body>
 </html>
