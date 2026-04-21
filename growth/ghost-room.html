@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>غرفة العمليات - تحليل النزيف الخفي | Qudozen</title>
+  <title>غرفة العمليات - تجربة النظام الذاتي | Qudozen</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
     body { font-family: 'Tajawal', sans-serif; background-color: #040914; color: white; overflow: hidden; }
@@ -14,110 +13,82 @@
       background: rgba(13, 148, 136, 0.03); 
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(225, 29, 72, 0.2); /* Bleeding red border */
+      border: 1px solid rgba(13, 148, 136, 0.2); 
     }
-    
-    .ticker { font-variant-numeric: tabular-nums; }
-    
-    /* Heartbeat animation */
-    @keyframes heartbeat { 
-      0%, 100% { transform: scale(1); opacity: 0.8; } 
-      50% { transform: scale(1.05); opacity: 1; text-shadow: 0 0 20px rgba(225,29,72,0.8); } 
-    }
-    .heartbeat-text { animation: heartbeat 2s infinite; }
-    
-    /* Background Scanner Line */
-    @keyframes scan {
-      0% { top: -10%; opacity: 0; }
-      10% { opacity: 0.5; }
-      90% { opacity: 0.5; }
-      100% { top: 110%; opacity: 0; }
-    }
-    .scanner-line {
-      position: absolute;
-      left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(225, 29, 72, 0.8), transparent);
-      box-shadow: 0 0 20px rgba(225, 29, 72, 0.6);
-      animation: scan 4s linear infinite;
-      z-index: 0;
-    }
-    
-    /* Glitch Effect */
-    @keyframes glitch {
-      2%, 64% { transform: translate(2px,0) skew(0deg); }
-      4%, 60% { transform: translate(-2px,0) skew(0deg); }
-      62% { transform: translate(0,0) skew(5deg); }
-    }
-    .glitch { animation: glitch 4s infinite; }
   </style>
 </head>
 <body class="h-screen w-screen relative flex items-center justify-center p-4">
 
   <!-- Background Ambience -->
-  <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(225,29,72,0.05)_0%,rgba(4,9,20,1)_80%)] z-0"></div>
-  <div class="scanner-line"></div>
-  <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-5 pointer-events-none z-0 mix-blend-overlay border-red-500"></div>
+  <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(13,148,136,0.05)_0%,rgba(4,9,20,1)_80%)] z-0"></div>
+  <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-5 pointer-events-none z-0 mix-blend-overlay"></div>
 
   <!-- Medical UI Frame -->
-  <div class="relative z-10 w-full max-w-4xl glass rounded-3xl p-8 md:p-12 shadow-[0_0_50px_rgba(225,29,72,0.15)] flex flex-col items-center">
+  <div class="relative z-10 w-full max-w-4xl glass rounded-3xl p-8 md:p-12 shadow-[0_0_50px_rgba(13,148,136,0.15)] flex flex-col items-center">
     
     <!-- Top Bar -->
-    <div class="w-full flex justify-between items-center mb-8 border-b border-rose-900/30 pb-4">
+    <div class="w-full flex justify-between items-center mb-8 border-b border-teal-900/30 pb-4">
       <div class="flex items-center gap-3">
-        <span class="w-3 h-3 rounded-full bg-rose-500 animate-pulse"></span>
-        <span class="text-xs font-bold text-rose-500 uppercase tracking-widest font-mono">Live Diagnosis</span>
+        <span class="w-3 h-3 rounded-full bg-teal-500 animate-pulse"></span>
+        <span class="text-xs font-bold text-teal-500 uppercase tracking-widest font-mono">نظام التشغيل الذاتي</span>
       </div>
       <div class="text-xs text-gray-500 font-mono tracking-widest" id="sys-time">SYS_TIME: 00:00:00</div>
     </div>
 
     <!-- Main Subject -->
     <div class="text-center mb-10 w-full">
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-400 mb-2">تحليل النزيف الدائم لعيادة</h1>
-      <h2 class="text-4xl md:text-5xl font-black text-white glitch" id="clinic-name">جاري استخراج البيانات...</h2>
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-400 mb-4">شاهد كيف يدار عملك بوعي مستقل</h1>
+      <h2 class="text-4xl md:text-5xl font-black text-white" id="clinic-name">جاري التهيئة...</h2>
     </div>
 
-    <!-- Live Counter -->
-    <div class="flex flex-col items-center mb-12">
-      <div class="text-sm text-rose-400 uppercase tracking-widest font-bold mb-4 flex items-center gap-2">
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
-        <span>الخسارة المقدرة شهرياً لتأخر الردود</span>
-      </div>
-      
-      <div class="flex items-end gap-3 justify-center w-full focus-in">
-        <span class="text-rose-500 text-3xl md:text-4xl pb-3 font-bold">ريال</span>
-        <span class="text-6xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-br from-rose-400 to-red-600 ticker heartbeat-text drop-shadow-[0_0_15px_rgba(225,29,72,0.8)]" id="loss-counter">
-          0
-        </span>
-      </div>
-      
-      <div class="mt-4 text-gray-500 text-sm font-mono tracking-widest" id="loss-baseline">
-        [ BASELINE: 10 PATIENTS/DAY x 30 DAYS x 350 SAR ]
+    <!-- The Flow Preview -->
+    <div class="flex flex-col items-center mb-12 w-full">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 w-full mb-8">
+        <div class="bg-black/40 border border-teal-900/50 p-4 rounded-xl text-center">
+          <div class="text-teal-400 text-2xl mb-2">⚡</div>
+          <div class="text-sm font-bold text-white mb-1">رد في 3 ثوانٍ</div>
+          <div class="text-xs text-gray-500">استجابة فورية لأي عميل</div>
+        </div>
+        <div class="bg-black/40 border border-teal-900/50 p-4 rounded-xl text-center">
+          <div class="text-teal-400 text-2xl mb-2">🧠</div>
+          <div class="text-sm font-bold text-white mb-1">تأهيل ذكي</div>
+          <div class="text-xs text-gray-500">فهم طبيعي لطلبات العملاء</div>
+        </div>
+        <div class="bg-black/40 border border-teal-900/50 p-4 rounded-xl text-center">
+          <div class="text-teal-400 text-2xl mb-2">📅</div>
+          <div class="text-sm font-bold text-white mb-1">حجز آلي</div>
+          <div class="text-xs text-gray-500">مزامنة حية مع تقويمك</div>
+        </div>
+        <div class="bg-black/40 border border-teal-900/50 p-4 rounded-xl text-center">
+          <div class="text-teal-400 text-2xl mb-2">📊</div>
+          <div class="text-sm font-bold text-white mb-1">لوحة تحكم حية</div>
+          <div class="text-xs text-gray-500">متابعة فورية للنتائج</div>
+        </div>
       </div>
     </div>
 
     <!-- Psychology Box -->
-    <div class="w-full bg-[#0a0508] border border-rose-900/50 rounded-xl p-6 text-center shadow-inner relative overflow-hidden mb-10">
-      <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-rose-500 to-transparent"></div>
-      <p class="text-gray-300 text-lg leading-relaxed" id="pain-message">
-        المرضى لا ينتظرون. عندما يتألم المريض في الـ 12 ليلاً، عيادتك مغلقة بينما العيادة المجاورة لها ذكاء يصطاد المريض ويرحب به.
+    <div class="w-full bg-[#051014] border border-teal-900/50 rounded-xl p-6 text-center shadow-inner relative overflow-hidden mb-10">
+      <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-500 to-transparent"></div>
+      <p class="text-gray-300 text-lg leading-relaxed font-bold">
+        جرب كيف يعمل نظام التشغيل الذاتي
+      </p>
+      <p class="text-gray-400 text-sm mt-2">
+        هذا ليس عرضاً وهمياً، ستختبر الآن التدفق الفعلي للمحادثة وسترى كيف تظهر النتائج في لوحة التحكم الحية.
       </p>
     </div>
 
     <!-- The Escape -> Dual CTAs & Social Proof -->
     <div class="w-full flex flex-col md:flex-row justify-center gap-4 mb-6">
-      <a href="#" id="jake-btn" class="flex-1 bg-gradient-to-r from-teal-500 to-teal-700 text-white px-8 py-5 rounded-2xl font-black text-xl hover:scale-105 transition duration-300 shadow-[0_0_30px_rgba(13,148,136,0.3)] border border-teal-400/50 flex flex-col items-center">
-        <span>تحدث مع جيك</span>
-        <span class="text-xs font-normal text-teal-100 mt-2 tracking-widest opacity-80">(واتساب شخصي لإيقاف النزيف)</span>
-      </a>
-      <a href="#" id="report-btn" class="flex-1 bg-transparent border-2 border-rose-900/50 text-white px-8 py-5 rounded-2xl font-black text-xl hover:bg-rose-900/20 transition duration-300 flex flex-col items-center justify-center">
-        <span>استخرج التقرير الكامل</span>
-        <span class="text-xs font-normal text-gray-400 mt-2 tracking-widest">(أرقام وبيانات المنافسين)</span>
+      <a href="/index.html#simulator" id="start-sim-btn" class="flex-1 bg-gradient-to-r from-teal-500 to-teal-700 text-white px-8 py-5 rounded-2xl font-black text-xl hover:scale-105 transition duration-300 shadow-[0_0_30px_rgba(13,148,136,0.3)] border border-teal-400/50 flex flex-col items-center">
+        <span>▶ ابدأ المحاكاة الحية الآن</span>
+        <span class="text-xs font-normal text-teal-100 mt-2 tracking-widest opacity-80">(تجربة فعلية كاملة)</span>
       </a>
     </div>
     
     <div class="w-full text-center mt-2 pb-4">
-      <div class="inline-block bg-white/5 border border-white/10 px-6 py-2 rounded-full text-sm text-gray-400 heartbeat-text">
-        🩺 <span id="social-proof-count">47</span> عيادة في <span id="social-proof-city">المملكة</span> أوقفت هذا النزيف وتفوقت اليوم.
+      <div class="inline-block bg-white/5 border border-white/10 px-6 py-2 rounded-full text-sm text-gray-400">
+        🤖 <span id="social-proof-count">47</span> منشأة في <span id="social-proof-city">المملكة</span> تعمل بهذا النظام بوعي كامل اليوم.
       </div>
     </div>
 
@@ -132,67 +103,15 @@
 
     // URL Parsing (Ghost Room params)
     const urlParams = new URLSearchParams(window.location.search);
-    const clinicName = urlParams.get('clinic') || 'عيادتك';
+    const clinicName = urlParams.get('clinic') || 'منشأتك';
     const city = urlParams.get('city') || 'المملكة';
-    const pain = urlParams.get('pain') || 'general';
-    const volumeStr = urlParams.get('vol') || '10'; // Patients lost per day
     
     document.getElementById('clinic-name').innerText = clinicName;
     document.getElementById('social-proof-city').innerText = city;
-    document.getElementById('jake-btn').href = `https://wa.me/966570733834?text=${encodeURIComponent('أهلاً جيك، دخلت غرفة العمليات وشعرت بالرعب من حجم الخسارة لـ ' + clinicName + '. أريد وقف النزيف.')}`;
-    document.getElementById('report-btn').href = `https://wa.me/966570733834?text=${encodeURIComponent('أهلاً جيك، أريد استخراج تقرير التحليل الكامل لعيادتي ' + clinicName)}`;
 
-    // Pain Signatures Mapping
-    const painMap = {
-      'bad_reviews': `المنافسون يسرقون مرضاك المحتملين بسبب تقييمات الاستقبال السلبية. كل مريض يقرأ تقييماً سيئاً يكلفك عائداً مدى الحياة.`,
-      'no_website': `غياب التواجد الرقمي والصمت التام لعيادتك في ${city} يعني أنك تترك المرضى للعيادات التي ترد بثوانٍ.`,
-      'hiring_receptionist': `دوران الموظفين العالي يكلفك آلاف الريالات للتدريب، ومع ذلك يسقطون محادثات المرضى بسبب ضغط العمل.`,
-      'general': `المرضى لا ينتظرون. عندما يتألم المريض في الـ 12 ليلاً، عيادتك مغلقة بينما العيادة المجاورة لها ذكاء يصطاد المريض ويرحب به.`
-    };
-    
-    document.getElementById('pain-message').innerText = painMap[pain] || painMap['general'];
-
-    // The Brutal Math (Default 10 * 30 * 350 SAR = 105,000 SAR)
-    const patientsLostPerDay = parseInt(volumeStr) || 10;
-    const baseValueSAR = 350; // Minimum viable dental visit
-    const daysInMonth = 30;
-    const totalMonthlyLoss = patientsLostPerDay * daysInMonth * baseValueSAR; // 105,000 SAR
-    
-    document.getElementById('loss-baseline').innerText = `[ BASELINE: ${patientsLostPerDay} PATIENTS/DAY x ${daysInMonth} DAYS x ${baseValueSAR} SAR AVG VISIT ]`;
-
-    // GSAP Animate Counter Ticking Up Psychologically
-    const counterEl = document.getElementById('loss-counter');
-    const obj = { val: 0 };
-    
-    // Animate up to the base loss in 3 seconds
-    gsap.to(obj, {
-      val: totalMonthlyLoss,
-      duration: 3,
-      ease: "power2.out",
-      onUpdate: () => {
-        counterEl.innerText = Math.floor(obj.val).toLocaleString('en-US');
-      },
-      onComplete: () => {
-        // Now tick up infinitely like a bleeding meter
-        setInterval(() => {
-          let current = parseFloat(counterEl.innerText.replace(/,/g, ''));
-          // Add roughly 3 SAR per second (1 hour = ~ 10k, just simulating pain over time)
-          const bleed = Math.random() * (12 - 2) + 2; 
-          current += bleed;
-          counterEl.innerText = Math.floor(current).toLocaleString('en-US');
-          
-          // Flash red harder on jump
-          gsap.fromTo(counterEl, 
-            { textShadow: "0 0 40px rgba(225,29,72,1)" }, 
-            { textShadow: "0 0 15px rgba(225,29,72,0.8)", duration: 0.5 }
-          );
-        }, 1200);
-      }
-    });
-
-    // Dwell tracking — ping /api/ghost-dwell at 30s, 60s, 120s
+    // Dwell tracking — ping /api/ghost-dwell
     const _dwellPhone = urlParams.get('phone') || null;
-    const _dwellData = { phone: _dwellPhone, clinic: clinicName, city, pain, vertical: 'dental' };
+    const _dwellData = { phone: _dwellPhone, clinic: clinicName, city, vertical: 'business' };
     function pingDwell(seconds, exitedVia) {
       fetch('/api/ghost-dwell', {
         method: 'POST',
@@ -202,11 +121,9 @@
     }
     setTimeout(() => pingDwell(30),  30000);
     setTimeout(() => pingDwell(60),  60000);
-    setTimeout(() => pingDwell(120), 120000);
 
     // Track CTA exit intent
-    document.getElementById('jake-btn').addEventListener('click', () => pingDwell(0, 'whatsapp'));
-    document.getElementById('report-btn').addEventListener('click', () => pingDwell(0, 'report'));
+    document.getElementById('start-sim-btn').addEventListener('click', () => pingDwell(0, 'simulator'));
 
   </script>
 </body>
