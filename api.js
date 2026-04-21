@@ -165,7 +165,7 @@ router.get('/analytics', async (req, res) => res.json({}));
 router.post('/ghost-dwell', async (req, res) => {
   res.json({ ok: true });
   try {
-    const { phone, clinic, city, pain, vertical, dwell_seconds, exited_via } = req.body;
+    const { phone, clinic, city, pain, vertical, dwell_seconds, exited_via } = req.body || {};
     if (!phone && !clinic) return;
 
     const HIGH_INTENT_THRESHOLD = 60;
