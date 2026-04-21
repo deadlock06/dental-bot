@@ -165,7 +165,7 @@
       border-radius:50%;
       display:flex;align-items:center;justify-content:center;
       box-shadow:0 4px 20px rgba(37,211,102,0.4);
-      z-index:1000;cursor:pointer;
+      z-index:999;cursor:pointer;
       transition:transform .3s;
     }
     .chat-widget:hover{transform:scale(1.1)}
@@ -428,7 +428,7 @@
           </div>
 
           <!-- Start button (below phone) -->
-          <div class="mt-6 text-center">
+          <div class="mt-6 text-center" style="position:relative;z-index:1001">
             <button id="simStartBtn" onclick="startSimulator()"
               class="bg-gold text-gray-900 px-8 py-3 rounded-xl font-black hover:shadow-[0_0_20px_rgba(212,165,116,0.5)] transition">
               ▶ ابدأ المحاكاة
