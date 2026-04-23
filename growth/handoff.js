@@ -1,51 +1,68 @@
-// ═══════════════════════════════════════════════════════════════
-// handoff.js — Growth Swarm 3.0: Intelligent Handoff
-// Brain Step 9: Transitioning a lead to the main bot / human
-// ═══════════════════════════════════════════════════════════════
-
 const { createClient } = require('@supabase/supabase-js');
 const { sendWhatsApp } = require('./lib/whatsappProvider');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-/**
- * Trigger an intelligent handoff.
- * 1. Alerts the admin via WhatsApp.
- * 2. Creates a 'patient' record so the lead can interact with the Qudozen demo bot.
- * 3. Sends a transition message.
- */
-async function handoffLead(lead, triggerMessage) {
+const ESCALATION_TRIGGERS = [
+  'opt_out', 'legal', 'ai_questioned', 'pricing', 'buying_signal', 'stalled', 'low_confidence'
+];
+
+async function checkEscalationTriggers(lead, messageText, intent) {
+  const lowerMsg = messageText.toLowerCase();
+  
+  if (intent === 'OPT_OUT') return 'opt_out';
+  if (lowerMsg.includes('sue') || lowerMsg.includes('lawyer') || lowerMsg.includes('legal')) return 'legal';
+  if (lowerMsg.includes('are you a bot') || lowerMsg.includes('ai')) return 'ai_questioned';
+  if (lowerMsg.includes('how much') || lowerMsg.includes('price')) return 'pricing';
+  if (intent === 'HANDED_OFF') return 'buying_signal';
+  if (lead.qualification_step && lead.qualification_step > 5) return 'stalled';
+  
+  return null;
+}
+
+async function handoffLead(lead, triggerMessage, reason = 'buying_signal') {
   try {
-    console.log(`[handoff] 🤝 Initiating handoff for ${lead.phone}`);
+    console.log(`[handoff] 🤝 Initiating handoff for ${lead.phone} (Reason: ${reason})`);
 
-    // 1. Notify Admin
-    const adminPhone = process.env.ADMIN_PHONE;
-    if (adminPhone) {
-      const adminMsg = `🚨 *Growth Swarm Handoff* 🚨\n\nLead: ${lead.company_name || lead.business_name || 'Unknown'}\nPhone: ${lead.phone}\nTrigger: "${triggerMessage}"\nScore: ${lead.total_score || lead.confidence_score || 0}\n\nThey are ready to talk!`;
-      await sendWhatsApp(adminPhone, adminMsg);
-    }
+    const adminPhone = process.env.ADMIN_PHONE || '+966570733834';
 
-    // 2. Insert into the main bot's `patients` table
-    // This allows them to trigger the Dental Bot flows (demo mode)
+    // Formatting alert specifically to the requested format
+    const adminMsg = `🚨 *Qudozen Escalation Alert* 🚨\n\n` +
+      `🏢 Clinic: ${lead.company_name || 'Unknown'}\n` +
+      `📱 Phone: ${lead.phone}\n` +
+      `🔥 Reason: ${reason.toUpperCase()}\n` +
+      `💬 Last Msg: "${triggerMessage}"\n` +
+      `📊 Score: ${lead.total_score || 0}/100\n\n` +
+      `Action required immediately.`;
+
+    await sendWhatsApp(adminPhone, adminMsg);
+
+    // Create a 'patient' record to allow the lead to interact with the Qudozen demo bot
     const { error: patientError } = await supabase.from('patients').upsert({
       phone: lead.phone,
       language: lead.language || 'ar',
       current_flow: 'start',
       flow_step: 0,
-      flow_data: { source: 'growth_swarm_handoff' }
+      flow_data: { source: 'growth_swarm_handoff', reason }
     }, { onConflict: 'phone' });
 
     if (patientError) {
       console.error('[handoff] ❌ Failed to create patient record:', patientError.message);
     }
 
-    // 3. Send the transition message to the lead
-    const lang = lead.language || 'ar'; // Default to Arabic
-    const transitionMsg = lang === 'ar'
-      ? `لقد طلبت التواصل مع فريقنا! سيتواصل معك أحد الخبراء قريباً. 📞\n\nفي هذه الأثناء، يمكنك تجربة روبوت خدمة العملاء الخاص بنا (الذي تستطيع الحصول على مثله). فقط أرسل *"مرحبا"* لتبدأ التجربة!`
-      : `I've let the team know you're ready to chat! A human will reach out shortly. 📞\n\nIn the meantime, you can test out our AI Receptionist (the exact one you'd get). Just reply *"Hello"* to start the demo!`;
+    const lang = lead.language || 'ar';
+    let transitionMsg = "";
+
+    if (reason === 'opt_out') {
+      transitionMsg = lang === 'ar' ? "تم إزالة رقمك بنجاح. عذراً على الإزعاج." : "You've been successfully removed. Apologies for the interruption.";
+    } else {
+      transitionMsg = lang === 'ar'
+        ? `لقد أبلغت فريقي وسيتواصلون معك قريباً. 📞\n\nفي هذه الأثناء، يمكنك تجربة روبوت خدمة العملاء الخاص بنا الآن. فقط أرسل *"مرحبا"* للبدء!`
+        : `I've alerted the team and they'll reach out shortly. 📞\n\nIn the meantime, you can test out our AI Receptionist right now. Just reply *"Hello"* to start!`;
+    }
 
     await sendWhatsApp(lead.phone, transitionMsg);
+    await supabase.from('gs_leads').update({ status: reason === 'opt_out' ? 'opted_out' : 'handed_off', conversation_state: 'ESCALATED' }).eq('id', lead.id);
 
     console.log(`[handoff] ✅ Handoff complete for ${lead.phone}`);
     return { success: true };
@@ -57,5 +74,6 @@ async function handoffLead(lead, triggerMessage) {
 }
 
 module.exports = {
-  handoffLead
+  handoffLead,
+  checkEscalationTriggers
 };

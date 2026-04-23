@@ -842,4 +842,7 @@ router.post('/approve/:id', jwtAuth, async (req, res) => {
   }
 });
 
+// ========== GS 3.0 DASHBOARD API ==========
+router.use('/api', jwtAuth, require('./dashboard-api'));
+
 module.exports = router;
