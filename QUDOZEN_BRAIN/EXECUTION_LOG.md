@@ -5,6 +5,44 @@
 
 ---
 
+## Session: 2026-04-23 (Part 2) — Simulator Debug + Full Fix
+
+**Agent:** Antigravity AI (Claude Opus 4.6)  
+**User:** Qudozen founder  
+**Duration:** ~30 min  
+**Commit:** `3377f8f`  
+
+### What Was Done
+
+1. **Deep-read full `public/index.html`** (1286 lines, 84KB)
+2. **Browser-tested the simulator** on qudozen.com live — ran full Arabic booking flow end to end
+3. **Found and fixed 7 bugs in the simulator:**
+
+| Bug # | What Was Wrong | Fix |
+|---|---|---|
+| 1 | Dashboard preview panel never visible (CSS `opacity:0 scale(0.95)` never removed) | Added `requestAnimationFrame()` to animate `opacity:1, scale(1)` after `hidden` class removed |
+| 2 | My Appointment flow hardcoded English labels ("Book Now", "Reschedule", "Cancel") even in Arabic mode | All labels now check `simData.lang` and show Arabic/English accordingly |
+| 3 | Menu chip labels used `m.lang` (which doesn't exist on the message object) instead of `simData.lang` | Changed all `m.lang` → `simData.lang` |
+| 4 | Reschedule flow: "Tomorrow" / "Next Week" buttons always English | Now shows "غداً" / "الأسبوع القادم" in Arabic mode |
+| 5 | Cancel flow: "Yes" / "No" buttons always English | Now shows "نعم، ألغِ" / "لا، احتفظ" in Arabic |
+| 6 | WhatsApp redirect panel (`#waRedirect`) never shown after booking completes | Added `showWhatsAppRedirect()` function with fade-in animation |
+| 7 | No mobile hamburger menu (nav links `hidden md:flex` but no toggle) | Added ☰ hamburger button + full mobile dropdown with all nav links |
+
+4. **Fixed `resetSimulator()`:**
+   - Now hides dashboard preview panel
+   - Now hides WhatsApp redirect panel
+   - Changed "Waiting..." to Arabic "في انتظار البدء..."
+
+5. **Enhanced `updateDashboardData()`:**
+   - Dashboard labels now update based on selected language
+   - REF number updates with timestamp
+   - Proper CSS animation in/out
+
+### Files Modified
+- `public/index.html` (+97 lines, -22 lines)
+
+---
+
 ## Session: 2026-04-23 — System Audit + Knowledge Base Creation
 
 **Agent:** Antigravity AI (Claude Sonnet 4.6)  
