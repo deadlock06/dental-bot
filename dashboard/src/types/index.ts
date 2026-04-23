@@ -115,14 +115,20 @@ export type Period = '7d' | '30d' | '90d';
 export interface Lead {
   id: string;
   phone: string;
+  company_name?: string;
   name?: string;
   source: string;
   category: string;
-  status: 'new' | 'contacted' | 'appointment_booked' | 'lost' | 'opt_out';
-  confidence_score: number;
+  status: 'new' | 'contacted' | 'messaged' | 'bumped_1' | 'bumped_2' | 'opted_out' | 'engaged' | 'handed_off';
+  total_score: number;
+  fit_score: number;
+  pain_score: number;
+  timing_score: number;
+  reachability_score: number;
+  pain_signals?: any[];
   last_contacted_at?: string;
   created_at: string;
   metadata?: any;
 }
 
-export type LeadStatus = 'new' | 'contacted' | 'appointment_booked' | 'lost' | 'opt_out';
+export type LeadStatus = 'new' | 'contacted' | 'messaged' | 'bumped_1' | 'bumped_2' | 'opted_out' | 'engaged' | 'handed_off';

@@ -1,72 +1,61 @@
-const { getGhostRoomUrl, detectLanguage: detectLeadLanguage } = require('./brain');
+// ═══════════════════════════════════════════════════════════════
+// handoff.js — Growth Swarm 3.0: Intelligent Handoff
+// Brain Step 9: Transitioning a lead to the main bot / human
+// ═══════════════════════════════════════════════════════════════
 
-function detectIntent(message) {
-  if (!message) return 'general';
-  
-  const msg = message.toLowerCase();
-  
-  if (/سعر|price|كم|cost|expensive|رسوم|تكلفة|كمية|كم الاشتراك/.test(msg)) {
-    return 'price_query';
-  }
-  if (/demo|جرب|try|test|تجربة|نجرب|شوف|أريد أن أرى/.test(msg)) {
-    return 'demo_request';
-  }
-  if (/مشكلة|problem|slow|bad|بطيء|سيء|ما يرد/.test(msg)) {
-    return 'complaint';
-  }
-  return 'general';
-}
+const { createClient } = require('@supabase/supabase-js');
+const { sendWhatsApp } = require('./lib/whatsappProvider');
 
-function detectLanguage(message) {
-  return /[\u0600-\u06FF]/.test(message || '') ? 'ar' : 'en';
-}
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-function generateROIMessage(lead, lang) {
-  const url = getGhostRoomUrl(lead);
-  if (lang === 'ar') {
-    return `بناءً على حساباتنا، التأخير في الرد يكلفك أكثر من ذكائنا الاصطناعي (299 ريال فقط/شهر). شاهده هنا: ${url}`;
-  }
-  return `Based on our maths, delayed replies cost you more than our AI (only 299 SAR/mo). See the math: ${url}`;
-}
+/**
+ * Trigger an intelligent handoff.
+ * 1. Alerts the admin via WhatsApp.
+ * 2. Creates a 'patient' record so the lead can interact with the Qudozen demo bot.
+ * 3. Sends a transition message.
+ */
+async function handoffLead(lead, triggerMessage) {
+  try {
+    console.log(`[handoff] 🤝 Initiating handoff for ${lead.phone}`);
 
-async function startDemoBooking(lead, lang) {
-  // Logic to create patient and trigger the bot flow dynamically
-  // Simulated here since bot.js depends on database actions
-  console.log(`[handoff.js] Creating patient record for ${lead.phone} with initial flow booking...`);
-  return { success: true, action: 'starting_demo', lang };
-}
+    // 1. Notify Admin
+    const adminPhone = process.env.ADMIN_PHONE;
+    if (adminPhone) {
+      const adminMsg = `🚨 *Growth Swarm Handoff* 🚨\n\nLead: ${lead.company_name || lead.business_name || 'Unknown'}\nPhone: ${lead.phone}\nTrigger: "${triggerMessage}"\nScore: ${lead.total_score || lead.confidence_score || 0}\n\nThey are ready to talk!`;
+      await sendWhatsApp(adminPhone, adminMsg);
+    }
 
-async function escalateToHuman(lead, message) {
-  console.log(`[handoff.js] Escalate to human admin for ${lead.phone}. Reason: ${message}`);
-  return { success: true, action: 'escalated' };
-}
+    // 2. Insert into the main bot's `patients` table
+    // This allows them to trigger the Dental Bot flows (demo mode)
+    const { error: patientError } = await supabase.from('patients').upsert({
+      phone: lead.phone,
+      language: lead.language || 'ar',
+      current_flow: 'start',
+      flow_step: 0,
+      flow_data: { source: 'growth_swarm_handoff' }
+    }, { onConflict: 'phone' });
 
-async function handleReply(lead, message) {
-  const intent = detectIntent(message);
-  const lang = detectLanguage(message);
-  console.log(`[handoff] Reply detected: ${intent} / ${lang}`);
+    if (patientError) {
+      console.error('[handoff] ❌ Failed to create patient record:', patientError.message);
+    }
 
-  switch (intent) {
-    case 'price_query':
-      console.log(generateROIMessage(lead, lang));
-      return { action: 'roi', intent };
-    case 'demo_request':
-      await startDemoBooking(lead, lang);
-      return { action: 'demo', intent };
-    case 'complaint':
-      await escalateToHuman(lead, message);
-      return { action: 'human', intent };
-    default:
-      await startDemoBooking(lead, lang); // fallback default
-      return { action: 'default', intent };
+    // 3. Send the transition message to the lead
+    const lang = lead.language || 'ar'; // Default to Arabic
+    const transitionMsg = lang === 'ar'
+      ? `لقد طلبت التواصل مع فريقنا! سيتواصل معك أحد الخبراء قريباً. 📞\n\nفي هذه الأثناء، يمكنك تجربة روبوت خدمة العملاء الخاص بنا (الذي تستطيع الحصول على مثله). فقط أرسل *"مرحبا"* لتبدأ التجربة!`
+      : `I've let the team know you're ready to chat! A human will reach out shortly. 📞\n\nIn the meantime, you can test out our AI Receptionist (the exact one you'd get). Just reply *"Hello"* to start the demo!`;
+
+    await sendWhatsApp(lead.phone, transitionMsg);
+
+    console.log(`[handoff] ✅ Handoff complete for ${lead.phone}`);
+    return { success: true };
+
+  } catch (err) {
+    console.error('[handoff] ❌ Handoff failed:', err.message);
+    return { success: false, error: err.message };
   }
 }
 
 module.exports = {
-  detectIntent,
-  detectLanguage,
-  handleReply,
-  generateROIMessage,
-  startDemoBooking,
-  escalateToHuman
+  handoffLead
 };

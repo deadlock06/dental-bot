@@ -165,3 +165,152 @@ CREATE TABLE IF NOT EXISTS message_logs (
 CREATE INDEX IF NOT EXISTS idx_message_logs_to_phone    ON message_logs(to_phone);
 CREATE INDEX IF NOT EXISTS idx_message_logs_status      ON message_logs(status);
 CREATE INDEX IF NOT EXISTS idx_message_logs_message_sid ON message_logs(message_sid);
+
+-- ══════════════════════════════════════════════════════
+-- GROWTH SWARM 3.0 — Advanced Lead Intelligence Tables
+-- Added: 2026-04-23 | Brain Step 2
+-- ══════════════════════════════════════════════════════
+
+-- ── GS Leads (4D-scored, pain-aware lead profiles) ───
+CREATE TABLE IF NOT EXISTS gs_leads (
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  campaign_id           UUID,
+  source                TEXT,
+
+  -- Company identity
+  company_name          TEXT NOT NULL,
+  owner_name            TEXT,
+  phone                 TEXT,
+  phone_type            TEXT,
+  whatsapp_detected     BOOLEAN DEFAULT false,
+  email                 TEXT,
+  website               TEXT,
+  domain                TEXT,
+  address               TEXT,
+  city                  TEXT,
+  state                 TEXT,
+  country               TEXT DEFAULT 'SA',
+
+  -- Google presence
+  google_rating         DECIMAL,
+  google_review_count   INT,
+
+  -- Business profile
+  industry              TEXT,
+  employee_count        TEXT,
+
+  -- Pain signal intelligence
+  pain_signals          JSONB DEFAULT '[]',
+  is_hiring             BOOLEAN DEFAULT false,
+  hiring_roles          TEXT[],
+  hiring_posted_days_ago INT,
+  has_negative_reviews  BOOLEAN DEFAULT false,
+  negative_review_themes TEXT[],
+  has_booking_system    BOOLEAN DEFAULT false,
+  website_last_updated  DATE,
+
+  -- Social presence
+  instagram_handle      TEXT,
+  instagram_last_post_date DATE,
+  facebook_page         TEXT,
+
+  -- 4D scoring engine
+  fit_score             INT DEFAULT 0,
+  pain_score            INT DEFAULT 0,
+  timing_score          INT DEFAULT 0,
+  reachability_score    INT DEFAULT 0,
+  total_score           INT DEFAULT 0,
+  score_explanation     TEXT,
+
+  -- Status & lifecycle
+  priority              TEXT DEFAULT 'cold',
+  status                TEXT DEFAULT 'new',
+  approval_status       TEXT DEFAULT 'pending',
+  last_contacted_at     TIMESTAMPTZ,
+  last_replied_at       TIMESTAMPTZ,
+  created_at            TIMESTAMPTZ DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_gs_leads_phone       ON gs_leads(phone);
+CREATE INDEX IF NOT EXISTS idx_gs_leads_domain      ON gs_leads(domain);
+CREATE INDEX IF NOT EXISTS idx_gs_leads_total_score ON gs_leads(total_score DESC);
+CREATE INDEX IF NOT EXISTS idx_gs_leads_priority    ON gs_leads(priority);
+CREATE INDEX IF NOT EXISTS idx_gs_leads_status      ON gs_leads(status);
+CREATE INDEX IF NOT EXISTS idx_gs_leads_campaign    ON gs_leads(campaign_id);
+
+-- ── GS Conversations (multi-channel message log) ────
+CREATE TABLE IF NOT EXISTS gs_conversations (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id           UUID REFERENCES gs_leads(id) ON DELETE CASCADE,
+  campaign_id       UUID,
+  channel           TEXT,
+  direction         TEXT,
+  message_text      TEXT,
+  status            TEXT DEFAULT 'pending',
+  twilio_sid        TEXT,
+  ai_generated      BOOLEAN DEFAULT true,
+  human_reviewed    BOOLEAN DEFAULT false,
+  scheduled_for     TIMESTAMPTZ,
+  sent_at           TIMESTAMPTZ,
+  created_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_gs_conv_lead     ON gs_conversations(lead_id);
+CREATE INDEX IF NOT EXISTS idx_gs_conv_status   ON gs_conversations(status);
+CREATE INDEX IF NOT EXISTS idx_gs_conv_campaign ON gs_conversations(campaign_id);
+
+-- ── GS Sequences (drip nurture automation) ──────────
+CREATE TABLE IF NOT EXISTS gs_sequences (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id           UUID REFERENCES gs_leads(id) ON DELETE CASCADE,
+  sequence_type     TEXT,
+  current_step      INT DEFAULT 0,
+  total_steps       INT DEFAULT 0,
+  next_send_at      TIMESTAMPTZ,
+  is_paused         BOOLEAN DEFAULT false,
+  is_completed      BOOLEAN DEFAULT false,
+  whatsapp_sent     INT DEFAULT 0,
+  replies           INT DEFAULT 0,
+  created_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_gs_seq_lead       ON gs_sequences(lead_id);
+CREATE INDEX IF NOT EXISTS idx_gs_seq_next_send  ON gs_sequences(next_send_at);
+CREATE INDEX IF NOT EXISTS idx_gs_seq_completed  ON gs_sequences(is_completed);
+
+-- ── GS Campaigns (outreach campaign management) ─────
+CREATE TABLE IF NOT EXISTS gs_campaigns (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name              TEXT NOT NULL,
+  target_industry   TEXT,
+  target_city       TEXT,
+  target_state      TEXT,
+  status            TEXT DEFAULT 'draft',
+  max_leads         INT DEFAULT 500,
+  leads_found       INT DEFAULT 0,
+  leads_approved    INT DEFAULT 0,
+  outreach_sent     INT DEFAULT 0,
+  replies_received  INT DEFAULT 0,
+  meetings_booked   INT DEFAULT 0,
+  created_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_gs_camp_status ON gs_campaigns(status);
+
+-- ── GS Feedback (AI improvement loop) ───────────────
+CREATE TABLE IF NOT EXISTS gs_feedback (
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id               UUID REFERENCES gs_leads(id) ON DELETE CASCADE,
+  feedback_type         TEXT,
+  ai_output             TEXT,
+  rating                INT,
+  correct               BOOLEAN,
+  human_correction      TEXT,
+  improvement_applied   BOOLEAN DEFAULT false,
+  created_at            TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_gs_feedback_lead ON gs_feedback(lead_id);
+CREATE INDEX IF NOT EXISTS idx_gs_feedback_type ON gs_feedback(feedback_type);
+

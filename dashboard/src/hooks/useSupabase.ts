@@ -15,6 +15,9 @@ export interface LiveStats {
   revenue: number;
   no_show_rate: number;
   new_patients: number;
+  appointments_trend?: any[];
+  treatment_breakdown?: any[];
+  peak_hours?: any[];
 }
 
 export function useDashboardStats(clinicId?: string) {
@@ -93,12 +96,16 @@ export interface LiveLead {
   id: string;
   phone: string;
   name?: string;
-  business_name?: string;
+  company_name?: string;
+  owner_name?: string;
   city?: string;
-  vertical?: string;
-  confidence_score: number;
+  total_score: number;
+  fit_score: number;
+  pain_score: number;
+  timing_score: number;
+  reachability_score: number;
   status: string;
-  pain_signal?: string;
+  pain_signals?: string[];
   last_contacted_at?: string;
   created_at: string;
 }
@@ -117,8 +124,8 @@ export function useLeads(filters?: { status?: string; minScore?: number }) {
       if (filters?.minScore) params.set('min_score', String(filters.minScore));
       const qs = params.toString() ? `?${params}` : '';
       const result = await apiFetch<{ leads: LiveLead[]; total: number }>(`/leads${qs}`);
-      setData(result.leads ?? (result as any));
-      setTotal(result.total ?? (result as any[]).length ?? 0);
+      setData(result.leads ?? ((result as unknown) as any[]));
+      setTotal(result.total ?? result.leads?.length ?? 0);
       setError(null);
     } catch (e: any) {
       setError(e.message);

@@ -129,7 +129,26 @@ export default function Dashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {METRIC_CARDS.map(card => {
-          // ... rest of logic
+          const value = (stats as any)[card.key] as number;
+          return (
+            <div key={card.key} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-tight w-2/3">{card.label}</span>
+                <div className={cn('p-1.5 rounded-lg shrink-0', card.bg, card.text)}>
+                  <card.icon className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-2xl font-black tracking-tight text-slate-900">
+                  {card.format === 'currency' ? formatCurrency(value) : card.format === 'percent' ? `${value}%` : value}
+                </span>
+                <span className={cn('text-[10px] font-bold mb-1 flex items-center', card.up ? 'text-emerald-500' : 'text-amber-500')}>
+                  {card.up ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
+                  {card.change}
+                </span>
+              </div>
+            </div>
+          );
         })}
       </div>
 
@@ -188,13 +207,13 @@ export default function Dashboard() {
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie
-                data={stats.treatment_breakdown}
+                data={stats.treatment_breakdown || []}
                 cx="50%" cy="50%"
                 innerRadius={45} outerRadius={70}
                 paddingAngle={2}
                 dataKey="value"
               >
-                {stats.treatment_breakdown.map((entry, i) => (
+                {(stats.treatment_breakdown || []).map((entry, i) => (
                   <Cell key={i} fill={entry.color} />
                 ))}
               </Pie>
@@ -205,7 +224,7 @@ export default function Dashboard() {
             </PieChart>
           </ResponsiveContainer>
           <div className="space-y-1.5 mt-2">
-            {stats.treatment_breakdown.slice(0, 4).map(item => (
+            {(stats.treatment_breakdown || []).slice(0, 4).map(item => (
               <div key={item.name} className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />

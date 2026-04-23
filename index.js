@@ -107,38 +107,59 @@ app.post('/webhook', twilio.webhook(), async (req, res) => {
   const fromPhone = req.body.From?.replace('whatsapp:', '') || '';
   const messageTextRaw = req.body.Body || '';
   
-  // --- GROWTH SWARM: OPT-OUT DETECTION ---
+  // --- GROWTH SWARM: OPT-OUT DETECTION (COMPLIANCE) ---
   const stopKeywords = ['stop', 'unsubscribe', 'توقف', 'إلغاء', 'أرجو التوقف'];
   if (stopKeywords.some(k => messageTextRaw.toLowerCase().includes(k))) {
-    console.log(`[Opt-Out] Received STOP from ${fromPhone}. Marking lead as opted_out.`);
-    await growthSupabase
-      .from('growth_leads_v2')
-      .update({ status: 'opted_out' })
-      .eq('phone', fromPhone);
+    console.log(`[Opt-Out] 🛑 Received STOP from ${fromPhone}. Processing compliance opt-out.`);
+    
+    // Update Legacy V2
+    await growthSupabase.from('growth_leads_v2').update({ status: 'opted_out' }).eq('phone', fromPhone);
+    
+    // Update GS 3.0 Lead
+    const { data: gsLead } = await growthSupabase.from('gs_leads').select('id').eq('phone', fromPhone).maybeSingle();
+    if (gsLead) {
+      await growthSupabase.from('gs_leads').update({ status: 'opted_out' }).eq('id', gsLead.id);
+      await growthSupabase.from('gs_sequences').update({ is_paused: true }).eq('lead_id', gsLead.id);
+    }
+    
     return; // Stop processing totally
   }
 
-  // --- GROWTH SWARM: HANDOFF CHECK ---
+  // --- GROWTH SWARM 3.0: CONVERSATION STATE MACHINE ---
   try {
-    // Check v2 table by phone
-    const { data: growthLead } = await growthSupabase
+    // 1. Check if sender is in the new v3 gs_leads table
+    const { data: gsLead } = await growthSupabase
+      .from('gs_leads')
+      .select('*')
+      .or(`phone.eq.${fromPhone},phone.eq.+${fromPhone.replace(/^\+/, '')}`)
+      .not('status', 'eq', 'opted_out')
+      .maybeSingle();
+
+    if (gsLead) {
+      console.log(`[Webhook] Match found in gs_leads for ${fromPhone}. Routing to State Machine.`);
+      const { handleInboundMessage } = require('./growth/state-machine');
+      await handleInboundMessage(gsLead, messageTextRaw, req.body.MessageSid);
+      return; // Stop processing, state machine handles it completely
+    }
+
+    // 2. Fallback: Check legacy v2 table
+    const { data: growthLeadV2 } = await growthSupabase
       .from('growth_leads_v2')
       .select('*')
       .or(`phone.eq.${fromPhone},phone.eq.+${fromPhone.replace(/^\+/, '')}`)
       .eq('status', 'messaged')
       .maybeSingle();
 
-    if (growthLead) {
-      console.log(`[Handoff] Match found for ${fromPhone}. Triggering handoff.`);
+    if (growthLeadV2) {
+      console.log(`[Handoff] Match found in growth_leads_v2 for ${fromPhone}. Triggering legacy handoff.`);
       const { handoffLead } = require('./growth/handoff');
-      await handoffLead(growthLead, messageTextRaw);
-      // Wait a moment for patient creation before continuing
+      await handoffLead(growthLeadV2, messageTextRaw);
       await new Promise(r => setTimeout(r, 500));
     }
   } catch (e) {
-    // Not a growth lead or error — continue normally
+    console.error('[Webhook] Error routing to Growth Swarm:', e.message);
   }
-  // --- END GROWTH SWARM CHECK ---
+  // --- END GROWTH SWARM ROUTING ---
 
   try {
     const body = req.body;

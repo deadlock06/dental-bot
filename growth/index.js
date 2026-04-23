@@ -22,6 +22,7 @@ const { runIndeedScout }  = require('./scouts/indeed');
 const { runAllScouts }    = require('./scouts/orchestrator');
 const { handoffLead }     = require('./handoff');
 const { sendFollowUps, processBatch } = require('./sender');
+const { startSequence, processSequences } = require('./nurture');
 
 // Track last scout run in memory (survives restarts via DB query instead)
 let lastScoutReport = null;
@@ -275,6 +276,9 @@ router.post('/add-and-fire', async (req, res) => {
           whatsapp_provider: sendResult.provider,
           message_count: 1
         }).eq('id', lead.id);
+
+        // Start GS 3.0 Nurture Sequence
+        await startSequence(lead.id);
         
         return res.json({
           success: true,
@@ -377,6 +381,9 @@ router.post('/send-batch', basicAuth, async (req, res) => {
         first_contacted_at: lead.first_contacted_at || new Date().toISOString(),
         message_count: (lead.message_count || 0) + 1
       }).eq('id', lead.id);
+
+      // Start GS 3.0 Nurture Sequence
+      await startSequence(lead.id);
     }
     
     results.push({
@@ -404,8 +411,13 @@ router.post('/send-batch', basicAuth, async (req, res) => {
 router.post('/send-followups', async (req, res) => {
   res.sendStatus(200);
   try {
+    // Legacy V2 follow-ups
     const results = await sendFollowUps();
-    console.log(`[FollowUps] Processed ${results.length} follow-up(s)`);
+    console.log(`[FollowUps] Processed ${results.length} legacy follow-up(s)`);
+
+    // GS 3.0 Nurture Engine sequences
+    const sequenceResults = await processSequences();
+    console.log(`[FollowUps] GS3.0 Nurture Engine: ${sequenceResults.sent} sent`);
   } catch (e) {
     console.error('[FollowUps] Error:', e.message);
   }
@@ -749,6 +761,9 @@ router.post('/approve/:id', basicAuth, async (req, res) => {
       manually_approved: true,
       message_count: (lead.message_count || 0) + 1,
     }).eq('id', id);
+
+    // Start GS 3.0 Nurture Sequence
+    await startSequence(lead.id);
     
     res.json({ success: true });
   } else {

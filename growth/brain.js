@@ -1,13 +1,17 @@
 require('dotenv').config();
 const OpenAI = require('openai');
-const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY || 'fake-key-for-test' });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
-const ARABIC_CITIES = ['جازان','مكة','المدينة','أبها','تبوك','نجران','Jazan','Mecca','Medina','Abha','Tabuk','Najran'];
+const ARABIC_CITIES = ['جازان','مكة','المدينة','أبها','تبوك','نجران','Jazan','Mecca','Medina','Abha','Tabuk','Najran', 'Riyadh', 'Jeddah', 'الرياض', 'جدة'];
 const ARABIC_REGEX = /[\u0600-\u06FF]/;
+
+// ─────────────────────────────────────────────
+// Language Detection
+// ─────────────────────────────────────────────
 
 function detectLanguage(lead) {
   const city = lead.city || '';
-  const name = lead.business_name || lead.business || '';
+  const name = lead.company_name || lead.business_name || '';
   
   if (ARABIC_CITIES.some(c => city.toLowerCase().includes(c.toLowerCase()))) return 'ar';
   if (name.startsWith('Al ') || name.startsWith('Al-') || ARABIC_REGEX.test(name)) return 'ar';
@@ -15,54 +19,122 @@ function detectLanguage(lead) {
   return 'ar'; // Default Saudi market
 }
 
-function calculateHeatScore(lead) {
-  const pain = lead.pain || lead.pain_signal || 'bad_reviews';
-  const heatMap = { slow_response: 10, bad_reviews: 9, hiring_receptionist: 8, no_website: 7 };
-  return heatMap[pain] || 5;
-}
+// ─────────────────────────────────────────────
+// Ghost Room URL Generator
+// ─────────────────────────────────────────────
 
 function getGhostRoomUrl(lead) {
   const base = (process.env.BASE_URL || 'https://qudozen.com').replace(/\/$/, '');
+  
+  // Use the top pain signal or a default
+  let primaryPain = 'bad_reviews';
+  if (lead.pain_signals && lead.pain_signals.length > 0) {
+    primaryPain = lead.pain_signals[0].type;
+  } else if (lead.pain_signal) {
+    primaryPain = lead.pain_signal;
+  }
+
   const qs = new URLSearchParams({
-    name: encodeURIComponent(lead.website_owner_name || lead.name || ''),
-    clinic: encodeURIComponent(lead.business_name || lead.business || ''),
-    city: encodeURIComponent(lead.city || ''),
-    pain: lead.pain_signal || lead.pain || 'bad_reviews',
+    name: encodeURIComponent(lead.owner_name || lead.name || 'Doctor'),
+    clinic: encodeURIComponent(lead.company_name || lead.business_name || 'Clinic'),
+    city: encodeURIComponent(lead.city || 'your city'),
+    pain: primaryPain
   });
   return `${base}/growth/room?${qs.toString()}`;
 }
 
-const AR_TEMPLATES = {
-  bad_reviews: (lead, url) =>
-    `دكتور ${lead.name || ''}، مراجعين ${lead.business_name || 'العيادة'} يبحثون عن عيادة ترد على رسائلهم بسرعة. لو عيادتك كانت أول من يرد — كم مريض كنت ستكسب هذا الشهر؟ ${url} -جيك`,
-  hiring_receptionist: (lead, url) =>
-    `دكتور ${lead.name || ''}، كلما استأجرت موظفة استقبال جديدة — تدربها، ثم تترك. الذكاء الاصطناعي لا يغادر أبداً. جرب بنفسك؟ ${url} -جيك`,
-  slow_response: (lead, url) =>
-    `دكتور ${lead.name || ''}، ${lead.business_name || 'العيادة'} تخسر مراجعين كل ساعة بسبب التأخر في الرد. هل تعلم كم تكلفك هذه الساعات شهرياً؟ اكتشف هنا: ${url} -جيك`,
-  no_website: (lead, url) =>
-    `دكتور ${lead.name || ''}، لاحظت أن مرضاك في ${lead.city || 'المدينة'} يذهبون لمنافسيك لعدم توفرك بالبحث. كم مريض تخسر يومياً؟ ${url} -جيك`
-};
+// ─────────────────────────────────────────────
+// Hyper-Personalized Message Generation (GPT)
+// ─────────────────────────────────────────────
 
-const EN_TEMPLATES = {
-  bad_reviews: (lead, url) =>
-    `Dr. ${lead.name || ''}, every hour ${lead.business_name || "your clinic"} doesn't reply to a WhatsApp message, a patient books with your competitor instead. Want to see exactly how much that's costing you? ${url} -Jake`,
-  hiring_receptionist: (lead, url) =>
-    `Dr. ${lead.name || ''}, notice how receptionists need constant training before they quit? What if an AI handled everything 24/7 without leaving? Want to see how? ${url} -Jake`,
-  slow_response: (lead, url) =>
-    `Dr. ${lead.name || ''}, your missed calls and slow responses are sending patients directly to competitors. Want to see the exact numbers on what you're losing? ${url} -Jake`,
-  no_website: (lead, url) =>
-    `Dr. ${lead.name || ''}, patients searching in ${lead.city || 'your area'} are finding competitors instead of you. What if fixing this was entirely automated? ${url} -Jake`
-};
+async function generateHyperPersonalizedMessage(lead) {
+  try {
+    const lang = detectLanguage(lead);
+    const url = getGhostRoomUrl(lead);
+    
+    // Extract intelligence
+    const company = lead.company_name || lead.business_name || 'your clinic';
+    const owner = lead.owner_name || lead.name || 'Doctor';
+    const city = lead.city || 'your area';
+    const rating = lead.google_rating ? `${lead.google_rating}/5` : 'unknown';
+    
+    let painContext = '';
+    if (lead.pain_signals && lead.pain_signals.length > 0) {
+      painContext = lead.pain_signals.map(s => `- ${s.detail}`).join('\n');
+    }
 
-function generateMessage(lead) {
-  const lang = detectLanguage(lead);
-  const pain = lead.pain || lead.pain_signal || 'bad_reviews';
-  const url = getGhostRoomUrl(lead);
-  
-  const templates = lang === 'ar' ? AR_TEMPLATES : EN_TEMPLATES;
-  const generate = templates[pain] || templates.bad_reviews;
-  
-  return generate(lead, url);
+    const systemPrompt = `You are Jake, an AI growth consultant for Qudozen (an AI business OS).
+You are writing a cold WhatsApp outreach message to a clinic owner.
+
+LEAD INTELLIGENCE:
+- Clinic: ${company}
+- Owner: ${owner}
+- City: ${city}
+- Google Rating: ${rating}
+- Pain Signals Detected:
+${painContext || '- General clinic operations (assumed)'}
+
+RULES:
+1. MUST be extremely short (under 40 words).
+2. MUST sound like a real human texting (casual, no emojis except maybe one, no corporate speak).
+3. MUST reference ONE specific pain signal if available (e.g. "saw you're hiring a receptionist", "noticed a recent review about wait times", "saw your site doesn't have online booking").
+4. MUST include this exact link at the end: ${url}
+5. Sign off with "- Jake" (or "- جيك" in Arabic).
+6. Language: ${lang === 'ar' ? 'Arabic (Saudi dialect, professional but casual)' : 'English'}
+7. DO NOT use generic greetings like "Dear". Use "Hi Dr. [Name]" or "مرحباً دكتور [Name]".
+
+Write the message now.`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'system', content: systemPrompt }],
+      temperature: 0.7,
+      max_tokens: 150
+    });
+
+    const msg = response.choices[0].message.content.trim();
+    console.log(`[brain] 🧠 Generated personalized message for ${company}:\n${msg}`);
+    return msg;
+
+  } catch (err) {
+    console.error('[brain] ❌ GPT generation failed, falling back to template:', err.message);
+    return fallbackTemplate(lead);
+  }
 }
 
-module.exports = { generateMessage, getGhostRoomUrl, detectLanguage, calculateHeatScore };
+// ─────────────────────────────────────────────
+// Fallback Templates (if API fails)
+// ─────────────────────────────────────────────
+
+function fallbackTemplate(lead) {
+  const lang = detectLanguage(lead);
+  const url = getGhostRoomUrl(lead);
+  const name = lead.owner_name || lead.name || '';
+  const company = lead.company_name || lead.business_name || (lang === 'ar' ? 'العيادة' : 'your clinic');
+
+  if (lang === 'ar') {
+    return `مرحباً دكتور ${name}، مرضى ${company} يذهبون للمنافسين بسبب تأخر الرد على الواتساب. هل تعلم كم تكلفك هذه الساعات شهرياً؟ اكتشف هنا: ${url} -جيك`;
+  } else {
+    return `Hi Dr. ${name}, missed calls and slow WhatsApp replies at ${company} are sending patients to competitors. Want to see the exact numbers on what you're losing? ${url} -Jake`;
+  }
+}
+
+// ─────────────────────────────────────────────
+// Legacy Wrapper (for backwards compatibility)
+// ─────────────────────────────────────────────
+
+async function generateMessage(lead) {
+  // If we have full GS 3.0 lead object, use hyper-personalized
+  if (lead.company_name || lead.pain_signals) {
+    return await generateHyperPersonalizedMessage(lead);
+  }
+  // Otherwise use fallback (for old tests)
+  return fallbackTemplate(lead);
+}
+
+module.exports = { 
+  generateMessage, 
+  generateHyperPersonalizedMessage,
+  getGhostRoomUrl, 
+  detectLanguage 
+};

@@ -89,13 +89,13 @@ router.get('/patients', async (req, res) => {
   }
 });
 
-// GET /api/leads — real leads from Supabase
+// GET /api/leads — real leads from Supabase (GS 3.0)
 router.get('/leads', async (req, res) => {
   try {
     const { status, min_score, limit = '100' } = req.query;
-    let url = `${SUPABASE_URL}/rest/v1/growth_leads_v2?order=confidence_score.desc&limit=${limit}&select=*`;
+    let url = `${SUPABASE_URL}/rest/v1/gs_leads?order=total_score.desc&limit=${limit}&select=*`;
     if (status && status !== 'All') url += `&status=eq.${encodeURIComponent(status)}`;
-    if (min_score) url += `&confidence_score=gte.${encodeURIComponent(min_score)}`;
+    if (min_score) url += `&total_score=gte.${encodeURIComponent(min_score)}`;
     const r = await axios.get(url, { headers: { ...headers, Prefer: 'count=exact' } });
     const total = parseInt(r.headers['content-range']?.split('/')[1] || '0', 10);
     res.json({ leads: r.data || [], total });
