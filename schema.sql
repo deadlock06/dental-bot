@@ -225,6 +225,8 @@ CREATE TABLE IF NOT EXISTS gs_leads (
   priority              TEXT DEFAULT 'cold',
   status                TEXT DEFAULT 'new',
   approval_status       TEXT DEFAULT 'pending',
+  conversation_state    TEXT DEFAULT 'INITIAL',
+  qualification_step    INT DEFAULT 0,
   last_contacted_at     TIMESTAMPTZ,
   last_replied_at       TIMESTAMPTZ,
   created_at            TIMESTAMPTZ DEFAULT NOW(),

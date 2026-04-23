@@ -5,6 +5,53 @@
 
 ---
 
+## Session: 2026-04-23 (Part 7) — Phase 4: Conversation & Objection Handling
+
+**Agent:** Antigravity AI (Gemini 3.1 Pro High)
+**Duration:** ~15 min
+
+### What Was Done
+
+1. **Build Step 6: Conversation State Machine:** Created `growth/conversation-engine.js`.
+   - Defined 10 states: `INITIAL`, `REPLIED`, `QUALIFYING`, `OBJECTION`, `INTERESTED`, `BOOKING`, `BOOKED`, `NURTURING`, `ESCALATED`, `DEAD`.
+   - Implemented `processInboundMessage` to handle incoming messages, detect objections, step through qualification questions, and manage state transitions.
+   - Updated `gs_leads` in `schema.sql` to include `conversation_state` and `qualification_step` columns.
+2. **Build Step 7: Objection Handling Library:** Created `growth/objections.js`.
+   - Configured objection templates for `too_expensive`, `not_interested`, `already_have`, `send_info`, `not_now`, and `call_me` with keyword detection logic in English and Arabic.
+   - Defined 5 sequential qualification questions (Q1-Q5).
+   - Hooked `objections.js` up to `brain.js`'s `applyGuardrails` to ensure all AI objection responses adhere strictly to the WhatsApp constraints.
+
+### Files Created / Modified
+- `growth/conversation-engine.js` (created)
+- `growth/objections.js` (created)
+- `schema.sql` (modified)
+
+---
+
+## Session: 2026-04-23 (Part 6) — Phase 3: Scoring Engine + Hyper-Personalization
+
+**Agent:** Antigravity AI (Gemini 3.1 Pro High)
+**Duration:** ~15 min
+
+### What Was Done
+
+1. **Build Step 4: 4D Scoring Engine:** Created `growth/scoring-engine.js`.
+   - Implemented `calculateFit`, `calculatePain`, `calculateTiming`, and `calculateReach` with respective point caps.
+   - Built `calculate4DScore` to combine values and assign priorities (`hot`, `warm`, `cool`, `cold`, `skip`).
+   - Integrated OpenAI-powered `generateScoreExplanation` to write 2-3 sentence justifications.
+2. **Build Step 5: Hyper-Personalized Messages:** Upgraded `growth/brain.js`.
+   - Updated system prompts to use the **PAS (Problem, Agitate, Solution)** formula.
+   - Added specific guidance for 5 pain templates (`hiring_receptionist`, `low_google_rating`, `no_booking_system`, `negative_reviews`, `inactive_social`).
+   - Built `applyGuardrails(message)` to strictly enforce WhatsApp constraints: max 320 chars, no links initially, no emojis, no promotional language, ends with a question, and signs off as "-جيك" or "-Jake".
+   - Implemented a banned words filter.
+3. **Deployed:** Pushed changes to Render via git.
+
+### Files Created / Modified
+- `growth/scoring-engine.js` (created)
+- `growth/brain.js` (modified)
+
+---
+
 ## Session: 2026-04-23 (Part 5) — Bug Fixes: Circular Deps + sender.js
 
 **Agent:** Antigravity AI (Claude Sonnet 4.6 Thinking)
