@@ -38,7 +38,7 @@
     <!-- Main Subject -->
     <div class="text-center mb-10 w-full">
       <h1 class="text-2xl md:text-3xl font-bold text-gray-400 mb-4">شاهد كيف يدار عملك بوعي مستقل</h1>
-      <h2 class="text-4xl md:text-5xl font-black text-white" id="clinic-name">جاري التهيئة...</h2>
+      <h2 class="text-4xl md:text-5xl font-black text-white" id="clinic-name">منشأتك</h2>
     </div>
 
     <!-- The Flow Preview -->
@@ -80,7 +80,7 @@
 
     <!-- The Escape -> Dual CTAs & Social Proof -->
     <div class="w-full flex flex-col md:flex-row justify-center gap-4 mb-6">
-      <a href="/index.html#simulator" id="start-sim-btn" class="flex-1 bg-gradient-to-r from-teal-500 to-teal-700 text-white px-8 py-5 rounded-2xl font-black text-xl hover:scale-105 transition duration-300 shadow-[0_0_30px_rgba(13,148,136,0.3)] border border-teal-400/50 flex flex-col items-center">
+      <a href="/#simulator" id="start-sim-btn" class="flex-1 bg-gradient-to-r from-teal-500 to-teal-700 text-white px-8 py-5 rounded-2xl font-black text-xl hover:scale-105 transition duration-300 shadow-[0_0_30px_rgba(13,148,136,0.3)] border border-teal-400/50 flex flex-col items-center">
         <span>▶ ابدأ المحاكاة الحية الآن</span>
         <span class="text-xs font-normal text-teal-100 mt-2 tracking-widest opacity-80">(تجربة فعلية كاملة)</span>
       </a>
@@ -95,36 +95,45 @@
   </div>
 
   <script>
-    // System Time Clock
-    setInterval(() => {
-      const now = new Date();
-      document.getElementById('sys-time').innerText = 'SYS_TIME: ' + now.toISOString().split('T')[1].split('.')[0] + ' KSA';
-    }, 1000);
+    (() => {
+      const byId = (id) => document.getElementById(id);
+      const sysTime = byId('sys-time');
+      const clinicNameEl = byId('clinic-name');
+      const cityEl = byId('social-proof-city');
+      const startBtn = byId('start-sim-btn');
+      const urlParams = new URLSearchParams(window.location.search);
+      const clinicName = urlParams.get('clinic') || 'منشأتك';
+      const city = urlParams.get('city') || 'المملكة';
+      const dwellPhone = urlParams.get('phone') || null;
+      const dwellData = { phone: dwellPhone, clinic: clinicName, city, vertical: 'business' };
 
-    // URL Parsing (Ghost Room params)
-    const urlParams = new URLSearchParams(window.location.search);
-    const clinicName = urlParams.get('clinic') || 'منشأتك';
-    const city = urlParams.get('city') || 'المملكة';
-    
-    document.getElementById('clinic-name').innerText = clinicName;
-    document.getElementById('social-proof-city').innerText = city;
+      function updateClock() {
+        if (!sysTime) return;
+        const now = new Date();
+        sysTime.innerText = 'SYS_TIME: ' + now.toISOString().split('T')[1].split('.')[0] + ' KSA';
+      }
 
-    // Dwell tracking — ping /api/ghost-dwell
-    const _dwellPhone = urlParams.get('phone') || null;
-    const _dwellData = { phone: _dwellPhone, clinic: clinicName, city, vertical: 'business' };
-    function pingDwell(seconds, exitedVia) {
-      fetch('/api/ghost-dwell', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ..._dwellData, dwell_seconds: seconds, exited_via: exitedVia || null }),
-      }).catch(() => {});
-    }
-    setTimeout(() => pingDwell(30),  30000);
-    setTimeout(() => pingDwell(60),  60000);
+      function pingDwell(seconds, exitedVia) {
+        fetch('/api/ghost-dwell', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...dwellData, dwell_seconds: seconds, exited_via: exitedVia || null }),
+        }).catch(() => {});
+      }
 
-    // Track CTA exit intent
-    document.getElementById('start-sim-btn').addEventListener('click', () => pingDwell(0, 'simulator'));
+      if (clinicNameEl) clinicNameEl.innerText = clinicName;
+      if (cityEl) cityEl.innerText = city;
+      if (startBtn) startBtn.href = '/#simulator';
 
+      updateClock();
+      setInterval(updateClock, 1000);
+      setTimeout(() => pingDwell(30), 30000);
+      setTimeout(() => pingDwell(60), 60000);
+
+      if (startBtn) {
+        startBtn.addEventListener('click', () => pingDwell(0, 'simulator'));
+      }
+    })();
   </script>
 </body>
 </html>

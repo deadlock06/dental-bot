@@ -366,7 +366,7 @@
             <div class="absolute inset-0 rounded-[36px] border-2 border-gray-700 pointer-events-none z-20" style="box-shadow:0 0 60px rgba(13,148,136,0.15)"></div>
 
             <!-- WhatsApp-style container -->
-            <div class="rounded-[34px] overflow-hidden bg-[#111b21]" style="height:600px;display:flex;flex-direction:column">
+            <div id="simPhoneShell" class="rounded-[34px] overflow-hidden bg-[#111b21]" style="height:600px;display:flex;flex-direction:column">
 
               <!-- Status bar -->
               <div class="bg-[#111b21] px-5 pt-3 pb-1 flex justify-between items-center text-[11px] text-gray-400">
@@ -674,7 +674,6 @@
           <a href="https://wa.me/96657436016?text=أريد%20الاشتراك%20في%20الوعي%20الأساسي" class="w-full bg-[#1e293b] text-white py-3.5 rounded-xl font-bold hover:bg-gray-700 transition text-center border border-gray-700">البدء بالنسخة القياسية</a>
         </div>
         <div class="glass p-8 rounded-3xl flex flex-col text-right border-2 border-[#0D9488]/50 shadow-[0_0_30px_rgba(13,148,136,0.15)] transform md:-translate-y-4 relative bg-[#091520]">
-          <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#0D9488] text-white text-xs font-black px-4 py-1 rounded-full">الأكثر طلباً</div>
           <h3 class="text-xl text-[#5EEAD4] mb-2 font-bold mt-2">النظام (Pro)</h3>
           <div class="flex items-baseline gap-2 mb-6 border-b border-gray-800 pb-6 mt-2">
             <span class="text-5xl font-black text-white">499</span>
@@ -863,26 +862,36 @@ let simStep = 0;
 let simFlow = ''; // 'booking', 'reschedule', 'cancel', 'my_appt'
 let simData = { name: 'Visitor', treatment: 'Consultation', date: 'Tomorrow', slot: '10:00 AM', doctor: 'Dr. Ahmed', lang: 'ar', phone: '+96657436016', booked: false };
 let simRunning = false;
+let simIsInitializing = false;
 
-const getSim = () => ({
-  chat: document.getElementById('simChat'),
-  replies: document.getElementById('simReplies'),
-  input: document.getElementById('simInput'),
-  sendBtn: document.getElementById('simSend'),
-  progress: document.getElementById('simProgress'),
-  stepLbl: document.getElementById('simStepLabel')
-});
+const getSim = () => {
+  const elements = {
+    chat: document.getElementById('simChat'),
+    replies: document.getElementById('simReplies'),
+    input: document.getElementById('simInput'),
+    sendBtn: document.getElementById('simSend'),
+    progress: document.getElementById('simProgress'),
+    stepLbl: document.getElementById('simStepLabel')
+  };
+  // Log if any critical element is missing for debugging
+  if (!elements.chat || !elements.replies) console.warn('[Sim] Critical DOM elements missing:', elements);
+  return elements;
+};
 
 function setProgress(n) {
   const { progress, stepLbl } = getSim();
   if(!progress) return;
   progress.style.width = ((n / 10) * 100) + '%';
-  stepLbl.textContent  = (simData.lang === 'ar' ? 'المرحلة ' : 'Phase ') + Math.min(n, 10) + ' / 10';
+  if (stepLbl) {
+    stepLbl.textContent = (simData.lang === 'ar' ? 'المرحلة ' : 'Phase ') + Math.min(n, 10) + ' / 10';
+  }
   document.querySelectorAll('.step-item').forEach(el => {
     const s = parseInt(el.dataset.step);
-    if (s < n) el.querySelector('div').style.cssText='background:#0D9488;border-color:#0D9488;color:white;opacity:1';
-    else if (s === n) el.querySelector('div').style.cssText='background:rgba(212,165,116,0.2);border-color:#D4A574;color:#D4A574;opacity:1';
-    else el.querySelector('div').style.opacity='0.35';
+    const indicator = el.querySelector('div');
+    if (!indicator) return;
+    if (s < n) indicator.style.cssText='background:#0D9488;border-color:#0D9488;color:white;opacity:1';
+    else if (s === n) indicator.style.cssText='background:rgba(212,165,116,0.2);border-color:#D4A574;color:#D4A574;opacity:1';
+    else indicator.style.opacity='0.35';
   });
 }
 
@@ -894,25 +903,32 @@ function scrollChat() {
 async function addBotBubble(html) {
   const { chat } = getSim();
   if(!chat) return;
-  const typing = document.createElement('div');
-  typing.className = 'sim-typing flex items-center gap-1 px-3 py-2 rounded-xl self-start mb-2';
-  typing.style.cssText = 'background:#1e293b;border:1px solid rgba(94,234,212,0.1)';
-  typing.innerHTML = '<span></span><span></span><span></span>';
-  chat.appendChild(typing);
-  scrollChat();
-
-  await new Promise(r => setTimeout(r, 650 + Math.random()*350));
-  if(typing.parentNode) typing.remove();
   
-  const bubble = document.createElement('div');
-  bubble.className = 'sim-bubble-bot mb-2 whitespace-pre-wrap text-right';
-  bubble.innerHTML = html;
-  const ts = document.createElement('div');
-  ts.className = 'text-[10px] text-gray-600 mt-1.5';
-  ts.textContent = new Date().toLocaleTimeString(simData.lang==='ar'?'ar-SA':'en-US',{hour:'2-digit',minute:'2-digit'});
-  bubble.appendChild(ts);
-  chat.appendChild(bubble);
-  scrollChat();
+  try {
+    const typing = document.createElement('div');
+    typing.className = 'sim-typing flex items-center gap-1 px-3 py-2 rounded-xl self-start mb-2';
+    typing.style.cssText = 'background:#1e293b;border:1px solid rgba(94,234,212,0.1)';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    chat.appendChild(typing);
+    scrollChat();
+
+    await new Promise(r => setTimeout(r, 650 + Math.random()*350));
+    
+    // Check if parent still exists (it might have been cleared by resetSimulator)
+    if(typing.parentNode === chat) chat.removeChild(typing);
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'sim-bubble-bot mb-2 whitespace-pre-wrap text-right';
+    bubble.innerHTML = html;
+    const ts = document.createElement('div');
+    ts.className = 'text-[10px] text-gray-600 mt-1.5';
+    ts.textContent = new Date().toLocaleTimeString(simData.lang==='ar'?'ar-SA':'en-US',{hour:'2-digit',minute:'2-digit'});
+    bubble.appendChild(ts);
+    chat.appendChild(bubble);
+    scrollChat();
+  } catch (e) {
+    console.error('[Sim] addBotBubble failed:', e);
+  }
 }
 
 function addUserBubble(text) {
@@ -1159,29 +1175,40 @@ function updateDashboardData(m) {
   document.getElementById('dsDoctor').textContent = simData.doctor;
 }
 
-function startSimulator() {
-  const { chat } = getSim();
+async function startSimulator() {
+  if (simIsInitializing) return;
+  simIsInitializing = true;
+
+  const { chat, replies } = getSim();
   simRunning = true; 
   simStep = 0; 
   simFlow = ''; 
   simData = { name:'Visitor', treatment:'Consultation', date:'Tomorrow', slot:'10:00 AM', doctor:'Dr. Ahmed', lang:'ar', phone:'+96657436016', booked: false };
   
-  // Ensure visibility
+  // Ensure visibility and clean slate
   if(chat) {
     chat.innerHTML = ''; 
-    // If the phone container was hidden, show it here
-    const phone = document.getElementById('simChat').closest('.rounded-[34px]');
-    if(phone) phone.style.opacity = '1';
+    const phone = document.getElementById('simPhoneShell');
+    if(phone) {
+      phone.style.opacity = '1';
+      phone.style.display = 'flex';
+    }
   }
+  if(replies) replies.innerHTML = '';
   
-  setProgress(0);
+  setProgress(1);
   const startBtn = document.getElementById('simStartBtn');
   if(startBtn) startBtn.style.display = 'none';
   
   console.log('[Sim] Starting with language select...');
-  addBotBubble(MESSAGES.ar.langSelect).then(() => {
+  try {
+    await addBotBubble(MESSAGES.ar.langSelect);
     setReplies([{label:'1️⃣ English', value:'en'}, {label:'2️⃣ العربية', value:'ar'}]);
-  });
+  } catch (e) {
+    console.error('[Sim] Startup failed:', e);
+  } finally {
+    simIsInitializing = false;
+  }
 }
 
 function resetSimulator() {
