@@ -197,8 +197,19 @@
       <a href="#pricing" class="hover:text-aqua transition">الاستثمار</a>
       <a href="#jake" class="hover:text-aqua transition">رسالة جيك</a>
     </div>
-    <a href="/growth/ghost-room" class="bg-gold text-gray-900 px-6 py-2.5 rounded-xl font-bold hover:bg-[#b78a5e] transition transform hover:-translate-y-0.5 shadow-lg shadow-gold/20">غرفة العمليات</a>
+    <div class="flex items-center gap-3">
+      <a href="/growth/ghost-room" class="hidden sm:inline-block bg-gold text-gray-900 px-6 py-2.5 rounded-xl font-bold hover:bg-[#b78a5e] transition transform hover:-translate-y-0.5 shadow-lg shadow-gold/20">غرفة العمليات</a>
+      <button id="mobileMenuBtn" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="md:hidden text-gray-300 hover:text-aqua text-2xl">☰</button>
+    </div>
   </nav>
+  <!-- Mobile Menu -->
+  <div id="mobileMenu" class="hidden fixed top-[68px] left-0 right-0 z-40 glass border-b border-white/10 px-6 py-6 flex flex-col gap-4 text-center text-gray-300 text-lg font-medium">
+    <a href="#services" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition">خدماتنا</a>
+    <a href="#simulator" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition">جرب المحاكي</a>
+    <a href="#pricing" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition">الاستثمار</a>
+    <a href="#jake" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition">رسالة جيك</a>
+    <a href="/growth/ghost-room" class="bg-gold text-gray-900 px-6 py-2.5 rounded-xl font-bold">غرفة العمليات</a>
+  </div>
 
   <!-- ══════════════════════════════════════════════════ -->
   <!-- HERO                                              -->
@@ -1016,10 +1027,10 @@ async function nextStep(ui) {
     simFlow = ''; simStep = 1;
     await addBotBubble(m.menu);
     return setReplies([
-      {label: m.lang==='en'?'1️⃣ Book':'1️⃣ حجز', value:'1'},
-      {label: m.lang==='en'?'2️⃣ My Appt':'2️⃣ موعدي', value:'2'},
-      {label: m.lang==='en'?'7️⃣ Prices':'7️⃣ الأسعار', value:'7'},
-      {label: m.lang==='en'?'8️⃣ Location':'8️⃣ الموقع', value:'8'},
+      {label: simData.lang==='en'?'1️⃣ Book':'1️⃣ حجز', value:'1'},
+      {label: simData.lang==='en'?'2️⃣ My Appt':'2️⃣ موعدي', value:'2'},
+      {label: simData.lang==='en'?'7️⃣ Prices':'7️⃣ الأسعار', value:'7'},
+      {label: simData.lang==='en'?'8️⃣ Location':'8️⃣ الموقع', value:'8'},
     ]);
   }
 
@@ -1032,10 +1043,10 @@ async function nextStep(ui) {
       setProgress(2);
       await addBotBubble(m.menu);
       return setReplies([
-        {label: m.lang==='en'?'1️⃣ Book Appt':'1️⃣ حجز موعد', value:'1'},
-        {label: m.lang==='en'?'2️⃣ My Appt':'2️⃣ موعدي', value:'2'},
-        {label: m.lang==='en'?'7️⃣ Prices':'7️⃣ الأسعار', value:'7'},
-        {label: m.lang==='en'?'8️⃣ Location':'8️⃣ الموقع', value:'8'},
+        {label: simData.lang==='en'?'1️⃣ Book Appt':'1️⃣ حجز موعد', value:'1'},
+        {label: simData.lang==='en'?'2️⃣ My Appt':'2️⃣ موعدي', value:'2'},
+        {label: simData.lang==='en'?'7️⃣ Prices':'7️⃣ الأسعار', value:'7'},
+        {label: simData.lang==='en'?'8️⃣ Location':'8️⃣ الموقع', value:'8'},
       ]);
     }
     
@@ -1106,8 +1117,9 @@ async function processBooking(ui, m) {
       await addBotBubble(b.securing);
       await addBotBubble(b.confirmed + "\n\n" + b.summary(simData));
       updateDashboardData(m);
+      showWhatsAppRedirect();
       simFlow = ''; 
-      setReplies([{label: m.lang==='en'?'0️⃣ Main Menu':'0️⃣ القائمة الرئيسية', value:'0'}]);
+      setReplies([{label: simData.lang==='en'?'0️⃣ Main Menu':'0️⃣ القائمة الرئيسية', value:'0'}]);
       setTimeout(() => triggerAutonomousReminder(m), 4000);
       break;
   }
@@ -1116,12 +1128,19 @@ async function processBooking(ui, m) {
 // ── My Appointment Logic ──
 async function processMyAppt(ui, m) {
   if (!simData.booked) { 
-    await addBotBubble(m.lang==='ar'?'ليس لديك موعد حالي.':'You have no active appointment.'); 
-    return setReplies([{label: '1️⃣ Book Now', value:'1'}, {label:'0️⃣ Menu', value:'0'}]); 
+    await addBotBubble(simData.lang==='ar'?'ليس لديك موعد حالي. هل تريد الحجز؟':'You have no active appointment.'); 
+    return setReplies([
+      {label: simData.lang==='ar'?'1️⃣ حجز موعد':'1️⃣ Book Now', value:'1'}, 
+      {label: simData.lang==='ar'?'0️⃣ القائمة':'0️⃣ Menu', value:'0'}
+    ]); 
   }
-  if (ui === '2' || ui.includes('my')) {
+  if (ui === '2' || ui.includes('my') || ui.includes('موعدي')) {
     await addBotBubble(m.myAppt(simData));
-    setReplies([{label: '1️⃣ Reschedule', value:'resched'}, {label: '2️⃣ Cancel', value:'cancel'}]);
+    setReplies([
+      {label: simData.lang==='ar'?'1️⃣ إعادة جدولة':'1️⃣ Reschedule', value:'resched'}, 
+      {label: simData.lang==='ar'?'2️⃣ إلغاء':'2️⃣ Cancel', value:'cancel'},
+      {label: simData.lang==='ar'?'3️⃣ القائمة':'3️⃣ Menu', value:'0'}
+    ]);
   } else if (ui === 'resched') { simFlow = 'reschedule'; simStep = 1; processReschedule('', m); }
     else if (ui === 'cancel') { simFlow = 'cancel'; simStep = 1; processCancel('', m); }
 }
@@ -1129,25 +1148,39 @@ async function processMyAppt(ui, m) {
 // ── Reschedule Logic ──
 async function processReschedule(ui, m) {
   const r = m.resched;
-  if (simStep === 1) { simStep = 2; await addBotBubble(r.date); setReplies([{label: '1️⃣ Tomorrow', value:'1'}, {label:'2️⃣ Next Week', value:'2'}]); }
+  if (simStep === 1) { 
+    simStep = 2; 
+    await addBotBubble(r.date); 
+    setReplies([
+      {label: simData.lang==='ar'?'1️⃣ غداً':'1️⃣ Tomorrow', value:'1'}, 
+      {label: simData.lang==='ar'?'2️⃣ الأسبوع القادم':'2️⃣ Next Week', value:'2'}
+    ]); 
+  }
   else if (simStep === 2) { 
-    simData.date = ui==='1'?'Tomorrow':'Next Week';
+    simData.date = ui==='1'?(simData.lang==='ar'?'غداً':'Tomorrow'):(simData.lang==='ar'?'الأسبوع القادم':'Next Week');
     await addBotBubble(r.confirm(simData.date, simData.slot));
     updateDashboardData(m);
     simFlow = ''; simStep = 1; 
-    setReplies([{label: '0️⃣ Main Menu', value:'0'}]);
+    setReplies([{label: simData.lang==='ar'?'0️⃣ القائمة الرئيسية':'0️⃣ Main Menu', value:'0'}]);
   }
 }
 
 // ── Cancel Logic ──
 async function processCancel(ui, m) {
   const c = m.cancel;
-  if (simStep === 1) { simStep = 2; await addBotBubble(c.confirm); setReplies([{label:'1️⃣ Yes', value:'1'}, {label:'2️⃣ No', value:'2'}]); }
+  if (simStep === 1) { 
+    simStep = 2; 
+    await addBotBubble(c.confirm); 
+    setReplies([
+      {label: simData.lang==='ar'?'1️⃣ نعم، ألغِ':'1️⃣ Yes', value:'1'}, 
+      {label: simData.lang==='ar'?'2️⃣ لا، احتفظ':'2️⃣ No', value:'2'}
+    ]); 
+  }
   else if (simStep === 2) {
     if (ui === '1') {
       simData.booked = false; await addBotBubble(c.success); updateDashboardData(m);
-    } else { await addBotBubble('Great! Appointment kept.'); }
-    simFlow = ''; simStep = 1; setReplies([{label: '0️⃣ Main Menu', value:'0'}]);
+    } else { await addBotBubble(simData.lang==='ar'?'تم الاحتفاظ بالموعد!':'Great! Appointment kept.'); }
+    simFlow = ''; simStep = 1; setReplies([{label: simData.lang==='ar'?'0️⃣ القائمة الرئيسية':'0️⃣ Main Menu', value:'0'}]);
   }
 }
 
@@ -1166,13 +1199,50 @@ async function triggerAutonomousReminder(m) {
 
 function updateDashboardData(m) {
   const dp = document.getElementById('dashPreview');
-  if (!simData.booked) { dp.classList.add('hidden'); return; }
+  if (!dp) return;
+  if (!simData.booked) { 
+    dp.classList.add('hidden'); 
+    dp.style.opacity = '0'; 
+    dp.style.transform = 'scale(0.95)'; 
+    return; 
+  }
   dp.classList.remove('hidden');
+  // Force reflow then animate in
+  requestAnimationFrame(() => {
+    dp.style.opacity = '1';
+    dp.style.transform = 'scale(1)';
+  });
   document.getElementById('dsPatientName').textContent = simData.name;
   document.getElementById('dsTreatment').textContent = simData.treatment;
   document.getElementById('dsSlot').textContent = simData.slot;
   document.getElementById('dsDate').textContent = simData.date;
   document.getElementById('dsDoctor').textContent = simData.doctor;
+  // Update ref number with timestamp
+  const ref = document.getElementById('dsRef');
+  if (ref) ref.textContent = 'REF: QZ-' + Date.now().toString().slice(-6);
+  // Update dashboard labels based on language
+  const d = m.dash;
+  const el = (id, txt) => { const e = document.getElementById(id); if(e) e.textContent = txt; };
+  el('dsStatus', d.status);
+  el('dsConfLabel', d.conf);
+  el('dsTreatLabel', d.treat);
+  el('dsSlotLabel', d.time);
+  el('dsDateLabel', d.date);
+  el('dsDocLabel', d.doc);
+  el('dsSyncLabel', d.sync);
+  el('dsRemLabel', d.rem);
+}
+
+function showWhatsAppRedirect() {
+  const wa = document.getElementById('waRedirect');
+  if (wa) {
+    wa.classList.remove('hidden');
+    wa.style.opacity = '0';
+    requestAnimationFrame(() => {
+      wa.style.transition = 'opacity 0.5s ease';
+      wa.style.opacity = '1';
+    });
+  }
 }
 
 async function startSimulator() {
@@ -1216,10 +1286,15 @@ function resetSimulator() {
   simRunning = false; simStep = 0; simFlow = '';
   simData = { name:'Visitor', treatment:'Consultation', date:'Tomorrow', slot:'10:00 AM', doctor:'Dr. Ahmed', lang:'ar', phone:'+96657436016', booked: false };
   if(chat) chat.innerHTML = '';
-  if(replies) replies.innerHTML = '<span class="text-gray-600 text-xs italic">Waiting...</span>';
+  if(replies) replies.innerHTML = '<span class="text-gray-600 text-xs italic">في انتظار البدء...</span>';
   disableInput(); setProgress(0);
   const startBtn = document.getElementById('simStartBtn');
   if(startBtn) startBtn.style.display = 'block';
+  // Hide side panels
+  const dp = document.getElementById('dashPreview');
+  if(dp) { dp.classList.add('hidden'); dp.style.opacity = '0'; dp.style.transform = 'scale(0.95)'; }
+  const wa = document.getElementById('waRedirect');
+  if(wa) { wa.classList.add('hidden'); wa.style.opacity = '0'; }
 }
 
 
