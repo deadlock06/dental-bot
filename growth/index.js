@@ -35,31 +35,101 @@ function getStripe() {
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// ========== SECURITY: BASIC AUTH ==========
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'qudozen_growth_swarm_secret_key';
 
-const basicAuth = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    console.log('[Auth] No auth header provided');
-    res.setHeader('WWW-Authenticate', 'Basic realm="Growth Swarm"');
-    return res.status(401).send('Authentication required');
-  }
-  const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
-  const user = auth[0];
-  const pass = auth[1];
+// ========== SECURITY: JWT AUTH ==========
+
+const jwtAuth = (req, res, next) => {
+  // Check cookie first (for browser) then header (for API)
+  const token = req.cookies?.growth_token || req.headers.authorization?.split(' ')[1];
   
+  if (!token) {
+    console.log('[Auth] No token found, redirecting to login');
+    if (req.headers.accept?.includes('text/html')) {
+      return res.redirect('/growth/login');
+    }
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    console.log('[Auth] Invalid token:', err.message);
+    if (req.headers.accept?.includes('text/html')) {
+      return res.redirect('/growth/login');
+    }
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+};
+
+// Login GET
+router.get('/login', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>Growth Swarm — Login</title>
+  <style>
+    body { font-family: sans-serif; background: #0d1117; color: #e6edf3; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    .login-card { background: #161b22; border: 1px solid #30363d; padding: 40px; border-radius: 12px; width: 100%; max-width: 400px; text-align: center; }
+    h1 { margin-bottom: 24px; font-size: 24px; }
+    input { width: 100%; padding: 12px; margin-bottom: 16px; border-radius: 6px; border: 1px solid #30363d; background: #0d1117; color: #fff; }
+    button { width: 100%; padding: 12px; border-radius: 6px; border: none; background: #1f6feb; color: #fff; font-weight: bold; cursor: pointer; }
+    button:hover { background: #388bfd; }
+    .error { color: #f85149; margin-top: 16px; font-size: 14px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h1>🚀 Growth Swarm</h1>
+    <input type="text" id="user" placeholder="Username" />
+    <input type="password" id="pass" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <div id="error" class="error">Invalid credentials</div>
+  </div>
+  <script>
+    async function login() {
+      const user = document.getElementById('user').value;
+      const pass = document.getElementById('pass').value;
+      const res = await fetch('/growth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user, pass })
+      });
+      if (res.ok) window.location.href = '/growth/dashboard';
+      else document.getElementById('error').style.display = 'block';
+    }
+  </script>
+</body>
+</html>`);
+});
+
+// Login POST
+router.post('/login', (req, res) => {
+  const { user, pass } = req.body;
   const adminUser = process.env.ADMIN_USER || 'admin';
   const adminPass = process.env.ADMIN_PASS || 'password123';
 
   if (user === adminUser && pass === adminPass) {
-    console.log(`[Auth] Success for user: ${user}`);
-    next();
+    const token = jwt.sign({ user: adminUser, role: 'admin' }, JWT_SECRET, { expiresIn: '24h' });
+    res.cookie('growth_token', token, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000 // 24h
+    });
+    res.json({ success: true, token });
   } else {
-    console.log(`[Auth] Failed attempt for user: ${user}`);
-    res.setHeader('WWW-Authenticate', 'Basic realm="Growth Swarm"');
-    return res.status(401).send('Invalid credentials');
+    res.status(401).json({ error: 'Invalid credentials' });
   }
-};
+});
+
+router.get('/logout', (req, res) => {
+  res.clearCookie('growth_token');
+  res.redirect('/growth/login');
+});
 
 // ========== STRIPE WEBHOOK ==========
 
@@ -341,7 +411,7 @@ router.post('/add-and-fire', async (req, res) => {
 /**
  * POST /growth/send-batch
  */
-router.post('/send-batch', basicAuth, async (req, res) => {
+router.post('/send-batch', jwtAuth, async (req, res) => {
   const { limit = 5, min_confidence = 0 } = req.body;
 
   const { data: leads, error } = await supabase
@@ -426,7 +496,7 @@ router.post('/send-followups', async (req, res) => {
 // ========== SCOUTING (ORCHESTRATED) ==========
 
 // POST /growth/scout/run — Run all scouts (or specific ones)
-router.post('/scout/run', basicAuth, async (req, res) => {
+router.post('/scout/run', jwtAuth, async (req, res) => {
   const { scouts, autoSend = false, cities } = req.body;
   console.log('[index.js] Scout run triggered via API');
   try {
@@ -440,7 +510,7 @@ router.post('/scout/run', basicAuth, async (req, res) => {
 });
 
 // POST /growth/scout/indeed — Legacy compat: runs just Indeed via orchestrator
-router.post('/scout/indeed', basicAuth, async (req, res) => {
+router.post('/scout/indeed', jwtAuth, async (req, res) => {
   console.log('[index.js] Indeed scout triggered');
   try {
     const report = await runAllScouts(supabase, { scouts: ['indeed', 'job_portals'] });
@@ -453,7 +523,7 @@ router.post('/scout/indeed', basicAuth, async (req, res) => {
 });
 
 // POST /growth/scout/places — Google Places only
-router.post('/scout/places', basicAuth, async (req, res) => {
+router.post('/scout/places', jwtAuth, async (req, res) => {
   const { cities, autoSend = false } = req.body;
   console.log('[index.js] Google Places scout triggered');
   try {
@@ -467,7 +537,7 @@ router.post('/scout/places', basicAuth, async (req, res) => {
 });
 
 // GET /growth/scout/status — Last scout report
-router.get('/scout/status', basicAuth, (req, res) => {
+router.get('/scout/status', jwtAuth, (req, res) => {
   res.json({ success: true, lastRun: lastScoutReport });
 });
 
@@ -476,7 +546,7 @@ router.get('/scout/status', basicAuth, (req, res) => {
 /**
  * GET /growth/dashboard — V2.5 Dark Mode
  */
-router.get('/dashboard', basicAuth, async (req, res) => {
+router.get('/dashboard', jwtAuth, async (req, res) => {
   const filterStatus = req.query.status || '';
   const filterConf   = parseInt(req.query.min_confidence || '0');
 
@@ -602,6 +672,7 @@ router.get('/dashboard', basicAuth, async (req, res) => {
   </div>
   <div style="display:flex;gap:8px">
     <a href="/growth/room?clinic=Demo&city=Riyadh" target="_blank" class="btn btn-secondary" style="text-decoration:none;font-size:12px">Ghost Room</a>
+    <a href="/growth/logout" class="btn btn-secondary" style="text-decoration:none;font-size:12px;background:#da3633;color:#fff">Logout</a>
   </div>
 </div>
 
@@ -732,7 +803,7 @@ router.get('/dashboard', basicAuth, async (req, res) => {
 /**
  * POST /growth/approve/:id
  */
-router.post('/approve/:id', basicAuth, async (req, res) => {
+router.post('/approve/:id', jwtAuth, async (req, res) => {
   const { id } = req.params;
   
   const { data: lead } = await supabase

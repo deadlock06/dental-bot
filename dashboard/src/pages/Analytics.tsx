@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Download, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Download, Calendar, Loader2 } from 'lucide-react';
 import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
-  XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, FunnelChart, Funnel, LabelList
+  BarChart, Bar, LineChart, Line,
+  XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
-import { MOCK_DASHBOARD_STATS, MOCK_APPOINTMENTS } from '../lib/mockData';
+import axios from 'axios';
 import { cn } from '../lib/utils';
 import type { Period } from '../types';
 
@@ -14,53 +14,36 @@ const PERIODS: { label: string; value: Period }[] = [
   { label: 'Last 90 Days', value: '90d' },
 ];
 
-const DOCTOR_UTILIZATION = [
-  { name: 'Dr. Marjuk', value: 87, color: '#3B82F6' },
-  { name: 'Dr. Narmin', value: 74, color: '#8B5CF6' },
-  { name: 'Dr. Ahmed', value: 91, color: '#10B981' },
-  { name: 'Dr. Sara', value: 62, color: '#F59E0B' },
-];
-
-const REVENUE_DATA = [
-  { treatment: 'Cleaning', revenue: 4200 },
-  { treatment: 'Fillings', revenue: 6800 },
-  { treatment: 'Braces', revenue: 9500 },
-  { treatment: 'Whitening', revenue: 3200 },
-  { treatment: 'Extraction', revenue: 2100 },
-  { treatment: 'Implants', revenue: 12000 },
-];
-
-const NOSHOW_TREND = [
-  { week: 'Week 1', rate: 12 },
-  { week: 'Week 2', rate: 9 },
-  { week: 'Week 3', rate: 11 },
-  { week: 'Week 4', rate: 7 },
-  { week: 'Week 5', rate: 8 },
-  { week: 'Week 6', rate: 5 },
-];
-
-const FUNNEL_DATA = [
-  { name: 'Bot Interactions', value: 450, fill: '#3B82F6' },
-  { name: 'Started Booking', value: 280, fill: '#6366F1' },
-  { name: 'Slot Selected', value: 210, fill: '#8B5CF6' },
-  { name: 'Confirmed', value: 178, fill: '#10B981' },
-  { name: 'Completed', value: 152, fill: '#059669' },
-];
-
 export default function Analytics() {
   const [period, setPeriod] = useState<Period>('30d');
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
 
-  const stats = MOCK_DASHBOARD_STATS;
-
-  // Build trend data based on period
-  const trendDays = period === '7d' ? 7 : period === '30d' ? 30 : 90;
-  const trendData = Array.from({ length: Math.min(trendDays, 30) }, (_, i) => {
-    const d = new Date(Date.now() - (trendDays - 1 - i) * 86400000);
-    return {
-      date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      appointments: Math.floor(Math.random() * 15) + 3,
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(`/api/analytics?period=${period}`);
+        setData(response.data);
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+      } finally {
+        setLoading(false);
+      }
     };
-  });
+    fetchData();
+  }, [period]);
+
+  if (loading || !data) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[400px] text-slate-500 gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <p className="text-sm font-medium">Loading intelligence report...</p>
+      </div>
+    );
+  }
+
+  const { summary, trendData, revenueByTreatment, doctorUtilization, noShowTrend, funnelData } = data;
 
   return (
     <div className="space-y-6">
@@ -94,10 +77,10 @@ export default function Analytics() {
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Appointments', value: period === '7d' ? 87 : period === '30d' ? 342 : 891, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Revenue (SAR)', value: period === '7d' ? '18,500' : period === '30d' ? '71,200' : '198,500', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Avg No-Show Rate', value: '8%', color: 'text-red-600', bg: 'bg-red-50' },
-          { label: 'New Patients', value: period === '7d' ? 12 : period === '30d' ? 47 : 124, color: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'Total Appointments', value: summary.total_appointments, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Revenue (SAR)', value: summary.revenue.toLocaleString(), color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Avg No-Show Rate', value: `${summary.no_show_rate}%`, color: 'text-red-600', bg: 'bg-red-50' },
+          { label: 'New Patients', value: summary.new_patients, color: 'text-purple-600', bg: 'bg-purple-50' },
         ].map(s => (
           <div key={s.label} className={cn('rounded-xl p-4', s.bg)}>
             <div className={cn('text-2xl font-bold', s.color)}>{s.value}</div>
@@ -133,7 +116,7 @@ export default function Analytics() {
           <h2 className="font-semibold text-slate-900 mb-1">Revenue by Treatment</h2>
           <p className="text-xs text-slate-400 mb-4">SAR earnings breakdown</p>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={REVENUE_DATA} layout="vertical" barSize={14}>
+            <BarChart data={revenueByTreatment} layout="vertical" barSize={14}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
               <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
               <YAxis type="category" dataKey="treatment" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} width={70} />
@@ -150,7 +133,7 @@ export default function Analytics() {
           <h2 className="font-semibold text-slate-900 mb-1">Doctor Utilization</h2>
           <p className="text-xs text-slate-400 mb-4">% of available slots booked</p>
           <div className="space-y-4 py-2">
-            {DOCTOR_UTILIZATION.map(doc => (
+            {doctorUtilization.map((doc: any) => (
               <div key={doc.name}>
                 <div className="flex items-center justify-between text-sm mb-1.5">
                   <span className="font-medium text-slate-700">{doc.name}</span>
@@ -174,7 +157,7 @@ export default function Analytics() {
           <h2 className="font-semibold text-slate-900 mb-1">No-Show Rate Trend</h2>
           <p className="text-xs text-slate-400 mb-4">Weekly no-show percentage</p>
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={NOSHOW_TREND}>
+            <LineChart data={noShowTrend}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="week" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} unit="%" />
@@ -188,8 +171,8 @@ export default function Analytics() {
           <h2 className="font-semibold text-slate-900 mb-1">Patient Acquisition Funnel</h2>
           <p className="text-xs text-slate-400 mb-4">From WhatsApp interaction to completed visit</p>
           <div className="space-y-2">
-            {FUNNEL_DATA.map((item, i) => {
-              const pct = Math.round((item.value / FUNNEL_DATA[0].value) * 100);
+            {funnelData.map((item: any, i: number) => {
+              const pct = Math.round((item.value / funnelData[0].value) * 100);
               return (
                 <div key={item.name} className="flex items-center gap-3">
                   <div className="text-xs text-slate-500 w-32 truncate">{item.name}</div>

@@ -1,9 +1,13 @@
 require('dotenv').config(); // must be first — loads env vars before any module reads them
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const helmet  = require('helmet');
 const twilio  = require('twilio');
+const { DateTime } = require('luxon');
 const path    = require('path');
 const app     = express();
+
+app.use(cookieParser());
 
 app.use(helmet({
   contentSecurityPolicy: false, // allow external assets/scripts for now
@@ -241,6 +245,11 @@ function parseDateToISO(dateStr) {
 app.post('/send-reminders', async (req, res) => {
   res.sendStatus(200);
   try {
+    const now = DateTime.now().setZone('Asia/Riyadh');
+    const todayISO = now.toISODate();
+    const tomorrowISO = now.plus({ days: 1 }).toISODate();
+    const yesterdayISO = now.minus({ days: 1 }).toISODate();
+
     const { getAppointmentsDueTomorrow, getAppointmentsDueInOneHour, getAppointmentsDueFollowUp } = require('./db');
     
     // Fetch specifically what we need for this run
@@ -248,7 +257,7 @@ app.post('/send-reminders', async (req, res) => {
     const oneHourLeads   = await getAppointmentsDueInOneHour();
     const followUpLeads  = await getAppointmentsDueFollowUp();
     
-    console.log(`[Reminders] Processing ${tomorrowLeads.length} tomorrows, ${oneHourLeads.length} 1-hour, ${followUpLeads.length} follow-ups`);
+    console.log(`[Reminders] Processing ${tomorrowLeads.length} tomorrows, ${oneHourLeads.length} 1-hour, ${followUpLeads.length} follow-ups (SAR: ${now.toFormat('HH:mm')})`);
     
     const allReminders = [...tomorrowLeads, ...oneHourLeads, ...followUpLeads];
 

@@ -1,9 +1,65 @@
 // ═══════════════════════════════════════════════════════════════
 // scoring.js — Growth Swarm 3.0: 4D Scoring Engine
 // Brain Step 4: Fit, Pain, Timing, Reachability (4D)
+// NOTE: detectPainSignals is defined here to avoid circular deps
+//       with finder.js. finder.js still exports it separately.
 // ═══════════════════════════════════════════════════════════════
 
-const { detectPainSignals } = require('./finder');
+// ─────────────────────────────────────────────
+// PAIN SIGNAL DETECTION (inline — no circular dep)
+// ─────────────────────────────────────────────
+
+function detectPainSignalsInternal(lead) {
+  const signals = [];
+  let painScore = 0;
+
+  if (lead.google_rating != null) {
+    if (lead.google_rating < 3.5) {
+      signals.push({ type: 'low_google_rating_critical', severity: 'critical', detail: `Rating ${lead.google_rating}/5`, score_contribution: 35 });
+      painScore += 35;
+    } else if (lead.google_rating < 4.0) {
+      signals.push({ type: 'low_google_rating', severity: 'high', detail: `Rating ${lead.google_rating}/5`, score_contribution: 25 });
+      painScore += 25;
+    }
+  }
+  if (lead.google_review_count != null && lead.google_review_count < 10) {
+    signals.push({ type: 'low_review_count', severity: 'medium', detail: `Only ${lead.google_review_count} reviews`, score_contribution: 15 });
+    painScore += 15;
+  }
+  if (!lead.website || lead.website.trim() === '') {
+    signals.push({ type: 'no_website', severity: 'high', detail: 'No website', score_contribution: 20 });
+    painScore += 20;
+  }
+  if (lead.website && !lead.has_booking_system) {
+    signals.push({ type: 'no_booking_system', severity: 'high', detail: 'Website but no online booking', score_contribution: 25 });
+    painScore += 25;
+  }
+  if (lead.is_hiring) {
+    const d = lead.hiring_posted_days_ago || 999;
+    if (d <= 14) { signals.push({ type: 'actively_hiring_recent', severity: 'high', detail: `Hiring posted ${d}d ago`, score_contribution: 30 }); painScore += 30; }
+    else if (d <= 60) { signals.push({ type: 'hiring', severity: 'medium', detail: `Hiring posted ${d}d ago`, score_contribution: 15 }); painScore += 15; }
+  }
+  if (lead.has_negative_reviews && Array.isArray(lead.negative_review_themes) && lead.negative_review_themes.length > 0) {
+    const relevant = ['wait_time', 'no_response', 'scheduling', 'no_show', 'communication', 'cancellation'];
+    const matching = lead.negative_review_themes.filter(t => relevant.includes(t));
+    if (matching.length > 0) { signals.push({ type: 'negative_reviews_relevant', severity: 'critical', detail: `Complaints: ${matching.join(', ')}`, score_contribution: 30 }); painScore += 30; }
+    else { signals.push({ type: 'negative_reviews_general', severity: 'medium', detail: `Negative themes: ${lead.negative_review_themes.join(', ')}`, score_contribution: 10 }); painScore += 10; }
+  }
+  if (lead.instagram_handle && lead.instagram_last_post_date) {
+    const days = Math.floor((Date.now() - new Date(lead.instagram_last_post_date).getTime()) / 86400000);
+    if (days > 180) { signals.push({ type: 'instagram_abandoned', severity: 'high', detail: `Instagram inactive ${days}d`, score_contribution: 20 }); painScore += 20; }
+    else if (days > 60) { signals.push({ type: 'instagram_inactive', severity: 'medium', detail: `Instagram inactive ${days}d`, score_contribution: 10 }); painScore += 10; }
+  }
+
+  painScore = Math.min(100, painScore);
+  return {
+    signals,
+    pain_score: painScore,
+    signal_count: signals.length,
+    has_critical: signals.some(s => s.severity === 'critical'),
+    top_signal: signals.length > 0 ? signals.sort((a, b) => b.score_contribution - a.score_contribution)[0].type : null
+  };
+}
 
 // ─────────────────────────────────────────────
 // 1. FIT SCORE (0-100)
@@ -142,8 +198,8 @@ function compute4DScore(lead, campaignTarget = {}) {
   const timing = calculateTimingScore(lead);
   const reachability = calculateReachabilityScore(lead);
   
-  // Pain score was built in Step 3 (finder.js)
-  const pain = detectPainSignals(lead);
+  // Pain score — use internal implementation to avoid circular dep with finder.js
+  const pain = detectPainSignalsInternal(lead);
 
   const totalScore = fit.score + timing.score + reachability.score + pain.pain_score;
   const maxPossible = 400; // 100 per dimension

@@ -10,7 +10,8 @@ const supabase = createClient(
   process.env.SUPABASE_KEY
 );
 
-const { compute4DScore, determinePriority } = require('./scoring');
+// NOTE: scoring.js is required lazily inside functions to avoid circular dependency.
+// (finder.js ← scoring.js ← finder.js cycle is broken by deferring the require)
 
 // ─────────────────────────────────────────────
 // Phone Normalization (Saudi Arabia)
@@ -292,6 +293,9 @@ function deduplicateLeads(leads) {
 
 async function saveLeadToDB(lead) {
   try {
+    // Lazy require to avoid circular dependency (finder → scoring → finder)
+    const { compute4DScore } = require('./scoring');
+
     // Run 4D scoring
     const scoreResult = compute4DScore(lead);
 

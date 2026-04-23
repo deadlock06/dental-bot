@@ -5,6 +5,94 @@
 
 ---
 
+## Session: 2026-04-23 (Part 5) — Bug Fixes: Circular Deps + sender.js
+
+**Agent:** Antigravity AI (Claude Sonnet 4.6 Thinking)
+**Duration:** ~10 min
+
+### What Was Done
+
+1. **Confirmed Steps 2–9 already complete** — all GS tables, finder.js, scoring.js, brain.js, conversation.js, state-machine.js, nurture.js, handoff.js were already operational.
+2. **Fixed circular dependency** between `scoring.js` and `finder.js`:
+   - `scoring.js` removed `require('./finder')` — moved pain detection logic inline as `detectPainSignalsInternal()`
+   - `finder.js` removed top-level `require('./scoring')` — now uses lazy `require` inside `saveLeadToDB()`
+3. **Fixed `sender.js` bugs:**
+   - Removed wrong import `buildGhostRoomUrl` → corrected to `getGhostRoomUrl`
+   - Removed duplicate Twilio `sendWhatsApp` — now uses shared `lib/whatsappProvider`
+   - Added missing `processBatch()` function (required by `growth/index.js`)
+   - Updated `module.exports` accordingly
+
+### Files Modified
+- `growth/scoring.js`
+- `growth/finder.js`
+- `growth/sender.js`
+
+---
+
+## Session: 2026-04-23 (Part 4) — Intelligence Layer + Security Hardening
+
+**Agent:** Antigravity AI (Gemini 3.1 Flash)  
+**User:** Qudozen founder  
+**Duration:** ~45 min  
+
+### What Was Done
+
+1. **Implemented Real Analytics Engine:**
+   - Modified `api.js` to replace the empty `/api/analytics` endpoint with real Supabase queries.
+   - Calculates summary KPIs (Total Appts, Revenue, No-Show Rate, New Patients).
+   - Generates daily trend data, revenue by treatment, and doctor utilization metrics.
+   - Built an estimated patient acquisition funnel based on booking ratios.
+2. **Dashboard Data Integration:**
+   - Refactored `dashboard/src/pages/Analytics.tsx` to fetch real data via Axios.
+   - Replaced all mock data constants with dynamic state and loading indicators.
+3. **Upgraded Growth Security (JWT):**
+   - Installed `jsonwebtoken` and `cookie-parser`.
+   - Replaced HTTP Basic Auth in `growth/index.js` with a robust JWT-based system.
+   - Implemented `/growth/login` (GET/POST) and `/growth/logout`.
+   - Uses HttpOnly cookies for secure browser sessions and Authorization headers for API.
+4. **Timezone Pinning (SAR):**
+   - Fixed `index.js` to use Luxon for all reminder and no-show logic.
+   - Pinned server time to `Asia/Riyadh` to prevent UTC-offset errors at midnight.
+5. **Database Schema Cleanup:**
+   - Removed duplicate `last_contacted_at` column from `growth_leads_v2` in `schema.sql`.
+
+### Files Modified
+- `api.js`
+- `index.js`
+- `growth/index.js`
+- `dashboard/src/pages/Analytics.tsx`
+- `schema.sql`
+- `package.json`
+
+### Issues Resolved
+- [x] `/api/analytics` returns `{}`
+- [x] No-show detection uses UTC
+- [x] Duplicate column in growth_leads_v2
+- [x] Growth dashboard uses weak Basic Auth
+
+---
+
+## Session: 2026-04-23 (Part 3) — Growth Swarm 3.0 Orchestration Layer Deployed
+
+**Agent:** Antigravity AI (Claude Opus 4.6)  
+**User:** Qudozen founder  
+**Duration:** ~2 hours  
+**Commit:** `c32b1bd`  
+
+### What Was Done
+
+1. **Executed 15-Step Architecture Plan:** Finalized the `qudozen-brain.json` roadmap.
+2. **State Machine (`growth/state-machine.js`):** Built an LLM intent classifier to intercept Twilio webhooks, parse lead intent (ENGAGED, OBJECTION, HANDED_OFF, OPT_OUT), and automatically pause nurture sequences upon reply.
+3. **Objection Handling (`growth/conversation.js`):** Implemented dynamic ChatGPT system prompts using the "Illusion Architecture" to respond to common prospect objections (price, AI skepticism) as "Jake".
+4. **Nurture Engine (`growth/nurture.js`):** Automated a cron-based sequence manager interacting with `gs_sequences` to fire scheduled follow-up loops.
+5. **Intelligent Handoff (`growth/handoff.js`):** Integrated the transition bridge from Growth Swarm into the core Qudozen Dental Bot (`patients` table) while pinging the admin via WhatsApp.
+6. **AI Feedback Loop (`gs_feedback`):** Automatically logs AI outputs mapped to handoffs (success), opt-outs (fail), and objections, serving as a dataset for future LLM reinforcement learning.
+7. **Compliance Engine (`index.js`):** Intercepts 'STOP' keywords globally, pausing all active `gs_sequences` instantly.
+8. **Dashboard UI Refactor:** Upgraded the React Dashboard (`/api/leads` and `Leads.tsx`) to pull from `gs_leads` natively, visually rendering the new 4D intelligence profile (Fit, Pain, Timing, Reachability) and specific lead pain chips.
+9. **Deployed:** Built the dashboard and pushed to production on Render.
+
+---
+
 ## Session: 2026-04-23 (Part 2) — Simulator Debug + Full Fix
 
 **Agent:** Antigravity AI (Claude Opus 4.6)  

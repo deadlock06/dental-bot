@@ -128,7 +128,6 @@ CREATE TABLE IF NOT EXISTS growth_leads_v2 (
 
   -- Lifecycle timestamps
   first_contacted_at    TIMESTAMPTZ,
-  last_contacted_at     TIMESTAMPTZ,
   replied_at            TIMESTAMPTZ,
   handed_off_at         TIMESTAMPTZ,
   opted_out_at          TIMESTAMPTZ,

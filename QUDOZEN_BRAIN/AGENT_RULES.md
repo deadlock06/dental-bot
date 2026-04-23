@@ -5,6 +5,18 @@
 
 ---
 
+## 🚀 0. SESSION BOOT PROTOCOL (Execute Immediately)
+Every time a new session starts, before writing ANY code or proposing ANY plans, you (the AI Agent) MUST execute this sequence to gain full context:
+
+1. **WHERE WORK STOPPED:** Read `EXECUTION_LOG.md` (top entry) to understand exactly what the previous agent completed.
+2. **WHERE TO START:** Read `CURRENT_PLAN.md` to identify the current Priority 1 task.
+3. **WHAT TO CHECK & AUDIT:** Read `STATUS.md` to check system health, open bugs, and database state.
+4. **VERIFY SYSTEM STATE:** Proactively read the source code files associated with the Priority 1 task to audit their current state before attempting any fixes.
+
+If you fail to execute this protocol, you risk breaking existing code by acting on outdated assumptions.
+
+---
+
 ## 🔴 ABSOLUTE RULES (Never Break, No Exceptions)
 
 ### Rule 1: Patient Flow Reset Protocol
@@ -96,6 +108,20 @@ After completing any task:
 2. Update `CURRENT_PLAN.md` with next steps
 3. Update `STATUS.md` if anything deployed
 4. Add any new ideas to `IDEAS_BACKLOG.md`
+
+### 👑 THE PRIME DIRECTIVE: THE BRAIN MUST BE UPDATED
+1. **At the end of EVERY successful session, feature implementation, or bug fix, you (the AI) MUST automatically update the `QUDOZEN_BRAIN` folder.**
+2. You must append your work to `EXECUTION_LOG.md`.
+3. You must update `CURRENT_PLAN.md` to check off completed tasks.
+4. You must update `MASTER_CONTEXT.md` or `STATUS.md` if you added new files or database tables.
+5. **Do NOT wait for the user to ask you to do this. Do it autonomously before declaring your task complete.**
+
+### 💾 MEMORY COMPRESSION PROTOCOL (1000-Year Memory)
+To prevent the AI context window from bloating infinitely, we use a hierarchical memory system. If you notice `EXECUTION_LOG.md` is getting too long (more than 10 sessions), you MUST execute the Compression Protocol:
+1. Delete the oldest sessions from the bottom of `EXECUTION_LOG.md`.
+2. Distill the technical/architectural takeaways from those sessions into a single concise "Wisdom" entry.
+3. Append that entry to `QUDOZEN_BRAIN/ARCHIVE/DECISIONS_LOG.md`.
+4. Leave only the 10 most recent sessions in `EXECUTION_LOG.md`.
 
 ### Rule 13: Never Assume DB Schema
 The schema evolves. If you need to know what columns exist:

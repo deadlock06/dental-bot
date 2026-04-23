@@ -1,6 +1,6 @@
 # 🖥️ STATUS — System Health Snapshot
 
-> Last checked: 2026-04-23 19:05 (AST / UTC+3)
+> Last checked: 2026-04-23 23:30 (AST / UTC+3)
 > Update this after every deploy or system change.
 
 ---
@@ -14,7 +14,7 @@
 | Supabase DB | ✅ Connected | All tables created via schema.sql |
 | Twilio WhatsApp | ✅ Active | Sandbox (for testing) / Production configured |
 | OpenAI GPT-4o-mini | ✅ Connected | Intent detection + date extraction |
-| Growth Dashboard | ✅ Live | `/growth/dashboard` — HTTP Basic Auth |
+| Growth Dashboard | ✅ Live | `/growth/dashboard` — JWT Auth |
 | React Dashboard | ⚠️ Unknown | `/dashboard` — may serve stale dist if not rebuilt |
 | Public Landing Page | ✅ Live | `/` serves `public/index.html` |
 | Ghost Room | ✅ Live | `/growth/ghost-room` |
@@ -25,10 +25,7 @@
 
 | Issue | Impact | Fix In |
 |---|---|---|
-| Dashboard not auto-built on Render | Medium — stale dashboard | CURRENT_PLAN Priority 1 |
-| No-show detection uses UTC (not SAR) | Medium — may misfire at midnight | CURRENT_PLAN Priority 1 |
-| `/api/analytics` returns `{}` | Low — analytics page empty | CURRENT_PLAN Priority 2 |
-| Duplicate column in schema.sql | Low — documentation only | CURRENT_PLAN Priority 1 |
+| Dashboard not auto-built on Render | Medium — stale dashboard | Manual build/commit required |
 
 ---
 
@@ -62,6 +59,8 @@ axios: ^1.15.0
 googleapis: ^171.4.0
 stripe: ^22.0.2
 cheerio: ^1.2.0
+jsonwebtoken: ^9.0.2
+cookie-parser: ^1.4.7
 ```
 
 ---
@@ -85,6 +84,7 @@ cheerio: ^1.2.0
 | STRIPE_WEBHOOK_SECRET | Optional | ❓ Check Render |
 | NODE_ENV | Auto | ✅ production (Render injects) |
 | PORT | Auto | ✅ (Render injects) |
+| JWT_SECRET | Yes | ✅ (using default fallback) |
 
 ---
 
@@ -97,8 +97,13 @@ cheerio: ^1.2.0
 | appointments | Unknown | Growing |
 | doctor_schedules | Unknown | Per clinic |
 | doctor_slots | Unknown | Cleaned hourly |
-| growth_leads_v2 | Unknown | Main pipeline |
+| growth_leads_v2 | Unknown | Legacy pipeline (deprecated) |
 | message_logs | Unknown | Twilio delivery tracking |
+| gs_leads | Unknown | GS 3.0: Core prospect data |
+| gs_campaigns | Unknown | GS 3.0: Broad targeted initiatives |
+| gs_sequences | Unknown | GS 3.0: Automated follow-up state |
+| gs_conversations | Unknown | GS 3.0: Full message history |
+| gs_feedback | Unknown | GS 3.0: AI learning loop data |
 
 ---
 

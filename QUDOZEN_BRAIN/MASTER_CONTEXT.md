@@ -68,9 +68,12 @@ All four layers share: index.js (server) + Supabase (database)
 | File | Size | Role | Key Functions |
 |---|---|---|---|
 | `growth/index.js` | 29KB | **Express router: all /growth/* endpoints + Growth HTML dashboard** | 20+ routes (see below) |
-| `growth/brain.js` | 3.9KB | **GPT-4o-mini outreach message generator** | `generateMessage(lead)` — writes personalized Arabic/English WhatsApp cold messages |
-| `growth/sender.js` | 2.9KB | **Follow-up drip sequence engine** | `sendFollowUps()`, `processBatch(limit)` |
-| `growth/handoff.js` | 2.4KB | **Converts growth lead reply → bot patient** | `handoffLead(lead, message)` — detects reply intent, creates patient record, starts bot flow |
+| `growth/state-machine.js` | 3.5KB | **LLM Intent Classifier & Core Router** | Intercepts all inbound Growth Swarm replies |
+| `growth/conversation.js` | 4.2KB | **"Jake" Persona & Objection Handling** | Uses "Illusion Architecture" GPT-4o-mini prompts |
+| `growth/nurture.js` | 5.1KB | **Automated Nurture Sequence Engine** | Cron-based drip campaigns tied to `gs_sequences` |
+| `growth/handoff.js` | 2.4KB | **Converts GS lead reply → bot patient** | `handoffLead(lead, message)` — notifies admin, creates patient record |
+| `growth/brain.js` | 3.9KB | **Legacy initial cold outreach generator** | Mostly superseded by sequence engine |
+| `growth/sender.js` | 2.9KB | **Legacy follow-up engine** | Now hooks into Nurture engine |
 | `growth/finder.js` | 2KB | **Legacy lead finder utility** | Deprecated, kept for compat |
 | `growth/ghost-room.html` | 6.9KB | **Revenue loss simulator landing page** | Animated counter + Stripe CTA. URL: /growth/ghost-room?clinic=X&city=Y |
 
@@ -232,29 +235,53 @@ patient_phone  TEXT
 appointment_id UUID
 ```
 
-### `growth_leads_v2` — Outreach pipeline
+### `growth_leads_v2` — Legacy Outreach Pipeline (Deprecated)
 ```sql
 phone                TEXT UNIQUE     -- Saudi mobile
-name                 TEXT
-business_name        TEXT
-city                 TEXT
-vertical             TEXT DEFAULT 'dental'
-status               TEXT  -- pending → verifying → verified_owner/needs_review/dropped → messaged → bumped_1 → bumped_2 → handed_off → customer/opted_out
-confidence_score     INT   -- 0-100
-is_owner_verified    BOOLEAN
-pain_signal          TEXT  -- 'hiring_receptionist' etc.
-website_found        BOOLEAN
-website_url          TEXT
-website_owner_name   TEXT
-phone_type           TEXT  -- 'personal' | 'business'
-last_message_sent    TEXT
-last_contacted_at    TIMESTAMPTZ
-first_contacted_at   TIMESTAMPTZ
-message_count        INT
-manually_approved    BOOLEAN
-stripe_session_id    TEXT
-stripe_customer_email TEXT
-paid_at              TIMESTAMPTZ
+-- (Legacy columns removed for brevity in context. Replaced by gs_leads)
+```
+
+### `gs_leads` — Growth Swarm 3.0 Core Pipeline
+```sql
+id                 UUID PRIMARY KEY
+campaign_id        UUID
+company_name       TEXT NOT NULL
+owner_name         TEXT
+phone              TEXT
+fit_score          INT DEFAULT 0
+pain_score         INT DEFAULT 0
+timing_score       INT DEFAULT 0
+reachability_score INT DEFAULT 0
+total_score        INT DEFAULT 0
+pain_signals       JSONB DEFAULT '[]'
+status             TEXT -- 'new' | 'contacted' | 'messaged' | 'bumped_1' | 'engaged' | 'handed_off' | 'opted_out'
+```
+
+### `gs_conversations` — Growth Swarm 3.0 Chat History
+```sql
+id                 UUID PRIMARY KEY
+lead_id            UUID
+direction          TEXT -- 'inbound' | 'outbound'
+message_text       TEXT
+ai_generated       BOOLEAN
+```
+
+### `gs_sequences` — Growth Swarm 3.0 Automated Drips
+```sql
+id                 UUID PRIMARY KEY
+lead_id            UUID
+current_step       INT
+is_paused          BOOLEAN
+next_trigger_at    TIMESTAMPTZ
+```
+
+### `gs_feedback` — AI Learning Loop
+```sql
+id                 UUID PRIMARY KEY
+lead_id            UUID
+feedback_type      TEXT -- 'opt_out' | 'handoff' | 'objection'
+ai_output          TEXT
+rating             INT
 ```
 
 ### `message_logs` — Twilio delivery tracking

@@ -6,69 +6,36 @@
 ---
 
 ## 🎯 Current Sprint Goal
-**Stabilize production deployment + fix known critical issues + set up living knowledge system**
+**Monitor Growth Swarm 3.0 in Production + Refine AI Feedback Loop**
 
 ---
 
 ## ✅ Completed This Session (2026-04-23)
 
-- [x] Created `QUDOZEN_BRAIN/` knowledge system folder
-- [x] Wrote `MASTER_CONTEXT.md` — complete file map, DB schema, routes, bot flow
-- [x] Wrote `AGENT_RULES.md` — sacred production rules
-- [x] Wrote `CURRENT_PLAN.md` (this file)
-- [x] Wrote `EXECUTION_LOG.md` — session history
-- [x] Wrote `IDEAS_BACKLOG.md` — future ideas
-- [x] Wrote `STATUS.md` — system health snapshot
-- [x] Diagnosed Render deployment issue (wrong file served → cause: Render had not redeployed latest commit)
+- [x] Completed **Growth Swarm 3.0 15-Step Epic**
+- [x] Deployed `state-machine.js` for intelligent conversation parsing (GPT-4o-mini intent matching)
+- [x] Deployed `nurture.js` for automated, state-aware multi-step follow-ups
+- [x] Built the `gs_feedback` loop to self-correct AI outbound messaging
+- [x] Integrated strict Twilio webhook compliance (opt-out immediately pauses `gs_sequences`)
+- [x] Rebuilt React Admin Dashboard (`/api/leads`) to display 4D metrics (Fit, Pain, Timing, Reachability)
+- [x] Pushed all code to production and verified Render deployment
+- [x] **Implemented Real Analytics Engine:** Replaced mock data in `/api/analytics` with real Supabase queries.
+- [x] **Upgraded Growth Security:** Replaced HTTP Basic Auth with JWT tokens for `/growth/dashboard`.
+- [x] **Fixed SAR Timezone Logic:** pinned reminders and no-show detection to Asia/Riyadh.
 
 ---
 
-## 🔥 Priority 1: Critical Fixes (Do These Next)
+## 🔥 Priority 1: Post-Launch Monitoring (Do These Next)
 
-### Fix 1: Render Dashboard Build
-**Problem:** `render.yaml` only runs `npm install` — the React dashboard (`dashboard/dist/`) is never rebuilt on Render  
-**Fix:** Update `render.yaml` build command:
-```yaml
-buildCommand: npm install && npm install --prefix dashboard && npm run build --prefix dashboard
-```
-**Files:** `render.yaml`  
-**Risk:** Low — adds 2-3 min to build time  
-**Status:** Open
+### Monitor 1: Feedback Loop Efficacy
+**Goal:** Watch `gs_feedback` in Supabase to see if the AI is generating positive handoffs or hitting too many objections. We may need to refine the prompt in `conversation.js`.
 
-### Fix 2: No-Show Detection Timezone
-**Problem:** No-show detection (index.js:295) compares times using `new Date()` (UTC) not Saudi time (UTC+3)  
-**Fix:** Use Luxon:
-```javascript
-const { DateTime } = require('luxon');
-const now = DateTime.now().setZone('Asia/Riyadh');
-```
-**Files:** `index.js` (no-show section ~line 295)  
-**Risk:** Medium — touches production reminder logic  
-**Status:** Open
-
-### Fix 3: Duplicate Column in Schema
-**Problem:** `growth_leads_v2` has `last_contacted_at` declared twice (lines 123 and 131)  
-**Fix:** Run in Supabase SQL editor (column already exists, just fix schema.sql doc):
-```sql
--- Remove the duplicate line 131 in schema.sql
-```
-**Files:** `schema.sql`  
-**Risk:** Low — schema.sql is documentation, actual DB may already be correct  
-**Status:** Open
+### Monitor 2: Ghost Room Conversion
+**Goal:** Track leads transitioning from Growth Swarm (`HANDED_OFF` state) into the Ghost Room demo. Verify that `patients` records are being successfully converted.
 
 ---
 
 ## 🟡 Priority 2: Improvements (Next Sprint)
-
-### Improve 1: Analytics Page
-**Problem:** `/api/analytics` returns empty `{}` — the Analytics page in the dashboard has no data  
-**Fix:** Implement real analytics queries (appointments trend, revenue, treatment breakdown)  
-**Files:** `api.js`, `dashboard/src/pages/Analytics.tsx`
-
-### Improve 2: Dashboard JWT Auth
-**Problem:** Growth dashboard uses HTTP Basic Auth (weak)  
-**Fix:** Implement proper JWT tokens with expiry for `/growth/dashboard`  
-**Files:** `growth/index.js`
 
 ### Improve 3: bot.js Modularization
 **Problem:** `bot.js` is 103KB single file — hard to maintain  
@@ -97,4 +64,4 @@ Top 3 from backlog:
 ---
 
 *Last updated: 2026-04-23 by Antigravity AI*
-*Next update: After Priority 1 fixes are complete*
+*Next update: After initial Growth Swarm 3.0 metrics are collected*
