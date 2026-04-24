@@ -235,14 +235,34 @@
     
     <div class="hidden md:flex gap-6 text-sm font-medium text-gray-300">
       <div class="group relative">
-        <a href="#services" class="hover:text-aqua transition flex items-center gap-1">خدماتنا <span class="text-[10px]">▼</span></a>
-        <div class="absolute top-full -right-4 w-56 pt-4 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300">
-          <div class="glass p-4 rounded-2xl border border-white/10 flex flex-col gap-3 shadow-2xl bg-[#0B1120]/95">
-            <a href="javascript:void(0)" onclick="scrollToService('reception')" class="text-xs hover:text-aqua transition text-right">🤖 موظف الاستقبال</a>
-            <a href="javascript:void(0)" onclick="scrollToService('growth')"    class="text-xs hover:text-aqua transition text-right">🎯 محرك النمو</a>
-            <a href="javascript:void(0)" onclick="scrollToService('realestate')" class="text-xs hover:text-aqua transition text-right">🏢 المساعد العقاري</a>
-            <a href="javascript:void(0)" onclick="scrollToService('web')"        class="text-xs hover:text-aqua transition text-right">🌐 أنظمة الويب</a>
-            <a href="javascript:void(0)" onclick="scrollToService('analytics')"  class="text-xs hover:text-aqua transition text-right">📊 لوحة البيانات</a>
+        <a href="#services" class="hover:text-aqua transition flex items-center gap-1 py-2">خدماتنا <span class="text-[10px]">▼</span></a>
+        <div class="absolute top-full right-0 w-64 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300 z-[100]">
+          <div class="glass p-4 rounded-2xl border border-white/10 flex flex-col gap-3 shadow-2xl bg-[#0B1120]/98 backdrop-blur-xl">
+            <a href="javascript:void(0)" onclick="scrollToService('reception')" class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
+              <span>🤖 موظف الاستقبال</span>
+              <span class="text-[10px] opacity-40">AOS</span>
+            </a>
+            <a href="javascript:void(0)" onclick="scrollToService('growth')"    class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
+              <span>🎯 محرك النمو</span>
+              <span class="text-[10px] opacity-40">SWARM</span>
+            </a>
+            <a href="javascript:void(0)" onclick="scrollToService('realestate')" class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
+              <span>🏢 المساعد العقاري</span>
+              <span class="text-[10px] opacity-40">RES</span>
+            </a>
+            <a href="javascript:void(0)" onclick="scrollToService('web')"        class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
+              <span>🌐 أنظمة الويب</span>
+              <span class="text-[10px] opacity-40">WEB</span>
+            </a>
+            <a href="javascript:void(0)" onclick="scrollToService('analytics')"  class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
+              <span>📊 لوحة البيانات</span>
+              <span class="text-[10px] opacity-40">DATA</span>
+            </a>
+            <div class="h-px bg-white/5 my-1"></div>
+            <a href="javascript:void(0)" onclick="scrollToService('enterprise')" class="text-xs text-gold hover:text-white transition text-right px-2 py-1.5 rounded-lg bg-gold/5 border border-gold/10 flex items-center justify-between flex-row-reverse">
+              <span>💎 النظام المؤسسي</span>
+              <span class="text-[8px] font-bold">PRO</span>
+            </a>
           </div>
         </div>
       </div>
