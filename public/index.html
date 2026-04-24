@@ -880,61 +880,88 @@
   <section id="simulator">
     <div class="container">
       <div class="section-header">
-        <span class="section-label">Proof of Work</span>
-        <h2 class="section-title">Interactive Experience</h2>
-        <p class="section-subtitle">Don't take our word for it. Try booking an appointment with Jake right now below.</p>
+        <span class="section-label">High-Fidelity Simulation</span>
+        <h2 class="section-title">The Autonomous Workflow</h2>
+        <p class="section-subtitle">Experience the exact interface and logic your clients will use. No mockups, just pure intelligence.</p>
       </div>
 
-      <div class="max-w-5xl mx-auto glass rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl bg-[#040914]/80">
-        <div class="flex flex-col md:flex-row h-[600px]">
-          <!-- Chat Interface -->
-          <div class="w-full md:w-[400px] bg-[#080C14] flex flex-col border-r border-white/5">
-            <div class="p-4 bg-[#1E293B] flex items-center gap-3 border-b border-white/5">
-              <div class="w-10 h-10 rounded-full bg-[#0D9488] flex items-center justify-center font-bold text-white">J</div>
-              <div>
-                <div class="text-sm font-bold text-white">Jake | Qudozen AI</div>
-                <div class="text-[10px] text-[#0D9488] flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#0D9488] animate-pulse"></span> Online</div>
-              </div>
-            </div>
-            <div id="chatDisplay" class="flex-1 p-6 overflow-y-auto flex flex-col gap-4 custom-scrollbar">
-              <!-- Messages -->
-            </div>
-            <div class="p-4 bg-[#0F172A] border-t border-white/5 flex gap-2">
-              <input id="chatInput" type="text" placeholder="Type your message..." class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#0D9488]">
-              <button id="sendBtn" class="bg-[#0D9488] text-white w-12 h-12 rounded-xl flex items-center justify-center hover:bg-[#0a7a70] transition-colors">&#x2192;</button>
-            </div>
+      <div class="flex flex-col lg:flex-row gap-12 items-center justify-center">
+        <!-- THE PHONE (Screenshot Parity) -->
+        <div id="simPhoneShell" class="relative w-[340px] h-[680px] bg-[#040914] rounded-[3rem] border-[8px] border-[#1E293B] shadow-[0_0_80px_rgba(13,148,136,0.15)] overflow-hidden z-10 flex flex-col">
+          
+          <!-- Header (Screenshot Matching) -->
+          <div class="bg-[#0B1120] p-5 pt-10 border-b border-white/5 flex items-center justify-between">
+             <div class="flex items-center gap-3">
+               <div class="relative">
+                 <div class="w-12 h-12 rounded-full bg-[#0D9488]/20 flex items-center justify-center border border-[#0D9488]/30">
+                   <span class="text-2xl">🤖</span>
+                 </div>
+                 <div class="absolute bottom-0 right-0 w-3 h-3 bg-teal-500 rounded-full border-2 border-[#0B1120]"></div>
+               </div>
+               <div>
+                 <div class="text-sm font-bold text-white tracking-tight">Smart Clinic System</div>
+                 <div class="text-[10px] text-teal-400 flex items-center gap-1">Always connected <span class="w-1 h-1 bg-teal-400 rounded-full animate-pulse"></span></div>
+               </div>
+             </div>
+             <div class="flex gap-2 opacity-40">
+               <div class="w-1 h-1 bg-white rounded-full"></div>
+               <div class="w-1 h-1 bg-white rounded-full"></div>
+               <div class="w-1 h-1 bg-white rounded-full"></div>
+             </div>
           </div>
 
-          <!-- Dashboard Sync Preview -->
-          <div class="flex-1 bg-[#040914] p-8 hidden md:flex flex-col border-l border-white/5">
-            <div class="flex items-center justify-between mb-8">
-              <h3 class="text-xs font-bold text-[#C9A84C] uppercase tracking-widest">Management Console</h3>
-              <div class="text-[10px] text-muted font-mono tracking-widest" id="simTimer">SEC: 0s</div>
+          <!-- Progress Bar (Phase X/7) -->
+          <div class="px-5 py-2 bg-[#0B1120]/50 border-b border-white/5 flex items-center justify-between">
+            <div class="flex-1 h-1 bg-white/5 rounded-full overflow-hidden mr-4">
+              <div id="simBar" class="h-full bg-teal transition-all duration-500" style="width: 15%"></div>
             </div>
-            <div class="space-y-6">
-              <div class="bg-white/5 rounded-2xl p-6 border border-white/5 relative overflow-hidden group">
-                <div class="absolute inset-0 bg-gradient-to-r from-[#0D9488]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="text-[10px] text-muted mb-2 uppercase tracking-tighter">Current Intelligence Phase</div>
-                <div id="simStatus" class="text-lg font-bold text-[#0D9488]">Waiting for visitor...</div>
-              </div>
-              <div class="bg-white/5 rounded-2xl p-6 border border-white/5">
-                <div class="text-[10px] text-muted mb-2 uppercase tracking-tighter">Live Calendar Sync</div>
-                <div id="simCalendar" class="space-y-3">
-                  <div class="h-2 bg-white/5 rounded-full w-full overflow-hidden">
-                    <div id="prog1" class="h-full bg-[#0D9488] w-0 transition-all duration-1000"></div>
-                  </div>
-                  <div class="h-2 bg-white/5 rounded-full w-3/4 overflow-hidden">
-                    <div id="prog2" class="h-full bg-[#C9A84C] w-0 transition-all duration-1000"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="mt-auto bg-[#C9A84C]/5 border border-[#C9A84C]/10 p-6 rounded-2xl">
-              <p class="text-[11px] text-[#C9A84C]/80 leading-relaxed font-medium">
-                <span class="font-bold">Real-time Logic:</span> This dashboard reflects the AI's internal state machine. Every response is generated by Qudozen v3.4 core.
-              </p>
-            </div>
+            <span id="simPhaseText" class="text-[9px] text-muted font-mono uppercase tracking-widest">Phase 1/7</span>
           </div>
+
+          <!-- Messages Area -->
+          <div id="simChat" class="flex-1 p-5 overflow-y-auto flex flex-col gap-4 custom-scrollbar bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] bg-fixed">
+            <!-- Bubbles -->
+          </div>
+
+          <!-- Interactive Chips Area (The selection buttons from screenshot) -->
+          <div id="simReplies" class="p-4 bg-[#0B1120]/80 backdrop-blur-md border-t border-white/5 flex flex-wrap justify-center gap-2">
+            <!-- Chips -->
+          </div>
+
+          <!-- Bottom Bar -->
+          <div class="p-4 bg-[#0B1120] flex gap-2 items-center">
+            <div class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-muted text-lg"><</div>
+            <div class="flex-1 bg-white/5 rounded-2xl px-4 py-2 text-[11px] text-muted border border-white/5">...Write a message</div>
+          </div>
+        </div>
+
+        <!-- System Stats (Dashboard Sync) -->
+        <div class="hidden lg:flex flex-col gap-6 w-full max-w-sm">
+           <div class="glass p-6 rounded-3xl border border-white/5">
+             <div class="text-[10px] text-gold uppercase tracking-[0.2em] mb-4">Autonomous Sync</div>
+             <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-muted">Intent Detection</span>
+                  <span class="text-xs text-teal font-mono">98.4%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-muted">Google Cal Sync</span>
+                  <span class="text-xs text-teal font-mono">LATENCY: 0.8s</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-muted">Patient Language</span>
+                  <span id="dashLang" class="text-xs text-gold font-mono">EN/AR</span>
+                </div>
+             </div>
+           </div>
+           
+           <div class="bg-teal/5 border border-teal/10 p-6 rounded-3xl">
+             <p class="text-xs text-teal/80 leading-relaxed italic">
+               "Jake is currently parsing natural language. He is not just checking dates; he is identifying specific symptoms to prioritize the appointment."
+             </p>
+           </div>
+           
+           <button onclick="resetPremiumSim()" class="btn-secondary w-full justify-center">Restart Full Workflow</button>
         </div>
       </div>
     </div>
@@ -1109,170 +1136,136 @@
     });
   </script>
 
-<script id="simScript">
-  const chatData = [
-    { type: 'patient', text: 'Hi, I want to book an appointment for tomorrow.' },
-    { type: 'bot', text: 'Hello! I am Jake, your AI assistant. I can help you with that. Which clinic would you like to visit?' },
-    { type: 'patient', text: 'Qudozen Center in Riyadh.' },
-    { type: 'bot', text: 'Perfect. We have slots available for tomorrow. Would 10:00 AM work for you?' },
-    { type: 'patient', text: 'Yes, that works.' },
-    { type: 'bot', text: 'Great! I have booked your slot. You will receive a reminder 24 hours before your visit. See you then!' }
-  ];
 
-  function startEnglishSim() {
-    const chat = document.getElementById('simChat');
-    const prog = document.getElementById('simProgress');
-    if(!chat) return;
-    chat.innerHTML = '';
-    prog.style.width = '0%';
-    
-    let i = 0;
-    function next() {
-      if (!document.getElementById('simChat')) return; // Cleanup if element gone
-      if (i >= chatData.length) {
-        setTimeout(startEnglishSim, 5000);
-        return;
-      }
-      const m = chatData[i];
-      const div = document.createElement('div');
-      div.style.padding = '12px 16px';
-      div.style.borderRadius = '16px';
-      div.style.fontSize = '14px';
-      div.style.lineHeight = '1.5';
-      div.style.maxWidth = '85%';
-      
-      if (m.type === 'bot') {
-        div.style.alignSelf = 'flex-start';
-        div.style.background = '#1E293B';
-        div.style.color = 'white';
-        div.style.borderTopLeftRadius = '0';
-      } else {
-        div.style.alignSelf = 'flex-end';
-        div.style.background = '#0D9488';
-        div.style.color = 'white';
-        div.style.borderTopRightRadius = '0';
-      }
-      div.textContent = m.text;
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
-      prog.style.width = ((i+1)/chatData.length * 100) + '%';
-      i++;
-      setTimeout(next, 2000);
-    }
-    next();
-  }
-  window.addEventListener('load', startEnglishSim);
-</script>
 
-<script id="botEngine">
-  (function(){
-    const chatDisplay = document.getElementById('chatDisplay');
-    const chatInput = document.getElementById('chatInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const simStatus = document.getElementById('simStatus');
-    const prog1 = document.getElementById('prog1');
-    const prog2 = document.getElementById('prog2');
-    const simTimer = document.getElementById('simTimer');
-    
-    let step = 0;
-    let seconds = 0;
-    const userData = { name: '', treatment: '', doctor: '', date: '', time: '' };
 
-    setInterval(() => {
-      seconds++;
-      if(simTimer) simTimer.textContent = 'SEC: ' + seconds + 's';
-    }, 1000);
-
-    function addMessage(type, text) {
-      const div = document.createElement('div');
-      div.style.padding = '12px 16px';
-      div.style.borderRadius = '16px';
-      div.style.fontSize = '14px';
-      div.style.lineHeight = '1.5';
-      div.style.maxWidth = '85%';
-      div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-      
-      if (type === 'bot') {
-        div.style.alignSelf = 'flex-start';
-        div.style.background = '#1E293B';
-        div.style.color = 'white';
-        div.style.borderTopLeftRadius = '0';
-      } else {
-        div.style.alignSelf = 'flex-end';
-        div.style.background = '#0D9488';
-        div.style.color = 'white';
-        div.style.borderTopRightRadius = '0';
-      }
-      div.textContent = text;
-      chatDisplay.appendChild(div);
-      chatDisplay.scrollTop = chatDisplay.scrollHeight;
-    }
-
-    function botReply(text, status, p1, p2) {
-      setTimeout(() => {
-        addMessage('bot', text);
-        if(status) simStatus.textContent = status;
-        if(p1 !== undefined) prog1.style.width = p1 + '%';
-        if(p2 !== undefined) prog2.style.width = p2 + '%';
-      }, 600);
-    }
-
-    function processInput() {
-      const input = chatInput.value.trim();
-      if(!input) return;
-      addMessage('user', input);
-      chatInput.value = '';
-
-      switch(step) {
-        case 0:
-          botReply('Nice to meet you! To book your appointment, what is your full name?', 'Processing Identity...', 20, 10);
-          step = 1;
-          break;
-        case 1:
-          userData.name = input;
-          botReply('Thanks ' + input + '. What treatment are you looking for? (e.g. Check-up, Scaling, Dental Implant)', 'Categorizing Intent...', 40, 20);
-          step = 2;
-          break;
-        case 2:
-          userData.treatment = input;
-          botReply('Understood. Which doctor would you like to see?', 'Querying Availability...', 50, 40);
-          step = 3;
-          break;
-        case 3:
-          userData.doctor = input;
-          botReply('Got it. What day works best for you?', 'Syncing Google Calendar...', 70, 60);
-          step = 4;
-          break;
-        case 4:
-          userData.date = input;
-          botReply('We have 10:00 AM or 2:30 PM available. Which do you prefer?', 'Locking Time Slot...', 90, 80);
-          step = 5;
-          break;
-        case 5:
-          userData.time = input;
-          botReply('Perfect! I am booking ' + userData.treatment + ' with ' + userData.doctor + ' for ' + userData.date + ' at ' + userData.time + '. Confirm?', 'Finalizing Transaction...', 95, 90);
-          step = 6;
-          break;
-        case 6:
-          botReply('Congratulations! Your appointment is confirmed. ID: QZ-' + Math.floor(Math.random()*900 + 100) + '. We just sent your clinic a notification.', 'Flow Complete - Success', 100, 100);
-          step = 7;
-          break;
-      }
-    }
-
-    sendBtn.onclick = processInput;
-    chatInput.onkeypress = (e) => { if(e.key === 'Enter') processInput(); };
-
-    // Initial greeting
-    setTimeout(() => {
-      botReply('Hi! I am Jake, your AI receptionist. Ready to see how I can manage your business? Type "Hi" to start!', 'Listening...', 0, 0);
-    }, 1000);
-  })();
-</script>
 <style>
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+</style>
+
+<script id="premiumSimScript">
+  const MESSAGES = {
+    en: {
+      greet: "Hello! I am Jake, your Smart Clinic assistant. Ready to secure your appointment?",
+      name: "Great! First, what is your full name?",
+      treat: "Welcome! What treatment do you need? (e.g. Scaling, Braces, Consult)",
+      doc: "Excellent. Select your preferred doctor: \n\n1. Dr. Ahmed (Implants)\n2. Dr. Sarah (Orthodontics)\n3. Any available doctor",
+      date: "Perfect. When would you like your appointment with {doc}?",
+      slot: "We have availability. Choose your time:",
+      confirm: "Final Review: {treat} with {doc} on {date} at {slot}. Confirm booking?",
+      success: "Successfully Booked! Your ID is QZ-{id}. You'll receive a WhatsApp reminder 24h before."
+    }
+  };
+
+  let simStep = 1;
+  let simData = { name: '', treatment: '', doctor: '', date: '', slot: '' };
+
+  function addSimBubble(type, text) {
+    const chat = document.getElementById('simChat');
+    const div = document.createElement('div');
+    div.style.padding = '12px 16px';
+    div.style.borderRadius = '18px';
+    div.style.fontSize = '12px';
+    div.style.lineHeight = '1.6';
+    div.style.maxWidth = '85%';
+    div.style.animation = 'bubbleIn 0.4s ease-out forwards';
+    
+    if (type === 'bot') {
+      div.style.alignSelf = 'flex-start';
+      div.style.background = '#1E293B';
+      div.style.color = 'white';
+      div.style.borderTopLeftRadius = '0';
+    } else {
+      div.style.alignSelf = 'flex-end';
+      div.style.background = '#0D9488';
+      div.style.color = 'white';
+      div.style.borderTopRightRadius = '0';
+    }
+    div.textContent = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function setSimReplies(replies) {
+    const container = document.getElementById('simReplies');
+    container.innerHTML = '';
+    replies.forEach(r => {
+      const btn = document.createElement('button');
+      btn.className = 'px-4 py-2 bg-white/5 border border-white/10 rounded-full text-[10px] text-teal-400 hover:bg-teal hover:text-white transition-all';
+      btn.textContent = r.label;
+      btn.onclick = () => handleChoice(r.value, r.label);
+      container.appendChild(btn);
+    });
+  }
+
+  function updatePhase(step) {
+    document.getElementById('simPhaseText').textContent = 'Phase ' + step + '/7';
+    document.getElementById('simBar').style.width = (step/7 * 100) + '%';
+  }
+
+  function handleChoice(val, label) {
+    addSimBubble('patient', label);
+    advanceSim(val);
+  }
+
+  function advanceSim(choice) {
+    simStep++;
+    updatePhase(simStep);
+    
+    setTimeout(() => {
+      if (simStep === 2) {
+        addSimBubble('bot', MESSAGES.en.name);
+        setSimReplies([{label: 'Marjuk Hasan', value: 'name'}]);
+      } else if (simStep === 3) {
+        simData.name = 'Marjuk';
+        addSimBubble('bot', MESSAGES.en.treat);
+        setSimReplies([{label: 'Scaling', value: 'scaling'}, {label: 'Braces', value: 'braces'}, {label: 'Implant', value: 'implant'}]);
+      } else if (simStep === 4) {
+        simData.treatment = choice;
+        addSimBubble('bot', MESSAGES.en.doc);
+        setSimReplies([{label: '1. Dr. Ahmed', value: 'Dr. Ahmed'}, {label: '2. Dr. Sarah', value: 'Dr. Sarah'}, {label: '3. Any doctor', value: 'Any doctor'}]);
+      } else if (simStep === 5) {
+        simData.doctor = choice;
+        addSimBubble('bot', MESSAGES.en.date.replace('{doc}', choice));
+        setSimReplies([{label: '1. Tomorrow', value: 'Tomorrow'}, {label: '2. Next Week', value: 'Next Week'}]);
+      } else if (simStep === 6) {
+        simData.date = choice;
+        addSimBubble('bot', MESSAGES.en.slot);
+        setSimReplies([{label: '10:00 AM', value: '10:00 AM'}, {label: '02:30 PM', value: '02:30 PM'}]);
+      } else if (simStep === 7) {
+        simData.slot = choice;
+        addSimBubble('bot', MESSAGES.en.confirm.replace('{treat}', simData.treatment).replace('{doc}', simData.doctor).replace('{date}', simData.date).replace('{slot}', simData.slot));
+        setSimReplies([{label: 'Confirm Booking', value: 'confirm'}, {label: 'Modify', value: 'modify'}]);
+      } else {
+        addSimBubble('bot', MESSAGES.en.success.replace('{id}', Math.floor(Math.random()*800+100)));
+        setSimReplies([{label: 'Restart Workflow', value: 'restart'}]);
+        if(choice === 'restart') resetPremiumSim();
+      }
+    }, 800);
+  }
+
+  function resetPremiumSim() {
+    simStep = 1;
+    document.getElementById('simChat').innerHTML = '';
+    updatePhase(1);
+    addSimBubble('bot', MESSAGES.en.greet);
+    setSimReplies([{label: 'Start Experience', value: 'start'}]);
+  }
+
+  window.addEventListener('load', () => {
+    resetPremiumSim();
+  });
+</script>
+<style>
+  @keyframes bubbleIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(13,148,136,0.1); border-radius: 10px; }
 </style>
 </body>
 </html>
