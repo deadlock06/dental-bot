@@ -1,6 +1,6 @@
 # 🖥️ STATUS — System Health Snapshot
 
-> Last checked: 2026-04-24 16:00 (KSA / UTC+3)
+> Last checked: 2026-04-25 02:51 (KSA / UTC+3) — v3.2.0-FUNNEL
 > Update this after every deploy or system change.
 
 ---
@@ -16,13 +16,13 @@
 | OpenAI GPT-4o-mini | ✅ Connected | Intent detection + date extraction |
 | Growth Dashboard | ✅ Live | `/growth/dashboard` — JWT Auth |
 | React Dashboard | ⚠️ Unknown | `/dashboard` — requires pre-built `dashboard/dist/` |
-| Public Landing Page | 🔄 Deploying | v3.4 commit `38f4310` — English LTR, gold accent, routing fixed |
+| Public Landing Page | ✅ Live (local) | **v3.2.0-FUNNEL** Arabic RTL — 5-phase sales funnel active |
 | Ghost Room | ✅ Live | `/growth/ghost-room.html` — Arabic RTL teaser, dwell tracking active |
 
-### ⚠️ Landing Page File Warning
-`public/index.html` has been silently reverted to Arabic v3.1 at least twice between sessions.
-**Always `Read` the file before `Write` to confirm it is English v3.4.**
-Check for `<html lang="en">` on line 1. If it shows `<html lang="ar" dir="rtl">` the file has been reverted.
+### ✅ Landing Page v3.2.0-FUNNEL Active
+`public/index.html` is **Arabic RTL v3.2** — the Unstoppable Sales Funnel build.
+Key new elements: `#reception-simulator` (bento phone), `#fomoTicker`, `revenueInput`, `redirectToRealSim()`, all `bs*` JS functions.
+**Do NOT revert to English v3.4.** The Arabic funnel is the production intent.
 
 ---
 

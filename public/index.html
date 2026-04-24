@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -216,7 +216,99 @@
     .animate-gradient-text {
       animation: gradient-text 6s ease infinite;
     }
-</style>
+
+    /* ── STEP 1: Bento Simulator (inside AI Receptionist card) ── */
+    #bsPhoneShell { display:flex; flex-direction:column; }
+    .bs-bubble-bot {
+      background:#1e293b; border:1px solid rgba(94,234,212,0.15);
+      border-radius:14px 14px 14px 3px; padding:9px 13px;
+      max-width:85%; align-self:flex-start; font-size:0.78rem;
+      line-height:1.55; animation:bubbleIn .3s ease forwards;
+    }
+    .bs-bubble-user {
+      background:linear-gradient(135deg,#0D9488,#0a7a70);
+      border-radius:14px 14px 3px 14px; padding:9px 13px;
+      max-width:78%; align-self:flex-end; font-size:0.78rem;
+      line-height:1.55; animation:bubbleIn .3s ease forwards;
+    }
+    .bs-typing span {
+      display:inline-block; width:6px; height:6px; border-radius:50%;
+      background:#5EEAD4; animation:typingDot 1.2s infinite;
+    }
+    .bs-typing span:nth-child(2){animation-delay:.2s}
+    .bs-typing span:nth-child(3){animation-delay:.4s}
+    #bsProgress { height:3px; background:linear-gradient(90deg,#0D9488,#5EEAD4); border-radius:999px; transition:width .5s ease; }
+    .bs-qr-chip {
+      display:inline-block; padding:5px 12px; border-radius:999px;
+      border:1px solid rgba(94,234,212,0.35); background:rgba(94,234,212,0.07);
+      color:#5EEAD4; font-size:0.72rem; font-weight:600; cursor:pointer; transition:all .2s; white-space:nowrap;
+    }
+    .bs-qr-chip:hover{background:rgba(94,234,212,0.18);border-color:#5EEAD4;transform:translateY(-1px)}
+    .bs-qr-chip.used{opacity:.35;pointer-events:none}
+    .bs-autonomous-notice {
+      background:linear-gradient(90deg,transparent,rgba(212,165,116,0.1),transparent);
+      background-size:200% 100%; animation:shimmer 3s infinite linear;
+      border-top:1px solid rgba(212,165,116,0.2); border-bottom:1px solid rgba(212,165,116,0.2);
+      padding:7px 0; margin:8px 0; color:#D4A574;
+      font-size:9px; letter-spacing:0.12em; text-transform:uppercase; font-weight:800; text-align:center;
+    }
+    /* ── STEP 2: Showcase overlay (non-interactive) ── */
+    .sim-showcase-overlay {
+      position:absolute; inset:0; z-index:15; cursor:pointer; border-radius:34px;
+    }
+    /* ── STEP 3: Mini Dashboard ── */
+    .bs-dash-field { transition:all 0.4s ease; }
+    @keyframes bsDashPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    /* ── STEP 4: Ghost Room FOMO Ticker ── */
+    #fomoTicker {
+      position:fixed; bottom:96px; left:20px; z-index:998; max-width:260px; pointer-events:none;
+    }
+    .fomo-item {
+      background:rgba(11,17,32,0.96); backdrop-filter:blur(20px);
+      border:1px solid rgba(94,234,212,0.15); border-radius:12px;
+      padding:10px 14px; display:flex; align-items:flex-start; gap:9px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.4); animation:fomoSlideIn 0.4s ease forwards;
+    }
+    @keyframes fomoSlideIn { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes fomoSlideOut { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-20px)} }
+    .fomo-item.leaving { animation:fomoSlideOut 0.4s ease forwards; }
+    /* ── STEP 5: Voice Note Bubble ── */
+    .voice-note-bubble {
+      background:#1e293b; border:1px solid rgba(94,234,212,0.2);
+      border-radius:14px 14px 14px 3px; padding:10px 14px; max-width:82%;
+      align-self:flex-start; display:flex; align-items:center; gap:10px;
+      animation:bubbleIn .35s ease forwards; cursor:pointer;
+    }
+    .voice-note-bubble:hover { border-color:rgba(94,234,212,0.5); }
+    .voice-play-btn {
+      width:30px; height:30px; border-radius:50%;
+      background:linear-gradient(135deg,#0D9488,#5EEAD4);
+      display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:transform .2s;
+    }
+    .voice-play-btn:hover { transform:scale(1.1); }
+    .voice-waveform { flex:1; height:22px; display:flex; align-items:center; gap:1.5px; }
+    .voice-waveform span {
+      display:inline-block; width:2.5px; border-radius:2px;
+      background:rgba(94,234,212,0.45); animation:waveAnim 1.2s ease-in-out infinite;
+    }
+    .voice-waveform span:nth-child(1){height:7px} .voice-waveform span:nth-child(2){height:13px;animation-delay:.1s}
+    .voice-waveform span:nth-child(3){height:18px;animation-delay:.2s} .voice-waveform span:nth-child(4){height:11px;animation-delay:.3s}
+    .voice-waveform span:nth-child(5){height:17px;animation-delay:.4s} .voice-waveform span:nth-child(6){height:9px;animation-delay:.5s}
+    .voice-waveform span:nth-child(7){height:14px;animation-delay:.6s} .voice-waveform span:nth-child(8){height:7px;animation-delay:.7s}
+    @keyframes waveAnim { 0%,100%{opacity:0.4;transform:scaleY(1)} 50%{opacity:1;transform:scaleY(1.4)} }
+    /* ── Revenue Bleed Input ── */
+    .revenue-input-wrap {
+      background:rgba(13,148,136,0.05); border:1px solid rgba(94,234,212,0.2);
+      border-radius:14px; padding:16px 20px; margin-bottom:20px;
+    }
+    .revenue-input-wrap input {
+      background:rgba(11,17,32,0.8); border:1px solid rgba(94,234,212,0.3);
+      border-radius:10px; padding:10px 16px; color:white; font-size:1rem;
+      font-family:'Tajawal',sans-serif; width:100%; outline:none; transition:border-color .3s; text-align:right;
+    }
+    .revenue-input-wrap input:focus { border-color:#5EEAD4; }
+    .revenue-input-wrap input::placeholder { color:rgba(255,255,255,0.3); }
+  </style>
 </head>
 <body class="antialiased selection:bg-[#0D9488] selection:text-white relative">
 
@@ -228,7 +320,8 @@
   </div>
 
   <!-- Navbar -->
-  <nav class="fixed w-full z-50 glass px-6 py-4 flex justify-between items-center transition-all duration-300" id="navbar">
+  <nav class="fixed w-full z-50 glass px-6 py-4 transition-all duration-300" id="navbar">
+    <div class="max-w-6xl mx-auto w-full flex justify-between items-center">
     <div class="text-xl font-bold tracking-wider flex items-center gap-2">
       <span class="text-2xl text-gold">⚡</span> QUDOZEN
     </div>
@@ -236,7 +329,7 @@
     <div class="hidden md:flex gap-6 text-sm font-medium text-gray-300">
       <div class="group relative">
         <a href="#services" class="hover:text-aqua transition flex items-center gap-1 py-2">خدماتنا <span class="text-[10px]">▼</span></a>
-        <div class="absolute top-full right-0 w-64 pt-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300 z-[100]">
+        <div class="absolute top-full right-0 w-64 pt-2 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-300 z-[100]">
           <div class="glass p-4 rounded-2xl border border-white/10 flex flex-col gap-3 shadow-2xl bg-[#0B1120]/98 backdrop-blur-xl">
             <a href="javascript:void(0)" onclick="scrollToService('reception')" class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
               <span>🤖 موظف الاستقبال</span>
@@ -274,6 +367,7 @@
     <div class="flex items-center gap-3">
       <a href="/growth/ghost-room" class="hidden sm:inline-block bg-gold text-gray-900 px-6 py-2.5 rounded-xl font-bold hover:bg-[#b78a5e] transition transform hover:-translate-y-0.5 shadow-lg shadow-gold/20">غرفة العمليات</a>
       <button id="mobileMenuBtn" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="md:hidden text-gray-300 hover:text-aqua text-2xl">☰</button>
+    </div>
     </div>
   </nav>
   <!-- Mobile Menu -->
@@ -374,15 +468,14 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <!-- 1. AI Receptionist (Spans 2 cols, 2 rows on lg) -->
-        <div onclick="openModal('reception')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-2 lg:row-span-2 flex flex-col justify-between overflow-hidden" style="background:linear-gradient(135deg,rgba(13,148,136,0.1),rgba(11,17,32,0.8));border-color:rgba(13,148,136,0.4)">
-          <div class="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-[#0D9488]/20 to-transparent pointer-events-none"></div>
-          <div>
-            <div class="w-16 h-16 rounded-2xl bg-teal-900 border border-teal-500 flex items-center justify-center text-3xl mb-6 shadow-[0_0_20px_rgba(13,148,136,0.4)] group-hover:scale-110 transition">🤖</div>
-            <h3 class="text-2xl md:text-3xl font-bold mb-3 text-white">موظف الاستقبال الذكي</h3>
-            <p class="text-gray-400 text-lg leading-relaxed">موظف لا ينام، يرد فوراً ويحجز المواعيد على مدار الساعة. يتحكم بالتقويم ويتحدث اللغتين بطلاقة.</p>
+        <!-- 1. AI Receptionist - REAL SIMULATOR EMBEDDED -->
+        <div id="reception-simulator" class="bento-card group glass rounded-3xl relative z-10 md:col-span-2 lg:row-span-2 overflow-hidden" style="background:linear-gradient(135deg,rgba(13,148,136,0.1),rgba(11,17,32,0.8));border-color:rgba(13,148,136,0.4)">
+          <div class="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-[#0D9488]/20 to-transparent pointer-events-none z-0"></div>
+          <div class="p-5 pb-2 relative z-10"><div class="flex items-center gap-3 mb-1"><div class="w-10 h-10 rounded-xl bg-teal-900 border border-teal-500 flex items-center justify-center text-xl shadow-[0_0_12px_rgba(13,148,136,0.4)]">🤖</div><div><div class="font-bold text-white text-sm">موظف الاستقبال الذكي</div><div class="text-[11px] text-teal-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-teal-400 rounded-full inline-block animate-pulse"></span>نظام حي — جرّب الآن</div></div></div></div>
+          <div class="flex flex-col lg:flex-row gap-3 px-3 pb-4 relative z-10" onclick="event.stopPropagation()">
+            <div class="flex-shrink-0 mx-auto" style="width:240px"><div class="relative" style="width:240px"><div class="absolute inset-0 rounded-[28px] border-2 border-gray-700 pointer-events-none z-20" style="box-shadow:0 0 30px rgba(13,148,136,0.2)"></div><div id="bsPhoneShell" class="rounded-[26px] overflow-hidden bg-[#111b21]" style="height:400px"><div class="bg-[#111b21] px-4 pt-2 pb-1 flex justify-between items-center text-[10px] text-gray-400"><span>9:41</span><div class="flex gap-1"><svg class="w-2.5 h-2.5 fill-gray-400" viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg></div></div><div class="bg-[#202c33] px-3 py-2 flex items-center gap-2 border-b border-gray-800/50"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-sm flex-shrink-0">🤖</div><div class="flex-1 min-w-0"><div class="font-bold text-white text-xs">النظام الذكي</div><div class="text-[10px] text-[#5EEAD4]">متصل دائماً</div></div><button onclick="bsReset()" class="text-gray-500 hover:text-rose-400 transition text-sm">↺</button></div><div class="bg-[#111b21] px-3 py-1"><div class="h-1 bg-gray-800 rounded-full overflow-hidden"><div id="bsProgress" style="width:0%"></div></div><div class="text-[9px] text-gray-600 mt-0.5" id="bsStepLabel" style="direction:rtl">الخطوة 0 من 10</div></div><div id="bsChat" class="overflow-y-auto px-2.5 py-3 flex flex-col gap-2" style="flex:1;background:#0d1418;height:210px"></div><div id="bsReplies" class="bg-[#111b21] border-t border-gray-800/50 px-2 py-2 flex flex-wrap gap-1.5 min-h-[44px] items-center"><span class="text-gray-600 text-[10px] italic">في انتظار البدء...</span></div><div class="bg-[#202c33] px-2 py-2 flex items-center gap-1.5 border-t border-gray-800/30"><div class="flex-1 bg-[#2a3942] rounded-full px-3 py-1.5"><input id="bsInput" type="text" placeholder="اكتب رسالة..." disabled class="w-full bg-transparent text-white text-xs outline-none placeholder-gray-600 text-right" style="direction:rtl"/></div><button id="bsSend" disabled onclick="bsHandleInput()" class="w-7 h-7 rounded-full bg-[#0D9488] flex items-center justify-center transition hover:bg-teal-600 disabled:opacity-30"><svg class="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button></div></div></div><div class="mt-3 text-center"><button id="bsStartBtn" onclick="bsStart()" class="bg-gold text-gray-900 px-6 py-2 rounded-xl font-black text-sm hover:shadow-[0_0_16px_rgba(212,165,116,0.5)] transition">▶ ابدأ التجربة</button></div></div>
+            <div class="flex-1 min-w-0"><div class="glass rounded-2xl p-4 border border-white/5" style="min-height:200px"><div class="flex items-center gap-2 mb-3"><div class="status-dot"></div><span class="text-[10px] font-bold text-[#22c55e] uppercase tracking-wider">لوحة التحكم — مباشر</span></div><div class="space-y-2"><div class="bg-[#0f1b2d] rounded-xl p-3 border border-teal-500/20 relative overflow-hidden"><div class="absolute top-0 right-0 w-1 h-full bg-teal-500"></div><div class="text-[9px] text-gray-500 mb-1">آخر عملية</div><div id="bsDsName" class="bs-dash-field text-xs font-bold text-white">-- في انتظار البدء --</div></div><div class="grid grid-cols-2 gap-1.5"><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500">العلاج</div><div id="bsDsTreat" class="bs-dash-field text-xs font-bold text-white mt-0.5">--</div></div><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500">الوقت</div><div id="bsDsSlot" class="bs-dash-field text-xs font-bold text-aqua mt-0.5">--</div></div><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500">التاريخ</div><div id="bsDsDate" class="bs-dash-field text-xs font-bold text-white mt-0.5">--</div></div><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500">المزامنة</div><div id="bsDsSync" class="bs-dash-field text-xs font-bold text-aqua mt-0.5">--</div></div></div><div id="bsRevenueBadge" class="hidden bs-revenue-badge"><div class="text-[9px] text-teal-400 font-bold mb-1">💰 الأرباح المحققة</div><div id="bsRevenueAmt" class="text-lg font-black text-white">--</div><div class="text-[9px] text-gray-400 mt-0.5">قُدوزن يعمل بينما أنت نائم</div></div></div></div></div>
           </div>
-          <div class="mt-8 text-teal-400 font-bold flex items-center gap-2 group-hover:gap-4 transition-all">اقرأ المزيد <span>←</span></div>
         </div>
 
         <!-- 2. Growth Swarm -->
@@ -1459,7 +1552,7 @@ gsap.fromTo('.feat-card', { opacity:0, y:30 }, {
   scrollTrigger: { trigger:'#features', start:'top 80%', once:true }
 });
 
-gsap.fromTo('.svc-card', { opacity:0, y:40 }, {
+gsap.fromTo('.bento-card', { y:40 }, {
   opacity:1, y:0, duration:0.7, stagger:0.12, ease:'power2.out',
   scrollTrigger: { trigger:'#services', start:'top 80%', once:true }
 });
@@ -1684,7 +1777,7 @@ window.addEventListener('load', () => {
       start: 'top 80%',
     },
     y: 100,
-    opacity: 0,
+    /* opacity: 0, */
     duration: 1,
     stagger: 0.15,
     ease: 'power4.out'
@@ -1718,5 +1811,333 @@ window.addEventListener('load', () => {
     }
   }
 </script>
+
+  <!-- ── FOMO Ghost Room Ticker ── -->
+  <div id="fomoTicker"></div>
+
+  <!-- ── All New Sales Funnel JS ── -->
+  <script>
+  /* ═══════════════════════════════════════════════════════
+     REDIRECT: Showcase → Real Simulator
+  ═══════════════════════════════════════════════════════ */
+  function redirectToRealSim() {
+    // Store revenue value for the "A-ha!" moment
+    const revInput = document.getElementById('revenueInput');
+    if (revInput && revInput.value) {
+      window._qzRevenue = parseInt(revInput.value);
+    }
+    // Smooth scroll to the bento card
+    const target = document.getElementById('reception-simulator');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Auto-start the bento simulator after scroll lands
+      setTimeout(() => {
+        const startBtn = document.getElementById('bsStartBtn');
+        if (startBtn && !window._bsRunning) startBtn.click();
+        // Highlight the card briefly
+        target.style.transition = 'box-shadow 0.5s';
+        target.style.boxShadow = '0 0 60px rgba(94,234,212,0.3)';
+        setTimeout(() => { target.style.boxShadow = ''; }, 2000);
+      }, 800);
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     BENTO SIMULATOR ENGINE (bs = bento sim)
+     All IDs prefixed with bs. Architecture identical to
+     the original simulator — fully isolated instance.
+  ═══════════════════════════════════════════════════════ */
+  let bsStep = 0, bsFlow = '', bsRunning = false, bsIsInit = false;
+  let bsData = { name:'Visitor', treatment:'Consultation', date:'Tomorrow', slot:'10:00 AM', doctor:'Dr. Ahmed', lang:'ar', phone:'+96657436016', booked:false };
+
+  window._bsRunning = false;
+
+  const BS_MSGS = {
+    ar: {
+      langSelect: "🌐 أهلاً! أنا جيك.\nاختر لغتك:\n1️⃣ English\n2️⃣ العربية",
+      menu: "أهلاً! 🦷\nأنا *جيك*، مساعدك الذكي.\nكيف أساعدك؟\n\n1️⃣ حجز موعد 📅\n2️⃣ الأسعار 💰\n3️⃣ الموقع 📍",
+      book: { name:"رائع! ما اسمك؟", phone:(p)=>`رقمك: *${p}*\nصحيح؟\n1️⃣ نعم\n2️⃣ لا`, treat:"اختر الخدمة:\n1️⃣ تنظيف 🦷\n2️⃣ حشوات\n3️⃣ تقويم 📐\n4️⃣ زراعة 🔬", doc:"الفريق المفضل:\n1️⃣ د. أحمد\n2️⃣ د. سارة\n3️⃣ أي فريق", date:(d)=>`الوقت المناسب مع ${d}؟\n1️⃣ غداً\n2️⃣ الأربعاء`, slot:(d)=>`الأوقات المتاحة (${d}):\n1️⃣ 10:00 ص\n2️⃣ 4:00 م`, securing:"🔒 جاري تأمين موعدك...", confirmed:"✅ *تم الحجز!* 🎉", summary:(d)=>`📋 *تفاصيل موعدك:*\n👤 ${d.name}\n🦷 ${d.treatment}\n📅 ${d.date}\n⏰ ${d.slot}\n👨‍⚕️ ${d.doctor}\n\n📅 مزامنة تقويم: ناجحة ✅\n🔔 تذكيرات مجدولة` },
+      reminder:(n,date,slot,treat)=>`🔔 *تذكير تلقائي (24 ساعة)*\nمرحباً ${n}، موعدك غداً:\n📅 ${date} ⏰ ${slot}\n🦷 ${treat}\n\nنراك قريباً! 😊`,
+      prices:"💰 *الأسعار التقريبية:*\n• تنظيف: 200 ر\n• حشو: 350 ر\n• تقويم: 3000+ ر\n• زراعة: 4500+ ر",
+      location:"📍 *الموقع:*\nالخبر، شارع الأمير تركي.\n🗺️ maps.google.com"
+    },
+    en: {
+      langSelect: "🌐 Hi! I'm Jake.\nChoose language:\n1️⃣ English\n2️⃣ العربية",
+      menu: "Welcome! 🦷\nI'm *Jake*, your AI assistant.\nHow can I help?\n\n1️⃣ Book Appointment 📅\n2️⃣ Prices 💰\n3️⃣ Location 📍",
+      book: { name:"Great! What's your name?", phone:(p)=>`Your number: *${p}*\nCorrect?\n1️⃣ Yes\n2️⃣ No`, treat:"Select service:\n1️⃣ Cleaning 🦷\n2️⃣ Fillings\n3️⃣ Braces 📐\n4️⃣ Implants 🔬", doc:"Preferred doctor:\n1️⃣ Dr. Ahmed\n2️⃣ Dr. Sarah\n3️⃣ Any available", date:(d)=>`When for ${d}?\n1️⃣ Tomorrow\n2️⃣ Wednesday`, slot:(d)=>`Available slots (${d}):\n1️⃣ 10:00 AM\n2️⃣ 4:00 PM`, securing:"🔒 Securing your slot...", confirmed:"✅ *Booking Successful!* 🎉", summary:(d)=>`📋 *Your Details:*\n👤 ${d.name}\n🦷 ${d.treatment}\n📅 ${d.date}\n⏰ ${d.slot}\n👨‍⚕️ ${d.doctor}\n\n📅 Calendar sync: ✅\n🔔 Reminders scheduled` },
+      reminder:(n,date,slot,treat)=>`🔔 *Auto-Reminder (24h)*\nHi ${n}, your appointment tomorrow:\n📅 ${date} ⏰ ${slot}\n🦷 ${treat}\n\nSee you! 😊`,
+      prices:"💰 *Prices:*\n• Cleaning: 200 SAR\n• Fillings: 350 SAR\n• Braces: 3000+ SAR\n• Implants: 4500+ SAR",
+      location:"📍 *Location:*\nKhobar, Prince Turki St.\n🗺️ maps.google.com"
+    }
+  };
+
+  const bsGet = () => ({
+    chat: document.getElementById('bsChat'),
+    replies: document.getElementById('bsReplies'),
+    input: document.getElementById('bsInput'),
+    send: document.getElementById('bsSend'),
+    progress: document.getElementById('bsProgress'),
+    label: document.getElementById('bsStepLabel'),
+    startBtn: document.getElementById('bsStartBtn')
+  });
+
+  function bsSetProgress(n) {
+    const {progress, label} = bsGet();
+    if(progress) progress.style.width = ((n/10)*100)+'%';
+    if(label) label.textContent = (bsData.lang==='ar'?'المرحلة ':'Phase ')+Math.min(n,10)+' / 10';
+  }
+
+  function bsScrollChat() {
+    const {chat}=bsGet(); if(chat) setTimeout(()=>{ chat.scrollTop=chat.scrollHeight; },60);
+  }
+
+  async function bsAddBot(html) {
+    const {chat}=bsGet(); if(!chat) return;
+    const t=document.createElement('div');
+    t.className='bs-typing flex items-center gap-1 px-3 py-2 rounded-xl self-start mb-1.5';
+    t.style.cssText='background:#1e293b;border:1px solid rgba(94,234,212,0.1)';
+    t.innerHTML='<span></span><span></span><span></span>';
+    chat.appendChild(t); bsScrollChat();
+    await new Promise(r=>setTimeout(r,600+Math.random()*300));
+    if(t.parentNode===chat) chat.removeChild(t);
+    const b=document.createElement('div');
+    b.className='bs-bubble-bot mb-1.5 whitespace-pre-wrap text-right';
+    b.innerHTML=html;
+    const ts=document.createElement('div');
+    ts.className='text-[9px] text-gray-600 mt-1';
+    ts.textContent=new Date().toLocaleTimeString(bsData.lang==='ar'?'ar-SA':'en-US',{hour:'2-digit',minute:'2-digit'});
+    b.appendChild(ts); chat.appendChild(b); bsScrollChat();
+  }
+
+  function bsAddUser(text) {
+    const {chat}=bsGet(); if(!chat) return;
+    const b=document.createElement('div');
+    b.className='bs-bubble-user mb-1.5 text-right';
+    b.innerHTML=text;
+    const ts=document.createElement('div');
+    ts.className='text-[9px] text-teal-200/60 mt-1 text-left';
+    ts.innerHTML=new Date().toLocaleTimeString(bsData.lang==='ar'?'ar-SA':'en-US',{hour:'2-digit',minute:'2-digit'})+' <span class="text-teal-400">✓✓</span>';
+    b.appendChild(ts); chat.appendChild(b); bsScrollChat();
+  }
+
+  function bsSetChips(chips) {
+    const {replies}=bsGet(); if(!replies) return;
+    replies.innerHTML='';
+    if(!chips||chips.length===0){ bsEnableInput(); return; }
+    bsDisableInput();
+    chips.forEach(({label,value})=>{
+      const btn=document.createElement('button');
+      btn.className='bs-qr-chip';
+      btn.textContent=label;
+      btn.onclick=()=>{ document.querySelectorAll('.bs-qr-chip').forEach(b=>b.classList.add('used')); bsAddUser(btn.textContent); bsNext(value||label); };
+      replies.appendChild(btn);
+    });
+  }
+
+  function bsEnableInput(){const {input,send,replies}=bsGet();if(!input)return;input.disabled=false;send.disabled=false;input.focus();replies.innerHTML='';}
+  function bsDisableInput(){const {input,send}=bsGet();if(!input)return;input.disabled=true;send.disabled=true;}
+
+  function bsHandleInput(){
+    const {input}=bsGet(); if(!input) return;
+    const val=input.value.trim(); if(!val||input.disabled) return;
+    input.value=''; bsAddUser(val); bsNext(val);
+  }
+
+  if(document.getElementById('bsInput')){
+    document.getElementById('bsInput').addEventListener('keydown',e=>{if(e.key==='Enter')bsHandleInput();});
+  }
+
+  /* Live dashboard updater */
+  function bsUpdateDash() {
+    const set=(id,val)=>{const e=document.getElementById(id);if(e){e.textContent=val;e.style.animation='none';void e.offsetWidth;e.style.animation='bsDashPulse 0.6s ease 2';}};
+    set('bsDsName', bsData.name||'--');
+    set('bsDsTreat', bsData.treatment||'--');
+    set('bsDsSlot', bsData.slot||'--');
+    set('bsDsDate', bsData.date||'--');
+    if(bsData.booked){
+      set('bsDsSync','مزامنة ✅');
+      // Revenue badge
+      const badge=document.getElementById('bsRevenueBadge');
+      const amtEl=document.getElementById('bsRevenueAmt');
+      if(badge && amtEl){
+        const rev=window._qzRevenue||0;
+        if(rev>0){
+          amtEl.textContent = rev+' ريال';
+          badge.classList.remove('hidden');
+          badge.style.animation='revenueGlow 2s ease-in-out infinite';
+        }
+      }
+    }
+  }
+
+  async function bsNext(ui) {
+    bsDisableInput();
+    let m=BS_MSGS[bsData.lang];
+    const u=ui.toLowerCase();
+    // Language detect
+    if(/[\u0600-\u06FF]/.test(ui) && bsData.lang!=='ar'){bsData.lang='ar';m=BS_MSGS.ar;}
+
+    const isZero=(u==='0'||u.includes('menu')||u.includes('القائمة'));
+    const inNotes=(bsFlow==='booking'&&bsStep===6);
+    if(isZero&&!inNotes){bsFlow='';bsStep=1;await bsAddBot(m.menu);return bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'حجز موعد':'Book'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'الأسعار':'Prices'),value:'2'},{label:'3️⃣ '+(bsData.lang==='ar'?'الموقع':'Location'),value:'3'}]);}
+
+    if(!bsFlow||bsStep===0){
+      if(bsStep===0){bsData.lang=(u==='en'||u.includes('1')||u.includes('en'))?'en':'ar';m=BS_MSGS[bsData.lang];bsStep=1;bsSetProgress(2);await bsAddBot(m.menu);return bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'حجز موعد':'Book Appt'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'الأسعار':'Prices'),value:'2'},{label:'3️⃣ '+(bsData.lang==='ar'?'الموقع':'Location'),value:'3'}]);}
+      if(u==='1'||u.includes('book')||u.includes('حجز')){bsFlow='booking';bsStep=2;return bsProcessBooking(u,m);}
+      if(u==='2'||u.includes('price')||u.includes('سعر')){await bsAddBot(m.prices);return bsSetChips([{label:'0️⃣ '+(bsData.lang==='ar'?'القائمة':'Menu'),value:'0'}]);}
+      if(u==='3'||u.includes('location')||u.includes('موقع')){await bsAddBot(m.location);return bsSetChips([{label:'0️⃣ '+(bsData.lang==='ar'?'القائمة':'Menu'),value:'0'}]);}
+    }
+    if(bsFlow==='booking') return bsProcessBooking(ui,m);
+  }
+
+  async function bsProcessBooking(ui,m){
+    const b=m.book;
+    switch(bsStep){
+      case 2:bsStep=3;bsSetProgress(3);await bsAddBot(b.name);bsEnableInput();break;
+      case 3:bsData.name=ui;bsStep=4;bsSetProgress(4);bsUpdateDash();await bsAddBot(b.phone(bsData.phone));bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'نعم':'Yes'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'لا':'No'),value:'2'}]);break;
+      case 4:bsStep=5;bsSetProgress(5);await bsAddBot(b.treat);bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'تنظيف':'Cleaning'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'حشوات':'Fillings'),value:'2'},{label:'3️⃣ '+(bsData.lang==='ar'?'تقويم':'Braces'),value:'3'}]);break;
+      case 5:bsData.treatment=ui==='1'?(bsData.lang==='ar'?'تنظيف':'Cleaning'):ui==='2'?(bsData.lang==='ar'?'حشوات':'Fillings'):ui==='3'?(bsData.lang==='ar'?'تقويم':'Braces'):ui;bsStep=7;bsSetProgress(6);bsUpdateDash();await bsAddBot(b.doc);bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'د. أحمد':'Dr. Ahmed'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'د. سارة':'Dr. Sarah'),value:'2'},{label:'3️⃣ '+(bsData.lang==='ar'?'أي فريق':'Any'),value:'3'}]);break;
+      case 7:bsData.doctor=ui==='1'?(bsData.lang==='ar'?'د. أحمد':'Dr. Ahmed'):ui==='2'?(bsData.lang==='ar'?'د. سارة':'Dr. Sarah'):(bsData.lang==='ar'?'أي فريق متاح':'Any doctor');bsStep=8;bsSetProgress(7);await bsAddBot(b.date(bsData.doctor));bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'غداً':'Tomorrow'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'الأربعاء':'Wednesday'),value:'2'}]);break;
+      case 8:bsData.date=ui==='1'?(bsData.lang==='ar'?'غداً':'Tomorrow'):(bsData.lang==='ar'?'الأربعاء':'Wednesday');bsStep=9;bsSetProgress(8);bsUpdateDash();await bsAddBot(b.slot(bsData.date));bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'10:00 ص':'10:00 AM'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'4:00 م':'4:00 PM'),value:'2'}]);break;
+      case 9:
+        bsData.slot=ui==='1'?(bsData.lang==='ar'?'10:00 صباحاً':'10:00 AM'):(bsData.lang==='ar'?'4:00 مساءً':'4:00 PM');
+        bsData.booked=true;bsStep=10;bsSetProgress(10);
+        await bsAddBot(b.securing);
+        await bsAddBot(b.confirmed+'\n\n'+b.summary(bsData));
+        bsUpdateDash();
+        // WhatsApp CTA
+        const {chat}=bsGet();
+        if(chat){
+          const waDiv=document.createElement('div');
+          waDiv.className='bs-bubble-bot mb-1.5';
+          waDiv.innerHTML='<a href="https://wa.me/96657436016?text='+encodeURIComponent('أهلاً جيك، جربت المحاكي وأريد تفعيل النظام.')+'" target="_blank" class="text-[#25D366] font-bold text-xs underline">تحدث مع جيك لتفعيل نظامك ←</a>';
+          chat.appendChild(waDiv);
+        }
+        bsFlow='';
+        bsSetChips([{label:'0️⃣ '+(bsData.lang==='ar'?'القائمة الرئيسية':'Main Menu'),value:'0'}]);
+        setTimeout(()=>bsTriggerReminder(m),3500);
+        break;
+    }
+  }
+
+  async function bsTriggerReminder(m){
+    const {chat}=bsGet(); if(!chat) return;
+    const notice=document.createElement('div');
+    notice.className='bs-autonomous-notice';
+    notice.textContent=(bsData.lang==='ar'?'─── أتمتة النظام الذاتي ───':'─── Autonomous System ───');
+    chat.appendChild(notice);
+    await bsAddBot(m.reminder(bsData.name,bsData.date,bsData.slot,bsData.treatment));
+    // STEP 5: Voice Note bubble
+    setTimeout(()=>bsAddVoiceNote(),1200);
+  }
+
+  async function bsAddVoiceNote(){
+    const {chat}=bsGet(); if(!chat) return;
+    const vn=document.createElement('div');
+    vn.className='voice-note-bubble mb-1.5';
+    vn.title=(bsData.lang==='ar'?'اضغط للاستماع':'Click to play');
+    vn.innerHTML=`
+      <div class="voice-play-btn" onclick="bsPlayVoice(this)">
+        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-white"><path d="M8 5v14l11-7z"/></svg>
+      </div>
+      <div class="flex-1">
+        <div class="voice-waveform"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="text-[9px] text-gray-500 mt-1">${bsData.lang==='ar'?'0:07 — رسالة صوتية من جيك':'0:07 — Voice note from Jake'}</div>
+      </div>`;
+    chat.appendChild(vn);
+    bsScrollChat();
+  }
+
+  function bsPlayVoice(btn){
+    const vn=btn.closest('.voice-note-bubble');
+    if(vn) vn.classList.toggle('voice-playing');
+    btn.innerHTML='<svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-white"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+    // Simple audio tone
+    try{
+      const ac=new AudioContext();
+      const osc=ac.createOscillator();
+      const gain=ac.createGain();
+      osc.connect(gain);gain.connect(ac.destination);
+      osc.frequency.setValueAtTime(420,ac.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(300,ac.currentTime+0.3);
+      gain.gain.setValueAtTime(0.15,ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.8);
+      osc.start();osc.stop(ac.currentTime+0.8);
+      setTimeout(()=>{
+        btn.innerHTML='<svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-white"><path d="M8 5v14l11-7z"/></svg>';
+        if(vn) vn.classList.remove('voice-playing');
+      },800);
+    } catch(e){}
+  }
+
+  async function bsStart(){
+    if(bsIsInit||window._bsRunning) return;
+    bsIsInit=true; window._bsRunning=true;
+    const {chat,replies,startBtn}=bsGet();
+    bsStep=0;bsFlow='';
+    bsData={name:'Visitor',treatment:'Consultation',date:'Tomorrow',slot:'10:00 AM',doctor:'Dr. Ahmed',lang:'ar',phone:'+96657436016',booked:false};
+    if(chat) chat.innerHTML='';
+    if(replies) replies.innerHTML='';
+    if(startBtn) startBtn.style.display='none';
+    bsSetProgress(1);
+    try{
+      await bsAddBot(BS_MSGS.ar.langSelect);
+      bsSetChips([{label:'1️⃣ English',value:'en'},{label:'2️⃣ العربية',value:'ar'}]);
+    }catch(e){console.error('[BS] Start error:',e);}
+    finally{bsIsInit=false;}
+  }
+
+  function bsReset(){
+    window._bsRunning=false;
+    const {chat,replies,startBtn}=bsGet();
+    bsStep=0;bsFlow='';
+    bsData={name:'Visitor',treatment:'Consultation',date:'Tomorrow',slot:'10:00 AM',doctor:'Dr. Ahmed',lang:'ar',phone:'+96657436016',booked:false};
+    if(chat) chat.innerHTML='';
+    if(replies) replies.innerHTML='<span class="text-gray-600 text-[10px] italic">في انتظار البدء...</span>';
+    if(startBtn){startBtn.style.display='block';}
+    bsDisableInput();bsSetProgress(0);
+    const badge=document.getElementById('bsRevenueBadge');
+    if(badge) badge.classList.add('hidden');
+    const ids=['bsDsName','bsDsTreat','bsDsSlot','bsDsDate','bsDsSync'];
+    ids.forEach(id=>{const e=document.getElementById(id);if(e)e.textContent='--';});
+    document.getElementById('bsDsName').textContent='-- في انتظار البدء --';
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     STEP 4: GHOST ROOM FOMO TICKER
+  ═══════════════════════════════════════════════════════ */
+  const FOMO_MSGS = [
+    {icon:'⚡',text:'السوارم استعاد عميل متردد لعيادة في الرياض'},
+    {icon:'📅',text:'الاستقبال حجز موعد زراعة الساعة 3:14 فجراً'},
+    {icon:'⭐',text:'تم جمع تقييم 5 نجوم تلقائياً'},
+    {icon:'🤖',text:'رد على 7 مرضى خلال أقل من 3 ثوانٍ'},
+    {icon:'📊',text:'كُشف عن نزيف 1200 ريال في عيادة الخبر'},
+    {icon:'🔒',text:'تم منع تعارض مواعيد وحجز بديل فوراً'},
+    {icon:'💰',text:'حملة ما بعد الزيارة أرجعت 3 مرضى'},
+    {icon:'🚀',text:'تقرير الصباح أُرسل للمدير الساعة 8:30'},
+    {icon:'🎯',text:'السوارم يرسل 12 رسالة مخصصة الآن'},
+    {icon:'📍',text:'عيادة جديدة في جدة تفعّل النظام الآن'},
+  ];
+  let fomoIdx=0;
+  function showFomoItem(){
+    const ticker=document.getElementById('fomoTicker');
+    if(!ticker) return;
+    const msg=FOMO_MSGS[fomoIdx%FOMO_MSGS.length];fomoIdx++;
+    const item=document.createElement('div');
+    item.className='fomo-item';
+    item.innerHTML=`<span style="font-size:1rem;flex-shrink:0">${msg.icon}</span><div><div class="text-[10px] text-white font-medium leading-snug">${msg.text}</div><div class="text-[9px] text-gray-500 mt-0.5">منذ لحظات</div></div>`;
+    ticker.appendChild(item);
+    setTimeout(()=>{
+      item.classList.add('leaving');
+      setTimeout(()=>{ if(item.parentNode===ticker) ticker.removeChild(item); },400);
+    },4000);
+  }
+  // Start FOMO ticker after 3s, every 6-9s
+  setTimeout(()=>{
+    showFomoItem();
+    setInterval(()=>showFomoItem(), 6000+Math.random()*3000);
+  },3000);
+
+  </script>
 </body>
 </html>
