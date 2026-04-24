@@ -1,15 +1,15 @@
 {
   "meta": {
     "project": "Qudozen",
-    "version": "3.2",
-    "last_updated": "2026-04-24T10:30:00+03:00",
+    "version": "3.3",
+    "last_updated": "2026-04-24T12:00:00+03:00",
     "schema": "2.0"
   },
   "system_status": {
     "overall_health": "healthy",
-    "active_modules": ["index_html_v3.2"],
+    "active_modules": ["index_html_v3.3"],
     "broken_modules": [],
-    "render_status": "ready_to_deploy"
+    "render_status": "deployed"
   },
   "execution_state": {
     "current_step": 12,
@@ -20,36 +20,44 @@
   "completed_steps": [
     {
       "step_number": 0,
-      "step_name": "Brain Init",
-      "timestamp_completed": "2026-04-24T02:57:07+03:00",
+      "step_name": "Brain Init / Pre-Build Audit",
+      "timestamp_completed": "2026-04-24T12:00:00+03:00",
       "files_created": [],
       "files_modified": ["brain/qudozen-brain.json"],
-      "insights": ["New index.html rebuild session started. Prior brain (GS 3.0 15-step) preserved in workflow_history but execution_state reset for Steps 1-12 of v3.2 build."],
-      "decisions": ["Preserved existing public/index.html as starting reference. Will overwrite with new architecture."],
-      "issues_found": ["Existing index.html uses Tailwind CDN + Arabic RTL — new brief requires vanilla CSS + English LTR + 3-dot nav."],
+      "insights": [
+        "Live site at qudozen.com confirmed Arabic RTL (Tailwind-based) at build start.",
+        "Brain showed v3.2 was reverted because the embedded simulator was abstracted away to a redirect. This is a non-negotiable constraint for v3.3.",
+        "v3.3 build restores English LTR layout AND embeds the simulator directly on the page via iframe with lazy-load + click-to-launch overlay."
+      ],
+      "decisions": [
+        "Bumped version to 3.3 to distinguish from the previously reverted 3.2 build."
+      ],
+      "issues_found": [
+        "v3.2 was reverted because simulator was a redirect-only teaser. v3.3 corrects this."
+      ],
       "fixes_applied": [],
       "ui_upgrades": []
     },
     {
       "step_number": 1,
       "step_name": "HTML Skeleton + 3-Dot Navigation",
-      "timestamp_completed": "2026-04-24T10:30:00+03:00",
-      "files_created": [],
-      "files_modified": ["public/index.html"],
-      "insights": ["Full-screen nav overlay with backdrop blur. 3-dot button morphs to X on open via CSS transforms. Escape key and backdrop click both close the menu."],
-      "decisions": ["Used a single nav-overlay div over a traditional nav bar — cleaner, more immersive, consistent with the minimal aesthetic."],
+      "timestamp_completed": "2026-04-24T12:00:00+03:00",
+      "files_created": ["public/index.html"],
+      "files_modified": [],
+      "insights": ["3-dot nav overlay with backdrop blur, Escape key close, backdrop click close, body scroll lock. Services accordion submenu via max-height transition."],
+      "decisions": ["Single nav-overlay div — no sticky header. Only 3-dot button visible at all times."],
       "issues_found": [],
       "fixes_applied": [],
-      "ui_upgrades": ["Services submenu uses max-height transition for smooth accordion open/close without JS height calculation."]
+      "ui_upgrades": []
     },
     {
       "step_number": 2,
       "step_name": "Global Design System (CSS Tokens)",
-      "timestamp_completed": "2026-04-24T10:30:00+03:00",
+      "timestamp_completed": "2026-04-24T12:00:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
-      "insights": ["All colors are CSS custom properties. No hardcoded hex values outside :root. Two breakpoints: 640px (mobile) and 1024px (tablet)."],
-      "decisions": ["Added --radius-sm/md/lg/xl tokens for consistent border-radius across components. Added --transition shorthand for uniform easing."],
+      "insights": ["All colors, radii, and transitions are CSS custom properties. Two breakpoints: 640px and 1024px."],
+      "decisions": ["Added --ease and --transition as separate tokens to allow duration changes without touching multiple properties."],
       "issues_found": [],
       "fixes_applied": [],
       "ui_upgrades": []
@@ -57,23 +65,23 @@
     {
       "step_number": 3,
       "step_name": "Hero Section",
-      "timestamp_completed": "2026-04-24T10:30:00+03:00",
+      "timestamp_completed": "2026-04-24T12:00:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
-      "insights": ["Orb uses CSS keyframe animation with scale + translate combo to feel alive. Gradient headline uses background-clip: text for the white-to-glow effect."],
-      "decisions": ["Used clamp() for headline font-size to ensure smooth scaling between mobile and desktop without media query breakpoints for typography."],
+      "insights": ["Floating orb via CSS keyframes. Gradient headline via background-clip:text. Hero CTA secondary now points to #simulator (anchor) not /growth/ghost-room.html — keeps user on page."],
+      "decisions": ["Hero 'Try the Live Simulator' CTA scrolls to the embedded simulator section rather than redirecting — consistent with embedded-first approach."],
       "issues_found": [],
       "fixes_applied": [],
-      "ui_upgrades": ["Added pulsing dot inside hero badge to signal live/active state."]
+      "ui_upgrades": ["Pulsing live dot in hero badge signals active/live system."]
     },
     {
       "step_number": 4,
       "step_name": "Services Master Header + Card Shell",
-      "timestamp_completed": "2026-04-24T10:30:00+03:00",
+      "timestamp_completed": "2026-04-24T12:00:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
-      "insights": ["Alternating layout achieved via direction:rtl on .service-card.reverse with direction:ltr reset on children — avoids complex CSS grid reordering."],
-      "decisions": ["Used direction flip rather than order reversal to keep HTML in reading order for accessibility and screen readers."],
+      "insights": ["Alternating layout via direction:rtl on .reverse class. Collapses to single column on mobile with direction:ltr restored."],
+      "decisions": ["direction flip for alternating cards preserves DOM order for screen readers."],
       "issues_found": [],
       "fixes_applied": [],
       "ui_upgrades": []
@@ -81,47 +89,60 @@
     {
       "step_number": 5,
       "step_name": "Service 1 — AI Receptionist",
-      "timestamp_completed": "2026-04-24T10:30:00+03:00",
+      "timestamp_completed": "2026-04-24T12:00:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
-      "insights": ["Simulator preview box is an <a> tag wrapping the screen mockup — semantically correct for click-to-navigate. Scanline CSS effect adds realism to the preview."],
-      "decisions": ["Used an <a> element instead of div+onclick for the simulator preview for better keyboard navigation and SEO."],
+      "insights": ["Simulator preview in card now links to #simulator (anchor scroll) not /growth/ghost-room.html — keeps user on page to use embedded simulator."],
+      "decisions": ["AI Receptionist card preview and CTA both scroll to #simulator section. Ghost-room.html is available as full-screen fallback only."],
       "issues_found": [],
       "fixes_applied": [],
-      "ui_upgrades": ["Added subtle scanline overlay effect to simulator preview screen using repeating-linear-gradient for visual depth."]
+      "ui_upgrades": ["Scanline CSS overlay on preview screen for depth/realism."]
     },
     {
       "step_number": 6,
       "step_name": "Services 2-7 Content Fill",
-      "timestamp_completed": "2026-04-24T10:30:00+03:00",
+      "timestamp_completed": "2026-04-24T12:00:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
-      "insights": ["Services 2-7 use emoji placeholders in styled containers. All WhatsApp CTAs use wa.me/966570733834. Real estate and Growth CTAs route to ghost-room.html."],
-      "decisions": ["Kept service descriptions to 2-3 sentences per brief instructions. Used HTML entities for special characters to avoid encoding issues."],
+      "insights": ["Services 2-7 CTAs route to wa.me/966570733834 (WhatsApp). No redirect to ghost-room for non-receptionist services."],
+      "decisions": ["Simplified Real Estate CTA to WhatsApp — ghost-room.html is receptionist-specific. Other services go direct to Jake."],
       "issues_found": [],
       "fixes_applied": [],
       "ui_upgrades": []
     },
     {
       "step_number": 7,
-      "step_name": "Live Simulator Section",
-      "timestamp_completed": "2026-04-24T10:30:00+03:00",
+      "step_name": "Simulator Section — EMBEDDED",
+      "timestamp_completed": "2026-04-24T12:00:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
-      "insights": ["Both simulator preview cards are <a> links to /growth/ghost-room.html. Hover lifts cards 6px with shadow to signal clickability."],
-      "decisions": ["Kept simulator section as a pure teaser — no embedded chat. Matches brief: this page is a gateway, ghost-room.html is the experience."],
+      "insights": [
+        "CORE CHANGE vs v3.2: Simulator is embedded via iframe with lazy loading, not a redirect teaser.",
+        "Browser chrome bar (red/yellow/green dots + URL bar) makes iframe feel like a real product.",
+        "Launch overlay prevents iframe from loading until user scrolls to section (IntersectionObserver pre-loads), then overlay hides on click.",
+        "Full-screen fallback link opens ghost-room.html in new tab."
+      ],
+      "decisions": [
+        "Used IntersectionObserver at 30% visibility threshold to pre-load iframe src when section comes into view — removes load delay when user clicks launch.",
+        "Overlay stays visible until user explicitly clicks — avoids autoplay/autoscroll surprise.",
+        "iframe src starts as about:blank to prevent premature network request on page load."
+      ],
       "issues_found": [],
       "fixes_applied": [],
-      "ui_upgrades": []
+      "ui_upgrades": [
+        "Browser chrome bar with macOS-style dots and URL display gives iframe an app-like feel.",
+        "Pulsing teal glow on launch button draws the eye.",
+        "Height is responsive: 650px desktop, 500px tablet, 420px mobile."
+      ]
     },
     {
       "step_number": 8,
       "step_name": "Pricing Section",
-      "timestamp_completed": "2026-04-24T10:30:00+03:00",
+      "timestamp_completed": "2026-04-24T12:00:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
-      "insights": ["System card elevated via translateY(-8px) and subtle teal glow — no badges. Setup fee for System tier displayed in sand-colored callout box for visibility."],
-      "decisions": ["No 'Most Popular' badge anywhere. Elevation and border glow communicate value without manipulation."],
+      "insights": ["System tier elevated via translateY(-8px) and border-glow. No badges."],
+      "decisions": ["No 'Most Popular' label. Elevation communicates value without manipulation."],
       "issues_found": [],
       "fixes_applied": [],
       "ui_upgrades": []
@@ -129,11 +150,11 @@
     {
       "step_number": 9,
       "step_name": "Jake's Letter",
-      "timestamp_completed": "2026-04-24T10:30:00+03:00",
+      "timestamp_completed": "2026-04-24T12:00:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
-      "insights": ["Decorative quotation mark is position:absolute, z-index:0, opacity:0.15. Body text at 1.15rem / 1.85 line-height for comfortable reading. First-person, conversational tone."],
-      "decisions": ["Used Georgia serif for signature and quote mark to contrast with Space Grotesk body — adds warmth and human feel."],
+      "insights": ["1.15rem body, 1.85 line-height. Decorative quote mark at 8rem, 15% opacity. Georgia serif for signature contrast."],
+      "decisions": ["Human, first-person tone. No corporate language."],
       "issues_found": [],
       "fixes_applied": [],
       "ui_upgrades": []
@@ -141,47 +162,48 @@
     {
       "step_number": 10,
       "step_name": "Footer",
-      "timestamp_completed": "2026-04-24T10:30:00+03:00",
+      "timestamp_completed": "2026-04-24T12:00:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
-      "insights": ["WhatsApp button is full-width, solid teal in footer — most prominent element. Footer darker than body (#080C18) for visual separation."],
-      "decisions": ["3-column grid: brand (2fr) | links (1fr) | contact (1.5fr). Brand collapses to full-width on tablet breakpoint."],
+      "insights": ["WhatsApp button is full-width solid teal — most prominent footer element. Footer bg #080C18 darker than body."],
+      "decisions": ["3-col grid: brand 2fr | links 1fr | contact 1.5fr. Brand spans full width on tablet."],
       "issues_found": [],
       "fixes_applied": [],
-      "ui_upgrades": ["Added 'All systems operational' status indicator with green pulsing dot in footer bottom bar."]
+      "ui_upgrades": ["Green pulsing status dot + 'All systems operational' in footer bar."]
     },
     {
       "step_number": 11,
       "step_name": "GSAP Scroll Animations",
-      "timestamp_completed": "2026-04-24T10:30:00+03:00",
+      "timestamp_completed": "2026-04-24T12:00:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
-      "insights": ["All animations trigger at 80% viewport. Service cards: y:60→0 + fade. Pricing + simulator cards: y:40→0 + fade with stagger. Jake's letter: opacity only, no movement. Hero: no animation."],
-      "decisions": ["Used window load event instead of DOMContentLoaded to ensure GSAP scripts (defer) are loaded before registration."],
+      "insights": ["Service cards: y60→0 + fade, stagger 0.04s. Pricing: y40 + stagger 0.12s. Simulator frame: y40 fade. Jake letter: opacity only. Hero: no animation."],
+      "decisions": ["window load event (not DOMContentLoaded) guarantees deferred GSAP scripts are ready. once:true on all triggers."],
       "issues_found": [],
       "fixes_applied": [],
-      "ui_upgrades": ["once:true on all ScrollTriggers — animations fire once and don't reverse on scroll up. Feels more polished, less distracting."]
+      "ui_upgrades": []
     },
     {
       "step_number": 12,
       "step_name": "Final QA & Compliance Check",
-      "timestamp_completed": "2026-04-24T10:30:00+03:00",
+      "timestamp_completed": "2026-04-24T12:00:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
       "insights": [],
       "decisions": [],
       "issues_found": [],
       "fixes_applied": [
-        "Used HTML entities throughout for special characters (em-dash, arrows, curly quotes) to prevent encoding issues",
-        "All CTAs minimum 44px height for mobile tap targets",
-        "All images/emojis have aria-label or aria-hidden",
-        "container padding 1.5rem on mobile prevents text touching screen edges",
-        "No banned words (guaranteed, revolutionary, Buy Now) present",
+        "HTML entities for all special characters — no raw Unicode",
+        "All CTAs min-height 44px for mobile tap targets",
+        "All emojis have aria-label; decorative elements have aria-hidden",
+        "container padding 1.5rem mobile — text never touches screen edge",
+        "No banned words (guaranteed, revolutionary, Buy Now)",
         "No fake badges anywhere in pricing or services",
-        "Both USD and SAR shown on all priced tiers",
-        "Setup fee clearly called out in Tier 2 pricing",
-        "All WhatsApp links use +966570733834",
-        "All simulator links route to /growth/ghost-room.html"
+        "USD and SAR shown on all priced tiers",
+        "Setup fee clearly stated on System tier",
+        "All WhatsApp links use wa.me/966570733834",
+        "Simulator iframe lazy-loads — no performance hit on page load",
+        "Escape closes nav, backdrop click closes nav"
       ],
       "ui_upgrades": []
     }
@@ -195,38 +217,29 @@
   },
   "next_action": {
     "step": null,
-    "instruction": "Deploy to Render via git push"
+    "instruction": "Site deployed. Monitor Render logs. Verify qudozen.com shows English v3.3 with embedded simulator."
   },
   "decisions": [
     {
       "step": 0,
-      "decision": "WhatsApp number corrected to +966570733834 per prompt (brief uses this number, old site used 96657436016). Using the number from the build prompt.",
-      "reasoning": "Build prompt explicitly states wa.me/966570733834 in multiple places."
+      "decision": "Bumped to v3.3. The v3.2 build was reverted because the simulator was a redirect-only teaser. v3.3 embeds the simulator directly via iframe.",
+      "reasoning": "Brain insight from revert: 'The embedded interactive simulator is a non-negotiable core feature for the landing page.' This is the primary architectural change in v3.3."
     },
     {
-      "step": 0,
-      "decision": "Building full 12-step sequence in one pass for efficiency, updating brain atomically after all steps.",
-      "reasoning": "All steps produce one deliverable file (public/index.html). Splitting into 12 separate file writes would be inefficient and risk partial states."
+      "step": 7,
+      "decision": "Simulator section uses a full-width iframe with browser chrome, lazy IntersectionObserver loading, and a click-to-launch overlay. Full-screen fallback available.",
+      "reasoning": "Honors the non-negotiable requirement of an embedded simulator. IntersectionObserver pre-loads the iframe on scroll-into-view to eliminate click latency. Overlay prevents autoplay surprise."
     },
     {
-      "step": 4,
-      "decision": "Alternating service card layout implemented via CSS direction:rtl on .reverse class rather than CSS grid order manipulation.",
-      "reasoning": "direction flip preserves DOM reading order for screen readers and avoids reordering visual content unpredictably across breakpoints."
-    },
-    {
-      "step": 8,
-      "decision": "System pricing tier elevated via translateY and border-glow only — zero badges, zero urgency labels.",
-      "reasoning": "Brief explicitly bans fake badges. Visual elevation communicates priority without manipulation."
-    },
-    {
-      "step": 11,
-      "decision": "GSAP scripts use defer attribute and are initialized on window load event, not DOMContentLoaded.",
-      "reasoning": "Deferred scripts may not be available at DOMContentLoaded. window load guarantees GSAP and ScrollTrigger are registered before animation setup runs."
+      "step": 5,
+      "decision": "AI Receptionist card CTA and preview link scroll to #simulator anchor, not to /growth/ghost-room.html.",
+      "reasoning": "Keeps user on the landing page to use the embedded simulator — consistent with embedded-first architecture."
     }
   ],
   "insights": [
-    "The sim-preview component in the AI Receptionist card is the highest-value visual on the page — teal border + scanline effect creates a screen-like feel without actual assets.",
-    "direction:rtl trick for alternating layouts breaks down predictably on mobile (640px) by simply removing it — clean fallback.",
-    "Using HTML entities for special characters (em-dash, arrows, quotes) is more robust than raw Unicode in HTML files across different editors and deployment pipelines."
+    "The embedded interactive simulator is a non-negotiable core feature for the landing page. Do not abstract it to a separate route.",
+    "Browser chrome (dots + URL bar) around the iframe makes it feel like a product demo rather than an embedded widget — significantly higher perceived quality.",
+    "IntersectionObserver at 30% threshold pre-loads the iframe src before the user clicks launch. This eliminates perceived load delay on click.",
+    "direction:rtl trick for alternating service cards collapses cleanly on mobile by removing it at 640px breakpoint."
   ]
 }

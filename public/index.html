@@ -1,1488 +1,1526 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Qudozen - نظام التشغيل الذاتي للأعمال</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Qudozen &#8212; Autonomous Business Infrastructure</title>
+  <meta name="description" content="We build self-managing systems that handle your operations &#8212; so you can focus on what actually matters." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
-    body { font-family: 'Tajawal', sans-serif; background-color: #0B1120; color: white; overflow-x: hidden; }
-    .glass {
-      background: rgba(13,148,136,0.05);
-      backdrop-filter: blur(40px);
-      -webkit-backdrop-filter: blur(40px);
-      border: 1px solid rgba(94,234,212,0.1);
+    /* ─── DESIGN TOKENS ─────────────────────────────────────────────────── */
+    :root {
+      --midnight:   #0B1120;
+      --surface:    #0F172A;
+      --teal:       #0D9488;
+      --sand:       #D4A574;
+      --glow:       #5EEAD4;
+      --text:       #F8FAFC;
+      --muted:      #94A3B8;
+      --footer-bg:  #080C18;
+      --radius-sm:  8px;
+      --radius-md:  12px;
+      --radius-lg:  16px;
+      --radius-xl:  24px;
+      --ease:       cubic-bezier(0.4, 0, 0.2, 1);
+      --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .text-teal { color: #0D9488; }
-    .text-aqua { color: #5EEAD4; }
-    .bg-teal  { background-color: #0D9488; }
-    .text-gold { color: #D4A574; }
-    .bg-gold  { background-color: #D4A574; }
-    .bg-gold:hover { background-color: #b78a5e; }
 
-    @keyframes float1 { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-20px) scale(1.05)} }
-    @keyframes float2 { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(30px) scale(0.95)} }
-    .blob1{animation:float1 25s ease-in-out infinite}
-    .blob2{animation:float2 22s ease-in-out infinite reverse}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
 
-    ::-webkit-scrollbar{width:8px}
-    ::-webkit-scrollbar-track{background:#0B1120}
-    ::-webkit-scrollbar-thumb{background:#0D9488;border-radius:4px}
-    ::-webkit-scrollbar-thumb:hover{background:#5EEAD4}
+    body {
+      background-color: var(--midnight);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
 
-    /* ── WhatsApp Simulator ── */
-    #simChat{scroll-behavior:smooth}
-    .sim-bubble-bot {
-      background:#1e293b;
-      border:1px solid rgba(94,234,212,0.15);
-      border-radius:18px 18px 18px 4px;
-      padding:12px 16px;
-      max-width:82%;
-      align-self:flex-start;
-      font-size:0.92rem;
-      line-height:1.6;
-      animation:bubbleIn .35s ease forwards;
-    }
-    .sim-bubble-user {
-      background:linear-gradient(135deg,#0D9488,#0a7a70);
-      border-radius:18px 18px 4px 18px;
-      padding:12px 16px;
-      max-width:72%;
-      align-self:flex-end;
-      font-size:0.92rem;
-      line-height:1.6;
-      animation:bubbleIn .3s ease forwards;
-    }
-    @keyframes bubbleIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-    .sim-typing span {
-      display:inline-block;
-      width:7px;height:7px;
-      border-radius:50%;
-      background:#5EEAD4;
-      animation:typingDot 1.2s infinite;
-    }
-    .sim-typing span:nth-child(2){animation-delay:.2s}
-    .sim-typing span:nth-child(3){animation-delay:.4s}
-    @keyframes typingDot{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-6px);opacity:1}}
+    img { max-width: 100%; display: block; }
+    a   { color: inherit; text-decoration: none; }
 
-    /* quick-reply chips */
-    .qr-chip {
-      display:inline-block;
-      padding:8px 18px;
-      border-radius:999px;
-      border:1px solid rgba(94,234,212,0.35);
-      background:rgba(94,234,212,0.07);
-      color:#5EEAD4;
-      font-size:0.82rem;
-      font-weight:600;
-      cursor:pointer;
-      transition:all .2s;
-      white-space:nowrap;
+    /* ─── UTILITIES ──────────────────────────────────────────────────────── */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
     }
-    .qr-chip:hover{background:rgba(94,234,212,0.18);border-color:#5EEAD4;transform:translateY(-1px)}
-    .qr-chip:disabled,.qr-chip.used{opacity:.35;pointer-events:none;cursor:default}
 
-    /* ── Feature counter cards ── */
-    .feat-card{
-      background:rgba(13,148,136,0.04);
-      border:1px solid rgba(94,234,212,0.12);
-      border-radius:20px;
-      padding:28px 20px;
-      text-align:center;
-      transition:transform .3s,border-color .3s;
-    }
-    .autonomous-notice {
-      background: linear-gradient(90deg, transparent, rgba(212,165,116,0.1), transparent);
-      background-size: 200% 100%;
-      animation: shimmer 3s infinite linear;
-      border-top: 1px solid rgba(212,165,116,0.2);
-      border-bottom: 1px solid rgba(212,165,116,0.2);
-      padding: 12px 0;
-      margin: 16px 0;
-      color: #D4A574;
-      font-size: 10px;
-      letter-spacing: 0.15em;
+    .section-label {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      font-weight: 800;
+      color: var(--teal);
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+      font-size: 1.05rem;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 600px;
+    }
+
+    section { padding: 6rem 0; }
+
+    /* ─── 3-DOT NAV ──────────────────────────────────────────────────────── */
+    .menu-btn {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 1100;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 50px;
+      padding: 0.65rem 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .menu-btn:hover {
+      background: rgba(13, 148, 136, 0.15);
+      border-color: rgba(13, 148, 136, 0.4);
+    }
+
+    .menu-btn .dot {
+      width: 5px;
+      height: 5px;
+      background: var(--text);
+      border-radius: 50%;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .menu-btn.open .dot:nth-child(1) { transform: translateX(5px) rotate(45deg) scale(1.8); }
+    .menu-btn.open .dot:nth-child(2) { opacity: 0; transform: scale(0); }
+    .menu-btn.open .dot:nth-child(3) { transform: translateX(-5px) rotate(-45deg) scale(1.8); }
+
+    /* ─── NAV OVERLAY ────────────────────────────────────────────────────── */
+    .nav-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 17, 32, 0.97);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+
+    .nav-overlay.open { opacity: 1; pointer-events: all; }
+
+    .nav-overlay nav { text-align: center; }
+
+    .nav-overlay nav a {
+      display: block;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 700;
+      color: var(--text);
+      padding: 0.45rem 0;
+      transition: color 0.2s ease;
+      letter-spacing: -0.01em;
+    }
+
+    .nav-overlay nav a:hover { color: var(--glow); }
+
+    .nav-services-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 700;
+      color: var(--text);
+      padding: 0.45rem 0;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+      transition: color 0.2s ease;
+    }
+
+    .nav-services-toggle:hover { color: var(--glow); }
+
+    .nav-services-toggle .arrow {
+      font-size: 1.4rem;
+      transition: transform 0.3s ease;
+    }
+
+    .nav-services-toggle.active .arrow { transform: rotate(180deg); }
+
+    .nav-services-submenu {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .nav-services-submenu.open { max-height: 500px; }
+
+    .nav-services-submenu a {
+      font-size: 1.05rem !important;
+      font-weight: 400 !important;
+      color: var(--muted) !important;
+      padding: 0.18rem 0 !important;
+      letter-spacing: 0.02em;
+    }
+
+    .nav-services-submenu a:hover { color: var(--glow) !important; }
+
+    /* ─── HERO ───────────────────────────────────────────────────────────── */
+    #home {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 8rem 2rem 6rem;
+    }
+
+    .hero-orb {
+      position: absolute;
+      width: 700px;
+      height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(13,148,136,0.08) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 0;
+      animation: floatOrb 25s ease-in-out infinite;
+    }
+
+    @keyframes floatOrb {
+      0%,100% { transform: translate(-50%,-50%) scale(1); }
+      33%      { transform: translate(-50%,-55%) scale(1.05); }
+      66%      { transform: translate(-48%,-48%) scale(0.97); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
       text-align: center;
     }
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--glow);
+      border: 1px solid rgba(94,234,212,0.3);
+      border-radius: 50px;
+      padding: 0.45rem 1.1rem;
+      margin-bottom: 2rem;
     }
-    
-    .qr-chip {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    .hero-badge .pulse {
+      width: 6px; height: 6px;
+      background: var(--glow);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
     }
-    .qr-chip:hover {
+
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:0.4; transform:scale(1.5); }
+    }
+
+    .hero-headline {
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--text) 0%, var(--glow) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-sub {
+      font-size: 1.2rem;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 600px;
+      margin: 0 auto 3rem;
+    }
+
+    .hero-ctas {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* ─── BUTTONS ─────────────────────────────────────────────────────────── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--teal);
+      color: var(--text);
+      padding: 0.9rem 2rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 1rem;
+      min-height: 44px;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(212,165,116,0.2);
-    }
-    .feat-card:hover{transform:translateY(-5px);border-color:rgba(94,234,212,0.4)}
-    .feat-counter{font-size:2.6rem;font-weight:900;background:linear-gradient(135deg,#5EEAD4,#0D9488);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-
-    /* ── Dashboard preview mockup ── */
-    .db-card{
-      background:#0f1b2d;
-      border:1px solid rgba(94,234,212,0.15);
-      border-radius:14px;
-      padding:16px 20px;
-    }
-    .status-dot{
-      width:8px;height:8px;border-radius:50%;
-      background:#22c55e;
-      box-shadow:0 0 8px #22c55e;
-      animation:pulse 2s infinite;
-    }
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-
-    /* ── Services section cards ── */
-    .svc-card{
-      border-radius:24px;
-      border:1px solid rgba(255,255,255,0.07);
-      padding:32px;
-      transition:all .3s;
-      cursor:default;
-    }
-    .svc-card:hover{border-color:rgba(94,234,212,0.3);transform:translateY(-4px)}
-    .svc-card.primary{
-      background:linear-gradient(135deg,rgba(13,148,136,0.12),rgba(94,234,212,0.04));
-      border-color:rgba(13,148,136,0.3);
+      box-shadow: 0 12px 30px rgba(13,148,136,0.35);
     }
 
-    /* ── completion overlay ── */
-    #simComplete{display:none}
-    #simComplete.show{display:flex}
-
-    /* chat-widget */
-    .chat-widget{
-      position:fixed;bottom:24px;right:24px;
-      width:60px;height:60px;
-      background-color:#25D366;
-      border-radius:50%;
-      display:flex;align-items:center;justify-content:center;
-      box-shadow:0 4px 20px rgba(37,211,102,0.4);
-      z-index:999;cursor:pointer;
-      transition:transform .3s;
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--sand);
+      font-weight: 500;
+      font-size: 1rem;
+      min-height: 44px;
+      padding: 0.5rem 0;
+      transition: gap 0.2s ease;
     }
-    .chat-widget:hover{transform:scale(1.1)}
 
-    /* progress bar */
-    #simProgress{
-      height:3px;background:linear-gradient(90deg,#0D9488,#5EEAD4);
-      border-radius:999px;transition:width .5s ease;
+    .btn-secondary:hover { gap: 0.7rem; }
+
+    /* ─── SERVICES ────────────────────────────────────────────────────────── */
+    #services { background: var(--surface); }
+
+    #services .section-header {
+      text-align: center;
+      margin-bottom: 5rem;
+    }
+
+    #services .section-subtitle { margin: 0 auto; }
+
+    .service-card {
+      background: rgba(15,23,42,0.6);
+      border: 1px solid rgba(148,163,184,0.08);
+      border-radius: var(--radius-xl);
+      padding: 3rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+      margin-bottom: 3rem;
+      transition: border-color var(--transition), transform var(--transition);
+    }
+
+    .service-card:last-child { margin-bottom: 0; }
+
+    .service-card:hover {
+      border-color: rgba(13,148,136,0.2);
+      transform: translateY(-4px);
+    }
+
+    .service-card.reverse { direction: rtl; }
+    .service-card.reverse > * { direction: ltr; }
+
+    .service-visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .service-emoji {
+      font-size: 5rem;
+      background: rgba(13,148,136,0.08);
+      border: 1px solid rgba(13,148,136,0.15);
+      border-radius: var(--radius-xl);
+      width: 100%;
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .service-tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 0.75rem;
+    }
+
+    .service-title {
+      font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      margin-bottom: 1rem;
+    }
+
+    .service-desc {
+      color: var(--muted);
+      font-weight: 300;
+      margin-bottom: 1.5rem;
+    }
+
+    .service-features {
+      list-style: none;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .service-features li {
+      font-size: 0.9rem;
+      color: var(--text);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+
+    .service-features li::before {
+      content: '\2192';
+      color: var(--teal);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 0.05em;
+    }
+
+    .service-impact {
+      border-left: 3px solid var(--teal);
+      background: rgba(13,148,136,0.05);
+      padding: 1rem 1.25rem;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 1.5rem;
+    }
+
+    .service-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--glow);
+      font-weight: 600;
+      font-size: 0.95rem;
+      min-height: 44px;
+      padding: 0.4rem 0;
+      transition: gap 0.2s ease;
+    }
+
+    .service-cta:hover { gap: 0.7rem; }
+
+    /* Simulator preview inside AI Receptionist card */
+    .sim-preview {
+      display: block;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(13,148,136,0.25);
+      background: rgba(13,148,136,0.05);
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: border-color var(--transition), transform var(--transition);
+      text-decoration: none;
+    }
+
+    .sim-preview:hover {
+      border-color: var(--glow);
+      transform: scale(1.02);
+    }
+
+    .sim-preview-screen {
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, rgba(13,148,136,0.3) 0%, rgba(11,17,32,0.9) 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sim-preview-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(94,234,212,0.03) 2px, rgba(94,234,212,0.03) 4px
+      );
+    }
+
+    .sim-play-icon { font-size: 3rem; position: relative; z-index: 1; }
+
+    .sim-preview-label {
+      font-size: 0.85rem;
+      color: var(--glow);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .sim-caption { font-size: 0.8rem; color: var(--muted); text-align: center; }
+
+    /* ─── SIMULATOR SECTION ──────────────────────────────────────────────── */
+    #simulator { background: var(--midnight); }
+
+    #simulator .section-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    #simulator .section-subtitle { margin: 0 auto; }
+
+    /* Full-width immersive simulator frame */
+    .simulator-frame-wrap {
+      position: relative;
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(13,148,136,0.3);
+      background: rgba(13,148,136,0.04);
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    /* Browser chrome bar */
+    .simulator-chrome {
+      background: rgba(15,23,42,0.95);
+      border-bottom: 1px solid rgba(148,163,184,0.08);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .chrome-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .chrome-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .chrome-dot.red    { background: #ff5f57; }
+    .chrome-dot.yellow { background: #febc2e; }
+    .chrome-dot.green  { background: #28c840; }
+
+    .chrome-url {
+      flex: 1;
+      background: rgba(11,17,32,0.7);
+      border: 1px solid rgba(148,163,184,0.1);
+      border-radius: 6px;
+      padding: 0.3rem 1rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .chrome-url-lock { color: var(--teal); font-size: 0.75rem; }
+
+    /* Iframe container */
+    .simulator-iframe-container {
+      position: relative;
+      width: 100%;
+      height: 650px;
+    }
+
+    .simulator-iframe-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* Overlay shown before user clicks "Launch" */
+    .simulator-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(11,17,32,0.92) 0%, rgba(13,148,136,0.08) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      cursor: pointer;
+      transition: opacity 0.4s ease;
+      z-index: 10;
+    }
+
+    .simulator-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .sim-launch-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--teal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      box-shadow: 0 0 40px rgba(13,148,136,0.4);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .simulator-overlay:hover .sim-launch-icon {
+      transform: scale(1.08);
+      box-shadow: 0 0 60px rgba(13,148,136,0.6);
+    }
+
+    .sim-launch-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      text-align: center;
+    }
+
+    .sim-launch-sub {
+      font-size: 0.95rem;
+      color: var(--muted);
+      text-align: center;
+      max-width: 380px;
+    }
+
+    .simulator-ctas {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    /* ─── PRICING ─────────────────────────────────────────────────────────── */
+    #pricing { background: var(--surface); }
+
+    #pricing .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    #pricing .section-subtitle { margin: 0 auto; }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .pricing-card {
+      background: rgba(11,17,32,0.7);
+      border: 1px solid rgba(148,163,184,0.1);
+      border-radius: var(--radius-xl);
+      padding: 2.5rem;
+      transition: border-color var(--transition), transform var(--transition);
+    }
+
+    .pricing-card:hover { border-color: rgba(13,148,136,0.2); }
+
+    .pricing-card.featured {
+      border-color: rgba(13,148,136,0.35);
+      transform: translateY(-8px);
+      background: rgba(13,148,136,0.04);
+      box-shadow: 0 0 40px rgba(13,148,136,0.08);
+    }
+
+    .pricing-tier-name {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 0.5rem;
+    }
+
+    .pricing-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+
+    .pricing-price { margin-bottom: 0.4rem; }
+
+    .pricing-usd {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .pricing-sar {
+      font-size: 1rem;
+      color: var(--muted);
+      margin-left: 0.5rem;
+    }
+
+    .pricing-cadence {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .pricing-setup {
+      font-size: 0.8rem;
+      color: var(--sand);
+      padding: 0.5rem 0.75rem;
+      background: rgba(212,165,116,0.08);
+      border-radius: var(--radius-sm);
+      margin-bottom: 1.5rem;
+    }
+
+    .pricing-interactions {
+      font-size: 0.85rem;
+      color: var(--glow);
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+
+    .pricing-features {
+      list-style: none;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .pricing-features li {
+      font-size: 0.9rem;
+      color: var(--muted);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+
+    .pricing-features li::before {
+      content: '\2713';
+      color: var(--teal);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .pricing-cta {
+      display: block;
+      text-align: center;
+      padding: 0.85rem;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.95rem;
+      min-height: 44px;
+      transition: transform var(--transition), box-shadow var(--transition), border-color 0.2s, color 0.2s;
+    }
+
+    .pricing-cta.solid { background: var(--teal); color: var(--text); }
+    .pricing-cta.solid:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(13,148,136,0.3); }
+
+    .pricing-cta.outline { border: 1px solid rgba(148,163,184,0.2); color: var(--text); }
+    .pricing-cta.outline:hover { border-color: var(--teal); color: var(--teal); }
+
+    /* ─── JAKE'S LETTER ──────────────────────────────────────────────────── */
+    #about { padding: 7rem 0; }
+
+    .jake-wrapper {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      position: relative;
+    }
+
+    .jake-quote-mark {
+      position: absolute;
+      top: -2rem; left: -1rem;
+      font-size: 8rem;
+      color: var(--teal);
+      opacity: 0.15;
+      font-family: Georgia, serif;
+      line-height: 1;
+      pointer-events: none;
+      z-index: 0;
+      user-select: none;
+    }
+
+    .jake-content { position: relative; z-index: 1; }
+
+    .jake-body {
+      font-size: 1.15rem;
+      line-height: 1.85;
+      color: var(--text);
+      font-weight: 300;
+    }
+
+    .jake-body p { margin-bottom: 1.5rem; }
+    .jake-body p:last-child { margin-bottom: 0; }
+
+    .jake-signature { margin-top: 2.5rem; }
+
+    .jake-signature em {
+      font-size: 1.3rem;
+      color: var(--sand);
+      font-family: Georgia, serif;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .jake-signature a {
+      color: var(--teal);
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: color 0.2s ease;
+    }
+
+    .jake-signature a:hover { color: var(--glow); }
+
+    /* ─── FOOTER ──────────────────────────────────────────────────────────── */
+    footer {
+      background: var(--footer-bg);
+      padding: 5rem 0 2rem;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1.5fr;
+      gap: 4rem;
+      margin-bottom: 4rem;
+    }
+
+    .footer-brand h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-brand h2 span { color: var(--teal); }
+
+    .footer-brand p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 0.35rem;
+    }
+
+    .footer-links h3,
+    .footer-contact h3 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .footer-links ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .footer-links a {
+      color: var(--muted);
+      font-size: 0.9rem;
+      transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover { color: var(--text); }
+
+    .whatsapp-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      background: var(--teal);
+      color: var(--text);
+      padding: 0.85rem 1.5rem;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: 1rem;
+      min-height: 44px;
+      width: 100%;
+      margin-bottom: 1.25rem;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .whatsapp-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(13,148,136,0.35);
+    }
+
+    .footer-contact-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-contact-item .icon { color: var(--teal); }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(148,163,184,0.08);
+      padding-top: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .footer-bottom p { font-size: 0.8rem; color: var(--muted); }
+
+    .footer-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .status-dot {
+      width: 7px; height: 7px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    /* ─── RESPONSIVE ──────────────────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .pricing-grid {
+        grid-template-columns: 1fr;
+        max-width: 480px;
+        margin: 0 auto;
+      }
+      .pricing-card.featured { transform: none; }
+
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+      .footer-brand { grid-column: 1 / -1; }
+
+      .simulator-iframe-container { height: 500px; }
+    }
+
+    @media (max-width: 640px) {
+      section { padding: 4rem 0; }
+      .container { padding: 0 1.5rem; }
+
+      .service-card {
+        grid-template-columns: 1fr;
+        padding: 2rem 1.5rem;
+      }
+      .service-card.reverse { direction: ltr; }
+
+      .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+      .hero-ctas { flex-direction: column; align-items: center; }
+
+      .simulator-iframe-container { height: 420px; }
+      .sim-launch-title { font-size: 1.2rem; }
     }
   </style>
 </head>
-<body class="antialiased selection:bg-[#0D9488] selection:text-white relative">
+<body>
 
-  <!-- Liquid Background -->
-  <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-    <div class="absolute top-[10%] -left-[10%] w-[50vw] h-[50vw] bg-[#0D9488]/10 rounded-full blur-[80px] blob1"></div>
-    <div class="absolute bottom-[20%] -right-[10%] w-[40vw] h-[40vw] bg-[#5EEAD4]/10 rounded-full blur-[80px] blob2"></div>
-    <div class="absolute top-[60%] left-[30%] w-[30vw] h-[30vw] bg-[#D4A574]/5 rounded-full blur-[80px] blob1" style="animation-delay:-10s"></div>
+  <!-- ─── 3-DOT MENU BUTTON ─────────────────────────────────────────────── -->
+  <button class="menu-btn" id="menuBtn" aria-label="Open navigation menu" aria-expanded="false">
+    <span class="dot"></span>
+    <span class="dot"></span>
+    <span class="dot"></span>
+  </button>
+
+  <!-- ─── NAV OVERLAY ──────────────────────────────────────────────────── -->
+  <div class="nav-overlay" id="navOverlay" role="dialog" aria-modal="true" aria-label="Navigation menu">
+    <nav>
+      <a href="#home"      class="nav-link">Home</a>
+
+      <div>
+        <button class="nav-services-toggle" id="servicesToggle" aria-expanded="false">
+          Services <span class="arrow">&#x2193;</span>
+        </button>
+        <div class="nav-services-submenu" id="servicesSubmenu">
+          <a href="#services" class="nav-link">AI Receptionist</a>
+          <a href="#services" class="nav-link">Real Estate Bot</a>
+          <a href="#services" class="nav-link">Web Systems</a>
+          <a href="#services" class="nav-link">App Studio</a>
+          <a href="#services" class="nav-link">Automation</a>
+          <a href="#services" class="nav-link">Growth Engine</a>
+          <a href="#services" class="nav-link">Analytics</a>
+        </div>
+      </div>
+
+      <a href="#simulator" class="nav-link">Simulator</a>
+      <a href="#pricing"   class="nav-link">Pricing</a>
+      <a href="#about"     class="nav-link">About</a>
+      <a href="#contact"   class="nav-link">Contact</a>
+    </nav>
   </div>
 
-  <!-- Navbar -->
-  <nav class="fixed w-full z-50 glass px-6 py-4 flex justify-between items-center transition-all duration-300" id="navbar">
-    <div class="text-xl font-bold tracking-wider flex items-center gap-2">
-      <span class="text-2xl text-gold">⚡</span> QUDOZEN
-    </div>
-    <div class="hidden md:flex gap-8 text-sm font-medium text-gray-300">
-      <a href="#services" class="hover:text-aqua transition">خدماتنا</a>
-      <a href="#simulator" class="hover:text-aqua transition">جرب المحاكي</a>
-      <a href="#pricing" class="hover:text-aqua transition">الاستثمار</a>
-      <a href="#jake" class="hover:text-aqua transition">رسالة جيك</a>
-    </div>
-    <div class="flex items-center gap-3">
-      <a href="/growth/ghost-room" class="hidden sm:inline-block bg-gold text-gray-900 px-6 py-2.5 rounded-xl font-bold hover:bg-[#b78a5e] transition transform hover:-translate-y-0.5 shadow-lg shadow-gold/20">غرفة العمليات</a>
-      <button id="mobileMenuBtn" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="md:hidden text-gray-300 hover:text-aqua text-2xl">☰</button>
-    </div>
-  </nav>
-  <!-- Mobile Menu -->
-  <div id="mobileMenu" class="hidden fixed top-[68px] left-0 right-0 z-40 glass border-b border-white/10 px-6 py-6 flex flex-col gap-4 text-center text-gray-300 text-lg font-medium">
-    <a href="#services" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition">خدماتنا</a>
-    <a href="#simulator" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition">جرب المحاكي</a>
-    <a href="#pricing" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition">الاستثمار</a>
-    <a href="#jake" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition">رسالة جيك</a>
-    <a href="/growth/ghost-room" class="bg-gold text-gray-900 px-6 py-2.5 rounded-xl font-bold">غرفة العمليات</a>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════ -->
-  <!-- HERO                                              -->
-  <!-- ══════════════════════════════════════════════════ -->
-  <section class="min-h-screen flex flex-col justify-center items-center text-center px-4 pt-24 relative z-10 border-b border-white/5">
-    <div class="max-w-4xl mx-auto flex flex-col items-center">
-      <div class="mb-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-sm font-medium text-aqua">
-        <span class="relative flex h-2 w-2">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-[#5EEAD4]"></span>
-        </span>
-        بنية تحتية متطورة للأعمال — مباشر الآن
+  <!-- ─── HERO ─────────────────────────────────────────────────────────── -->
+  <section id="home">
+    <div class="hero-orb" aria-hidden="true"></div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="pulse" aria-hidden="true"></span>
+        Autonomous Business Infrastructure
       </div>
-      <h1 class="text-5xl md:text-7xl font-black mb-8 leading-[1.15] tracking-tight">
-        جرب كيف يعمل عملك بـ<br>
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-[#5EEAD4]">وعي اصطناعي</span> في 60 ثانية.
-      </h1>
-      <p class="text-lg md:text-2xl text-gray-400 mb-12 max-w-2xl leading-relaxed">
-        العملاء لا ينتظرون. عملك يفقد فرصاً يومياً. نحن نبني تحولاً كاملاً ليعمل عملك بتشغيل ذاتي 24/7.
-      </p>
-      <div class="flex flex-col sm:flex-row gap-5 w-full justify-center max-w-md sm:max-w-none">
-        <a href="#simulator" class="bg-gold text-[#0B1120] px-8 py-4 rounded-xl font-bold text-lg hover:shadow-[0_0_25px_rgba(212,165,116,0.6)] transition duration-300 flex items-center justify-center gap-2">
-          <span>🚀 ابدأ المحاكاة الحية</span>
-        </a>
-        <a href="#pricing" class="glass px-8 py-4 rounded-xl font-bold text-lg text-white hover:bg-white/10 transition duration-300 flex items-center justify-center">
-          💎 شاهد خطط الاستثمار
-        </a>
-      </div>
-      <!-- Stats row -->
-      <div class="mt-16 grid grid-cols-3 gap-8 text-center border-t border-white/5 pt-10 w-full max-w-lg">
-        <div><div class="text-3xl font-black text-aqua">24/7</div><div class="text-xs text-gray-500 mt-1">متوفر دائماً</div></div>
-        <div><div class="text-3xl font-black text-gold">&lt;3s</div><div class="text-xs text-gray-500 mt-1">وقت الرد</div></div>
-        <div><div class="text-3xl font-black text-aqua">94%</div><div class="text-xs text-gray-500 mt-1">نسبة التأكيد</div></div>
+      <h1 class="hero-headline">Your Business,<br>Running on Intelligence</h1>
+      <p class="hero-sub">We build self-managing systems that handle your operations &#8212; so you can focus on what actually matters.</p>
+      <div class="hero-ctas">
+        <a href="#services"   class="btn-primary">Explore the Systems</a>
+        <a href="#simulator"  class="btn-secondary">Try the Live Simulator &#x2192;</a>
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════════ -->
-  <!-- THREE-LAYER ARCHITECTURE                          -->
-  <!-- ══════════════════════════════════════════════════ -->
-  <section id="architecture" class="py-24 px-6 relative z-10 border-b border-white/5 bg-[#0B1120]">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">أكثر من مجرد بوت محادثة. <span class="text-gold">بنية تحتية كاملة.</span></h2>
-        <p class="text-gray-400 text-lg">تحول كامل في كيفية عمل المنشأة. القوة تكمن في طبقات الوعي الثلاث.</p>
-      </div>
-      <div class="grid md:grid-cols-3 gap-8 relative">
-        <div class="hidden md:block absolute top-[40%] left-0 right-0 h-0.5 bg-gradient-to-r from-teal-900 via-aqua-500 to-gold/30 z-0"></div>
-        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80">
-          <div class="w-16 h-16 rounded-2xl bg-teal-900 border border-teal-500 flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(13,148,136,0.4)]">1️⃣</div>
-          <h3 class="text-2xl font-bold mb-3">طبقة الاستقبال</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">الواجهة الأمامية عبر الواتساب. نظام تشغيل ذاتي يرد فوراً، يستوعب الحالة، ويحجز المواعيد بلغة عربية سليمة.</p>
-        </div>
-        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80 mt-12 md:mt-0">
-          <div class="w-16 h-16 rounded-2xl border border-[#5EEAD4] flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(94,234,212,0.4)]" style="background:rgba(94,234,212,0.08)">2️⃣</div>
-          <h3 class="text-2xl font-bold mb-3">طبقة التنسيق</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">الدماغ الذي يربط المحادثة بالواقع. تنسيق فوري مع التقويم، منع التعارضات، وإرسال تذكيرات آلية.</p>
-        </div>
-        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80 mt-12 md:mt-0">
-          <div class="w-16 h-16 rounded-2xl bg-gold/20 border border-gold flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(212,165,116,0.4)]">3️⃣</div>
-          <h3 class="text-2xl font-bold mb-3 text-gold">طبقة التعلم (السوارم)</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">محرك وعي تسويقي يراقب السوق من أجلك. يستعيد العملاء المترددين ويجمع التقييمات بصمت.</p>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- ─── SERVICES ─────────────────────────────────────────────────────── -->
+  <section id="services">
+    <div class="container">
 
-  <!-- ══════════════════════════════════════════════════ -->
-  <!-- OUR SERVICES                                      -->
-  <!-- ══════════════════════════════════════════════════ -->
-  <section id="services" class="py-24 px-6 relative z-10 border-b border-white/5 bg-gradient-to-b from-[#0A0F18] to-[#0B1120]">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-16">
-        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-aqua mb-4 tracking-widest uppercase">خدماتنا</div>
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">كل ما تحتاجه في <span class="text-aqua">بنية واحدة</span></h2>
-        <p class="text-gray-400">من الاستقبال الذكي إلى التسويق الذاتي — نظام واحد يُدير كل شيء.</p>
+      <div class="section-header">
+        <span class="section-label">The Qudozen Suite</span>
+        <h2 class="section-title">Systems That Work While You Sleep</h2>
+        <p class="section-subtitle">Every product is designed to remove a specific operational bottleneck. Pick one. Stack them. Let them run.</p>
       </div>
 
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        <!-- PRIMARY: Dental AI Receptionist -->
-        <div class="svc-card primary md:col-span-2 lg:col-span-1 flex flex-col" style="background:linear-gradient(135deg,rgba(13,148,136,0.13),rgba(94,234,212,0.04));border-color:rgba(13,148,136,0.35)">
-          <div class="w-14 h-14 rounded-2xl bg-teal-900/60 border border-teal-500/50 flex items-center justify-center text-2xl mb-5 shadow-[0_0_20px_rgba(13,148,136,0.3)]">🦷</div>
-          <h3 class="text-xl font-bold mb-2 text-white">المساعد الطبي الذكي</h3>
-          <p class="text-gray-400 text-sm leading-relaxed mb-6 flex-1">واجهة واتساب كاملة تحجز المواعيد، تُذكّر العملاء، تتعامل مع الطوارئ، وتدير إلغاءات بدون أي تدخل بشري — 24 ساعة، 7 أيام.</p>
-          <ul class="space-y-2 mb-6">
-            <li class="flex items-center gap-2 text-sm text-gray-300"><span class="text-teal text-base">✓</span> حجز مواعيد كامل بـ 8 خطوات</li>
-            <li class="flex items-center gap-2 text-sm text-gray-300"><span class="text-teal text-base">✓</span> دعم عربي وإنجليزي تلقائي</li>
-            <li class="flex items-center gap-2 text-sm text-gray-300"><span class="text-teal text-base">✓</span> مزامنة تقويم جوجل فورية</li>
-            <li class="flex items-center gap-2 text-sm text-gray-300"><span class="text-teal text-base">✓</span> تذكيرات 24 ساعة + ساعة قبل الموعد</li>
+      <!-- SERVICE 1: AI RECEPTIONIST -->
+      <div class="service-card">
+        <div class="service-visual">
+          <a href="#simulator" class="sim-preview" aria-label="Try the AI Receptionist simulator">
+            <div class="sim-preview-screen">
+              <span class="sim-play-icon" aria-hidden="true">&#x25B6;</span>
+              <span class="sim-preview-label">Click to Experience Live</span>
+            </div>
+            <p class="sim-caption">Interactive demo &#8212; try it below on this page</p>
+          </a>
+        </div>
+        <div class="service-text">
+          <p class="service-tag">Always-On Patient Coordination</p>
+          <h3 class="service-title">The Receptionist That Never Clocks Out</h3>
+          <p class="service-desc">Most clinics lose patients before the first human even sees the message. Our AI Receptionist is live around the clock &#8212; booking, confirming, and nurturing patients the moment they reach out. It speaks Arabic and English, handles objections, and hands off seamlessly when a human touch is needed.</p>
+          <ul class="service-features">
+            <li>Answers WhatsApp 24/7 in Arabic and English</li>
+            <li>Books, reschedules, and cancels appointments automatically</li>
+            <li>Sends confirmed booking messages with all details</li>
+            <li>Handles patient intake forms before the visit</li>
+            <li>Follows up after appointments automatically</li>
+            <li>Manages your full calendar in real-time</li>
+            <li>Sends payment links and tracks confirmations</li>
+            <li>Filters and routes urgent cases to staff</li>
+            <li>Handles common FAQs without human intervention</li>
+            <li>Escalates to a live agent when needed</li>
+            <li>Logs every interaction in your dashboard</li>
+            <li>Works across WhatsApp, SMS, and web chat</li>
           </ul>
-          <div class="flex flex-col sm:flex-row gap-3 mt-auto">
-            <button onclick="openServiceModal('primary')" class="flex-1 bg-transparent border border-teal-500 text-teal-400 py-3 rounded-xl font-bold hover:bg-teal-500/10 transition">تفاصيل أكثر</button>
-            <a href="#simulator" class="flex-[2] bg-[#0D9488] text-white py-3 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.3)]">
-              🚀 جرب المحاكي الحي
+          <div class="service-impact">
+            Clinics using this system report 60&#8211;80% reduction in no-shows and an average of 12+ hours saved per week on front-desk tasks.
+          </div>
+          <a href="#simulator" class="service-cta">Try the Live Demo &#x2192;</a>
+        </div>
+      </div>
+
+      <!-- SERVICE 2: REAL ESTATE -->
+      <div class="service-card reverse">
+        <div class="service-visual">
+          <div class="service-emoji" role="img" aria-label="Real estate bot">&#x1F3E2;</div>
+        </div>
+        <div class="service-text">
+          <p class="service-tag">Automated Property Intelligence</p>
+          <h3 class="service-title">The Property Assistant That Qualifies, Books, and Follows Up</h3>
+          <p class="service-desc">Real estate moves fast. Your leads don&#8217;t wait. Our AI handles initial inquiry, qualification, viewing scheduling, and follow-up &#8212; in Arabic and English, 24/7. By the time your agent picks up the phone, the lead is warm and pre-qualified.</p>
+          <ul class="service-features">
+            <li>Responds to property inquiries within seconds</li>
+            <li>Qualifies leads with smart intake questions</li>
+            <li>Books property viewings automatically</li>
+            <li>Sends viewing confirmations and reminders</li>
+            <li>Follows up with leads that go cold</li>
+            <li>Routes hot leads directly to your agents</li>
+          </ul>
+          <div class="service-impact">
+            Agencies using this system report a 3&#xD7; increase in booked viewings without adding headcount.
+          </div>
+          <a href="https://wa.me/966570733834" class="service-cta" target="_blank" rel="noopener noreferrer">See How It Works &#x2192;</a>
+        </div>
+      </div>
+
+      <!-- SERVICE 3: WEB SYSTEMS -->
+      <div class="service-card">
+        <div class="service-visual">
+          <div class="service-emoji" role="img" aria-label="Web systems">&#x1F310;</div>
+        </div>
+        <div class="service-text">
+          <p class="service-tag">Digital Infrastructure</p>
+          <h3 class="service-title">Your Digital Presence, Built to Convert</h3>
+          <p class="service-desc">A website is your 24/7 salesperson. We build fast, focused web systems &#8212; landing pages, booking flows, and full sites &#8212; engineered to load instantly and guide visitors toward one action: reaching out to you.</p>
+          <ul class="service-features">
+            <li>High-converting landing pages and full sites</li>
+            <li>Integrated booking and lead capture flows</li>
+            <li>Mobile-first, sub-2s load times</li>
+            <li>Connected to your AI bot from day one</li>
+            <li>Analytics and conversion tracking built in</li>
+            <li>Multilingual support (Arabic + English)</li>
+          </ul>
+          <div class="service-impact">
+            Our clients average a 40% increase in qualified lead submissions within the first 30 days.
+          </div>
+          <a href="https://wa.me/966570733834" class="service-cta" target="_blank" rel="noopener noreferrer">Discuss Your Project &#x2192;</a>
+        </div>
+      </div>
+
+      <!-- SERVICE 4: APP STUDIO -->
+      <div class="service-card reverse">
+        <div class="service-visual">
+          <div class="service-emoji" role="img" aria-label="App development">&#x1F4F1;</div>
+        </div>
+        <div class="service-text">
+          <p class="service-tag">Custom Application Development</p>
+          <h3 class="service-title">Custom Applications That Fit Your Exact Process</h3>
+          <p class="service-desc">Off-the-shelf software makes you work around its limitations. We build bespoke web applications and internal tools that match your exact workflow &#8212; built fast, designed to scale, and connected to your existing systems.</p>
+          <ul class="service-features">
+            <li>Custom admin dashboards and portals</li>
+            <li>Staff-facing tools and workflow apps</li>
+            <li>Client-facing booking and payment portals</li>
+            <li>API integrations with your existing tools</li>
+            <li>Real-time data and live dashboards</li>
+            <li>Secure, cloud-hosted, always available</li>
+          </ul>
+          <div class="service-impact">
+            Custom tools eliminate the 2&#8211;4 hours per day your team spends working around software that wasn&#8217;t built for them.
+          </div>
+          <a href="https://wa.me/966570733834" class="service-cta" target="_blank" rel="noopener noreferrer">Tell Us What You Need &#x2192;</a>
+        </div>
+      </div>
+
+      <!-- SERVICE 5: AUTOMATION -->
+      <div class="service-card">
+        <div class="service-visual">
+          <div class="service-emoji" role="img" aria-label="Workflow automation">&#x2699;&#xFE0F;</div>
+        </div>
+        <div class="service-text">
+          <p class="service-tag">Workflow Automation</p>
+          <h3 class="service-title">Workflows That Run Without You Watching</h3>
+          <p class="service-desc">Every manual, repetitive task in your business is a leak. We map your operations, identify the bottlenecks, and build automated pipelines &#8212; so your team focuses on work that requires human judgment.</p>
+          <ul class="service-features">
+            <li>End-to-end workflow automation design</li>
+            <li>CRM, calendar, and communication sync</li>
+            <li>Automated reporting and data pipelines</li>
+            <li>Trigger-based notifications and escalations</li>
+            <li>Document generation and distribution</li>
+            <li>Integrations across 300+ tools and platforms</li>
+          </ul>
+          <div class="service-impact">
+            Businesses post-automation report saving 20&#8211;35 hours per week on tasks that previously required manual intervention.
+          </div>
+          <a href="https://wa.me/966570733834" class="service-cta" target="_blank" rel="noopener noreferrer">Map Your Workflows &#x2192;</a>
+        </div>
+      </div>
+
+      <!-- SERVICE 6: GROWTH -->
+      <div class="service-card reverse">
+        <div class="service-visual">
+          <div class="service-emoji" role="img" aria-label="Growth engine">&#x1F4C8;</div>
+        </div>
+        <div class="service-text">
+          <p class="service-tag">Intelligent Lead Generation</p>
+          <h3 class="service-title">Systems That Bring the Right Clients to You</h3>
+          <p class="service-desc">Growth isn&#8217;t about spending more on ads. It&#8217;s about building systems that find, qualify, and warm the right people &#8212; before your competitor even responds to their first message.</p>
+          <ul class="service-features">
+            <li>Automated outreach and follow-up sequences</li>
+            <li>Lead scoring and qualification filters</li>
+            <li>Multi-channel touchpoints (WhatsApp, email, SMS)</li>
+            <li>Nurture flows that convert cold leads to warm</li>
+            <li>Campaign performance tracking</li>
+            <li>AI-optimized messaging based on responses</li>
+          </ul>
+          <div class="service-impact">
+            Clients using the Growth Engine report a 4&#8211;6&#xD7; increase in qualified pipeline within 60 days.
+          </div>
+          <a href="https://wa.me/966570733834" class="service-cta" target="_blank" rel="noopener noreferrer">See It in Action &#x2192;</a>
+        </div>
+      </div>
+
+      <!-- SERVICE 7: ANALYTICS -->
+      <div class="service-card">
+        <div class="service-visual">
+          <div class="service-emoji" role="img" aria-label="Analytics dashboard">&#x1F4CA;</div>
+        </div>
+        <div class="service-text">
+          <p class="service-tag">Business Intelligence</p>
+          <h3 class="service-title">Know What&#8217;s Working Before You Have to Ask</h3>
+          <p class="service-desc">You can&#8217;t improve what you can&#8217;t see. We build real-time analytics dashboards that surface the metrics that actually matter &#8212; so every decision is backed by data.</p>
+          <ul class="service-features">
+            <li>Real-time operational dashboards</li>
+            <li>Custom KPI tracking and alerts</li>
+            <li>Automated weekly and monthly reports</li>
+            <li>Funnel analysis and conversion tracking</li>
+            <li>Staff performance and workload metrics</li>
+            <li>Integrated with your existing data sources</li>
+          </ul>
+          <div class="service-impact">
+            Data-driven teams make decisions 5&#xD7; faster and reduce operational waste by an average of 22%.
+          </div>
+          <a href="https://wa.me/966570733834" class="service-cta" target="_blank" rel="noopener noreferrer">Build Your Dashboard &#x2192;</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── SIMULATOR (EMBEDDED — FULL EXPERIENCE ON PAGE) ───────────────── -->
+  <section id="simulator">
+    <div class="container">
+
+      <div class="section-header">
+        <span class="section-label">Experience the System</span>
+        <h2 class="section-title">See It Work in Real Time</h2>
+        <p class="section-subtitle">Not a video. Not a screenshot. The live system &#8212; running exactly as it does for our clients. Interact with it right here.</p>
+      </div>
+
+      <div class="simulator-frame-wrap">
+        <!-- Browser chrome for realism -->
+        <div class="simulator-chrome">
+          <div class="chrome-dots">
+            <span class="chrome-dot red"    aria-hidden="true"></span>
+            <span class="chrome-dot yellow" aria-hidden="true"></span>
+            <span class="chrome-dot green"  aria-hidden="true"></span>
+          </div>
+          <div class="chrome-url">
+            <span class="chrome-url-lock" aria-hidden="true">&#x1F512;</span>
+            qudozen.com/growth/ghost-room
+          </div>
+        </div>
+
+        <!-- Iframe container with launch overlay -->
+        <div class="simulator-iframe-container">
+          <div class="simulator-overlay" id="simOverlay" role="button" tabindex="0" aria-label="Launch live simulator">
+            <div class="sim-launch-icon" aria-hidden="true">&#x25B6;</div>
+            <p class="sim-launch-title">Run the Live Simulator</p>
+            <p class="sim-launch-sub">Click to interact with the AI Receptionist exactly as a patient would. Book, ask questions, reschedule.</p>
+          </div>
+          <iframe
+            id="simFrame"
+            src="about:blank"
+            data-src="/growth/ghost-room.html"
+            title="Qudozen AI Receptionist Live Simulator"
+            allow="microphone"
+            loading="lazy"
+          ></iframe>
+        </div>
+      </div>
+
+      <div class="simulator-ctas">
+        <a href="/growth/ghost-room.html" class="btn-primary" target="_blank" rel="noopener noreferrer">&#x2197; Open in Full Screen</a>
+        <a href="https://wa.me/966570733834" class="btn-secondary" target="_blank" rel="noopener noreferrer">Talk to Jake Directly &#x2192;</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── PRICING ──────────────────────────────────────────────────────── -->
+  <section id="pricing">
+    <div class="container">
+
+      <div class="section-header">
+        <span class="section-label">Transparent Pricing</span>
+        <h2 class="section-title">Investment in Autonomy</h2>
+        <p class="section-subtitle">No hidden fees. No lock-in contracts. Every plan includes setup, onboarding, and ongoing support.</p>
+      </div>
+
+      <div class="pricing-grid">
+
+        <!-- AWARENESS -->
+        <div class="pricing-card">
+          <p class="pricing-tier-name">Awareness</p>
+          <h3 class="pricing-title">Get Your Foot in the Door</h3>
+          <div class="pricing-price">
+            <span class="pricing-usd">$80</span>
+            <span class="pricing-sar">/ 299 SAR</span>
+          </div>
+          <p class="pricing-cadence">per month</p>
+          <p class="pricing-interactions">200 patient interactions / month</p>
+          <ul class="pricing-features">
+            <li>AI Receptionist on WhatsApp</li>
+            <li>Arabic + English responses</li>
+            <li>Appointment booking and confirmation</li>
+            <li>Basic FAQ automation</li>
+            <li>Monthly performance report</li>
+            <li>Email support</li>
+          </ul>
+          <a href="https://wa.me/966570733834" class="pricing-cta outline" target="_blank" rel="noopener noreferrer">Start the Conversation</a>
+        </div>
+
+        <!-- SYSTEM (FEATURED) -->
+        <div class="pricing-card featured">
+          <p class="pricing-tier-name">System</p>
+          <h3 class="pricing-title">The Full Operating Stack</h3>
+          <div class="pricing-price">
+            <span class="pricing-usd">$133</span>
+            <span class="pricing-sar">/ 499 SAR</span>
+          </div>
+          <p class="pricing-cadence">per month</p>
+          <div class="pricing-setup">One-time setup fee: $186 / 699 SAR</div>
+          <p class="pricing-interactions">1,000 patient interactions / month</p>
+          <ul class="pricing-features">
+            <li>Everything in Awareness</li>
+            <li>Full calendar management</li>
+            <li>Payment link dispatch</li>
+            <li>Post-visit follow-up sequences</li>
+            <li>Live escalation to staff</li>
+            <li>Real-time admin dashboard</li>
+            <li>Weekly performance reports</li>
+            <li>Priority WhatsApp support</li>
+          </ul>
+          <a href="https://wa.me/966570733834" class="pricing-cta solid" target="_blank" rel="noopener noreferrer">Get Started Today</a>
+        </div>
+
+        <!-- SWARM -->
+        <div class="pricing-card">
+          <p class="pricing-tier-name">Swarm</p>
+          <h3 class="pricing-title">Enterprise &amp; Multi-Location</h3>
+          <div class="pricing-price">
+            <span class="pricing-usd">Custom</span>
+          </div>
+          <p class="pricing-cadence">tailored to your operation</p>
+          <p class="pricing-interactions">Unlimited interactions</p>
+          <ul class="pricing-features">
+            <li>Everything in System</li>
+            <li>Multi-location deployment</li>
+            <li>Dedicated account manager</li>
+            <li>Custom integrations (CRM, PMS, ERP)</li>
+            <li>Advanced analytics suite</li>
+            <li>SLA-backed uptime guarantee</li>
+            <li>Quarterly strategy reviews</li>
+          </ul>
+          <a href="https://wa.me/966570733834" class="pricing-cta outline" target="_blank" rel="noopener noreferrer">Talk to Us About Scale</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── JAKE'S LETTER ─────────────────────────────────────────────────── -->
+  <section id="about">
+    <div class="container">
+      <div class="jake-wrapper">
+        <span class="jake-quote-mark" aria-hidden="true">&#x201C;</span>
+        <div class="jake-content">
+          <span class="section-label">A Note from the Founder</span>
+          <h2 class="section-title">Why I Built This</h2>
+          <div class="jake-body">
+            <p>I watched a clinic lose a patient at 11pm because nobody was awake to answer a WhatsApp message. The patient wanted to book. The clinic wanted the booking. The system just wasn&#8217;t there to connect them.</p>
+            <p>That bothered me more than it should have. Because it wasn&#8217;t a hard problem. It was a solvable problem &#8212; one that was costing businesses real money, every single day, while the owners slept.</p>
+            <p>So I started building. Not software products. Not SaaS. <em>Systems.</em> Operational infrastructure that fills the gap between when a business closes and when a client needs help. Between when a lead arrives and when a human can respond. Between what a business wants to know and what its data is actually showing.</p>
+            <p>Qudozen is the result of that obsession. Every tool we build is designed to answer one question: what work can a well-designed system do better than a tired human doing it manually at midnight?</p>
+            <p>The answer, it turns out, is: most of it.</p>
+            <p>I&#8217;m not here to replace your team. I&#8217;m here to give them back their time &#8212; and give you back your business.</p>
+          </div>
+          <div class="jake-signature">
+            <em>&#8212; Jake</em>
+            <a href="https://wa.me/966570733834" target="_blank" rel="noopener noreferrer">
+              &#x1F4AC; +966 57 073 3834
             </a>
           </div>
         </div>
-
-        <!-- Growth Swarm -->
-        <div class="svc-card flex flex-col" style="background:rgba(212,165,116,0.04)">
-          <div class="w-14 h-14 rounded-2xl bg-gold/20 border border-gold/40 flex items-center justify-center text-2xl mb-5">🎯</div>
-          <h3 class="text-xl font-bold mb-2 text-gold">محرك النمو (السوارم)</h3>
-          <p class="text-gray-400 text-sm leading-relaxed mb-4">يكتشف العيادات المحتملة على خرائط جوجل، يكتب رسائل مخصصة، ويُرسلها تلقائياً — موقعاً باسم جيك.</p>
-          <ul class="space-y-2 flex-1">
-            <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-gold text-base">✓</span> اكتشاف تلقائي للعملاء</li>
-            <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-gold text-base">✓</span> رسائل بالذكاء الاصطناعي</li>
-            <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-gold text-base">✓</span> تتبع الردود والتحويل</li>
-          </ul>
-          <button onclick="openServiceModal('growth')" class="mt-6 w-full bg-transparent border border-gold/50 text-gold py-2.5 rounded-xl font-bold hover:bg-gold/10 transition">تفاصيل أكثر</button>
-        </div>
-
-        <!-- Analytics Dashboard -->
-        <div class="svc-card flex flex-col">
-          <div class="w-14 h-14 rounded-2xl border border-aqua/30 flex items-center justify-center text-2xl mb-5" style="background:rgba(94,234,212,0.06)">📊</div>
-          <h3 class="text-xl font-bold mb-2 text-aqua">لوحة التحكم الإدارية</h3>
-          <p class="text-gray-400 text-sm leading-relaxed mb-4">رؤية كاملة للمنشأة في الوقت الفعلي — العملاء، المواعيد، العملاء المحتملين، والصحة العامة للنظام.</p>
-          <ul class="space-y-2 flex-1">
-            <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-aqua text-base">✓</span> بيانات حية بدون تحديث</li>
-            <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-aqua text-base">✓</span> تقارير يومية تصل واتساب</li>
-            <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-aqua text-base">✓</span> تتبع معدل الغياب</li>
-          </ul>
-          <button onclick="openServiceModal('analytics')" class="mt-6 w-full bg-transparent border border-aqua/50 text-aqua py-2.5 rounded-xl font-bold hover:bg-aqua/10 transition">تفاصيل أكثر</button>
-        </div>
-
-        <!-- Calendar Sync -->
-        <div class="svc-card flex flex-col">
-          <div class="w-14 h-14 rounded-2xl border border-purple-500/30 flex items-center justify-center text-2xl mb-5" style="background:rgba(168,85,247,0.06)">📅</div>
-          <h3 class="text-xl font-bold mb-2" style="color:#c084fc">مزامنة التقويم الذكية</h3>
-          <p class="text-gray-400 text-sm leading-relaxed mb-4">كل حجز يظهر فوراً في تقويم المنشأة. قفل ذري يمنع التعارض حتى عند تزامن أكثر من طلب.</p>
-          <ul class="space-y-2 flex-1">
-            <li class="flex items-center gap-2 text-sm text-gray-400"><span style="color:#c084fc">✓</span> تكامل مع Google Calendar</li>
-            <li class="flex items-center gap-2 text-sm text-gray-400"><span style="color:#c084fc">✓</span> قفل ذري لمنع التعارض</li>
-          </ul>
-          <button onclick="openServiceModal('calendar')" class="mt-6 w-full bg-transparent border border-purple-500/50 text-purple-400 py-2.5 rounded-xl font-bold hover:bg-purple-500/10 transition">تفاصيل أكثر</button>
-        </div>
-
-        <!-- Reminder Engine -->
-        <div class="svc-card flex flex-col">
-          <div class="w-14 h-14 rounded-2xl border border-rose-500/30 flex items-center justify-center text-2xl mb-5" style="background:rgba(244,63,94,0.06)">🔔</div>
-          <h3 class="text-xl font-bold mb-2" style="color:#fb7185">محرك التذكيرات</h3>
-          <p class="text-gray-400 text-sm leading-relaxed mb-4">تذكيرات آلية قبل 24 ساعة وساعة من الموعد. تقليل الغياب 40%. متابعة بعد الزيارة وطلب تقييم جوجل.</p>
-          <ul class="space-y-2 flex-1">
-            <li class="flex items-center gap-2 text-sm text-gray-400"><span style="color:#fb7185">✓</span> تذكير 24 ساعة + ساعة</li>
-            <li class="flex items-center gap-2 text-sm text-gray-400"><span style="color:#fb7185">✓</span> طلب تقييم تلقائي</li>
-          </ul>
-          <button onclick="openServiceModal('reminder')" class="mt-6 w-full bg-transparent border border-rose-500/50 text-rose-400 py-2.5 rounded-xl font-bold hover:bg-rose-500/10 transition">تفاصيل أكثر</button>
-        </div>
-
       </div>
     </div>
   </section>
 
-  <!-- ══════════════════════════════════════════════════ -->
-  <!-- LIVE SIMULATOR                                    -->
-  <!-- ══════════════════════════════════════════════════ -->
-  <section id="simulator" class="py-24 px-4 relative z-10 border-b border-white/5 bg-[#070b14]">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-12">
-        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-gold mb-4 tracking-widest uppercase">محاكاة حية</div>
-        <h2 class="text-3xl md:text-4xl font-bold mb-4">جرّب <span class="text-gold">البوت الفعلي</span> الآن</h2>
-        <p class="text-gray-400 max-w-xl mx-auto">هذه ليست عرضاً وهمياً — هذا هو نفس النظام الذي يعمل على واتساب. جرّب الحجز الكامل من البداية للتأكيد.</p>
-      </div>
+  <!-- ─── FOOTER ────────────────────────────────────────────────────────── -->
+  <footer id="contact">
+    <div class="container">
+      <div class="footer-grid">
 
-      <div class="flex flex-col lg:flex-row gap-10 items-start justify-center">
-
-        <!-- Left: Simulator Phone Frame -->
-        <div class="w-full max-w-sm mx-auto lg:mx-0 flex-shrink-0">
-          <!-- Phone frame -->
-          <div class="relative mx-auto" style="width:320px">
-            <!-- Phone chrome -->
-            <div class="absolute inset-0 rounded-[36px] border-2 border-gray-700 pointer-events-none z-20" style="box-shadow:0 0 60px rgba(13,148,136,0.15)"></div>
-
-            <!-- WhatsApp-style container -->
-            <div id="simPhoneShell" class="rounded-[34px] overflow-hidden bg-[#111b21]" style="height:600px;display:flex;flex-direction:column">
-
-              <!-- Status bar -->
-              <div class="bg-[#111b21] px-5 pt-3 pb-1 flex justify-between items-center text-[11px] text-gray-400">
-                <span>9:41</span>
-                <div class="flex gap-1 items-center">
-                  <svg class="w-3 h-3 fill-gray-400" viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
-                  <svg class="w-3 h-3 fill-gray-400" viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
-                </div>
-              </div>
-
-              <!-- Chat header -->
-              <div class="bg-[#202c33] px-4 py-3 flex items-center gap-3 border-b border-gray-800/50">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-lg shadow-lg flex-shrink-0">🤖</div>
-                <div class="flex-1 min-w-0">
-                  <div class="font-bold text-white text-sm">النظام الذكي للمنشأة</div>
-                  <div class="text-[11px] text-[#5EEAD4] flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 bg-[#5EEAD4] rounded-full inline-block animate-pulse"></span>
-                    متصل دائماً
-                  </div>
-                </div>
-                <div class="flex items-center gap-3">
-                  <button onclick="resetSimulator()" class="text-gray-500 hover:text-rose-400 transition" title="إعادة تشغيل / Reset">↺</button>
-                  <div class="text-gray-500 text-xs">⋮</div>
-                </div>
-              </div>
-
-              <!-- Progress bar -->
-              <div class="bg-[#111b21] px-4 py-1.5">
-                <div class="h-1 bg-gray-800 rounded-full overflow-hidden">
-                  <div id="simProgress" style="width:0%"></div>
-                </div>
-                <div class="text-[10px] text-gray-600 mt-0.5" id="simStepLabel" style="direction:rtl">الخطوة 0 من 7</div>
-              </div>
-
-              <!-- Chat body -->
-              <div id="simChat" class="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-3"
-                   style="background:#0d1418;background-image:url('https://www.transparenttextures.com/patterns/stardust.png');background-size:200px">
-              </div>
-
-              <!-- Quick replies area -->
-              <div id="simReplies" class="bg-[#111b21] border-t border-gray-800/50 px-3 py-3 flex flex-wrap gap-2 min-h-[58px] items-center">
-                <span class="text-gray-600 text-xs italic">في انتظار البدء...</span>
-              </div>
-
-              <!-- Input bar -->
-              <div class="bg-[#202c33] px-3 py-2.5 flex items-center gap-2 border-t border-gray-800/30">
-                <div id="simInputWrap" class="flex-1 bg-[#2a3942] rounded-full px-4 py-2 flex items-center gap-2">
-                  <input id="simInput" type="text" placeholder="اكتب رسالة..." disabled
-                    class="flex-1 bg-transparent text-white text-sm outline-none placeholder-gray-600 text-right"
-                    style="min-width:0;direction:rtl" />
-                </div>
-                <button id="simSend" disabled
-                  class="w-9 h-9 rounded-full bg-[#0D9488] flex items-center justify-center transition hover:bg-teal-600 disabled:opacity-30"
-                  onclick="handleSimInput()">
-                  <svg class="w-4 h-4 fill-white rtl:rotate-180" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Start button (below phone) -->
-          <div class="mt-6 text-center" style="position:relative;z-index:1001">
-            <button id="simStartBtn" onclick="startSimulator()"
-              class="bg-gold text-gray-900 px-8 py-3 rounded-xl font-black hover:shadow-[0_0_20px_rgba(212,165,116,0.5)] transition">
-              ▶ ابدأ المحاكاة
-            </button>
-            <div class="text-xs text-gray-600 mt-2">لا يتطلب تسجيل · جاهز خلال ثانية</div>
-          </div>
+        <div class="footer-brand">
+          <h2>Qud<span>ozen</span></h2>
+          <p>Autonomous Business Infrastructure</p>
+          <p>Built with precision in Riyadh. Serving the world.</p>
         </div>
 
-        <!-- Right: Step guide + Dashboard preview -->
-        <div class="flex-1 space-y-6 w-full max-w-lg mx-auto lg:mx-0">
-
-          <!-- Step guide -->
-          <div class="glass rounded-2xl p-6">
-            <h3 class="text-base font-bold text-aqua mb-4 flex items-center gap-2">
-              <span>🗺</span> خريطة رحلة الحجز
-            </h3>
-            <div class="space-y-3" id="stepGuide">
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="1">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
-                <span class="text-sm text-gray-400">Language Pivot</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="2">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
-                <span class="text-sm text-gray-400">Smart Menu</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="3">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
-                <span class="text-sm text-gray-400">Identity Intake</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="4">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">4</div>
-                <span class="text-sm text-gray-400">Phone Matrix</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="5">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">5</div>
-                <span class="text-sm text-gray-400">Clinical Triage</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="6">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">6</div>
-                <span class="text-sm text-gray-400">Symptom Intake</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="7">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">7</div>
-                <span class="text-sm text-gray-400">Specialist Match</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="8">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">8</div>
-                <span class="text-sm text-gray-400">Temporal Logic</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="9">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">9</div>
-                <span class="text-sm text-gray-400">Atomic Slotting</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="10">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0 text-gold border-gold/40">✓</div>
-                <span class="text-sm text-gray-400">Autonomous Evolution</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Dashboard preview (dynamic) -->
-          <div id="dashPreview" class="glass rounded-2xl p-6 border border-[#0D9488]/30 hidden transform scale-95 opacity-0 transition-all duration-500 shadow-[0_0_40px_rgba(13,148,136,0.1)]">
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center gap-2">
-                <div class="status-dot"></div>
-                <span id="dsStatus" class="text-xs font-bold text-[#22c55e] uppercase tracking-wider">النظام نشط</span>
-              </div>
-              <div class="text-[10px] text-gray-500 tracking-tighter" id="dsTime">تحديث: الآن</div>
-            </div>
-            
-            <div id="dsTitle" class="text-sm font-bold text-white mb-5 border-b border-white/5 pb-3">📊 لوحة تحكم المنشأة — مباشر</div>
-            
-            <div class="space-y-4">
-              <!-- Result Card -->
-              <div class="bg-[#0f1b2d] border border-teal-500/30 rounded-xl p-4 shadow-inner relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
-                <div class="flex justify-between items-start mb-2">
-                  <div id="dsConfLabel" class="text-[10px] font-bold text-teal-400 uppercase">موعد مؤكد جديد</div>
-                  <div class="text-[10px] text-gray-500" id="dsRef">REF: QZ-2026</div>
-                </div>
-                <div class="text-lg font-black text-white mb-1" id="dsPatientName">--</div>
-                <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-white/5">
-                  <div>
-                    <div id="dsTreatLabel" class="text-[9px] text-gray-500 uppercase">نوع العلاج</div>
-                    <div id="dsTreatment" class="text-xs text-white font-bold">--</div>
-                  </div>
-                  <div>
-                    <div id="dsSlotLabel" class="text-[9px] text-gray-500 uppercase">الوقت</div>
-                    <div id="dsSlot" class="text-xs text-aqua font-bold">--</div>
-                  </div>
-                  <div>
-                    <div id="dsDateLabel" class="text-[9px] text-gray-500 uppercase">التاريخ</div>
-                    <div id="dsDate" class="text-xs text-white font-bold">--</div>
-                  </div>
-                  <div>
-                    <div id="dsDocLabel" class="text-[9px] text-gray-500 uppercase">الفريق</div>
-                    <div id="dsDoctor" class="text-xs text-white font-bold">--</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Stats Mini -->
-              <div class="grid grid-cols-2 gap-3">
-                <div class="bg-[#0f1b2d]/60 rounded-lg p-3 border border-white/5">
-                  <div id="dsSyncLabel" class="text-[9px] text-gray-500">تقويم جوجل</div>
-                  <div class="text-[10px] text-aqua font-bold">مزامنة: ناجحة ✅</div>
-                </div>
-                <div class="bg-[#0f1b2d]/60 rounded-lg p-3 border border-white/5">
-                  <div id="dsRemLabel" class="text-[9px] text-gray-500">تذكيرات</div>
-                  <div class="text-[10px] text-gold font-bold">مجدولة 24h+1h</div>
-                </div>
-              </div>
-            </div>
-
-            <a href="https://wa.me/96657436016?text=أريد%20تفعيل%20لوحة%20تحكمي%20الخاصة" target="_blank"
-               class="mt-6 w-full block bg-gold text-gray-900 py-3.5 rounded-xl font-black text-center hover:shadow-[0_0_20px_rgba(212,165,116,0.3)] transition text-sm">
-               تفعيل النظام الخاص بك →
-            </a>
-          </div>
-
-          <!-- WhatsApp redirect (shown after completion) -->
-          <div id="waRedirect" class="glass rounded-2xl p-6 border border-[#25D366]/30 hidden" style="background:rgba(37,211,102,0.04)">
-            <div class="flex items-start gap-4">
-              <div class="w-12 h-12 rounded-xl bg-[#25D366]/20 flex items-center justify-center flex-shrink-0">
-                <svg viewBox="0 0 24 24" class="w-6 h-6 fill-[#25D366]"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
-              </div>
-              <div class="flex-1">
-                <div class="text-sm font-bold text-white mb-1">محاكاتك مكتملة 🎉</div>
-                <p class="text-xs text-gray-400 mb-3 leading-relaxed">هذا بالضبط ما سيحدث في عملك. جاهز لتفعيل نظامك الخاص؟</p>
-                <a href="https://wa.me/96657436016?text=أهلاً%20جيك،%20جربت%20المحاكي%20وأريد%20تفعيل%20النظام%20لعيادتي." target="_blank"
-                   class="inline-flex items-center gap-2 bg-[#25D366] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#1da851] transition">
-                  <svg viewBox="0 0 24 24" class="w-4 h-4 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
-                  تحدث مع جيك الآن
-                </a>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════════ -->
-  <!-- FEATURE HIGHLIGHTS (animated counters)           -->
-  <!-- ══════════════════════════════════════════════════ -->
-  <section id="features" class="py-24 px-6 relative z-10 border-b border-white/5 bg-gradient-to-b from-[#070b14] to-[#0B1120]">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-14">
-        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-aqua mb-4 tracking-widest uppercase">أرقام حقيقية</div>
-        <h2 class="text-3xl md:text-4xl font-bold mb-3">البنية التحتية <span class="text-aqua">التي تتحدث أرقامها</span></h2>
-        <p class="text-gray-400">ليست وعوداً — بيانات من عيادات تعمل على النظام الآن.</p>
-      </div>
-
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div class="feat-card">
-          <div class="text-3xl mb-3">⚡</div>
-          <div class="feat-counter" id="cnt-response">0</div>
-          <div class="text-gray-500 text-xs mt-1">وقت الرد (ثانية)</div>
-        </div>
-        <div class="feat-card">
-          <div class="text-3xl mb-3">🕐</div>
-          <div class="feat-counter" id="cnt-uptime">0</div>
-          <div class="text-gray-500 text-xs mt-1">ساعة توفر / يوم</div>
-        </div>
-        <div class="feat-card">
-          <div class="text-3xl mb-3">✅</div>
-          <div class="feat-counter" id="cnt-confirm">0</div>
-          <div class="text-gray-500 text-xs mt-1">نسبة التأكيد %</div>
-        </div>
-        <div class="feat-card">
-          <div class="text-3xl mb-3">📉</div>
-          <div class="feat-counter" id="cnt-noshow">0</div>
-          <div class="text-gray-500 text-xs mt-1">تقليل الغياب %</div>
-        </div>
-        <div class="feat-card">
-          <div class="text-3xl mb-3">🌐</div>
-          <div class="feat-counter" id="cnt-lang">0</div>
-          <div class="text-gray-500 text-xs mt-1">لغات مدعومة</div>
-        </div>
-        <div class="feat-card">
-          <div class="text-3xl mb-3">📅</div>
-          <div class="feat-counter" id="cnt-sync">0</div>
-          <div class="text-gray-500 text-xs mt-1">ثانية للمزامنة</div>
-        </div>
-      </div>
-
-      <!-- Feature pills below counters -->
-      <div class="mt-12 grid md:grid-cols-2 gap-4">
-        <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-teal-500/30 transition">
-          <div class="w-10 h-10 rounded-xl bg-teal-900/50 border border-teal-500/30 flex items-center justify-center text-lg flex-shrink-0">🔒</div>
-          <div>
-            <div class="font-bold text-white text-sm mb-1">قفل ذري لمنع التعارض</div>
-            <p class="text-gray-500 text-xs leading-relaxed">حتى لو أرسل مريضان طلباً في نفس الثانية — يحجز واحد فقط، والآخر يرى وقتاً بديلاً فوراً.</p>
-          </div>
-        </div>
-        <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-gold/30 transition">
-          <div class="w-10 h-10 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-lg flex-shrink-0">🧠</div>
-          <div>
-            <div class="font-bold text-white text-sm mb-1">فهم طبيعي للطلبات</div>
-            <p class="text-gray-500 text-xs leading-relaxed">يفهم "بكره الصبح" و"الأسبوع الجاي" و"العصر" ويحولها لمواعيد فعلية في التقويم.</p>
-          </div>
-        </div>
-        <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-aqua/30 transition">
-          <div class="w-10 h-10 rounded-xl border border-aqua/30 flex items-center justify-center text-lg flex-shrink-0" style="background:rgba(94,234,212,0.07)">🚨</div>
-          <div>
-            <div class="font-bold text-white text-sm mb-1">كشف الطوارئ الفوري</div>
-            <p class="text-gray-500 text-xs leading-relaxed">يتعرف على كلمات الطوارئ ويعرض أقرب موعد متاح ويُنبّه الفريق مباشرة.</p>
-          </div>
-        </div>
-        <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-purple-500/30 transition">
-          <div class="w-10 h-10 rounded-xl border border-purple-500/30 flex items-center justify-center text-lg flex-shrink-0" style="background:rgba(168,85,247,0.07)">🔄</div>
-          <div>
-            <div class="font-bold text-white text-sm mb-1">إعادة الجدولة والإلغاء</div>
-            <p class="text-gray-500 text-xs leading-relaxed">المريض يعيد الجدولة أو يلغي بكلمة واحدة — الفتحة تعود للتقويم فوراً بدون تدخل بشري.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════════ -->
-  <!-- PRICING                                           -->
-  <!-- ══════════════════════════════════════════════════ -->
-  <section id="pricing" class="py-24 px-6 bg-[#0B1120] border-t border-white/5 relative z-10">
-    <div class="max-w-6xl mx-auto text-center relative z-10">
-      <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-aqua mb-6 tracking-widest uppercase">الاستثمار</div>
-      <h2 class="text-3xl md:text-5xl font-black mb-4 text-white">شفافية كاملة في التسعير</h2>
-      <p class="text-gray-400 text-lg mb-16 max-w-2xl mx-auto">أسعارنا ثابتة، ولا نخبئ الرسوم.</p>
-      <div class="grid md:grid-cols-3 gap-8 items-stretch">
-        <div class="glass p-8 rounded-3xl flex flex-col text-right border border-gray-800 hover:border-gray-600 transition">
-          <h3 class="text-xl text-[#5EEAD4] mb-2 font-bold">الوعي (Standard)</h3>
-          <div class="flex items-baseline gap-2 mb-6 border-b border-gray-800 pb-6 mt-4">
-            <span class="text-4xl font-black text-white">299</span>
-            <span class="text-gray-500">ريال/شهر</span>
-          </div>
-          <ul class="text-sm text-gray-300 space-y-4 mb-10 flex-1">
-            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>ردود آلية على واتساب 24/7</span></li>
-            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>حجز المواعيد الأساسية</span></li>
-            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>لغة عربية مخصصة للسعودية</span></li>
+        <div class="footer-links">
+          <h3>Navigate</h3>
+          <ul>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#simulator">Simulator</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
           </ul>
-          <div class="text-sm font-bold text-gray-400 mb-4 text-center">بدون رسوم إعداد</div>
-          <a href="https://wa.me/96657436016?text=أريد%20الاشتراك%20في%20الوعي%20الأساسي" class="w-full bg-[#1e293b] text-white py-3.5 rounded-xl font-bold hover:bg-gray-700 transition text-center border border-gray-700">البدء بالنسخة القياسية</a>
         </div>
-        <div class="glass p-8 rounded-3xl flex flex-col text-right border-2 border-[#0D9488]/50 shadow-[0_0_30px_rgba(13,148,136,0.15)] transform md:-translate-y-4 relative bg-[#091520]">
-          <h3 class="text-xl text-[#5EEAD4] mb-2 font-bold mt-2">النظام (Pro)</h3>
-          <div class="flex items-baseline gap-2 mb-6 border-b border-gray-800 pb-6 mt-2">
-            <span class="text-5xl font-black text-white">499</span>
-            <span class="text-gray-500">ريال/شهر</span>
-          </div>
-          <ul class="text-sm text-gray-200 space-y-4 mb-10 flex-1">
-            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>كل ميزات الأساسي</span></li>
-            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>التنسيق اللحظي مع تقويم جوجل</span></li>
-            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>نظام التذكيرات لتقليل الغياب</span></li>
-            <li class="flex items-start gap-3"><span class="text-gold font-bold mt-0.5">✓</span> <span>تقرير صباحي يومي على واتساب</span></li>
-          </ul>
-          <div class="text-xs text-rose-300 font-bold mb-4 text-center bg-rose-900/20 py-2.5 rounded-lg border border-rose-900/50">+ 699 ريال رسوم إعداد (لمرة واحدة)</div>
-          <a href="https://wa.me/96657436016?text=أريد%20النظام%20الشامل%20لعيادتي" class="w-full bg-[#0D9488] text-white py-3.5 rounded-xl font-black hover:bg-[#0c8077] transition text-center shadow-[0_0_20px_rgba(13,148,136,0.3)]">تفعيل النظام الشامل</a>
-        </div>
-        <div class="glass p-8 rounded-3xl flex flex-col text-right border border-gray-800 hover:border-gray-600 transition">
-          <h3 class="text-xl text-gold mb-2 font-bold">السوارم (Custom)</h3>
-          <div class="flex items-baseline gap-2 mb-6 border-b border-gray-800 pb-6 mt-4">
-            <span class="text-4xl font-black text-gold">مخصص</span>
-          </div>
-          <ul class="text-sm text-gray-300 space-y-4 mb-10 flex-1">
-            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>استرجاع العملاء المترددين تلقائياً</span></li>
-            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>توليد آلي لتقييمات جوجل</span></li>
-            <li class="flex items-start gap-3"><span class="text-teal font-bold mt-0.5">✓</span> <span>صيانة وعي المنشأة في السوق</span></li>
-          </ul>
-          <a href="https://wa.me/96657436016?text=أريد%20مناقشة%20طبقة%20السوارم." class="w-full bg-transparent border border-gray-500 text-gray-300 py-3.5 rounded-xl font-bold hover:bg-gray-800 transition text-center">اتصل بنا للتسعير</a>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- ══════════════════════════════════════════════════ -->
-  <!-- JAKE'S LETTER                                     -->
-  <!-- ══════════════════════════════════════════════════ -->
-  <section id="jake" class="py-32 border-t border-[#1e293b] relative z-10 bg-[#070b14]">
-    <div class="max-w-4xl mx-auto px-6">
-      <div class="flex flex-col md:flex-row gap-8 items-start relative z-10">
-        <div class="w-32 h-32 rounded-3xl bg-[#0D9488]/10 border border-[#0D9488]/30 flex items-center justify-center text-5xl shrink-0 shadow-[0_0_30px_rgba(13,148,136,0.1)]">👨‍💻</div>
-        <div>
-          <h3 class="text-3xl font-black mb-4 text-white">رسالة لك من مؤسس النظام</h3>
-          <div class="text-sm font-bold text-teal mb-6 tracking-wide">من: جيك</div>
-          <div class="space-y-4 text-gray-300 leading-relaxed text-lg">
-            <p>مرحباً. رأيت أصحاب أعمال ممتازين يبنون منشآت بملايين الريالات، ثم يخسرون عشرين إلى ثلاثين عميلاً شهرياً بشكل سخيف. ليس بسبب سوء الخدمة، بل لأن الاستقبال الطبيعي لا يمكنه الرد فوراً في الـ 12 ليلاً حين يحتاج العميل ويراسل أول 5 منشآت على جوجل.</p>
-            <p>من يرد أولاً، يحصل على العميل. هذه هي الحقيقة القاسية للسوق.</p>
-            <p>نظام التشغيل الذاتي الذي بنيته لا يتعلق بمجرد "الرد الآلي". إنه يتعلق بحماية منشأتك من النزيف اليومي الخفي. البنية التحتية تتكفل بالرد، والحجز، والمتابعة — لكي تستيقظ صباحاً وترى جدولك ممتلئاً تلقائياً.</p>
-            <p>إذا كنت جاهزاً لوقف النزيف في عملك، اضغط على الزر أدناه لتراسلني شخصياً.</p>
+        <div class="footer-contact">
+          <h3>Get in Touch</h3>
+          <a href="https://wa.me/966570733834" class="whatsapp-btn" target="_blank" rel="noopener noreferrer">
+            &#x1F4AC; Chat on WhatsApp
+          </a>
+          <div class="footer-contact-item">
+            <span class="icon">&#x2709;</span>
+            <span>jake@qudozen.com</span>
           </div>
-          <div class="mt-10">
-            <a href="https://wa.me/96657436016?text=أهلاً%20جيك،%20قرأت%20رسالتك%20وأريد%20تفعيل%20النظام%20لمنشأتي." class="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black hover:bg-gray-200 transition">
-              <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
-              تحدث مع جيك شخصياً
-            </a>
-            <div class="mt-4 text-sm text-gray-500">البريد الإلكتروني: jake@qudozen.com</div>
-            <div class="mt-1 text-sm text-gray-500">واتساب: 057436016</div>
+          <div class="footer-contact-item">
+            <span class="icon">&#x1F4DE;</span>
+            <span>+966 57 073 3834</span>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- Footer -->
-  <footer class="bg-black py-12 px-6 border-t border-gray-900 relative z-10">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-      <div class="text-center md:text-right">
-        <div class="text-xl font-bold tracking-wider mb-2 text-gold">⚡ QUDOZEN</div>
-        <p class="text-gray-500 text-sm">البنية التحتية والمحرك الذكي للأعمال.</p>
       </div>
-      <div class="flex gap-8 text-sm font-medium">
-        <a href="#services" class="text-gray-400 hover:text-aqua transition">خدماتنا</a>
-        <a href="#simulator" class="text-gray-400 hover:text-aqua transition">المحاكي</a>
-        <a href="https://wa.me/96657436016" class="text-gray-400 hover:text-aqua transition">دعم واتساب</a>
-        <a href="/growth/ghost-room" class="text-gray-400 hover:text-aqua transition">غرفة العمليات</a>
+
+      <div class="footer-bottom">
+        <p>&#xa9; 2026 Qudozen. All rights reserved.</p>
+        <div class="footer-status">
+          <span class="status-dot" aria-hidden="true"></span>
+          All systems operational
+        </div>
       </div>
-      <div class="text-gray-600 text-sm">© 2026 Qudozen. جميع الحقوق محفوظة.</div>
     </div>
   </footer>
 
-  <!-- Floating WhatsApp -->
-  <a href="https://wa.me/96657436016" class="chat-widget" aria-label="تواصل عبر واتساب">
-    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
-  </a>
+  <!-- ─── SCRIPTS: NAV + SIMULATOR LAUNCH + GSAP ───────────────────────── -->
+  <script>
+    // ── Navigation ─────────────────────────────────────────────────────────
+    var menuBtn         = document.getElementById('menuBtn');
+    var navOverlay      = document.getElementById('navOverlay');
+    var servicesToggle  = document.getElementById('servicesToggle');
+    var servicesSubmenu = document.getElementById('servicesSubmenu');
+    var navLinks        = navOverlay.querySelectorAll('.nav-link');
 
-<!-- ══════════════════════════════════════════════════ -->
-<!-- SIMULATOR STATE MACHINE                           -->
-<!-- ══════════════════════════════════════════════════ -->
-<script>
-try { gsap.registerPlugin(ScrollTrigger); } catch(e) { console.warn('[GSAP] Not loaded:', e.message); }
-
-/* ─── Simulator Architecture: Full Logic Parity (bot.js) ──── */
-const MESSAGES = {
-  ar: {
-    langSelect: "🌐 Welcome! I am Jake, your autonomous assistant.\nPlease choose your language / اختر لغتك:\n1️⃣ English\n2️⃣ العربية\n\n💡 Tap 1 for English, 2 for Arabic",
-    menu: "أهلاً وسهلاً بك في عيادتنا! 🦷✨\nأنا *جيك*، مساعدك الطبي الذكي، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد 📅\n2️⃣ موعدي الحالي 📋\n3️⃣ إعادة جدولة 🔄\n4️⃣ إلغاء الموعد ❌\n5️⃣ خدماتنا 🦷\n6️⃣ أطباؤنا 👨‍⚕️\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم المنشأة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️\n\n💡 اضغط رقماً أو أخبرني بما تحتاج 😊",
-    
-    // Booking Flow
-    bookingSteps: {
-      name: "رائع! لنبدأ الحجز 😊\nما اسمك الكريم؟\n\n💡 اكتب اسمك وأرسل\n0️⃣ القائمة الرئيسية",
-      phone: (p) => `شكراً! 😊\nرقم واتساب الخاص بك هو: *${p}*\nهل هذا صحيح؟\n\n1️⃣ نعم، هذا صحيح\n2️⃣ لا، أريد رقماً آخر\n\n💡 اضغط 1 للتأكيد أو 2 للتغيير\n0️⃣ القائمة الرئيسية`,
-      phoneReq: "من فضلك أدخل رقم هاتفك:\n\n💡 اكتب رقم هاتفك وأرسل",
-      treatment: "اختر نوع الخدمة: 🦷\n\n1️⃣ تنظيف وتلميع 🦷\n2️⃣ حشوات\n3️⃣ تقويم الأسنان 📐\n4️⃣ تبييض الأسنان ⚪\n5️⃣ خلع\n6️⃣ زراعة أسنان 🔬\n7️⃣ علاج العصب 🏥\n8️⃣ أخرى / غير متأكد\n\n💡 اضغط رقماً أو اختر من القائمة",
-      notes: "هل لديك ملاحظات أو وصف للحالة؟ (اختياري)\n\n💡 اكتب ملاحظتك أو أرسل *0* للتخطي\n0️⃣ تخطي الخطوة",
-      doctor: "اختر الفريق المفضل: 👨‍⚕️\n\n1️⃣ د. أحمد (أخصائي زراعة)\n2️⃣ د. سارة (أخصائية تقويم)\n3️⃣ أي فريق متاح\n\n💡 اضغط رقماً للاختيار",
-      date: (doc) => `متى تفضل موعدك ${doc}؟ 📅\n\n1️⃣ غداً (الثلاثاء)\n2️⃣ الأربعاء\n3️⃣ الخميس\n4️⃣ الأسبوع القادم\n\n💡 اضغط رقماً أو اكتب أي تاريخ مثل "بكرة"`,
-      slot: (date) => `الأوقات المتاحة لهذا اليوم (${date}): 📋\n\n1️⃣ 10:00 صباحاً\n2️⃣ 12:00 مساءً\n3️⃣ 04:00 مساءً\n4️⃣ 06:30 مساءً\n\n💡 اختر الوقت المناسب لك`,
-      securing: "🔒 جاري تأمين موعدك...\nتحقق من التعارضات في التقويم...",
-      confirmed: "✅ *تم الحجز بنجاح!* 🎉",
-      summary: (d) => `📋 *تفاصيل موعدك:*\n👤 الاسم: ${d.name}\n🦷 العلاج: ${d.treatment}\n📅 التاريخ: ${d.date}\n⏰ الوقت: ${d.slot}\n👨‍⚕️ الفريق: ${d.doctor}\n\n📅 تم التسجيل في تقويم المنشأة\n🔔 ستصلك تذكيرات تلقائية قبل الموعد`
-    },
-
-    // Reminder Preview (The "Sales" moment)
-    reminderPreview: (name, date, slot, treat) => `🔔 *تذكير تلقائي (بعد 24 ساعة)*\n\nمرحباً ${name}، نذكرك بموعدك غداً:\n📅 ${date} الساعة ⏰ ${slot}\n🦷 العلاج: ${treat}\n\nنراك قريباً! 😊 إذا أردت تغيير الموعد، فقط أرسل "إعادة جدولة".`,
-
-    // My Appointment Flow
-    myAppt: (d) => `📋 *موعدك الحالي:*\n📅 ${d.date} الساعة ${d.slot}\n👨‍⚕️ الفريق: ${d.doctor}\n\n1️⃣ إعادة جدولة 🔄\n2️⃣ إلغاء الموعد ❌\n3️⃣ العودة للقائمة الرئيسية`,
-    
-    // Reschedule Flow
-    resched: {
-      date: "أهلاً بك! لتغيير موعدك، اختر التاريخ الجديد:\n\n1️⃣ غداً\n2️⃣ بعد غد\n3️⃣ الأسبوع القادم",
-      confirm: (d, s) => `تم التحديث! موعدك الجديد هو:\n📅 ${d} الساعة ${s}\n\n✅ تم تحديث التقويم بنجاح.`
-    },
-
-    // Cancel Flow
-    cancel: {
-      confirm: "هل أنت متأكد من إلغاء موعدك؟ ❌\n\n1️⃣ نعم، ألغِ الموعد\n2️⃣ لا، احتفظ بالموعد",
-      success: "✅ تم إلغاء الموعد بنجاح. نأمل رؤيتك قريباً!"
-    },
-
-    // Info Messages
-    prices: "💰 *قائمة الأسعار التقريبية:*\n• تنظيف: 200 ريال\n• حشو: 350 ريال\n• تقويم: يبدأ من 3000 ريال\n• زراعة: يبدأ من 4500 ريال\n\n💡 هذه الأسعار أولية وتخضع للفحص.",
-    services: "🦷 *خدمات المنشأة:*\n• زراعة الأسنان المتقدمة\n• تقويم الأسنان الشفاف والعادي\n• طب أسنان الأطفال\n• تبييض الأسنان بالليزر",
-    location: "📍 *موقع المنشأة:*\nيقع مجمعنا في قلب الخبر، شارع الأمير تركي.\n\n🗺️ رابط خرائط جوجل:\nhttps://maps.google.com/?q=Qudozen+Clinic\n\n💡 يمكنك دائماً طلب الموقع وسأرسله لك فوراً!",
-    reviews: "⭐ *آراء عملائنا:*\n• 'تعامل راقي جداً ونظام دقيق' - خالد\n• 'أفضل منشأة تعاملت معها في الشرقية' - سارة\n\n🔗 يمكنك قراءة المزيد أو وضع تقييمك هنا:\nhttps://g.page/qudozen/review",
-    staff: "👩‍⚕️ جاري تحويلك للتحدث مع الفريق...\nيرجى الانتظار لحظة.",
-    
-    completion: (name) => `بكل سرور ${name}! 😊\nنتطلع لاستقبالك. إذا احتجت أي مساعدة إضافية نحن هنا.\n\n-- النظام الذكي للمنشأة 🤖`,
-    dash: { status:'نشط', title:'لوحة التحكم', conf:'موعد جديد', treat:'العلاج', time:'الوقت', date:'التاريخ', doc:'الفريق', sync:'مزامنة', rem:'تذكير' }
-  },
-  en: {
-    langSelect: "🌐 Welcome! I'm Jake, your AI assistant.\nPlease choose your language / اختر لغتك:\n1️⃣ English\n2️⃣ العربية\n\n💡 Tap 1 for English, 2 for Arabic",
-    menu: "Welcome to our clinic! 🦷✨\nI'm *Jake*, your AI medical assistant, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment 📅\n2️⃣ My appointment 📋\n3️⃣ Reschedule 🔄\n4️⃣ Cancel appointment ❌\n5️⃣ Our services 🦷\n6️⃣ Our doctors 👨‍⚕️\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍⚕️\n\n💡 Tap a number or tell me what you need 😊",
-    
-    // Booking Flow
-    bookingSteps: {
-      name: "Great! Let's book your appointment 😊\nWhat's your full name?\n\n💡 Type your name and send\n0️⃣ Main menu",
-      phone: (p) => `Thanks! 😊\nYour WhatsApp number is: *${p}*\nIs this correct?\n\n1️⃣ Yes, that's correct\n2️⃣ No, use a different number\n\n💡 Tap 1 to confirm or 2 to change\n0️⃣ Main menu`,
-      phoneReq: "Please enter your phone number:\n\n💡 Type your phone number and send",
-      treatment: "Select service type: 🦷\n\n1️⃣ Cleaning & Polishing 🦷\n2️⃣ Fillings\n3️⃣ Braces & Orthodontics 📐\n4️⃣ Teeth Whitening ⚪\n5️⃣ Extraction\n6️⃣ Dental Implants 🔬\n7️⃣ Root Canal 🏥\n8️⃣ Other / Not sure\n\n💡 Tap a number or pick from the list",
-      notes: "Any notes or description of your issue? (optional)\n\n💡 Type your note or send *0* to skip\n0️⃣ Skip step",
-      doctor: "Select your preferred doctor: 👨‍⚕️\n\n1️⃣ Dr. Ahmed (Implants)\n2️⃣ Dr. Sarah (Braces)\n3️⃣ Any available doctor\n\n💡 Tap a number to select",
-      date: (doc) => `When would you like your appointment with ${doc}? 📅\n\n1️⃣ Tomorrow (Tuesday)\n2️⃣ Wednesday\n3️⃣ Thursday\n4️⃣ Next week\n\n💡 Tap a number or type a date like "tomorrow"`,
-      slot: (date) => `Available slots for ${date}: 📋\n\n1️⃣ 10:00 AM\n2️⃣ 12:00 PM\n3️⃣ 04:00 PM\n4️⃣ 06:30 PM\n\n💡 Pick the best time for you`,
-      securing: "🔒 Securing your slot...\nChecking calendar for conflicts...",
-      confirmed: "✅ *Booking Successful!* 🎉",
-      summary: (d) => `📋 *Your Details:*\n👤 Name: ${d.name}\n🦷 Treatment: ${d.treatment}\n📅 Date: ${d.date}\n⏰ Time: ${d.slot}\n👨‍⚕️ Doctor: ${d.doctor}\n\n📅 Registered in clinic calendar\n🔔 Auto-reminders scheduled`
-    },
-
-    // Reminder Preview
-    reminderPreview: (name, date, slot, treat) => `🔔 *Auto-Reminder (24h later)*\n\nHi ${name}, reminding you of your appointment tomorrow:\n📅 ${date} at ⏰ ${slot}\n🦷 Treatment: ${treat}\n\nSee you then! 😊 If you need to change the time, just reply 'reschedule'.`,
-
-    // My Appointment Flow
-    myAppt: (d) => `📋 *Your Current Appointment:*\n📅 ${d.date} at ${d.slot}\n👨‍⚕️ Doctor: ${d.doctor}\n\n1️⃣ Reschedule 🔄\n2️⃣ Cancel ❌\n3️⃣ Back to Main Menu`,
-
-    // Reschedule Flow
-    resched: {
-      date: "Welcome! To change your time, select a new date:\n\n1️⃣ Tomorrow\n2️⃣ Day after\n3️⃣ Next week",
-      confirm: (d, s) => `Updated! Your new appointment is:\n📅 ${d} at ${s}\n\n✅ Calendar updated successfully.`
-    },
-
-    // Cancel Flow
-    cancel: {
-      confirm: "Are you sure you want to cancel? ❌\n\n1️⃣ Yes, cancel it\n2️⃣ No, keep it",
-      success: "✅ Appointment cancelled. We hope to see you soon!"
-    },
-
-    prices: "💰 *Estimated Price List:*\n• Cleaning: 200 SAR\n• Fillings: 350 SAR\n• Braces: from 3000 SAR\n• Implants: from 4500 SAR\n\n💡 Final price depends on clinical exam.",
-    services: "🦷 *Our Services:*\n• Dental Implants\n• Clear Aligners\n• Pediatric Dentistry\n• Laser Whitening",
-    location: "📍 *Our Location:*\nWe are located in the heart of Khobar, Prince Turki St.\n\n🗺️ Google Maps Link:\nhttps://maps.google.com/?q=Qudozen+Clinic\n\n💡 You can always ask for the location and I'll send it!",
-    reviews: "⭐ *Patient Reviews:*\n• 'Amazing experience and very professional' - Khalid\n• 'Best clinic in the Eastern Province' - Sarah\n\n🔗 Read more or leave a review here:\nhttps://g.page/qudozen/review",
-    staff: "👩‍⚕️ Connecting you to our team...\nPlease hold for a moment.",
-
-    completion: (name) => `You're welcome, ${name}! 😊\nWe look forward to seeing you. Let us know if you need anything else.\n\n-- Qudozen OS 🤖`,
-    dash: { status:'ACTIVE', title:'Management DB', conf:'New Booking', treat:'Treatment', time:'Time', date:'Date', doc:'Doctor', sync:'Sync', rem:'Remind' }
-  }
-};
-
-let simStep = 0;
-let simFlow = ''; // 'booking', 'reschedule', 'cancel', 'my_appt'
-let simData = { name: 'Visitor', treatment: 'Consultation', date: 'Tomorrow', slot: '10:00 AM', doctor: 'Dr. Ahmed', lang: 'ar', phone: '+96657436016', booked: false };
-let simRunning = false;
-let simIsInitializing = false;
-
-const getSim = () => {
-  const elements = {
-    chat: document.getElementById('simChat'),
-    replies: document.getElementById('simReplies'),
-    input: document.getElementById('simInput'),
-    sendBtn: document.getElementById('simSend'),
-    progress: document.getElementById('simProgress'),
-    stepLbl: document.getElementById('simStepLabel')
-  };
-  // Log if any critical element is missing for debugging
-  if (!elements.chat || !elements.replies) console.warn('[Sim] Critical DOM elements missing:', elements);
-  return elements;
-};
-
-function setProgress(n) {
-  const { progress, stepLbl } = getSim();
-  if(!progress) return;
-  progress.style.width = ((n / 10) * 100) + '%';
-  if (stepLbl) {
-    stepLbl.textContent = (simData.lang === 'ar' ? 'المرحلة ' : 'Phase ') + Math.min(n, 10) + ' / 10';
-  }
-  document.querySelectorAll('.step-item').forEach(el => {
-    const s = parseInt(el.dataset.step);
-    const indicator = el.querySelector('div');
-    if (!indicator) return;
-    if (s < n) indicator.style.cssText='background:#0D9488;border-color:#0D9488;color:white;opacity:1';
-    else if (s === n) indicator.style.cssText='background:rgba(212,165,116,0.2);border-color:#D4A574;color:#D4A574;opacity:1';
-    else indicator.style.opacity='0.35';
-  });
-}
-
-function scrollChat() { 
-  const { chat } = getSim();
-  if(chat) setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 80); 
-}
-
-async function addBotBubble(html) {
-  const { chat } = getSim();
-  if(!chat) return;
-  
-  try {
-    const typing = document.createElement('div');
-    typing.className = 'sim-typing flex items-center gap-1 px-3 py-2 rounded-xl self-start mb-2';
-    typing.style.cssText = 'background:#1e293b;border:1px solid rgba(94,234,212,0.1)';
-    typing.innerHTML = '<span></span><span></span><span></span>';
-    chat.appendChild(typing);
-    scrollChat();
-
-    await new Promise(r => setTimeout(r, 650 + Math.random()*350));
-    
-    // Check if parent still exists (it might have been cleared by resetSimulator)
-    if(typing.parentNode === chat) chat.removeChild(typing);
-    
-    const bubble = document.createElement('div');
-    bubble.className = 'sim-bubble-bot mb-2 whitespace-pre-wrap text-right';
-    bubble.innerHTML = html;
-    const ts = document.createElement('div');
-    ts.className = 'text-[10px] text-gray-600 mt-1.5';
-    ts.textContent = new Date().toLocaleTimeString(simData.lang==='ar'?'ar-SA':'en-US',{hour:'2-digit',minute:'2-digit'});
-    bubble.appendChild(ts);
-    chat.appendChild(bubble);
-    scrollChat();
-  } catch (e) {
-    console.error('[Sim] addBotBubble failed:', e);
-  }
-}
-
-function addUserBubble(text) {
-  const { chat } = getSim();
-  if(!chat) return;
-  const bubble = document.createElement('div');
-  bubble.className = 'sim-bubble-user mb-2 text-right';
-  bubble.innerHTML = text;
-  const ts = document.createElement('div');
-  ts.className = 'text-[10px] text-teal-200/60 mt-1.5 text-left';
-  ts.textContent = new Date().toLocaleTimeString(simData.lang==='ar'?'ar-SA':'en-US',{hour:'2-digit',minute:'2-digit'});
-  ts.innerHTML += ' <span class="text-teal-400">✓✓</span>';
-  bubble.appendChild(ts);
-  chat.appendChild(bubble);
-  scrollChat();
-}
-
-function setReplies(chips) {
-  const { replies } = getSim();
-  if(!replies) return;
-  replies.innerHTML = '';
-  if (!chips || chips.length === 0) { enableInput(); return; }
-  disableInput();
-  chips.forEach(({ label, value, emoji }) => {
-    const btn = document.createElement('button');
-    btn.className = 'qr-chip';
-    btn.textContent = (emoji ? emoji + ' ' : '') + label;
-    btn.onclick = () => {
-      document.querySelectorAll('.qr-chip').forEach(b => b.classList.add('used'));
-      addUserBubble(btn.textContent);
-      nextStep(value || label);
-    };
-    replies.appendChild(btn);
-  });
-}
-
-function enableInput() { 
-  const { input, sendBtn, replies } = getSim();
-  if(!input) return;
-  input.disabled = false; sendBtn.disabled = false; input.focus(); replies.innerHTML = ''; 
-}
-function disableInput() { 
-  const { input, sendBtn } = getSim();
-  if(!input) return;
-  input.disabled = true; sendBtn.disabled = true; 
-}
-
-function handleSimInput() {
-  const { input } = getSim();
-  if(!input) return;
-  const val = input.value.trim();
-  if (!val || input.disabled) return;
-  input.value = '';
-  addUserBubble(val);
-  nextStep(val);
-}
-if(document.getElementById('simInput')) {
-  document.getElementById('simInput').addEventListener('keydown', e => { if(e.key==='Enter') handleSimInput(); });
-}
-
-async function nextStep(ui) {
-  disableInput();
-  let m = MESSAGES[simData.lang];
-  const u = ui.toLowerCase();
-
-  // --- Neural Language Pivot ---
-  // Detect Arabic characters and switch language context immediately
-  const isAr = /[\u0600-\u06FF]/.test(ui);
-  if (isAr && simData.lang !== 'ar') {
-    simData.lang = 'ar';
-    m = MESSAGES.ar;
-    console.log('[Sim] Language pivoted to AR');
-  }
-
-  const b = m.bookingSteps;
-
-  // --- Contextual Simulation Controls ---
-  const isControlZero = (u === '0' || u === 'menu' || u === 'back' || u === 'القائمة');
-  
-  // Rule: '0' only resets to menu if:
-  // 1. Not in a specific data-entry step that uses '0' as a value (like Step 5/Notes)
-  // 2. Or if explicitly typing 'menu'
-  const inNotesStep = (simFlow === 'booking' && simStep === 6);
-  if (isControlZero && !inNotesStep) {
-    simFlow = ''; simStep = 1;
-    await addBotBubble(m.menu);
-    return setReplies([
-      {label: simData.lang==='en'?'1️⃣ Book':'1️⃣ حجز', value:'1'},
-      {label: simData.lang==='en'?'2️⃣ My Appt':'2️⃣ موعدي', value:'2'},
-      {label: simData.lang==='en'?'7️⃣ Prices':'7️⃣ الأسعار', value:'7'},
-      {label: simData.lang==='en'?'8️⃣ Location':'8️⃣ الموقع', value:'8'},
-    ]);
-  }
-
-  // --- Main Menu Routing ---
-  if (!simFlow || simStep === 0) {
-    if (simStep === 0) { // Lang Select
-      simData.lang = (u==='en' || u.includes('1') || u.includes('en')) ? 'en' : 'ar';
-      m = MESSAGES[simData.lang];
-      simStep = 1; 
-      setProgress(2);
-      await addBotBubble(m.menu);
-      return setReplies([
-        {label: simData.lang==='en'?'1️⃣ Book Appt':'1️⃣ حجز موعد', value:'1'},
-        {label: simData.lang==='en'?'2️⃣ My Appt':'2️⃣ موعدي', value:'2'},
-        {label: simData.lang==='en'?'7️⃣ Prices':'7️⃣ الأسعار', value:'7'},
-        {label: simData.lang==='en'?'8️⃣ Location':'8️⃣ الموقع', value:'8'},
-      ]);
+    function openMenu() {
+      menuBtn.classList.add('open');
+      navOverlay.classList.add('open');
+      menuBtn.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
     }
-    
-    if (u === '1' || u.includes('book')) { simFlow = 'booking'; simStep = 2; return processBooking(u, m); }
-    if (u === '2' || u.includes('my')) { simFlow = 'my_appt'; return processMyAppt(u, m); }
-    if (u === '3' || u.includes('resched')) { simFlow = 'reschedule'; simStep = 1; return processReschedule(u, m); }
-    if (u === '4' || u.includes('cancel')) { simFlow = 'cancel'; simStep = 1; return processCancel(u, m); }
-    if (u === '5' || u.includes('service')) { await addBotBubble(m.services); return setReplies([{label: '0️⃣ Main Menu', value:'0'}]); }
-    if (u === '7' || u.includes('price')) { await addBotBubble(m.prices); return setReplies([{label: '0️⃣ Main Menu', value:'0'}]); }
-    if (u === '8' || u.includes('location')) { await addBotBubble(m.location); return setReplies([{label: '0️⃣ Main Menu', value:'0'}]); }
-    if (u === '9' || u.includes('staff')) { await addBotBubble(m.staff); return setTimeout(() => resetSimulator(), 3000); }
-    // Natural Language Intents
-    if (u.includes('وين') || u.includes('موقع') || u.includes('where')) { await addBotBubble(m.location); return setReplies([{label: '0️⃣ Menu', value:'0'}]); }
-    if (u.includes('سعر') || u.includes('بكم') || u.includes('cost')) { await addBotBubble(m.prices); return setReplies([{label: '0️⃣ Menu', value:'0'}]); }
-  }
 
-  // --- Flow Controllers ---
-  if (simFlow === 'booking') return processBooking(ui, m);
-  if (simFlow === 'my_appt') return processMyAppt(ui, m);
-  if (simFlow === 'reschedule') return processReschedule(ui, m);
-  if (simFlow === 'cancel') return processCancel(ui, m);
-}
+    function closeMenu() {
+      menuBtn.classList.remove('open');
+      navOverlay.classList.remove('open');
+      menuBtn.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      servicesSubmenu.classList.remove('open');
+      servicesToggle.classList.remove('active');
+      servicesToggle.setAttribute('aria-expanded', 'false');
+    }
 
-// ── Booking Logic ──
-async function processBooking(ui, m) {
-  const b = m.bookingSteps;
-  switch(simStep) {
-    case 2: simStep = 3; setProgress(3); await addBotBubble(b.name); enableInput(); break;
-    case 3: 
-      simData.name = ui; simStep = 4; setProgress(4); 
-      await addBotBubble(b.phone(simData.phone)); 
-      setReplies([{label:m.lang==='en'?'1️⃣ Yes':'1️⃣ نعم', value:'1'}, {label:m.lang==='en'?'2️⃣ No':'2️⃣ لا', value:'2'}]); 
-      break;
-    case 4: 
-      if (ui==='1') { simStep = 5; setProgress(5); await addBotBubble(b.treatment); setReplies([{label:m.lang==='en'?'1️⃣ Cleaning':'1️⃣ تنظيف', value:'1'}, {label:m.lang==='en'?'2️⃣ Filling':'2️⃣ حشوات', value:'2'}]); }
-      else { simStep = 44; await addBotBubble(b.phoneReq); enableInput(); }
-      break;
-    case 44: simData.phone = ui; simStep = 5; setProgress(5); await addBotBubble(b.treatment); setReplies([{label:m.lang==='en'?'1️⃣ Cleaning':'1️⃣ تنظيف', value:'1'}, {label:m.lang==='en'?'2️⃣ Filling':'2️⃣ حشوات', value:'2'}]); break;
-    case 5: 
-      simData.treatment = ui==='1' ? (m.lang==='en'?'Cleaning':'تنظيف') : ui==='2' ? (m.lang==='en'?'Filling':'حشوات') : ui;
-      simStep = 6; setProgress(6);
-      await addBotBubble(b.notes); 
-      setReplies([{label: m.lang==='ar'?'0️⃣ تخطي':'0️⃣ Skip', value:'__skip__'}]); 
-      break;
-    case 6: 
-      simData.notes = (ui === '__skip__' || ui === '0') ? '' : ui;
-      simStep = 7; setProgress(7);
-      await addBotBubble(b.doctor); 
-      setReplies([{label:m.lang==='en'?'1️⃣ Dr. Ahmed':'1️⃣ د. أحمد', value:'1'}, {label:m.lang==='en'?'2️⃣ Dr. Sarah':'2️⃣ د. سارة', value:'2'}, {label: m.lang==='ar'?'3️⃣ أي فريق':'3️⃣ Any Doctor', value:'3'}]); 
-      break;
-    case 7: 
-      if (ui==='1') simData.doctor = m.lang==='en'?'Dr. Ahmed':'د. أحمد';
-      else if (ui==='2') simData.doctor = m.lang==='en'?'Dr. Sarah':'د. سارة';
-      else simData.doctor = m.lang==='ar'?'أي فريق متاح':'Any doctor';
-      simStep = 8; setProgress(8);
-      await addBotBubble(b.date(simData.doctor)); 
-      setReplies([{label: m.lang==='ar'?'1️⃣ غداً':'1️⃣ Tomorrow', value:'1'}, {label: m.lang==='ar'?'2️⃣ الأربعاء':'2️⃣ Wednesday', value:'2'}]); 
-      break;
-    case 8: 
-      simData.date = ui==='1'?(m.lang==='en'?'Tomorrow':'غداً'):(m.lang==='en'?'Wednesday':'الأربعاء'); 
-      simStep = 9; setProgress(9);
-      await addBotBubble(b.slot(simData.date)); 
-      setReplies([{label: m.lang==='en'?'1️⃣ 10:00 AM':'1️⃣ 10:00 صباحاً', value:'1'}, {label:m.lang==='en'?'2️⃣ 04:00 PM':'2️⃣ 04:00 مساءً', value:'2'}]); 
-      break;
-    case 9: 
-      simData.slot = ui==='1'?(m.lang==='en'?'10:00 AM':'10:00 صباحاً'):(m.lang==='en'?'04:00 PM':'04:00 مساءً'); 
-      simData.booked = true; simStep = 10; setProgress(10);
-      await addBotBubble(b.securing);
-      await addBotBubble(b.confirmed + "\n\n" + b.summary(simData));
-      updateDashboardData(m);
-      showWhatsAppRedirect();
-      simFlow = ''; 
-      setReplies([{label: simData.lang==='en'?'0️⃣ Main Menu':'0️⃣ القائمة الرئيسية', value:'0'}]);
-      setTimeout(() => triggerAutonomousReminder(m), 4000);
-      break;
-  }
-}
-
-// ── My Appointment Logic ──
-async function processMyAppt(ui, m) {
-  if (!simData.booked) { 
-    await addBotBubble(simData.lang==='ar'?'ليس لديك موعد حالي. هل تريد الحجز؟':'You have no active appointment.'); 
-    return setReplies([
-      {label: simData.lang==='ar'?'1️⃣ حجز موعد':'1️⃣ Book Now', value:'1'}, 
-      {label: simData.lang==='ar'?'0️⃣ القائمة':'0️⃣ Menu', value:'0'}
-    ]); 
-  }
-  if (ui === '2' || ui.includes('my') || ui.includes('موعدي')) {
-    await addBotBubble(m.myAppt(simData));
-    setReplies([
-      {label: simData.lang==='ar'?'1️⃣ إعادة جدولة':'1️⃣ Reschedule', value:'resched'}, 
-      {label: simData.lang==='ar'?'2️⃣ إلغاء':'2️⃣ Cancel', value:'cancel'},
-      {label: simData.lang==='ar'?'3️⃣ القائمة':'3️⃣ Menu', value:'0'}
-    ]);
-  } else if (ui === 'resched') { simFlow = 'reschedule'; simStep = 1; processReschedule('', m); }
-    else if (ui === 'cancel') { simFlow = 'cancel'; simStep = 1; processCancel('', m); }
-}
-
-// ── Reschedule Logic ──
-async function processReschedule(ui, m) {
-  const r = m.resched;
-  if (simStep === 1) { 
-    simStep = 2; 
-    await addBotBubble(r.date); 
-    setReplies([
-      {label: simData.lang==='ar'?'1️⃣ غداً':'1️⃣ Tomorrow', value:'1'}, 
-      {label: simData.lang==='ar'?'2️⃣ الأسبوع القادم':'2️⃣ Next Week', value:'2'}
-    ]); 
-  }
-  else if (simStep === 2) { 
-    simData.date = ui==='1'?(simData.lang==='ar'?'غداً':'Tomorrow'):(simData.lang==='ar'?'الأسبوع القادم':'Next Week');
-    await addBotBubble(r.confirm(simData.date, simData.slot));
-    updateDashboardData(m);
-    simFlow = ''; simStep = 1; 
-    setReplies([{label: simData.lang==='ar'?'0️⃣ القائمة الرئيسية':'0️⃣ Main Menu', value:'0'}]);
-  }
-}
-
-// ── Cancel Logic ──
-async function processCancel(ui, m) {
-  const c = m.cancel;
-  if (simStep === 1) { 
-    simStep = 2; 
-    await addBotBubble(c.confirm); 
-    setReplies([
-      {label: simData.lang==='ar'?'1️⃣ نعم، ألغِ':'1️⃣ Yes', value:'1'}, 
-      {label: simData.lang==='ar'?'2️⃣ لا، احتفظ':'2️⃣ No', value:'2'}
-    ]); 
-  }
-  else if (simStep === 2) {
-    if (ui === '1') {
-      simData.booked = false; await addBotBubble(c.success); updateDashboardData(m);
-    } else { await addBotBubble(simData.lang==='ar'?'تم الاحتفاظ بالموعد!':'Great! Appointment kept.'); }
-    simFlow = ''; simStep = 1; setReplies([{label: simData.lang==='ar'?'0️⃣ القائمة الرئيسية':'0️⃣ Main Menu', value:'0'}]);
-  }
-}
-
-// ── Autonomous Sales Machine Moment ──
-async function triggerAutonomousReminder(m) {
-  // Highlight bubble to show it's "Autonomous"
-  const { chat } = getSim();
-  const notice = document.createElement('div');
-  notice.className = 'autonomous-notice';
-  notice.textContent = m.lang === 'ar' ? '─── أتمتة النظام الذاتي ───' : '─── Autonomous System Automation ───';
-  if(chat) chat.appendChild(notice);
-  
-  const reminder = m.reminderPreview(simData.name, simData.date, simData.slot, simData.treatment);
-  await addBotBubble(reminder);
-}
-
-function updateDashboardData(m) {
-  const dp = document.getElementById('dashPreview');
-  if (!dp) return;
-  if (!simData.booked) { 
-    dp.classList.add('hidden'); 
-    dp.style.opacity = '0'; 
-    dp.style.transform = 'scale(0.95)'; 
-    return; 
-  }
-  dp.classList.remove('hidden');
-  // Force reflow then animate in
-  requestAnimationFrame(() => {
-    dp.style.opacity = '1';
-    dp.style.transform = 'scale(1)';
-  });
-  document.getElementById('dsPatientName').textContent = simData.name;
-  document.getElementById('dsTreatment').textContent = simData.treatment;
-  document.getElementById('dsSlot').textContent = simData.slot;
-  document.getElementById('dsDate').textContent = simData.date;
-  document.getElementById('dsDoctor').textContent = simData.doctor;
-  // Update ref number with timestamp
-  const ref = document.getElementById('dsRef');
-  if (ref) ref.textContent = 'REF: QZ-' + Date.now().toString().slice(-6);
-  // Update dashboard labels based on language
-  const d = m.dash;
-  const el = (id, txt) => { const e = document.getElementById(id); if(e) e.textContent = txt; };
-  el('dsStatus', d.status);
-  el('dsConfLabel', d.conf);
-  el('dsTreatLabel', d.treat);
-  el('dsSlotLabel', d.time);
-  el('dsDateLabel', d.date);
-  el('dsDocLabel', d.doc);
-  el('dsSyncLabel', d.sync);
-  el('dsRemLabel', d.rem);
-}
-
-function showWhatsAppRedirect() {
-  const wa = document.getElementById('waRedirect');
-  if (wa) {
-    wa.classList.remove('hidden');
-    wa.style.opacity = '0';
-    requestAnimationFrame(() => {
-      wa.style.transition = 'opacity 0.5s ease';
-      wa.style.opacity = '1';
+    menuBtn.addEventListener('click', function() {
+      navOverlay.classList.contains('open') ? closeMenu() : openMenu();
     });
-  }
-}
 
-async function startSimulator() {
-  if (simIsInitializing) return;
-  simIsInitializing = true;
+    navLinks.forEach(function(link) { link.addEventListener('click', closeMenu); });
 
-  const { chat, replies } = getSim();
-  simRunning = true; 
-  simStep = 0; 
-  simFlow = ''; 
-  simData = { name:'Visitor', treatment:'Consultation', date:'Tomorrow', slot:'10:00 AM', doctor:'Dr. Ahmed', lang:'ar', phone:'+96657436016', booked: false };
-  
-  // Ensure visibility and clean slate
-  if(chat) {
-    chat.innerHTML = ''; 
-    const phone = document.getElementById('simPhoneShell');
-    if(phone) {
-      phone.style.opacity = '1';
-      phone.style.display = 'flex';
+    servicesToggle.addEventListener('click', function() {
+      var isOpen = servicesSubmenu.classList.contains('open');
+      servicesSubmenu.classList.toggle('open');
+      servicesToggle.classList.toggle('active');
+      servicesToggle.setAttribute('aria-expanded', String(!isOpen));
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeMenu();
+    });
+
+    navOverlay.addEventListener('click', function(e) {
+      if (e.target === navOverlay) closeMenu();
+    });
+
+    // ── Simulator Lazy Launch ───────────────────────────────────────────────
+    var simOverlay = document.getElementById('simOverlay');
+    var simFrame   = document.getElementById('simFrame');
+    var launched   = false;
+
+    function launchSim() {
+      if (launched) return;
+      launched = true;
+      simFrame.src = simFrame.getAttribute('data-src');
+      simOverlay.classList.add('hidden');
     }
-  }
-  if(replies) replies.innerHTML = '';
-  
-  setProgress(1);
-  const startBtn = document.getElementById('simStartBtn');
-  if(startBtn) startBtn.style.display = 'none';
-  
-  console.log('[Sim] Starting with language select...');
-  try {
-    await addBotBubble(MESSAGES.ar.langSelect);
-    setReplies([{label:'1️⃣ English', value:'en'}, {label:'2️⃣ العربية', value:'ar'}]);
-  } catch (e) {
-    console.error('[Sim] Startup failed:', e);
-  } finally {
-    simIsInitializing = false;
-  }
-}
 
-function resetSimulator() {
-  const { chat, replies } = getSim();
-  simRunning = false; simStep = 0; simFlow = '';
-  simData = { name:'Visitor', treatment:'Consultation', date:'Tomorrow', slot:'10:00 AM', doctor:'Dr. Ahmed', lang:'ar', phone:'+96657436016', booked: false };
-  if(chat) chat.innerHTML = '';
-  if(replies) replies.innerHTML = '<span class="text-gray-600 text-xs italic">في انتظار البدء...</span>';
-  disableInput(); setProgress(0);
-  const startBtn = document.getElementById('simStartBtn');
-  if(startBtn) startBtn.style.display = 'block';
-  // Hide side panels
-  const dp = document.getElementById('dashPreview');
-  if(dp) { dp.classList.add('hidden'); dp.style.opacity = '0'; dp.style.transform = 'scale(0.95)'; }
-  const wa = document.getElementById('waRedirect');
-  if(wa) { wa.classList.add('hidden'); wa.style.opacity = '0'; }
-}
+    simOverlay.addEventListener('click', launchSim);
+    simOverlay.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); launchSim(); }
+    });
 
+    // Auto-launch when simulator section scrolls into view
+    if ('IntersectionObserver' in window) {
+      var simObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting && !launched) {
+            // Pre-load but keep overlay visible until user clicks
+            simFrame.src = simFrame.getAttribute('data-src');
+            launched = true;
+          }
+        });
+      }, { threshold: 0.3 });
+      simObserver.observe(document.getElementById('simulator'));
+    }
 
+    // ── GSAP Scroll Animations ──────────────────────────────────────────────
+    window.addEventListener('load', function() {
+      if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
 
+      gsap.registerPlugin(ScrollTrigger);
 
-
-
-
-/* ── Navbar scroll ── */
-window.addEventListener('scroll', () => {
-  const nav = document.getElementById('navbar');
-  if (nav) {
-    if (window.scrollY > 50) nav.classList.add('border-b','border-[#1e293b]','shadow-lg','bg-[#0B1120]/90');
-    else nav.classList.remove('border-b','border-[#1e293b]','shadow-lg','bg-[#0B1120]/90');
-  }
-});
-
-try {
-/* ── Feature counter animations (ScrollTrigger) ── */
-const counters = [
-  { id:'cnt-response', target:3,   suffix:'s', decimals:0 },
-  { id:'cnt-uptime',   target:24,  suffix:'',  decimals:0 },
-  { id:'cnt-confirm',  target:94,  suffix:'%', decimals:0 },
-  { id:'cnt-noshow',   target:40,  suffix:'%', decimals:0 },
-  { id:'cnt-lang',     target:2,   suffix:'',  decimals:0 },
-  { id:'cnt-sync',     target:1,   suffix:'s', decimals:0 },
-];
-
-counters.forEach(({ id, target, suffix, decimals }) => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const obj = { val: 0 };
-  ScrollTrigger.create({
-    trigger: '#features',
-    start: 'top 75%',
-    once: true,
-    onEnter: () => {
-      gsap.to(obj, {
-        val: target,
-        duration: 1.8,
-        ease: 'power2.out',
-        onUpdate: () => {
-          el.textContent = (decimals > 0 ? obj.val.toFixed(decimals) : Math.floor(obj.val)) + suffix;
-        }
+      gsap.utils.toArray('.service-card').forEach(function(card, i) {
+        gsap.from(card, {
+          scrollTrigger: { trigger: card, start: 'top 80%', once: true },
+          y: 60, opacity: 0, duration: 0.8, ease: 'power3.out', delay: i * 0.04
+        });
       });
-    }
-  });
-});
 
-/* ── Feat-card stagger on scroll ── */
-gsap.fromTo('.feat-card', { opacity:0, y:30 }, {
-  opacity:1, y:0, duration:0.6, stagger:0.1, ease:'power2.out',
-  scrollTrigger: { trigger:'#features', start:'top 80%', once:true }
-});
+      gsap.utils.toArray('.pricing-card').forEach(function(card, i) {
+        gsap.from(card, {
+          scrollTrigger: { trigger: card, start: 'top 80%', once: true },
+          y: 40, opacity: 0, duration: 0.7, ease: 'power3.out', delay: i * 0.12
+        });
+      });
 
-gsap.fromTo('.svc-card', { opacity:0, y:40 }, {
-  opacity:1, y:0, duration:0.7, stagger:0.12, ease:'power2.out',
-  scrollTrigger: { trigger:'#services', start:'top 80%', once:true }
-});
-} catch(e) { console.warn('[GSAP Animations] Skipped:', e.message); }
-</script>
-  <!-- Service Modal -->
-  <div id="serviceModalOverlay" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm hidden flex-col items-center justify-center p-4 transition-opacity duration-300 opacity-0" onclick="if(event.target === this) closeServiceModal()">
-    <div id="serviceModal" class="bg-[#0B1120] border border-[#0D9488]/30 rounded-3xl w-full max-w-2xl p-6 md:p-10 relative transform scale-95 transition-all duration-300 opacity-0 shadow-[0_0_40px_rgba(13,148,136,0.15)] flex flex-col">
-      <button onclick="closeServiceModal()" class="absolute top-6 left-6 text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
-      
-      <div id="smIcon" class="w-16 h-16 rounded-2xl bg-teal-900/40 border border-teal-500/30 flex items-center justify-center text-3xl mb-6"></div>
-      <h3 id="smTitle" class="text-2xl md:text-3xl font-bold mb-3 text-white"></h3>
-      <p id="smDesc" class="text-gray-300 text-lg leading-relaxed mb-6"></p>
-      
-      <div class="mb-8 bg-[#111b21] rounded-2xl p-5 border border-white/5">
-        <h4 class="text-lg font-bold text-[#5EEAD4] mb-4">الفوائد والمميزات</h4>
-        <ul id="smBenefits" class="space-y-3">
-        </ul>
-      </div>
-      
-      <a href="https://wa.me/966570733834" target="_blank" rel="noopener noreferrer" class="block w-full bg-[#0D9488] text-white py-4 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.3)] text-lg">
-        💬 ناقش مشروعك
-      </a>
-    </div>
-  </div>
+      gsap.from('.simulator-frame-wrap', {
+        scrollTrigger: { trigger: '.simulator-frame-wrap', start: 'top 80%', once: true },
+        y: 40, opacity: 0, duration: 0.9, ease: 'power3.out'
+      });
 
-<script>
-const serviceData = {
-  primary: {
-    icon: '🦷',
-    title: 'المساعد الطبي الذكي',
-    desc: 'واجهة واتساب كاملة تعمل على مدار الساعة للرد على العملاء، حجز المواعيد، التعامل مع الإلغاءات وإعادة الجدولة دون أي تدخل بشري. يدعم اللغتين العربية والإنجليزية بطلاقة.',
-    benefits: [
-      'عمل على مدار 24/7 دون توقف',
-      'تقليل نسبة التخلف عن المواعيد بنسبة تصل إلى 60-80%',
-      'توفير أكثر من 12 ساعة أسبوعياً من مهام الاستقبال',
-      'تجربة مستخدم سلسة وفورية'
-    ]
-  },
-  growth: {
-    icon: '🎯',
-    title: 'محرك النمو (السوارم)',
-    desc: 'نظام تسويقي ذكي يكتشف العملاء المحتملين تلقائياً عبر خرائط جوجل، يقوم بكتابة رسائل مخصصة بالذكاء الاصطناعي، ويقوم بالتواصل معهم بشكل دوري لزيادة التحويل.',
-    benefits: [
-      'اكتشاف عملاء جدد تلقائياً',
-      'رسائل مخصصة تبدو كأنها من شخص حقيقي (جيك)',
-      'متابعة مستمرة للعملاء المترددين',
-      'زيادة التحويل بدون حملات إعلانية مكلفة'
-    ]
-  },
-  analytics: {
-    icon: '📊',
-    title: 'لوحة التحكم الإدارية',
-    desc: 'واجهة مراقبة حية توفر لك رؤية شاملة لكل ما يحدث في منشأتك. تتبع المواعيد، العملاء، ومقاييس الأداء الرئيسية في الوقت الفعلي.',
-    benefits: [
-      'رؤية واضحة ومباشرة للبيانات',
-      'اتخاذ قرارات مبنية على الأرقام',
-      'تقارير أداء دورية عبر الواتساب',
-      'تتبع معدلات التحويل والغياب بدقة'
-    ]
-  },
-  calendar: {
-    icon: '📅',
-    title: 'مزامنة التقويم الذكية',
-    desc: 'نظام متطور يربط جميع حجوزات الواتساب مباشرة بتقويم جوجل الخاص بمنشأتك مع نظام قفل ذري يمنع تعارض المواعيد حتى في أوقات الذروة.',
-    benefits: [
-      'تحديث فوري للتقويم',
-      'منع الحجوزات المزدوجة نهائياً',
-      'تنظيم تلقائي لجدول العمل',
-      'توافق تام مع أنظمة العيادات'
-    ]
-  },
-  reminder: {
-    icon: '🔔',
-    title: 'محرك التذكيرات',
-    desc: 'نظام آلي يقوم بإرسال تذكيرات للعملاء قبل موعدهم بـ 24 ساعة وقبل الموعد بساعة واحدة، بالإضافة لطلب التقييمات بعد الزيارة.',
-    benefits: [
-      'خفض معدل عدم الحضور بشكل كبير',
-      'جمع تقييمات جوجل بسهولة وبشكل آلي',
-      'تحسين علاقة المنشأة بالعملاء',
-      'توفير وقت فريق العمل من الاتصالات اليدوية'
-    ]
-  }
-};
+      gsap.from('.jake-wrapper', {
+        scrollTrigger: { trigger: '.jake-wrapper', start: 'top 80%', once: true },
+        opacity: 0, duration: 1.2, ease: 'power2.out'
+      });
+    });
+  </script>
 
-function openServiceModal(id) {
-  const data = serviceData[id];
-  if(!data) return;
-  document.getElementById('smIcon').textContent = data.icon;
-  document.getElementById('smTitle').textContent = data.title;
-  document.getElementById('smDesc').textContent = data.desc;
-  
-  const ul = document.getElementById('smBenefits');
-  ul.innerHTML = '';
-  data.benefits.forEach(b => {
-    ul.innerHTML += `<li class="flex items-start gap-3 text-gray-300"><span class="text-[#5EEAD4] text-lg mt-0.5">✓</span> <span>${b}</span></li>`;
-  });
-  
-  const overlay = document.getElementById('serviceModalOverlay');
-  const modal = document.getElementById('serviceModal');
-  
-  overlay.classList.remove('hidden');
-  overlay.classList.add('flex');
-  
-  // Trigger reflow
-  void overlay.offsetWidth;
-  
-  overlay.classList.remove('opacity-0');
-  modal.classList.remove('opacity-0', 'scale-95');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeServiceModal() {
-  const overlay = document.getElementById('serviceModalOverlay');
-  const modal = document.getElementById('serviceModal');
-  
-  overlay.classList.add('opacity-0');
-  modal.classList.add('opacity-0', 'scale-95');
-  document.body.style.overflow = '';
-  
-  setTimeout(() => {
-    overlay.classList.remove('flex');
-    overlay.classList.add('hidden');
-  }, 300);
-}
-</script>
 </body>
 </html>
