@@ -301,55 +301,62 @@
             <li class="flex items-center gap-2 text-sm text-gray-300"><span class="text-teal text-base">✓</span> مزامنة تقويم جوجل فورية</li>
             <li class="flex items-center gap-2 text-sm text-gray-300"><span class="text-teal text-base">✓</span> تذكيرات 24 ساعة + ساعة قبل الموعد</li>
           </ul>
-          <a href="#simulator" class="w-full bg-[#0D9488] text-white py-3 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.3)]">
-            🚀 جرب المحاكي الحي
-          </a>
+          <div class="flex flex-col sm:flex-row gap-3 mt-auto">
+            <button onclick="openServiceModal('primary')" class="flex-1 bg-transparent border border-teal-500 text-teal-400 py-3 rounded-xl font-bold hover:bg-teal-500/10 transition">تفاصيل أكثر</button>
+            <a href="#simulator" class="flex-[2] bg-[#0D9488] text-white py-3 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.3)]">
+              🚀 جرب المحاكي الحي
+            </a>
+          </div>
         </div>
 
         <!-- Growth Swarm -->
-        <div class="svc-card" style="background:rgba(212,165,116,0.04)">
+        <div class="svc-card flex flex-col" style="background:rgba(212,165,116,0.04)">
           <div class="w-14 h-14 rounded-2xl bg-gold/20 border border-gold/40 flex items-center justify-center text-2xl mb-5">🎯</div>
           <h3 class="text-xl font-bold mb-2 text-gold">محرك النمو (السوارم)</h3>
           <p class="text-gray-400 text-sm leading-relaxed mb-4">يكتشف العيادات المحتملة على خرائط جوجل، يكتب رسائل مخصصة، ويُرسلها تلقائياً — موقعاً باسم جيك.</p>
-          <ul class="space-y-2">
+          <ul class="space-y-2 flex-1">
             <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-gold text-base">✓</span> اكتشاف تلقائي للعملاء</li>
             <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-gold text-base">✓</span> رسائل بالذكاء الاصطناعي</li>
             <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-gold text-base">✓</span> تتبع الردود والتحويل</li>
           </ul>
+          <button onclick="openServiceModal('growth')" class="mt-6 w-full bg-transparent border border-gold/50 text-gold py-2.5 rounded-xl font-bold hover:bg-gold/10 transition">تفاصيل أكثر</button>
         </div>
 
         <!-- Analytics Dashboard -->
-        <div class="svc-card">
+        <div class="svc-card flex flex-col">
           <div class="w-14 h-14 rounded-2xl border border-aqua/30 flex items-center justify-center text-2xl mb-5" style="background:rgba(94,234,212,0.06)">📊</div>
           <h3 class="text-xl font-bold mb-2 text-aqua">لوحة التحكم الإدارية</h3>
           <p class="text-gray-400 text-sm leading-relaxed mb-4">رؤية كاملة للمنشأة في الوقت الفعلي — العملاء، المواعيد، العملاء المحتملين، والصحة العامة للنظام.</p>
-          <ul class="space-y-2">
+          <ul class="space-y-2 flex-1">
             <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-aqua text-base">✓</span> بيانات حية بدون تحديث</li>
             <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-aqua text-base">✓</span> تقارير يومية تصل واتساب</li>
             <li class="flex items-center gap-2 text-sm text-gray-400"><span class="text-aqua text-base">✓</span> تتبع معدل الغياب</li>
           </ul>
+          <button onclick="openServiceModal('analytics')" class="mt-6 w-full bg-transparent border border-aqua/50 text-aqua py-2.5 rounded-xl font-bold hover:bg-aqua/10 transition">تفاصيل أكثر</button>
         </div>
 
         <!-- Calendar Sync -->
-        <div class="svc-card">
+        <div class="svc-card flex flex-col">
           <div class="w-14 h-14 rounded-2xl border border-purple-500/30 flex items-center justify-center text-2xl mb-5" style="background:rgba(168,85,247,0.06)">📅</div>
           <h3 class="text-xl font-bold mb-2" style="color:#c084fc">مزامنة التقويم الذكية</h3>
           <p class="text-gray-400 text-sm leading-relaxed mb-4">كل حجز يظهر فوراً في تقويم المنشأة. قفل ذري يمنع التعارض حتى عند تزامن أكثر من طلب.</p>
-          <ul class="space-y-2">
+          <ul class="space-y-2 flex-1">
             <li class="flex items-center gap-2 text-sm text-gray-400"><span style="color:#c084fc">✓</span> تكامل مع Google Calendar</li>
             <li class="flex items-center gap-2 text-sm text-gray-400"><span style="color:#c084fc">✓</span> قفل ذري لمنع التعارض</li>
           </ul>
+          <button onclick="openServiceModal('calendar')" class="mt-6 w-full bg-transparent border border-purple-500/50 text-purple-400 py-2.5 rounded-xl font-bold hover:bg-purple-500/10 transition">تفاصيل أكثر</button>
         </div>
 
         <!-- Reminder Engine -->
-        <div class="svc-card">
+        <div class="svc-card flex flex-col">
           <div class="w-14 h-14 rounded-2xl border border-rose-500/30 flex items-center justify-center text-2xl mb-5" style="background:rgba(244,63,94,0.06)">🔔</div>
           <h3 class="text-xl font-bold mb-2" style="color:#fb7185">محرك التذكيرات</h3>
           <p class="text-gray-400 text-sm leading-relaxed mb-4">تذكيرات آلية قبل 24 ساعة وساعة من الموعد. تقليل الغياب 40%. متابعة بعد الزيارة وطلب تقييم جوجل.</p>
-          <ul class="space-y-2">
+          <ul class="space-y-2 flex-1">
             <li class="flex items-center gap-2 text-sm text-gray-400"><span style="color:#fb7185">✓</span> تذكير 24 ساعة + ساعة</li>
             <li class="flex items-center gap-2 text-sm text-gray-400"><span style="color:#fb7185">✓</span> طلب تقييم تلقائي</li>
           </ul>
+          <button onclick="openServiceModal('reminder')" class="mt-6 w-full bg-transparent border border-rose-500/50 text-rose-400 py-2.5 rounded-xl font-bold hover:bg-rose-500/10 transition">تفاصيل أكثر</button>
         </div>
 
       </div>
@@ -1355,6 +1362,127 @@ gsap.fromTo('.svc-card', { opacity:0, y:40 }, {
   scrollTrigger: { trigger:'#services', start:'top 80%', once:true }
 });
 } catch(e) { console.warn('[GSAP Animations] Skipped:', e.message); }
+</script>
+  <!-- Service Modal -->
+  <div id="serviceModalOverlay" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm hidden flex-col items-center justify-center p-4 transition-opacity duration-300 opacity-0" onclick="if(event.target === this) closeServiceModal()">
+    <div id="serviceModal" class="bg-[#0B1120] border border-[#0D9488]/30 rounded-3xl w-full max-w-2xl p-6 md:p-10 relative transform scale-95 transition-all duration-300 opacity-0 shadow-[0_0_40px_rgba(13,148,136,0.15)] flex flex-col">
+      <button onclick="closeServiceModal()" class="absolute top-6 left-6 text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+      
+      <div id="smIcon" class="w-16 h-16 rounded-2xl bg-teal-900/40 border border-teal-500/30 flex items-center justify-center text-3xl mb-6"></div>
+      <h3 id="smTitle" class="text-2xl md:text-3xl font-bold mb-3 text-white"></h3>
+      <p id="smDesc" class="text-gray-300 text-lg leading-relaxed mb-6"></p>
+      
+      <div class="mb-8 bg-[#111b21] rounded-2xl p-5 border border-white/5">
+        <h4 class="text-lg font-bold text-[#5EEAD4] mb-4">الفوائد والمميزات</h4>
+        <ul id="smBenefits" class="space-y-3">
+        </ul>
+      </div>
+      
+      <a href="https://wa.me/966570733834" target="_blank" rel="noopener noreferrer" class="block w-full bg-[#0D9488] text-white py-4 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.3)] text-lg">
+        💬 ناقش مشروعك
+      </a>
+    </div>
+  </div>
+
+<script>
+const serviceData = {
+  primary: {
+    icon: '🦷',
+    title: 'المساعد الطبي الذكي',
+    desc: 'واجهة واتساب كاملة تعمل على مدار الساعة للرد على العملاء، حجز المواعيد، التعامل مع الإلغاءات وإعادة الجدولة دون أي تدخل بشري. يدعم اللغتين العربية والإنجليزية بطلاقة.',
+    benefits: [
+      'عمل على مدار 24/7 دون توقف',
+      'تقليل نسبة التخلف عن المواعيد بنسبة تصل إلى 60-80%',
+      'توفير أكثر من 12 ساعة أسبوعياً من مهام الاستقبال',
+      'تجربة مستخدم سلسة وفورية'
+    ]
+  },
+  growth: {
+    icon: '🎯',
+    title: 'محرك النمو (السوارم)',
+    desc: 'نظام تسويقي ذكي يكتشف العملاء المحتملين تلقائياً عبر خرائط جوجل، يقوم بكتابة رسائل مخصصة بالذكاء الاصطناعي، ويقوم بالتواصل معهم بشكل دوري لزيادة التحويل.',
+    benefits: [
+      'اكتشاف عملاء جدد تلقائياً',
+      'رسائل مخصصة تبدو كأنها من شخص حقيقي (جيك)',
+      'متابعة مستمرة للعملاء المترددين',
+      'زيادة التحويل بدون حملات إعلانية مكلفة'
+    ]
+  },
+  analytics: {
+    icon: '📊',
+    title: 'لوحة التحكم الإدارية',
+    desc: 'واجهة مراقبة حية توفر لك رؤية شاملة لكل ما يحدث في منشأتك. تتبع المواعيد، العملاء، ومقاييس الأداء الرئيسية في الوقت الفعلي.',
+    benefits: [
+      'رؤية واضحة ومباشرة للبيانات',
+      'اتخاذ قرارات مبنية على الأرقام',
+      'تقارير أداء دورية عبر الواتساب',
+      'تتبع معدلات التحويل والغياب بدقة'
+    ]
+  },
+  calendar: {
+    icon: '📅',
+    title: 'مزامنة التقويم الذكية',
+    desc: 'نظام متطور يربط جميع حجوزات الواتساب مباشرة بتقويم جوجل الخاص بمنشأتك مع نظام قفل ذري يمنع تعارض المواعيد حتى في أوقات الذروة.',
+    benefits: [
+      'تحديث فوري للتقويم',
+      'منع الحجوزات المزدوجة نهائياً',
+      'تنظيم تلقائي لجدول العمل',
+      'توافق تام مع أنظمة العيادات'
+    ]
+  },
+  reminder: {
+    icon: '🔔',
+    title: 'محرك التذكيرات',
+    desc: 'نظام آلي يقوم بإرسال تذكيرات للعملاء قبل موعدهم بـ 24 ساعة وقبل الموعد بساعة واحدة، بالإضافة لطلب التقييمات بعد الزيارة.',
+    benefits: [
+      'خفض معدل عدم الحضور بشكل كبير',
+      'جمع تقييمات جوجل بسهولة وبشكل آلي',
+      'تحسين علاقة المنشأة بالعملاء',
+      'توفير وقت فريق العمل من الاتصالات اليدوية'
+    ]
+  }
+};
+
+function openServiceModal(id) {
+  const data = serviceData[id];
+  if(!data) return;
+  document.getElementById('smIcon').textContent = data.icon;
+  document.getElementById('smTitle').textContent = data.title;
+  document.getElementById('smDesc').textContent = data.desc;
+  
+  const ul = document.getElementById('smBenefits');
+  ul.innerHTML = '';
+  data.benefits.forEach(b => {
+    ul.innerHTML += `<li class="flex items-start gap-3 text-gray-300"><span class="text-[#5EEAD4] text-lg mt-0.5">✓</span> <span>${b}</span></li>`;
+  });
+  
+  const overlay = document.getElementById('serviceModalOverlay');
+  const modal = document.getElementById('serviceModal');
+  
+  overlay.classList.remove('hidden');
+  overlay.classList.add('flex');
+  
+  // Trigger reflow
+  void overlay.offsetWidth;
+  
+  overlay.classList.remove('opacity-0');
+  modal.classList.remove('opacity-0', 'scale-95');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeServiceModal() {
+  const overlay = document.getElementById('serviceModalOverlay');
+  const modal = document.getElementById('serviceModal');
+  
+  overlay.classList.add('opacity-0');
+  modal.classList.add('opacity-0', 'scale-95');
+  document.body.style.overflow = '';
+  
+  setTimeout(() => {
+    overlay.classList.remove('flex');
+    overlay.classList.add('hidden');
+  }, 300);
+}
 </script>
 </body>
 </html>
