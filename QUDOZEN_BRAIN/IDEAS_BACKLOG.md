@@ -1,3 +1,8 @@
+### 🎨 UI/UX Evolution (New)
+- **3D Simulator Transition:** Use Three.js to make the phone frame rotate in 3D space during the "Swarm" phase.
+- **Real-time Metrics:** Stream live conversion data from the production database into the hero section ticker.
+- **Multilingual Toggle:** Add a native (non-auto-translate) toggle between Arabic and English for international users.
+
 # 💡 IDEAS BACKLOG — Future Plans & New Ideas
 
 > Capture every idea here as it arrives. Don't lose any idea.
