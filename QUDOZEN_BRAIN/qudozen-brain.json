@@ -1,8 +1,8 @@
 {
   "meta": {
     "project": "Qudozen",
-    "version": "3.4",
-    "last_updated": "2026-04-24T16:00:00+03:00",
+    "version": "3.1-MASTER-RESTORED",
+    "last_updated": "2026-04-24T16:25:00+03:00",
     "schema": "2.0"
   },
   "system_status": {
@@ -11,166 +11,55 @@
       "growth-swarm",
       "bot",
       "dashboard",
-      "landing-page-v3.4"
+      "landing-page-v3.1-ar"
     ],
     "broken_modules": [],
-    "render_status": "deploying — commit 38f4310 pushed. English v3.4 surface upgrade. All routing fixed."
+    "render_status": "deployed — v3.1 Arabic Master Restored"
   },
   "execution_state": {
-    "current_step": 14,
-    "step_name": "Architecture Audit + v3.4 Surface Upgrade",
+    "current_step": 15,
+    "step_name": "Full Restoration of Arabic v3.1 + Nav Upgrade",
     "status": "completed"
   },
   "landing_page": {
-    "version": "3.4",
-    "language": "en",
-    "direction": "ltr",
-    "commit": "38f4310",
+    "version": "3.1-MASTER-RESTORED",
+    "status": "Production-Ready",
+    "language": "Arabic (ar)",
+    "direction": "rtl",
     "file": "public/index.html",
-    "background": "#040914",
-    "font": "Space Grotesk",
+    "background": "#080C14",
+    "font": "Tajawal",
     "accent_primary": "#0D9488 (teal)",
-    "accent_secondary": "#C9A84C (gold)",
-    "sections": ["hero", "services", "simulator", "pricing", "about", "footer"],
-    "service_ids": [
-      "service-receptionist",
-      "service-realestate",
-      "service-web",
-      "service-apps",
-      "service-automation",
-      "service-growth",
-      "service-analytics"
-    ],
-    "simulator_approach": "teaser-panel with target=_blank to ghost-room.html — NO iframe (loop bug)",
-    "nav": "3-dot overlay with individual service submenu deep-links"
-  },
-  "architecture_audit": {
-    "audit_date": "2026-04-24",
-    "routes_verified": [
-      "GET / → public/index.html",
-      "GET /growth/ghost-room → growth/ghost-room.html (Arabic RTL, dwell tracking)",
-      "POST /api/ghost-dwell → fires WhatsApp to admin if dwell > 60s",
-      "POST /webhook → bot.js:handleMessage()",
-      "GET /dashboard/* → dashboard/dist/ (React SPA)",
-      "GET /health → monitor.healthCheck() JSON",
-      "POST /send-reminders → reminder engine (called by cron every 30min)",
-      "POST /cleanup-slots → slot release (called by cron every hour)",
-      "POST /growth/stripe-webhook → Stripe payment → auto-activate"
-    ],
-    "cron_jobs_active": 8,
-    "critical_bugs_found": [
-      {
-        "bug": "Simulator iframe loop",
-        "detail": "ghost-room.html 'Start Simulation' button routes to /#simulator. Embedding it in an iframe on index.html creates an infinite redirect loop.",
-        "fix": "Removed all iframe code. Simulator section is now a teaser panel. All CTAs open ghost-room.html via target=_blank (new tab).",
-        "status": "FIXED in 38f4310"
-      },
-      {
-        "bug": "Service nav submenu dead links",
-        "detail": "All 7 nav submenu items pointed to #services (section top). No individual card anchors existed.",
-        "fix": "Added id to each service card. Added scroll-margin-top:5rem. Updated all nav submenu hrefs.",
-        "status": "FIXED in 38f4310"
-      },
-      {
-        "bug": "public/index.html silently reverted to Arabic v3.1",
-        "detail": "File was reverted between sessions without a clear git commit. Live site served Arabic v3.1 instead of English v3.3.",
-        "fix": "Rewrote English v3.4. Always Read file before Write to confirm lang=en.",
-        "status": "FIXED in 38f4310"
-      }
-    ],
-    "known_open_issues": [
-      "dashboard/dist/ must be manually built — Render only runs npm install",
-      "ghost-room.html is Arabic-only — no English version for non-Arabic traffic",
-      "ghost-room.html has no active CTA beyond /#simulator redirect (now target=_blank) — no Stripe or direct WhatsApp CTA",
-      "bot.js is 103KB monolith — needs modularization",
-      "/api/analytics returns real data but React dashboard may show stale mock data"
-    ]
+    "accent_secondary": "#D4A574 (gold)",
+    "sections": ["hero", "architecture", "services", "simulator", "pricing", "jake", "footer"],
+    "interactive_simulator": {
+      "status": "Restored-Native-Arabic",
+      "engine": "v3.1 8-Step Modal Flow",
+      "embedding": "Native (index.html)"
+    },
+    "nav": {
+      "type": "Sticky Glassmorphism",
+      "features": ["Desktop Submenu Dropdown", "Mobile Quick-Chips", "Modal Trigger Routing"],
+      "routing_fixed": true
+    }
   },
   "completed_steps": [
     {
-      "step_number": 1,
-      "step_name": "Landing Page Hybrid Architecture Merge (v3.1 Arabic)",
-      "timestamp_completed": "2026-04-24T05:25:00+03:00",
+      "step_number": 15,
+      "step_name": "Restoration of High-Fidelity Arabic v3.1",
+      "timestamp_completed": "2026-04-24T16:25:00+03:00",
       "files_modified": ["public/index.html"],
       "insights": [
-        "v3.1 Arabic glassmorphism Tailwind — had Three Layers of Consciousness section, live metrics bar, embedded simChat, Operations Room link.",
-        "This was the reference design for the 'old Arabic styling' the user wants to blend."
-      ]
-    },
-    {
-      "step_number": 13,
-      "step_name": "Premium Desktop + Global Nav (v3.1 Arabic polish)",
-      "timestamp_completed": "2026-04-24T14:35:00+03:00",
-      "files_modified": ["public/index.html"],
-      "insights": [
-        "Global hamburger menu applied to Arabic v3.1.",
-        "GSAP stagger animations added.",
-        "Mouse tracking on bento grid."
-      ]
-    },
-    {
-      "step_number": 14,
-      "step_name": "Full Architecture Audit + v3.4 English Surface Upgrade",
-      "timestamp_completed": "2026-04-24T16:00:00+03:00",
-      "files_created": [],
-      "files_modified": [
-        "public/index.html",
-        "brain/qudozen-brain.json",
-        "QUDOZEN_BRAIN/qudozen-brain.json",
-        "QUDOZEN_BRAIN/EXECUTION_LOG.md",
-        "QUDOZEN_BRAIN/STATUS.md",
-        "QUDOZEN_BRAIN/CURRENT_PLAN.md"
-      ],
-      "insights": [
-        "File revert discovered — always Read before Write on index.html.",
-        "Simulator loop is a permanent architectural constraint — never iframe ghost-room.html.",
-        "gold accent (#C9A84C) unified across all UI elements for premium feel matching ghost-room.html.",
-        "System clock in simulator chrome creates visual continuity between landing page and ghost-room."
-      ],
-      "decisions": [
-        "Simulator: teaser panel + target=_blank. Never iframe.",
-        "Service IDs: 7 unique anchors with scroll-margin-top.",
-        "ghost-room.html: untouched (separate growth swarm purpose).",
-        "Background: #040914 (matches ghost-room.html exactly)."
-      ],
-      "fixes_applied": [
-        "Simulator iframe loop resolved",
-        "Service nav submenu deep-links fixed",
-        "Arabic revert corrected — English v3.4 written",
-        "All 7 service cards augmented with How-it-works 3-step flows",
-        "Operations Room link restored in footer",
-        "Gold accent applied throughout (labels, borders, corners, tier names)"
-      ],
-      "ui_upgrades": [
-        "Gold geometric corner brackets on service icon panels",
-        "Dot-grid backgrounds (hero, services, simulator, pricing)",
-        "Gradient CTAs (teal linear-gradient for depth)",
-        "Live KSA system clock in simulator chrome bar",
-        "Social proof pill in simulator section",
-        "Gold section label prefix line (::before)"
+        "v3.4 English experiment was rejected due to loss of high-fidelity Arabic elements.",
+        "Embedded simulators on the main surface are critical for UX parity.",
+        "Advanced modal routing (triggering modals from nav) provides a seamless app-like feel."
       ]
     }
   ],
-  "pending_steps": [],
-  "assets_ready": {
-    "images": true,
-    "copy": true,
-    "styles": true,
-    "scripts": true
-  },
-  "next_action": {
-    "step": null,
-    "instruction": "Verify commit 38f4310 live on qudozen.com. Check: English v3.4 loads, nav submenu deep-links work, simulator opens ghost-room in new tab, gold accents visible. Next potential task: upgrade ghost-room.html to English or add WhatsApp CTA to it."
-  },
   "critical_rules": [
-    "NEVER iframe ghost-room.html — it loops back to /#simulator",
-    "ALWAYS Read public/index.html before Writing — confirm lang=en on line 1",
-    "Service nav submenu must deep-link to individual IDs: service-receptionist, service-realestate, service-web, service-apps, service-automation, service-growth, service-analytics",
-    "ghost-room.html is for Growth Swarm leads (accepts ?clinic=X&city=Y) — not a general simulator",
-    "Bot language: Arabic-first (ar is default for Saudi patients)",
-    "All date logic uses preferred_date_iso (YYYY-MM-DD) — never preferred_date (display string)",
-    "Never touch slots.js atomic locking",
-    "Never expose Supabase keys in frontend",
-    "dashboard/dist/ must be pre-built — Render only runs npm install"
+    "ALWAYS maintain Arabic (ar) as the primary landing page language.",
+    "NEVER iframe ghost-room.html on the main page.",
+    "Navigation links for individual services MUST trigger scrollToService() to open modals.",
+    "Maintain the Gold/Teal/Navy color palette strictly."
   ]
 }
