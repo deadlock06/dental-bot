@@ -2,14 +2,14 @@
   "meta": {
     "project": "Qudozen",
     "version": "3.3",
-    "last_updated": "2026-04-24T12:00:00+03:00",
+    "last_updated": "2026-04-24T14:00:00+03:00",
     "schema": "2.0"
   },
   "system_status": {
     "overall_health": "healthy",
     "active_modules": ["index_html_v3.3"],
     "broken_modules": [],
-    "render_status": "deployed"
+    "render_status": "live — English confirmed. Latest commit 48b8162 deployed. All 12 steps complete."
   },
   "execution_state": {
     "current_step": 12,
@@ -77,74 +77,118 @@
     {
       "step_number": 4,
       "step_name": "Services Master Header + Card Shell",
-      "timestamp_completed": "2026-04-24T12:00:00+03:00",
+      "timestamp_completed": "2026-04-24T12:30:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
       "insights": ["Alternating layout via direction:rtl on .reverse class. Collapses to single column on mobile with direction:ltr restored."],
       "decisions": ["direction flip for alternating cards preserves DOM order for screen readers."],
-      "issues_found": [],
-      "fixes_applied": [],
+      "issues_found": ["Services subtitle did not match Step 4 spec on step-by-step audit."],
+      "fixes_applied": ["Subtitle updated to: 'From AI reception to autonomous growth — everything your business needs to run without you.' Committed b000bfc and pushed."],
       "ui_upgrades": []
     },
     {
       "step_number": 5,
       "step_name": "Service 1 — AI Receptionist",
-      "timestamp_completed": "2026-04-24T12:00:00+03:00",
+      "timestamp_completed": "2026-04-24T12:35:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
-      "insights": ["Simulator preview in card now links to #simulator (anchor scroll) not /growth/ghost-room.html — keeps user on page to use embedded simulator."],
-      "decisions": ["AI Receptionist card preview and CTA both scroll to #simulator section. Ghost-room.html is available as full-screen fallback only."],
-      "issues_found": [],
-      "fixes_applied": [],
+      "insights": ["Step-by-step audit caught 5 mismatches vs spec: description, all 12 features, impact text, CTA href, and sim preview href."],
+      "decisions": ["Simulator preview and CTA both now link to /growth/ghost-room.html per Step 5 spec. Previous decision to use #simulator anchor overridden by explicit spec requirement."],
+      "issues_found": [
+        "Description was generic placeholder — not spec copy",
+        "12 features were generic — not the exact technical list (8-step flow, Calendar sync, emergency detection, NLP, etc.)",
+        "Impact text had wrong numbers (60-80% / 12h vs spec 40% / 15h)",
+        "CTA and preview both linked to #simulator instead of /growth/ghost-room.html"
+      ],
+      "fixes_applied": [
+        "Description: 'A WhatsApp-native AI that books appointments, handles reschedules, detects emergencies, and sends reminders — all in fluent Arabic and English. No human intervention needed.'",
+        "12 features replaced with exact spec list",
+        "Impact: '40% fewer no-shows and reclaim 15+ hours of admin time weekly'",
+        "Simulator preview href: /growth/ghost-room.html",
+        "CTA href: /growth/ghost-room.html",
+        "Committed 301f651 and pushed"
+      ],
       "ui_upgrades": ["Scanline CSS overlay on preview screen for depth/realism."]
     },
     {
       "step_number": 6,
       "step_name": "Services 2-7 Content Fill",
-      "timestamp_completed": "2026-04-24T12:00:00+03:00",
+      "timestamp_completed": "2026-04-24T12:40:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
-      "insights": ["Services 2-7 CTAs route to wa.me/966570733834 (WhatsApp). No redirect to ghost-room for non-receptionist services."],
-      "decisions": ["Simplified Real Estate CTA to WhatsApp — ghost-room.html is receptionist-specific. Other services go direct to Jake."],
-      "issues_found": [],
-      "fixes_applied": [],
+      "insights": ["Step-by-step audit replaced all 6 placeholder cards with exact spec copy. All descriptions trimmed to 1-2 sentences per spec scannability rule."],
+      "decisions": [
+        "Real Estate CTA: /growth/ghost-room.html?v=real-estate per spec",
+        "Growth Engine CTA: /growth/ghost-room.html per spec",
+        "Web/App/Automation/Analytics CTAs: wa.me/966570733834 per spec"
+      ],
+      "issues_found": ["All 6 cards had wrong tags, titles, descriptions, features, and impact text vs spec"],
+      "fixes_applied": [
+        "Card 2: 'Real Estate Intelligence' / 'Every Lead, Answered Instantly' / 6 spec features / 3x faster response / ghost-room CTA",
+        "Card 3: 'Custom Web Architecture' / 'Websites That Think, Not Just Show' / 6 spec features / 40-60% conversions",
+        "Card 4: 'Native App Development' / 'Apps Built for Performance' / Swift+Kotlin/offline/push/biometric / 4.6+ stars",
+        "Card 5: 'Workflow Automation' / 'Connect Everything, Touch Nothing' / webhook/CRM/invoice/drip/Slack / 20+h saved",
+        "Card 6: 'Autonomous Growth Engine' / 'New Clients While You Sleep' / Google Maps Swarm / 15-30 leads/month",
+        "Card 7: 'Intelligence Dashboard' / 'See What Others Miss' / live analytics/no-show prediction / 2x reaction time",
+        "Committed 026f7ea and pushed"
+      ],
       "ui_upgrades": []
     },
     {
       "step_number": 7,
-      "step_name": "Simulator Section — EMBEDDED",
-      "timestamp_completed": "2026-04-24T12:00:00+03:00",
+      "step_name": "Live Simulator Section — Teaser",
+      "timestamp_completed": "2026-04-24T12:50:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
       "insights": [
-        "CORE CHANGE vs v3.2: Simulator is embedded via iframe with lazy loading, not a redirect teaser.",
-        "Browser chrome bar (red/yellow/green dots + URL bar) makes iframe feel like a real product.",
-        "Launch overlay prevents iframe from loading until user scrolls to section (IntersectionObserver pre-loads), then overlay hides on click.",
-        "Full-screen fallback link opens ghost-room.html in new tab."
+        "Step 7 spec is explicit: 'Do NOT embed a working chat here — this page is a teaser, the simulator lives on ghost-room.html.' Overrides earlier v3.3 embedded-iframe decision.",
+        "Two-column screenshot cards with hover-lift shadow communicate clickability without needing a working embed.",
+        "Subtitle updated to spec: 'This is not a mockup. These are live screenshots of the actual system running on WhatsApp right now.'"
       ],
       "decisions": [
-        "Used IntersectionObserver at 30% visibility threshold to pre-load iframe src when section comes into view — removes load delay when user clicks launch.",
-        "Overlay stays visible until user explicitly clicks — avoids autoplay/autoscroll surprise.",
-        "iframe src starts as about:blank to prevent premature network request on page load."
+        "Replaced embedded iframe + browser chrome + JS overlay with two-column teaser grid per Step 7 spec.",
+        "Removed ~120 lines of iframe CSS and JS (simOverlay, simFrame, IntersectionObserver, chrome bar) — no longer needed.",
+        "Both preview cards link to /growth/ghost-room.html. Primary CTA also links there. Secondary is WhatsApp."
       ],
-      "issues_found": [],
-      "fixes_applied": [],
+      "issues_found": ["Previous Step 7 implementation was an embedded iframe, conflicting with explicit spec rule."],
+      "fixes_applied": [
+        "iframe CSS removed: .simulator-frame-wrap, .simulator-chrome, .chrome-dots, .chrome-dot, .chrome-url, .simulator-iframe-container, .simulator-overlay, .sim-launch-icon, .sim-launch-title, .sim-launch-sub",
+        "iframe JS removed: simOverlay, simFrame, launchSim(), IntersectionObserver",
+        "New: .simulator-grid 2-col, .sim-card with hover-lift, .sim-card-screen (chat-bg teal / dash-bg sand), .sim-card-body",
+        "Committed 6aadf91 and pushed"
+      ],
       "ui_upgrades": [
-        "Browser chrome bar with macOS-style dots and URL display gives iframe an app-like feel.",
-        "Pulsing teal glow on launch button draws the eye.",
-        "Height is responsive: 650px desktop, 500px tablet, 420px mobile."
+        "chat-bg uses teal gradient tint, dash-bg uses sand gradient tint — visually distinct at a glance.",
+        "Hover translateY(-6px) + shadow gives screenshots the feel of clickable product thumbnails."
       ]
     },
     {
       "step_number": 8,
       "step_name": "Pricing Section",
-      "timestamp_completed": "2026-04-24T12:00:00+03:00",
+      "timestamp_completed": "2026-04-24T13:00:00+03:00",
       "files_created": [],
       "files_modified": ["public/index.html"],
-      "insights": ["System tier elevated via translateY(-8px) and border-glow. No badges."],
-      "decisions": ["No 'Most Popular' label. Elevation communicates value without manipulation."],
-      "issues_found": [],
-      "fixes_applied": [],
+      "insights": ["System tier elevated via translateY(-8px) and teal border-glow — no badges. All three cards use spec-exact CTAs and features."],
+      "decisions": [
+        "Removed card subtitle titles ('Get Your Foot in the Door' etc.) — not in Step 8 spec.",
+        "Removed unused .pricing-title CSS rule.",
+        "Card 1 'No setup fee' and Card 3 'Custom setup & onboarding' shown in muted-style .pricing-setup box to differentiate visually from Card 2's sand-colored fee callout."
+      ],
+      "issues_found": [
+        "Subtitle was 'No hidden fees. No lock-in contracts…' — spec is 'Transparent pricing. No hidden fees.'",
+        "Card titles not in spec",
+        "All three feature lists wrong vs spec",
+        "CTAs: 'Start the Conversation', 'Get Started Today', 'Talk to Us About Scale' — all wrong",
+        "Card 1 missing 'No setup fee' callout",
+        "Card 3 missing 'Custom setup & onboarding' callout"
+      ],
+      "fixes_applied": [
+        "Subtitle corrected to spec",
+        "Card 1: 4 spec features, 'No setup fee', CTA 'Start with Awareness'",
+        "Card 2: 6 spec features (Calendar sync, reminders, emergency detection, reschedule, no-show prediction), setup fee, CTA 'Activate the System'",
+        "Card 3: 6 spec features (client recovery, AI review gen, market monitoring, dedicated manager, custom integrations), CTA 'Talk to Jake'",
+        "Committed f542a59 and pushed"
+      ],
       "ui_upgrades": []
     },
     {
@@ -217,7 +261,7 @@
   },
   "next_action": {
     "step": null,
-    "instruction": "Site deployed. Monitor Render logs. Verify qudozen.com shows English v3.3 with embedded simulator."
+    "instruction": "All 12 steps complete. Commit 48b8162 deployed. Monitor Render logs. Verify qudozen.com shows: two-column simulator teaser, correct pricing CTAs (Start with Awareness / Activate the System / Talk to Jake), Jake's letter exact copy, hello@qudozen.com in footer."
   },
   "decisions": [
     {
