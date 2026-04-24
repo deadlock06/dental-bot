@@ -121,9 +121,21 @@
         }).catch(() => {});
       }
 
+      const lang = urlParams.get('lang') || 'ar';
+      
+      if (lang === 'en') {
+        document.documentElement.lang = 'en';
+        document.documentElement.dir = 'ltr';
+        document.body.style.fontFamily = "'Space Grotesk', sans-serif";
+        if (byId('clinic-name')) byId('clinic-name').innerText = urlParams.get('clinic') || 'Your Business';
+        if (startBtn) startBtn.innerHTML = '<span>▶ Launch Live Simulation Now</span><span class="text-xs font-normal text-teal-100 mt-2 tracking-widest opacity-80">(Full Experience)</span>';
+      }
+
       if (clinicNameEl) clinicNameEl.innerText = clinicName;
       if (cityEl) cityEl.innerText = city;
-      if (startBtn) startBtn.href = '/#simulator';
+      
+      // FIX: Change href to WhatsApp to prevent redirect loop when embedded
+      if (startBtn) startBtn.href = 'https://wa.me/966570733834?text=' + encodeURIComponent('أهلاً جيك، أريد تجربة المحاكي الآن');
 
       updateClock();
       setInterval(updateClock, 1000);

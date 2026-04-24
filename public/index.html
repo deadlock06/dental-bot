@@ -70,7 +70,7 @@
       font-weight:300; max-width:620px; line-height:1.75;
     }
 
-    /* ── 3-DOT NAV ── */
+    /* ── 3-DOT NAV (Mobile Only) ── */
     .menu-btn {
       position:fixed; top:1.5rem; right:1.5rem; z-index:1100;
       background:rgba(8,15,32,0.92);
@@ -88,6 +88,26 @@
     .menu-btn.open .dot:nth-child(1) { transform:translateX(5px) rotate(45deg) scale(1.8); }
     .menu-btn.open .dot:nth-child(2) { opacity:0; transform:scale(0); }
     .menu-btn.open .dot:nth-child(3) { transform:translateX(-5px) rotate(-45deg) scale(1.8); }
+
+    /* ── DESKTOP TOP BAR ── */
+    .desktop-header {
+      position:fixed; top:0; left:0; right:0; height:80px; z-index:1050;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 3rem; background:rgba(4,9,20,0.8);
+      backdrop-filter:blur(20px); border-bottom:1px solid var(--gold-border);
+    }
+    .desktop-header .logo { font-size:1.4rem; font-weight:700; color:var(--text); }
+    .desktop-header .logo span { color:var(--gold); }
+    .desktop-nav { display:flex; gap:2.5rem; align-items:center; }
+    .desktop-nav a { font-size:.7rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.12em; transition:color .2s; }
+    .desktop-nav a:hover { color:var(--gold); }
+    
+    @media (max-width:768px) {
+      .desktop-header { display:none; }
+    }
+    @media (min-width:769px) {
+      .menu-btn { display:none; }
+    }
 
     /* ── NAV OVERLAY ── */
     .nav-overlay {
@@ -557,6 +577,19 @@
 </head>
 <body>
 
+  <!-- DESKTOP HEADER -->
+  <header class="desktop-header">
+    <div class="logo">Qud<span>ozen</span></div>
+    <nav class="desktop-nav">
+      <a href="#home">Home</a>
+      <a href="#services">Services</a>
+      <a href="#simulator">Simulator</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#about">About</a>
+      <a href="https://wa.me/966570733834" class="btn-primary" style="padding:.6rem 1.2rem;font-size:.8rem;">Contact Jake</a>
+    </nav>
+  </header>
+
   <!-- 3-DOT MENU -->
   <button class="menu-btn" id="menuBtn" aria-label="Open navigation menu" aria-expanded="false">
     <span class="dot"></span><span class="dot"></span><span class="dot"></span>
@@ -894,9 +927,12 @@
             <span class="dot" aria-hidden="true"></span>
             System is live &#8212; handling real patient conversations right now
           </div>
-          <div class="sim-ctas">
-            <a href="/growth/ghost-room.html" class="btn-primary" target="_blank" rel="noopener noreferrer">&#x25B6; Launch Full Simulator</a>
-            <a href="https://wa.me/966570733834" class="btn-secondary" target="_blank" rel="noopener noreferrer">Talk to Jake Directly &#x2192;</a>
+          <div class="sim-ctas" style="margin-bottom:2.5rem;">
+            <a href="https://wa.me/966570733834?text=أريد%20تفعيل%20لوحة%20تحكمي%20الخاصة" class="btn-primary" target="_blank" rel="noopener noreferrer">&#x25B6; Launch Mobile Simulation</a>
+            <a href="#simulator" onclick="document.getElementById('simFrame').classList.remove('hidden')" class="btn-secondary">Show Desktop View &#x2192;</a>
+          </div>
+          <div id="simFrame" class="hidden border-t border-white/10">
+            <iframe src="/growth/ghost-room.html?lang=en" class="w-full h-[600px] border-none bg-black"></iframe>
           </div>
         </div>
       </div>
