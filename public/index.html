@@ -232,15 +232,16 @@
     <div class="text-xl font-bold tracking-wider flex items-center gap-2">
       <span class="text-2xl text-gold">⚡</span> QUDOZEN
     </div>
-    <div class="hidden md:flex gap-8 text-sm font-medium text-gray-300">
-      <a href="#services" class="hover:text-aqua transition">خدماتنا</a>
-      <a href="#simulator" class="hover:text-aqua transition">جرب المحاكي</a>
-      <a href="#pricing" class="hover:text-aqua transition">الاستثمار</a>
-      <a href="#jake" class="hover:text-aqua transition">رسالة جيك</a>
+    <div class="hidden">
+      <!-- Direct links hidden to maintain clean hamburger-only UI across all devices -->
+      <a href="#services">خدماتنا</a>
+      <a href="#simulator">جرب المحاكي</a>
+      <a href="#pricing">الاستثمار</a>
+      <a href="#jake">رسالة جيك</a>
     </div>
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-4">
       <a href="/growth/ghost-room" class="hidden sm:inline-block bg-gold text-gray-900 px-6 py-2.5 rounded-xl font-bold hover:bg-[#b78a5e] transition transform hover:-translate-y-0.5 shadow-lg shadow-gold/20">غرفة العمليات</a>
-      <button id="mobileMenuBtn" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="md:hidden text-gray-300 hover:text-aqua text-2xl">☰</button>
+      <button id="mobileMenuBtn" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="text-gray-300 hover:text-aqua text-3xl focus:outline-none transition-transform hover:scale-110">☰</button>
     </div>
   </nav>
   <!-- Mobile Menu -->
