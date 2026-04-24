@@ -654,7 +654,7 @@
       <!-- 1: AI RECEPTIONIST -->
       <div id="service-receptionist" class="service-card">
         <div class="service-visual">
-          <a href="/growth/ghost-room.html" class="sim-preview" target="_blank" rel="noopener noreferrer" aria-label="Try the AI Receptionist live demo">
+          <a href="#simulator" class="sim-preview" target="_blank" rel="noopener noreferrer" aria-label="Try the AI Receptionist live demo">
             <div class="sim-preview-screen">
               <span class="sim-play-icon" aria-hidden="true">&#x25B6;</span>
               <span class="sim-preview-label">Click to Experience Live</span>
@@ -689,7 +689,7 @@
             </ol>
           </div>
           <div class="service-impact">Clinics using this system report 40% fewer no-shows and reclaim 15+ hours of admin time weekly.</div>
-          <a href="/growth/ghost-room.html" class="service-cta" target="_blank" rel="noopener noreferrer">Try the Live Demo &#x2192;</a>
+          <a href="#simulator" class="service-cta" target="_blank" rel="noopener noreferrer">Try the Live Demo &#x2192;</a>
         </div>
       </div>
 
@@ -839,7 +839,7 @@
             </ol>
           </div>
           <div class="service-impact">Clients see 15&#8211;30 new qualified leads per month with zero manual work.</div>
-          <a href="/growth/ghost-room.html" class="service-cta" target="_blank" rel="noopener noreferrer">See the Engine Run &#x2192;</a>
+          <a href="#simulator" class="service-cta" target="_blank" rel="noopener noreferrer">See the Engine Run &#x2192;</a>
         </div>
       </div>
 
@@ -880,65 +880,59 @@
   <section id="simulator">
     <div class="container">
       <div class="section-header">
-        <span class="section-label">Experience the System</span>
-        <h2 class="section-title">See It Work in Real Time</h2>
-        <p class="section-subtitle">This is not a mockup. These are live capabilities of the actual system running on WhatsApp right now.</p>
+        <span class="section-label">Live Intelligence</span>
+        <h2 class="section-title">See the Autonomy in Action</h2>
+        <p class="section-subtitle">Watch the AI receptionist manage a full booking flow on WhatsApp in real-time.</p>
       </div>
-
-      <div class="sim-teaser">
-        <div class="sim-chrome">
-          <div class="chrome-dots" aria-hidden="true">
-            <div class="chrome-dot"></div>
-            <div class="chrome-dot"></div>
-            <div class="chrome-dot"></div>
+      
+      <div class="flex flex-col lg:flex-row gap-12 items-center">
+        <!-- Phone Shell -->
+        <div id="simPhoneShell" style="width:320px; height:640px; background:#0B1120; border-radius:3rem; border:8px solid #1E293B; position:relative; overflow:hidden; box-shadow:0 0 100px rgba(13,148,136,0.1); z-index:10; margin:0 auto;">
+          <div style="position:absolute; top:0; left:0; right:0; height:24px; background:#1E293B; display:flex; justify-content:center; align-items:center; gap:8px;">
+            <div style="width:48px; height:4px; background:#0F172A; border-radius:99px;"></div>
           </div>
-          <div class="chrome-url" aria-hidden="true">qudozen.com &#x2014; Live AI System Preview</div>
-          <span class="chrome-sys" id="sysTime" aria-hidden="true">SYS: --:--:--</span>
+          <div id="simChat" style="height:100%; padding:40px 16px 16px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; background:#080C14;">
+            <!-- Chat bubbles -->
+          </div>
+          <div id="simProgress" style="position:absolute; bottom:0; left:0; height:4px; background:#0D9488; transition:width 0.5s ease; width:0%;"></div>
         </div>
-        <div class="sim-body">
-          <p class="sim-tagline">
-            The AI receptionist handles every WhatsApp message end-to-end &#8212; booking, rescheduling,
-            reminders, follow-ups &#8212; across Arabic and English, 24 hours a day.
-            Launch the simulator to watch a full patient conversation play out live.
-          </p>
-          <div class="sim-caps">
-            <div class="sim-cap">
-              <div class="sim-cap-icon" aria-hidden="true">&#x26A1;</div>
-              <div class="sim-cap-title">Reply in 3 Seconds</div>
-              <div class="sim-cap-desc">Instant response to any patient, any time</div>
+
+        <!-- Logic Steps -->
+        <div class="flex-1 space-y-6 w-full max-w-xl">
+          <div class="glass rounded-3xl p-8 border border-white/5 bg-[#0D9488]/5">
+            <h3 class="text-xl font-bold mb-6 text-white flex items-center gap-3">
+              <span class="w-8 h-8 rounded-lg bg-[#0D9488]/20 flex items-center justify-center text-[#0D9488] text-sm">AI</span>
+              System Decision Logic
+            </h3>
+            <div class="space-y-8">
+              <div class="flex gap-4">
+                <div class="w-1 bg-gradient-to-b from-[#0D9488] to-transparent rounded-full h-12"></div>
+                <div>
+                  <div class="text-white font-bold mb-1">Instant Recognition</div>
+                  <div class="text-muted text-sm">Jake identifies the patient's intent and language in under 3 seconds.</div>
+                </div>
+              </div>
+              <div class="flex gap-4">
+                <div class="w-1 bg-gradient-to-b from-[#C9A84C] to-transparent rounded-full h-12"></div>
+                <div>
+                  <div class="text-white font-bold mb-1">Atomic Scheduling</div>
+                  <div class="text-muted text-sm">Directly syncs with your Google Calendar with zero double-booking risk.</div>
+                </div>
+              </div>
+              <div class="flex gap-4">
+                <div class="w-1 bg-gradient-to-b from-[#0D9488] to-transparent rounded-full h-12"></div>
+                <div>
+                  <div class="text-white font-bold mb-1">Autonomous Follow-up</div>
+                  <div class="text-muted text-sm">Sends automatic reminders and handles cancellations without human help.</div>
+                </div>
+              </div>
             </div>
-            <div class="sim-cap">
-              <div class="sim-cap-icon" aria-hidden="true">&#x1F9E0;</div>
-              <div class="sim-cap-title">Smart Qualification</div>
-              <div class="sim-cap-desc">Natural language in Arabic &amp; English</div>
-            </div>
-            <div class="sim-cap">
-              <div class="sim-cap-icon" aria-hidden="true">&#x1F4C5;</div>
-              <div class="sim-cap-title">Auto Booking</div>
-              <div class="sim-cap-desc">Live sync with Google Calendar</div>
-            </div>
-            <div class="sim-cap">
-              <div class="sim-cap-icon" aria-hidden="true">&#x1F4CA;</div>
-              <div class="sim-cap-title">Live Dashboard</div>
-              <div class="sim-cap-desc">Real-time view of all conversations</div>
-            </div>
-          </div>
-          <div class="sim-proof">
-            <span class="dot" aria-hidden="true"></span>
-            System is live &#8212; handling real patient conversations right now
-          </div>
-          <div class="sim-ctas" style="margin-bottom:2.5rem;">
-            <a href="https://wa.me/966570733834?text=أريد%20تفعيل%20لوحة%20تحكمي%20الخاصة" class="btn-primary" target="_blank" rel="noopener noreferrer">&#x25B6; Launch Mobile Simulation</a>
-            <a href="#simulator" onclick="document.getElementById('simFrame').classList.remove('hidden')" class="btn-secondary">Show Desktop View &#x2192;</a>
-          </div>
-          <div id="simFrame" class="hidden border-t border-white/10">
-            <iframe src="/growth/ghost-room.html?lang=en" class="w-full h-[600px] border-none bg-black"></iframe>
+            <button onclick="startEnglishSim()" class="mt-10 w-full btn-primary justify-center shadow-xl shadow-[#0D9488]/20">Restart Simulation</button>
           </div>
         </div>
       </div>
-
     </div>
-  </section>
+</section>
 
   <!-- PRICING -->
   <section id="pricing">
@@ -1049,7 +1043,7 @@
             <li><a href="#simulator">Simulator</a></li>
             <li><a href="#pricing">Pricing</a></li>
             <li><a href="#about">About</a></li>
-            <li><a href="/growth/ghost-room.html" target="_blank" rel="noopener noreferrer">Operations Room</a></li>
+            <li><a href="#simulator" target="_blank" rel="noopener noreferrer">Operations Room</a></li>
             <li><a href="#">Privacy Policy</a></li>
           </ul>
         </div>
@@ -1108,5 +1102,60 @@
       gsap.from('.jake-wrapper',{scrollTrigger:{trigger:'.jake-wrapper',start:'top 80%',once:true},opacity:0,duration:1,ease:'power2.out'});
     });
   </script>
+
+<script id="simScript">
+  const chatData = [
+    { type: 'patient', text: 'Hi, I want to book an appointment for tomorrow.' },
+    { type: 'bot', text: 'Hello! I am Jake, your AI assistant. I can help you with that. Which clinic would you like to visit?' },
+    { type: 'patient', text: 'Qudozen Center in Riyadh.' },
+    { type: 'bot', text: 'Perfect. We have slots available for tomorrow. Would 10:00 AM work for you?' },
+    { type: 'patient', text: 'Yes, that works.' },
+    { type: 'bot', text: 'Great! I have booked your slot. You will receive a reminder 24 hours before your visit. See you then!' }
+  ];
+
+  function startEnglishSim() {
+    const chat = document.getElementById('simChat');
+    const prog = document.getElementById('simProgress');
+    if(!chat) return;
+    chat.innerHTML = '';
+    prog.style.width = '0%';
+    
+    let i = 0;
+    function next() {
+      if (!document.getElementById('simChat')) return; // Cleanup if element gone
+      if (i >= chatData.length) {
+        setTimeout(startEnglishSim, 5000);
+        return;
+      }
+      const m = chatData[i];
+      const div = document.createElement('div');
+      div.style.padding = '12px 16px';
+      div.style.borderRadius = '16px';
+      div.style.fontSize = '14px';
+      div.style.lineHeight = '1.5';
+      div.style.maxWidth = '85%';
+      
+      if (m.type === 'bot') {
+        div.style.alignSelf = 'flex-start';
+        div.style.background = '#1E293B';
+        div.style.color = 'white';
+        div.style.borderTopLeftRadius = '0';
+      } else {
+        div.style.alignSelf = 'flex-end';
+        div.style.background = '#0D9488';
+        div.style.color = 'white';
+        div.style.borderTopRightRadius = '0';
+      }
+      div.textContent = m.text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+      prog.style.width = ((i+1)/chatData.length * 100) + '%';
+      i++;
+      setTimeout(next, 2000);
+    }
+    next();
+  }
+  window.addEventListener('load', startEnglishSim);
+</script>
 </body>
 </html>
