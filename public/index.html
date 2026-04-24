@@ -9,7 +9,39 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
-    body { font-family: 'Tajawal', sans-serif; background-color: #0B1120; color: white; overflow-x: hidden; }
+    body { font-family: 'Tajawal', sans-serif; background-color: #080C14; color: white; overflow-x: hidden; }
+    .glass {
+      background: rgba(13,148,136,0.03);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass:hover {
+      background: rgba(13,148,136,0.06);
+      border-color: rgba(94,234,212,0.2);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+    .text-glow {
+      text-shadow: 0 0 20px rgba(94,234,212,0.3);
+    }
+    .bento-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .bento-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(94,234,212,0.06), transparent 40%);
+      opacity: 0;
+      transition: opacity 0.5s;
+      pointer-events: none;
+    }
+    .bento-card:hover::before {
+      opacity: 1;
+    }
+
     .glass {
       background: rgba(13,148,136,0.05);
       backdrop-filter: blur(40px);
@@ -175,7 +207,16 @@
       height:3px;background:linear-gradient(90deg,#0D9488,#5EEAD4);
       border-radius:999px;transition:width .5s ease;
     }
-  </style>
+  
+    @keyframes gradient-text {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .animate-gradient-text {
+      animation: gradient-text 6s ease infinite;
+    }
+</style>
 </head>
 <body class="antialiased selection:bg-[#0D9488] selection:text-white relative">
 
@@ -214,38 +255,40 @@
   <!-- ══════════════════════════════════════════════════ -->
   <!-- HERO                                              -->
   <!-- ══════════════════════════════════════════════════ -->
-  <section class="min-h-screen flex flex-col justify-center items-center text-center px-4 pt-24 relative z-10 border-b border-white/5">
-    <div class="max-w-4xl mx-auto flex flex-col items-center">
-      <div class="mb-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-sm font-medium text-aqua">
+  <section class="min-h-screen flex flex-col justify-center items-center text-center px-6 pt-32 pb-24 relative z-10 border-b border-white/5 overflow-hidden">
+                      <div class="max-w-6xl mx-auto flex flex-col items-center">
+                        
+      <div class="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-xs font-medium text-aqua tracking-widest uppercase border border-aqua/10">
         <span class="relative flex h-2 w-2">
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
           <span class="relative inline-flex rounded-full h-2 w-2 bg-[#5EEAD4]"></span>
         </span>
-        بنية تحتية متطورة للأعمال — مباشر الآن
+        نظام التشغيل الذاتي v3.3
       </div>
-      <h1 class="text-5xl md:text-7xl font-black mb-8 leading-[1.15] tracking-tight">
-        جرب كيف يعمل عملك بـ<br>
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-[#5EEAD4]">وعي اصطناعي</span> في 60 ثانية.
+      <h1 class="text-6xl md:text-8xl font-black mb-8 leading-[1.05] tracking-tight text-glow">
+        أعمالك، تعمل <br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-l from-[#5EEAD4] via-[#0D9488] to-[#5EEAD4] bg-[length:200%_auto] animate-gradient-text">بالذكاء الاصطناعي</span>
       </h1>
-      <p class="text-lg md:text-2xl text-gray-400 mb-12 max-w-2xl leading-relaxed">
-        العملاء لا ينتظرون. عملك يفقد فرصاً يومياً. نحن نبني تحولاً كاملاً ليعمل عملك بتشغيل ذاتي 24/7.
+      <p class="text-lg md:text-2xl text-gray-400 mb-12 max-w-3xl leading-relaxed font-light">
+        نبني أنظمة ذاتية الإدارة تتولى عملياتك التشغيلية بالكامل — لتتفرغ أنت لما يهمك حقاً. القوة تكمن في طبقات الوعي الثلاث.
       </p>
-      <div class="flex flex-col sm:flex-row gap-5 w-full justify-center max-w-md sm:max-w-none">
-        <a href="#simulator" class="bg-gold text-[#0B1120] px-8 py-4 rounded-xl font-bold text-lg hover:shadow-[0_0_25px_rgba(212,165,116,0.6)] transition duration-300 flex items-center justify-center gap-2">
-          <span>🚀 ابدأ المحاكاة الحية</span>
-        </a>
-        <a href="#pricing" class="glass px-8 py-4 rounded-xl font-bold text-lg text-white hover:bg-white/10 transition duration-300 flex items-center justify-center">
-          💎 شاهد خطط الاستثمار
-        </a>
-      </div>
-      <!-- Stats row -->
-      <div class="mt-16 grid grid-cols-3 gap-8 text-center border-t border-white/5 pt-10 w-full max-w-lg">
-        <div><div class="text-3xl font-black text-aqua">24/7</div><div class="text-xs text-gray-500 mt-1">متوفر دائماً</div></div>
-        <div><div class="text-3xl font-black text-gold">&lt;3s</div><div class="text-xs text-gray-500 mt-1">وقت الرد</div></div>
-        <div><div class="text-3xl font-black text-aqua">94%</div><div class="text-xs text-gray-500 mt-1">نسبة التأكيد</div></div>
-      </div>
-    </div>
-  </section>
+
+                        <div class="flex flex-col sm:flex-row gap-6 w-full justify-center">
+                          <a href="#simulator" class="bg-white text-black px-10 py-5 rounded-2xl font-black text-xl hover:bg-gray-200 transition duration-300 shadow-2xl shadow-aqua/20 flex items-center gap-3">
+                            <span>🚀 جرب المحاكاة الحية</span>
+                          </a>
+                          <a href="#pricing" class="glass px-10 py-5 rounded-2xl font-bold text-xl text-white hover:bg-white/5 transition duration-300 border border-white/10">
+                            💎 شاهد خطط الاستثمار
+                          </a>
+                        </div>
+                        <div class="mt-24 grid grid-cols-2 md:grid-cols-4 gap-12 text-center border-t border-white/5 pt-16 w-full">
+                          <div><div class="text-4xl font-black text-white">24/7</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase">التوفر التشغيلي</div></div>
+                          <div><div class="text-4xl font-black text-aqua">&lt;3s</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase">سرعة الاستجابة</div></div>
+                          <div><div class="text-4xl font-black text-gold">94%</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase">دقة التحويل</div></div>
+                          <div><div class="text-4xl font-black text-white">100%</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase">أتمتة كاملة</div></div>
+                        </div>
+                      </div>
+                    </section>
 
   <!-- ══════════════════════════════════════════════════ -->
   <!-- THREE-LAYER ARCHITECTURE                          -->
@@ -291,7 +334,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- 1. AI Receptionist (Spans 2 cols, 2 rows on lg) -->
-        <div onclick="openModal('reception')" class="cursor-pointer group glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 md:col-span-2 lg:row-span-2 flex flex-col justify-between overflow-hidden" style="background:linear-gradient(135deg,rgba(13,148,136,0.1),rgba(11,17,32,0.8));border-color:rgba(13,148,136,0.4)">
+        <div onclick="openModal('reception')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-2 lg:row-span-2 flex flex-col justify-between overflow-hidden" style="background:linear-gradient(135deg,rgba(13,148,136,0.1),rgba(11,17,32,0.8));border-color:rgba(13,148,136,0.4)">
           <div class="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-[#0D9488]/20 to-transparent pointer-events-none"></div>
           <div>
             <div class="w-16 h-16 rounded-2xl bg-teal-900 border border-teal-500 flex items-center justify-center text-3xl mb-6 shadow-[0_0_20px_rgba(13,148,136,0.4)] group-hover:scale-110 transition">🤖</div>
@@ -302,42 +345,42 @@
         </div>
 
         <!-- 2. Growth Swarm -->
-        <div onclick="openModal('growth')" class="cursor-pointer group glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 md:col-span-1 lg:col-span-2" style="background:rgba(212,165,116,0.05);border-color:rgba(212,165,116,0.2)">
+        <div onclick="openModal('growth')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-2" style="background:rgba(212,165,116,0.05);border-color:rgba(212,165,116,0.2)">
           <div class="w-12 h-12 rounded-xl bg-gold/20 border border-gold/40 flex items-center justify-center text-2xl mb-4 group-hover:rotate-12 transition">🎯</div>
           <h3 class="text-xl font-bold mb-2 text-gold">محرك النمو التلقائي</h3>
           <p class="text-gray-400 text-sm leading-relaxed">يكتشف العملاء المحتملين ويرسل لهم رسائل مخصصة بالذكاء الاصطناعي نيابة عنك.</p>
         </div>
 
         <!-- 3. Real Estate Bot -->
-        <div onclick="openModal('realestate')" class="cursor-pointer group glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 md:col-span-1 lg:col-span-1" style="border-color:rgba(94,234,212,0.2)">
+        <div onclick="openModal('realestate')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1" style="border-color:rgba(94,234,212,0.2)">
           <div class="w-12 h-12 rounded-xl bg-aqua/10 border border-aqua/30 flex items-center justify-center text-2xl mb-4 group-hover:-translate-y-1 transition">🏢</div>
           <h3 class="text-xl font-bold mb-2 text-white">المساعد العقاري</h3>
           <p class="text-gray-400 text-sm leading-relaxed">تأهيل العملاء للعقارات وجدولة الزيارات تلقائياً.</p>
         </div>
 
         <!-- 4. Web Systems -->
-        <div onclick="openModal('web')" class="cursor-pointer group glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 md:col-span-1 lg:col-span-1" style="border-color:rgba(168,85,247,0.3)">
+        <div onclick="openModal('web')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1" style="border-color:rgba(168,85,247,0.3)">
           <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">🌐</div>
           <h3 class="text-xl font-bold mb-2 text-white">أنظمة ويب للتحويل</h3>
           <p class="text-gray-400 text-sm leading-relaxed">مواقع فائقة السرعة مصممة خصيصاً لجلب العملاء.</p>
         </div>
 
         <!-- 5. App Studio -->
-        <div onclick="openModal('app')" class="cursor-pointer group glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 md:col-span-1 lg:col-span-1" style="border-color:rgba(244,63,94,0.3)">
+        <div onclick="openModal('app')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1" style="border-color:rgba(244,63,94,0.3)">
           <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-2xl mb-4 group-hover:rotate-12 transition">📱</div>
           <h3 class="text-xl font-bold mb-2 text-white">تطبيقات مخصصة</h3>
           <p class="text-gray-400 text-sm leading-relaxed">أدوات داخلية وتطبيقات عملاء مصممة لأعمالك.</p>
         </div>
 
         <!-- 6. Automation -->
-        <div onclick="openModal('auto')" class="cursor-pointer group glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 md:col-span-1 lg:col-span-1" style="border-color:rgba(59,130,246,0.3)">
+        <div onclick="openModal('auto')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1" style="border-color:rgba(59,130,246,0.3)">
           <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-2xl mb-4 group-hover:-translate-y-1 transition">⚡</div>
           <h3 class="text-xl font-bold mb-2 text-white">أتمتة العمليات</h3>
           <p class="text-gray-400 text-sm leading-relaxed">ربط الأنظمة وتسيير العمليات دون تدخل بشري.</p>
         </div>
 
         <!-- 7. Analytics -->
-        <div onclick="openModal('analytics')" class="cursor-pointer group glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 md:col-span-2 lg:col-span-2 flex flex-col justify-between" style="background:linear-gradient(45deg,rgba(11,17,32,0.8),rgba(94,234,212,0.05));border-color:rgba(94,234,212,0.3)">
+        <div onclick="openModal('analytics')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-2 lg:col-span-2 flex flex-col justify-between" style="background:linear-gradient(45deg,rgba(11,17,32,0.8),rgba(94,234,212,0.05));border-color:rgba(94,234,212,0.3)">
           <div>
             <div class="w-12 h-12 rounded-xl bg-aqua/20 border border-aqua/50 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">📊</div>
             <h3 class="text-2xl font-bold mb-2 text-aqua">لوحة القيادة الذكية</h3>
@@ -442,57 +485,60 @@
           </div>
         </div>
 
-        <!-- Right: Step guide + Dashboard preview -->
-        <div class="flex-1 space-y-6 w-full max-w-lg mx-auto lg:mx-0">
-
-          <!-- Step guide -->
-          <div class="glass rounded-2xl p-6">
-            <h3 class="text-base font-bold text-aqua mb-4 flex items-center gap-2">
-              <span>🗺</span> خريطة رحلة الحجز
-            </h3>
-            <div class="space-y-3" id="stepGuide">
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="1">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
-                <span class="text-sm text-gray-400">Language Pivot</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="2">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
-                <span class="text-sm text-gray-400">Smart Menu</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="3">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
-                <span class="text-sm text-gray-400">Identity Intake</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="4">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">4</div>
-                <span class="text-sm text-gray-400">Phone Matrix</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="5">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">5</div>
-                <span class="text-sm text-gray-400">Clinical Triage</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="6">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">6</div>
-                <span class="text-sm text-gray-400">Symptom Intake</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="7">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">7</div>
-                <span class="text-sm text-gray-400">Specialist Match</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="8">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">8</div>
-                <span class="text-sm text-gray-400">Temporal Logic</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="9">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0">9</div>
-                <span class="text-sm text-gray-400">Atomic Slotting</span>
-              </div>
-              <div class="step-item flex items-center gap-3 opacity-40" data-step="10">
-                <div class="w-7 h-7 rounded-full border border-gray-600 flex items-center justify-center text-xs font-bold flex-shrink-0 text-gold border-gold/40">✓</div>
-                <span class="text-sm text-gray-400">Autonomous Evolution</span>
-              </div>
+        
+    <!-- Right: Step guide + Dashboard preview -->
+    <div class="flex-1 space-y-8 w-full max-w-2xl mx-auto lg:mx-0">
+      <div class="glass rounded-3xl p-8 border border-white/5 relative overflow-hidden group">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-aqua/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-aqua/10 transition-colors"></div>
+        <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+          <span class="w-8 h-8 rounded-lg bg-aqua/10 flex items-center justify-center text-aqua text-sm">01</span>
+          رحلة العميل الذكية
+        </h3>
+        <div class="space-y-6">
+          <div class="flex gap-4">
+            <div class="w-1 bg-gradient-to-b from-aqua to-transparent rounded-full h-12"></div>
+            <div>
+              <div class="text-white font-bold mb-1">الاستجابة اللحظية</div>
+              <div class="text-gray-400 text-sm">يقوم النظام بالرد خلال أقل من 3 ثوانٍ بلهجة محلية طبيعية.</div>
             </div>
           </div>
+          <div class="flex gap-4 opacity-50">
+            <div class="w-1 bg-gray-700 rounded-full h-12"></div>
+            <div>
+              <div class="text-white font-bold mb-1">تأهيل الطلب</div>
+              <div class="text-gray-400 text-sm">فرز تلقائي للحالات الطارئة، الحجوزات، أو الاستفسارات العامة.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Mockup for Desktop -->
+      <div class="glass rounded-3xl p-4 border border-white/5 bg-[#0F172A]/50 relative group">
+        <div class="flex items-center gap-2 mb-4 px-2">
+          <div class="w-3 h-3 rounded-full bg-rose-500/50"></div>
+          <div class="w-3 h-3 rounded-full bg-amber-500/50"></div>
+          <div class="w-3 h-3 rounded-full bg-emerald-500/50"></div>
+          <div class="text-[10px] text-gray-500 ml-4 tracking-widest uppercase">Qudozen Dashboard v3.0</div>
+        </div>
+        <div class="aspect-video bg-[#080C14] rounded-xl border border-white/5 overflow-hidden relative">
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="text-center">
+              <div class="text-aqua text-4xl font-black mb-2 animate-pulse">4D Analytics</div>
+              <div class="text-gray-500 text-xs">Waiting for simulator trigger...</div>
+            </div>
+          </div>
+          <!-- Mock Chart -->
+          <div class="absolute bottom-4 left-4 right-4 h-24 flex items-end gap-1 opacity-20">
+            <div class="flex-1 bg-aqua h-[40%] rounded-t"></div>
+            <div class="flex-1 bg-aqua h-[60%] rounded-t"></div>
+            <div class="flex-1 bg-aqua h-[30%] rounded-t"></div>
+            <div class="flex-1 bg-aqua h-[80%] rounded-t"></div>
+            <div class="flex-1 bg-aqua h-[50%] rounded-t"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
           <!-- Dashboard preview (dynamic) -->
           <div id="dashPreview" class="glass rounded-2xl p-6 border border-[#0D9488]/30 hidden transform scale-95 opacity-0 transition-all duration-500 shadow-[0_0_40px_rgba(13,148,136,0.1)]">
@@ -1441,6 +1487,46 @@ function closeModal() {
   document.body.style.overflow='';
   setTimeout(()=> { ov.classList.remove('flex'); ov.classList.add('hidden'); }, 300);
 }
+</script>
+
+<script>
+document.querySelectorAll('.bento-card').forEach(card => {
+  card.onmousemove = e => {
+    const rect = card.getBoundingClientRect(),
+          x = e.clientX - rect.left,
+          y = e.clientY - rect.top;
+    card.style.setProperty('--mouse-x', `${x}px`);
+    card.style.setProperty('--mouse-y', `${y}px`);
+  };
+});
+</script>
+
+<script>
+window.addEventListener('load', () => {
+  gsap.from('.bento-card', {
+    scrollTrigger: {
+      trigger: '#services',
+      start: 'top 80%',
+    },
+    y: 100,
+    opacity: 0,
+    duration: 1,
+    stagger: 0.15,
+    ease: 'power4.out'
+  });
+
+  gsap.from('#pricing .glass', {
+    scrollTrigger: {
+      trigger: '#pricing',
+      start: 'top 80%',
+    },
+    scale: 0.9,
+    opacity: 0,
+    duration: 1,
+    stagger: 0.2,
+    ease: 'back.out(1.7)'
+  });
+});
 </script>
 </body>
 </html>
