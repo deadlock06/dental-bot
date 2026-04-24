@@ -880,54 +880,60 @@
   <section id="simulator">
     <div class="container">
       <div class="section-header">
-        <span class="section-label">Live Intelligence</span>
-        <h2 class="section-title">See the Autonomy in Action</h2>
-        <p class="section-subtitle">Watch the AI receptionist manage a full booking flow on WhatsApp in real-time.</p>
+        <span class="section-label">Proof of Work</span>
+        <h2 class="section-title">Interactive Experience</h2>
+        <p class="section-subtitle">Don't take our word for it. Try booking an appointment with Jake right now below.</p>
       </div>
-      
-      <div class="flex flex-col lg:flex-row gap-12 items-center">
-        <!-- Phone Shell -->
-        <div id="simPhoneShell" style="width:320px; height:640px; background:#0B1120; border-radius:3rem; border:8px solid #1E293B; position:relative; overflow:hidden; box-shadow:0 0 100px rgba(13,148,136,0.1); z-index:10; margin:0 auto;">
-          <div style="position:absolute; top:0; left:0; right:0; height:24px; background:#1E293B; display:flex; justify-content:center; align-items:center; gap:8px;">
-            <div style="width:48px; height:4px; background:#0F172A; border-radius:99px;"></div>
-          </div>
-          <div id="simChat" style="height:100%; padding:40px 16px 16px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; background:#080C14;">
-            <!-- Chat bubbles -->
-          </div>
-          <div id="simProgress" style="position:absolute; bottom:0; left:0; height:4px; background:#0D9488; transition:width 0.5s ease; width:0%;"></div>
-        </div>
 
-        <!-- Logic Steps -->
-        <div class="flex-1 space-y-6 w-full max-w-xl">
-          <div class="glass rounded-3xl p-8 border border-white/5 bg-[#0D9488]/5">
-            <h3 class="text-xl font-bold mb-6 text-white flex items-center gap-3">
-              <span class="w-8 h-8 rounded-lg bg-[#0D9488]/20 flex items-center justify-center text-[#0D9488] text-sm">AI</span>
-              System Decision Logic
-            </h3>
-            <div class="space-y-8">
-              <div class="flex gap-4">
-                <div class="w-1 bg-gradient-to-b from-[#0D9488] to-transparent rounded-full h-12"></div>
-                <div>
-                  <div class="text-white font-bold mb-1">Instant Recognition</div>
-                  <div class="text-muted text-sm">Jake identifies the patient's intent and language in under 3 seconds.</div>
-                </div>
+      <div class="max-w-5xl mx-auto glass rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl bg-[#040914]/80">
+        <div class="flex flex-col md:flex-row h-[600px]">
+          <!-- Chat Interface -->
+          <div class="w-full md:w-[400px] bg-[#080C14] flex flex-col border-r border-white/5">
+            <div class="p-4 bg-[#1E293B] flex items-center gap-3 border-b border-white/5">
+              <div class="w-10 h-10 rounded-full bg-[#0D9488] flex items-center justify-center font-bold text-white">J</div>
+              <div>
+                <div class="text-sm font-bold text-white">Jake | Qudozen AI</div>
+                <div class="text-[10px] text-[#0D9488] flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#0D9488] animate-pulse"></span> Online</div>
               </div>
-              <div class="flex gap-4">
-                <div class="w-1 bg-gradient-to-b from-[#C9A84C] to-transparent rounded-full h-12"></div>
-                <div>
-                  <div class="text-white font-bold mb-1">Atomic Scheduling</div>
-                  <div class="text-muted text-sm">Directly syncs with your Google Calendar with zero double-booking risk.</div>
-                </div>
+            </div>
+            <div id="chatDisplay" class="flex-1 p-6 overflow-y-auto flex flex-col gap-4 custom-scrollbar">
+              <!-- Messages -->
+            </div>
+            <div class="p-4 bg-[#0F172A] border-t border-white/5 flex gap-2">
+              <input id="chatInput" type="text" placeholder="Type your message..." class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#0D9488]">
+              <button id="sendBtn" class="bg-[#0D9488] text-white w-12 h-12 rounded-xl flex items-center justify-center hover:bg-[#0a7a70] transition-colors">&#x2192;</button>
+            </div>
+          </div>
+
+          <!-- Dashboard Sync Preview -->
+          <div class="flex-1 bg-[#040914] p-8 hidden md:flex flex-col border-l border-white/5">
+            <div class="flex items-center justify-between mb-8">
+              <h3 class="text-xs font-bold text-[#C9A84C] uppercase tracking-widest">Management Console</h3>
+              <div class="text-[10px] text-muted font-mono tracking-widest" id="simTimer">SEC: 0s</div>
+            </div>
+            <div class="space-y-6">
+              <div class="bg-white/5 rounded-2xl p-6 border border-white/5 relative overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-r from-[#0D9488]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="text-[10px] text-muted mb-2 uppercase tracking-tighter">Current Intelligence Phase</div>
+                <div id="simStatus" class="text-lg font-bold text-[#0D9488]">Waiting for visitor...</div>
               </div>
-              <div class="flex gap-4">
-                <div class="w-1 bg-gradient-to-b from-[#0D9488] to-transparent rounded-full h-12"></div>
-                <div>
-                  <div class="text-white font-bold mb-1">Autonomous Follow-up</div>
-                  <div class="text-muted text-sm">Sends automatic reminders and handles cancellations without human help.</div>
+              <div class="bg-white/5 rounded-2xl p-6 border border-white/5">
+                <div class="text-[10px] text-muted mb-2 uppercase tracking-tighter">Live Calendar Sync</div>
+                <div id="simCalendar" class="space-y-3">
+                  <div class="h-2 bg-white/5 rounded-full w-full overflow-hidden">
+                    <div id="prog1" class="h-full bg-[#0D9488] w-0 transition-all duration-1000"></div>
+                  </div>
+                  <div class="h-2 bg-white/5 rounded-full w-3/4 overflow-hidden">
+                    <div id="prog2" class="h-full bg-[#C9A84C] w-0 transition-all duration-1000"></div>
+                  </div>
                 </div>
               </div>
             </div>
-            <button onclick="startEnglishSim()" class="mt-10 w-full btn-primary justify-center shadow-xl shadow-[#0D9488]/20">Restart Simulation</button>
+            <div class="mt-auto bg-[#C9A84C]/5 border border-[#C9A84C]/10 p-6 rounded-2xl">
+              <p class="text-[11px] text-[#C9A84C]/80 leading-relaxed font-medium">
+                <span class="font-bold">Real-time Logic:</span> This dashboard reflects the AI's internal state machine. Every response is generated by Qudozen v3.4 core.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -1157,5 +1163,116 @@
   }
   window.addEventListener('load', startEnglishSim);
 </script>
+
+<script id="botEngine">
+  (function(){
+    const chatDisplay = document.getElementById('chatDisplay');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const simStatus = document.getElementById('simStatus');
+    const prog1 = document.getElementById('prog1');
+    const prog2 = document.getElementById('prog2');
+    const simTimer = document.getElementById('simTimer');
+    
+    let step = 0;
+    let seconds = 0;
+    const userData = { name: '', treatment: '', doctor: '', date: '', time: '' };
+
+    setInterval(() => {
+      seconds++;
+      if(simTimer) simTimer.textContent = 'SEC: ' + seconds + 's';
+    }, 1000);
+
+    function addMessage(type, text) {
+      const div = document.createElement('div');
+      div.style.padding = '12px 16px';
+      div.style.borderRadius = '16px';
+      div.style.fontSize = '14px';
+      div.style.lineHeight = '1.5';
+      div.style.maxWidth = '85%';
+      div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+      
+      if (type === 'bot') {
+        div.style.alignSelf = 'flex-start';
+        div.style.background = '#1E293B';
+        div.style.color = 'white';
+        div.style.borderTopLeftRadius = '0';
+      } else {
+        div.style.alignSelf = 'flex-end';
+        div.style.background = '#0D9488';
+        div.style.color = 'white';
+        div.style.borderTopRightRadius = '0';
+      }
+      div.textContent = text;
+      chatDisplay.appendChild(div);
+      chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    function botReply(text, status, p1, p2) {
+      setTimeout(() => {
+        addMessage('bot', text);
+        if(status) simStatus.textContent = status;
+        if(p1 !== undefined) prog1.style.width = p1 + '%';
+        if(p2 !== undefined) prog2.style.width = p2 + '%';
+      }, 600);
+    }
+
+    function processInput() {
+      const input = chatInput.value.trim();
+      if(!input) return;
+      addMessage('user', input);
+      chatInput.value = '';
+
+      switch(step) {
+        case 0:
+          botReply('Nice to meet you! To book your appointment, what is your full name?', 'Processing Identity...', 20, 10);
+          step = 1;
+          break;
+        case 1:
+          userData.name = input;
+          botReply('Thanks ' + input + '. What treatment are you looking for? (e.g. Check-up, Scaling, Dental Implant)', 'Categorizing Intent...', 40, 20);
+          step = 2;
+          break;
+        case 2:
+          userData.treatment = input;
+          botReply('Understood. Which doctor would you like to see?', 'Querying Availability...', 50, 40);
+          step = 3;
+          break;
+        case 3:
+          userData.doctor = input;
+          botReply('Got it. What day works best for you?', 'Syncing Google Calendar...', 70, 60);
+          step = 4;
+          break;
+        case 4:
+          userData.date = input;
+          botReply('We have 10:00 AM or 2:30 PM available. Which do you prefer?', 'Locking Time Slot...', 90, 80);
+          step = 5;
+          break;
+        case 5:
+          userData.time = input;
+          botReply('Perfect! I am booking ' + userData.treatment + ' with ' + userData.doctor + ' for ' + userData.date + ' at ' + userData.time + '. Confirm?', 'Finalizing Transaction...', 95, 90);
+          step = 6;
+          break;
+        case 6:
+          botReply('Congratulations! Your appointment is confirmed. ID: QZ-' + Math.floor(Math.random()*900 + 100) + '. We just sent your clinic a notification.', 'Flow Complete - Success', 100, 100);
+          step = 7;
+          break;
+      }
+    }
+
+    sendBtn.onclick = processInput;
+    chatInput.onkeypress = (e) => { if(e.key === 'Enter') processInput(); };
+
+    // Initial greeting
+    setTimeout(() => {
+      botReply('Hi! I am Jake, your AI receptionist. Ready to see how I can manage your business? Type "Hi" to start!', 'Listening...', 0, 0);
+    }, 1000);
+  })();
+</script>
+<style>
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+</style>
 </body>
 </html>
