@@ -503,120 +503,61 @@
 
     #simulator .section-subtitle { margin: 0 auto; }
 
-    /* Full-width immersive simulator frame */
-    .simulator-frame-wrap {
-      position: relative;
-      border-radius: var(--radius-xl);
-      border: 1px solid rgba(13,148,136,0.3);
-      background: rgba(13,148,136,0.04);
-      overflow: hidden;
-      margin-bottom: 2rem;
+    /* Two-column teaser grid */
+    .simulator-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 3rem;
     }
 
-    /* Browser chrome bar */
-    .simulator-chrome {
-      background: rgba(15,23,42,0.95);
-      border-bottom: 1px solid rgba(148,163,184,0.08);
-      padding: 0.75rem 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .chrome-dots {
-      display: flex;
-      gap: 6px;
-    }
-
-    .chrome-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-    }
-
-    .chrome-dot.red    { background: #ff5f57; }
-    .chrome-dot.yellow { background: #febc2e; }
-    .chrome-dot.green  { background: #28c840; }
-
-    .chrome-url {
-      flex: 1;
-      background: rgba(11,17,32,0.7);
-      border: 1px solid rgba(148,163,184,0.1);
-      border-radius: 6px;
-      padding: 0.3rem 1rem;
-      font-size: 0.8rem;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .chrome-url-lock { color: var(--teal); font-size: 0.75rem; }
-
-    /* Iframe container */
-    .simulator-iframe-container {
-      position: relative;
-      width: 100%;
-      height: 650px;
-    }
-
-    .simulator-iframe-container iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
+    .sim-card {
       display: block;
-    }
-
-    /* Overlay shown before user clicks "Launch" */
-    .simulator-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(11,17,32,0.92) 0%, rgba(13,148,136,0.08) 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 1.5rem;
+      text-decoration: none;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid rgba(148,163,184,0.1);
+      background: var(--surface);
       cursor: pointer;
-      transition: opacity 0.4s ease;
-      z-index: 10;
+      transition: transform var(--transition), box-shadow var(--transition);
     }
 
-    .simulator-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
+    .sim-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
     }
 
-    .sim-launch-icon {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: var(--teal);
+    .sim-card-screen {
+      aspect-ratio: 4/3;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2rem;
-      box-shadow: 0 0 40px rgba(13,148,136,0.4);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      font-size: 4rem;
     }
 
-    .simulator-overlay:hover .sim-launch-icon {
-      transform: scale(1.08);
-      box-shadow: 0 0 60px rgba(13,148,136,0.6);
+    .sim-card-screen.chat-bg {
+      background: linear-gradient(135deg, rgba(13,148,136,0.25) 0%, var(--midnight) 100%);
     }
 
-    .sim-launch-title {
-      font-size: 1.6rem;
-      font-weight: 700;
+    .sim-card-screen.dash-bg {
+      background: linear-gradient(135deg, rgba(212,165,116,0.2) 0%, var(--midnight) 100%);
+    }
+
+    .sim-card-body {
+      padding: 1.25rem 1.5rem;
+    }
+
+    .sim-card-body h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
       color: var(--text);
-      text-align: center;
     }
 
-    .sim-launch-sub {
-      font-size: 0.95rem;
+    .sim-card-body p {
+      font-size: 0.85rem;
       color: var(--muted);
-      text-align: center;
-      max-width: 380px;
+      line-height: 1.5;
     }
 
     .simulator-ctas {
@@ -935,7 +876,7 @@
       .footer-grid { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
       .footer-brand { grid-column: 1 / -1; }
 
-      .simulator-iframe-container { height: 500px; }
+      .simulator-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 640px) {
@@ -952,8 +893,7 @@
       .footer-bottom { flex-direction: column; text-align: center; }
       .hero-ctas { flex-direction: column; align-items: center; }
 
-      .simulator-iframe-container { height: 420px; }
-      .sim-launch-title { font-size: 1.2rem; }
+      .sim-card-screen { font-size: 3rem; }
     }
   </style>
 </head>
@@ -1203,50 +1143,40 @@
     </div>
   </section>
 
-  <!-- ─── SIMULATOR (EMBEDDED — FULL EXPERIENCE ON PAGE) ───────────────── -->
+  <!-- ─── STEP 7: SIMULATOR TEASER ────────────────────────────────────── -->
   <section id="simulator">
     <div class="container">
 
-      <div class="section-header">
+      <div class="section-header" style="text-align:center; margin-bottom:3rem;">
         <span class="section-label">Experience the System</span>
         <h2 class="section-title">See It Work in Real Time</h2>
-        <p class="section-subtitle">Not a video. Not a screenshot. The live system &#8212; running exactly as it does for our clients. Interact with it right here.</p>
+        <p class="section-subtitle" style="margin:0 auto;">This is not a mockup. These are live screenshots of the actual system running on WhatsApp right now.</p>
       </div>
 
-      <div class="simulator-frame-wrap">
-        <!-- Browser chrome for realism -->
-        <div class="simulator-chrome">
-          <div class="chrome-dots">
-            <span class="chrome-dot red"    aria-hidden="true"></span>
-            <span class="chrome-dot yellow" aria-hidden="true"></span>
-            <span class="chrome-dot green"  aria-hidden="true"></span>
-          </div>
-          <div class="chrome-url">
-            <span class="chrome-url-lock" aria-hidden="true">&#x1F512;</span>
-            qudozen.com/growth/ghost-room
-          </div>
-        </div>
+      <div class="simulator-grid">
 
-        <!-- Iframe container with launch overlay -->
-        <div class="simulator-iframe-container">
-          <div class="simulator-overlay" id="simOverlay" role="button" tabindex="0" aria-label="Launch live simulator">
-            <div class="sim-launch-icon" aria-hidden="true">&#x25B6;</div>
-            <p class="sim-launch-title">Run the Live Simulator</p>
-            <p class="sim-launch-sub">Click to interact with the AI Receptionist exactly as a patient would. Book, ask questions, reschedule.</p>
+        <!-- LEFT: Patient / WhatsApp view -->
+        <a href="/growth/ghost-room.html" class="sim-card" aria-label="Open the live patient simulator">
+          <div class="sim-card-screen chat-bg" aria-hidden="true">&#x1F4AC;</div>
+          <div class="sim-card-body">
+            <h3>Patient View</h3>
+            <p>WhatsApp conversation from first message to confirmed booking.</p>
           </div>
-          <iframe
-            id="simFrame"
-            src="about:blank"
-            data-src="/growth/ghost-room.html"
-            title="Qudozen AI Receptionist Live Simulator"
-            allow="microphone"
-            loading="lazy"
-          ></iframe>
-        </div>
+        </a>
+
+        <!-- RIGHT: Admin dashboard view -->
+        <a href="/growth/ghost-room.html" class="sim-card" aria-label="See the admin dashboard preview">
+          <div class="sim-card-screen dash-bg" aria-hidden="true">&#x1F4CA;</div>
+          <div class="sim-card-body">
+            <h3>Admin Dashboard</h3>
+            <p>See bookings, conversations, and system health.</p>
+          </div>
+        </a>
+
       </div>
 
       <div class="simulator-ctas">
-        <a href="/growth/ghost-room.html" class="btn-primary" target="_blank" rel="noopener noreferrer">&#x2197; Open in Full Screen</a>
+        <a href="/growth/ghost-room.html" class="btn-primary">&#x25B6; Run Full Simulator</a>
         <a href="https://wa.me/966570733834" class="btn-secondary" target="_blank" rel="noopener noreferrer">Talk to Jake Directly &#x2192;</a>
       </div>
 
@@ -1458,37 +1388,6 @@
     navOverlay.addEventListener('click', function(e) {
       if (e.target === navOverlay) closeMenu();
     });
-
-    // ── Simulator Lazy Launch ───────────────────────────────────────────────
-    var simOverlay = document.getElementById('simOverlay');
-    var simFrame   = document.getElementById('simFrame');
-    var launched   = false;
-
-    function launchSim() {
-      if (launched) return;
-      launched = true;
-      simFrame.src = simFrame.getAttribute('data-src');
-      simOverlay.classList.add('hidden');
-    }
-
-    simOverlay.addEventListener('click', launchSim);
-    simOverlay.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); launchSim(); }
-    });
-
-    // Auto-launch when simulator section scrolls into view
-    if ('IntersectionObserver' in window) {
-      var simObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-          if (entry.isIntersecting && !launched) {
-            // Pre-load but keep overlay visible until user clicks
-            simFrame.src = simFrame.getAttribute('data-src');
-            launched = true;
-          }
-        });
-      }, { threshold: 0.3 });
-      simObserver.observe(document.getElementById('simulator'));
-    }
 
     // ── GSAP Scroll Animations ──────────────────────────────────────────────
     window.addEventListener('load', function() {
