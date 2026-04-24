@@ -1262,12 +1262,10 @@
           <span class="section-label">A Note from the Founder</span>
           <h2 class="section-title">Why I Built This</h2>
           <div class="jake-body">
-            <p>I watched a clinic lose a patient at 11pm because nobody was awake to answer a WhatsApp message. The patient wanted to book. The clinic wanted the booking. The system just wasn&#8217;t there to connect them.</p>
-            <p>That bothered me more than it should have. Because it wasn&#8217;t a hard problem. It was a solvable problem &#8212; one that was costing businesses real money, every single day, while the owners slept.</p>
-            <p>So I started building. Not software products. Not SaaS. <em>Systems.</em> Operational infrastructure that fills the gap between when a business closes and when a client needs help. Between when a lead arrives and when a human can respond. Between what a business wants to know and what its data is actually showing.</p>
-            <p>Qudozen is the result of that obsession. Every tool we build is designed to answer one question: what work can a well-designed system do better than a tired human doing it manually at midnight?</p>
-            <p>The answer, it turns out, is: most of it.</p>
-            <p>I&#8217;m not here to replace your team. I&#8217;m here to give them back their time &#8212; and give you back your business.</p>
+            <p>I&#8217;ve watched brilliant business owners build operations worth millions, then lose twenty to thirty clients every month for a stupid reason. Not because their service was bad. Because a human receptionist can&#8217;t reply instantly at midnight when a prospect messages the first five businesses on Google.</p>
+            <p>The one who replies first gets the client. That&#8217;s the brutal truth of the market.</p>
+            <p>The autonomous system I built isn&#8217;t about &#8220;auto-replies.&#8221; It&#8217;s about protecting your business from the hidden daily bleed. The infrastructure handles the reply, the booking, the follow-up &#8212; so you wake up to a full schedule that filled itself.</p>
+            <p>If you&#8217;re ready to stop the bleed, hit the button below and message me directly.</p>
           </div>
           <div class="jake-signature">
             <em>&#8212; Jake</em>
@@ -1310,7 +1308,7 @@
           </a>
           <div class="footer-contact-item">
             <span class="icon">&#x2709;</span>
-            <span>jake@qudozen.com</span>
+            <span>hello@qudozen.com</span>
           </div>
           <div class="footer-contact-item">
             <span class="icon">&#x1F4DE;</span>
@@ -1378,33 +1376,47 @@
     });
 
     // ── GSAP Scroll Animations ──────────────────────────────────────────────
-    window.addEventListener('load', function() {
+    document.addEventListener('DOMContentLoaded', function() {
       if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
 
       gsap.registerPlugin(ScrollTrigger);
 
-      gsap.utils.toArray('.service-card').forEach(function(card, i) {
-        gsap.from(card, {
-          scrollTrigger: { trigger: card, start: 'top 80%', once: true },
-          y: 60, opacity: 0, duration: 0.8, ease: 'power3.out', delay: i * 0.04
+      // Section headers (excluding hero)
+      gsap.utils.toArray('.section-header').forEach(function(header) {
+        gsap.from(header, {
+          scrollTrigger: { trigger: header, start: 'top 80%', once: true },
+          y: 30, opacity: 0, duration: 0.6, ease: 'power2.out'
         });
       });
 
-      gsap.utils.toArray('.pricing-card').forEach(function(card, i) {
+      // Service cards: y 60→0, stagger 0.1s
+      gsap.utils.toArray('.service-card').forEach(function(card, i) {
+        gsap.from(card, {
+          scrollTrigger: { trigger: card, start: 'top 80%', once: true },
+          y: 60, opacity: 0, duration: 0.8, ease: 'power3.out', delay: i * 0.1
+        });
+      });
+
+      // Simulator teaser cards: y 40, stagger 0.12s
+      gsap.utils.toArray('.sim-card').forEach(function(card, i) {
         gsap.from(card, {
           scrollTrigger: { trigger: card, start: 'top 80%', once: true },
           y: 40, opacity: 0, duration: 0.7, ease: 'power3.out', delay: i * 0.12
         });
       });
 
-      gsap.from('.simulator-frame-wrap', {
-        scrollTrigger: { trigger: '.simulator-frame-wrap', start: 'top 80%', once: true },
-        y: 40, opacity: 0, duration: 0.9, ease: 'power3.out'
+      // Pricing cards: y 40, stagger 0.15s
+      gsap.utils.toArray('.pricing-card').forEach(function(card, i) {
+        gsap.from(card, {
+          scrollTrigger: { trigger: card, start: 'top 80%', once: true },
+          y: 40, opacity: 0, duration: 0.7, ease: 'power3.out', delay: i * 0.15
+        });
       });
 
+      // Jake's letter: opacity only, no movement, 1s
       gsap.from('.jake-wrapper', {
         scrollTrigger: { trigger: '.jake-wrapper', start: 'top 80%', once: true },
-        opacity: 0, duration: 1.2, ease: 'power2.out'
+        opacity: 0, duration: 1, ease: 'power2.out'
       });
     });
   </script>
