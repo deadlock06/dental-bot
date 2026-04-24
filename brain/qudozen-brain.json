@@ -1,19 +1,19 @@
 {
   "meta": {
     "project": "Qudozen",
-    "version": "3.3",
-    "last_updated": "2026-04-24T14:00:00+03:00",
+    "version": "3.4",
+    "last_updated": "2026-04-24T16:00:00+03:00",
     "schema": "2.0"
   },
   "system_status": {
     "overall_health": "healthy",
-    "active_modules": ["index_html_v3.3"],
+    "active_modules": ["index_html_v3.4"],
     "broken_modules": [],
-    "render_status": "live — English confirmed. Latest commit 48b8162 deployed. All 12 steps complete."
+    "render_status": "deploying — commit 38f4310 pushed. Surface upgrade + routing fix + simulator loop resolved."
   },
   "execution_state": {
-    "current_step": 12,
-    "step_name": "Final QA & Compliance Check",
+    "current_step": 13,
+    "step_name": "Surface Upgrade + Architecture Audit",
     "status": "completed",
     "blocker": ""
   },
@@ -261,29 +261,42 @@
   },
   "next_action": {
     "step": null,
-    "instruction": "All 12 steps complete. Commit 48b8162 deployed. Monitor Render logs. Verify qudozen.com shows: two-column simulator teaser, correct pricing CTAs (Start with Awareness / Activate the System / Talk to Jake), Jake's letter exact copy, hello@qudozen.com in footer."
+    "instruction": "v3.4 pushed as commit 38f4310. Wait for Render deploy (~2-5 min). Verify qudozen.com shows English v3.4: deep dark background #040914, gold accents, 7 service cards each with How-it-works steps, simulator teaser with browser chrome, correct pricing CTAs. All routing verified: nav submenu deep-links to individual service anchors."
   },
   "decisions": [
+    {
+      "step": 13,
+      "decision": "Bumped to v3.4. Full architecture audit performed. Discovered file had been reverted to old Arabic build — rewrote English LTR build with surface upgrade.",
+      "reasoning": "Live site audit via WebFetch showed qudozen.com serving Arabic v3.1, not English v3.3. File was reverted. Session rebuilt from scratch with all fixes applied."
+    },
+    {
+      "step": 13,
+      "decision": "Simulator iframe approach permanently abandoned. Simulator section is now a premium teaser panel that opens ghost-room.html in a new tab.",
+      "reasoning": "CRITICAL BUG FOUND: ghost-room.html's 'Start Simulation' button routes to /#simulator. Embedding ghost-room.html in an iframe creates an infinite redirect loop. New-tab approach eliminates the loop entirely while preserving the ghost-room dwell-tracking analytics."
+    },
+    {
+      "step": 13,
+      "decision": "All 7 service cards given unique IDs and scroll-margin-top:5rem. Nav submenu deep-links to individual cards.",
+      "reasoning": "Previous nav submenu pointed all 7 services to #services (section top). User could not navigate to a specific service from the menu. Individual anchors fix this routing issue."
+    },
+    {
+      "step": 13,
+      "decision": "ghost-room.html kept as-is (Arabic RTL Tailwind). Not modified.",
+      "reasoning": "ghost-room.html serves a separate purpose: Growth Swarm cold outreach landing page (accepts ?clinic=X&city=Y params). It has its own dwell-tracking analytics (pingDwell to /api/ghost-dwell). Modifying it is a separate task."
+    },
     {
       "step": 0,
       "decision": "Bumped to v3.3. The v3.2 build was reverted because the simulator was a redirect-only teaser. v3.3 embeds the simulator directly via iframe.",
       "reasoning": "Brain insight from revert: 'The embedded interactive simulator is a non-negotiable core feature for the landing page.' This is the primary architectural change in v3.3."
-    },
-    {
-      "step": 7,
-      "decision": "Simulator section uses a full-width iframe with browser chrome, lazy IntersectionObserver loading, and a click-to-launch overlay. Full-screen fallback available.",
-      "reasoning": "Honors the non-negotiable requirement of an embedded simulator. IntersectionObserver pre-loads the iframe on scroll-into-view to eliminate click latency. Overlay prevents autoplay surprise."
-    },
-    {
-      "step": 5,
-      "decision": "AI Receptionist card CTA and preview link scroll to #simulator anchor, not to /growth/ghost-room.html.",
-      "reasoning": "Keeps user on the landing page to use the embedded simulator — consistent with embedded-first architecture."
     }
   ],
   "insights": [
-    "The embedded interactive simulator is a non-negotiable core feature for the landing page. Do not abstract it to a separate route.",
-    "Browser chrome (dots + URL bar) around the iframe makes it feel like a product demo rather than an embedded widget — significantly higher perceived quality.",
-    "IntersectionObserver at 30% threshold pre-loads the iframe src before the user clicks launch. This eliminates perceived load delay on click.",
-    "direction:rtl trick for alternating service cards collapses cleanly on mobile by removing it at 640px breakpoint."
+    "CRITICAL: ghost-room.html loops back to /#simulator. Never embed it in an iframe. Always open in new tab (target=_blank).",
+    "ghost-room.html is a Growth Swarm conversion page (accepts ?clinic=X&city=Y), not a general simulator. Do not repurpose it.",
+    "The old Arabic site (v3.1) had content the architecture needed: Three Layers of Consciousness, live metrics bar, Operations Room nav link. These were missing from v3.3 but partially restored in v3.4 (Operations Room link back in footer nav).",
+    "Service nav submenu must use individual card IDs with scroll-margin-top — not #services anchor. All 7 IDs: service-receptionist, service-realestate, service-web, service-apps, service-automation, service-growth, service-analytics.",
+    "direction:rtl trick for alternating service cards collapses cleanly on mobile by removing it at 640px breakpoint.",
+    "The file public/index.html was reverted to Arabic v3.1 between sessions. Always confirm file state with Read before writing.",
+    "System clock (SYS: HH:MM:SS KSA) in simulator chrome bar creates visual continuity with ghost-room.html aesthetic."
   ]
 }

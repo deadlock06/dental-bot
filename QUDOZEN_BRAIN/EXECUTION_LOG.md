@@ -5,6 +5,99 @@
 
 ---
 
+## Session: 2026-04-24 (Part 4) — Full Architecture Audit + v3.4 Surface Upgrade
+
+**Agent:** Claude Sonnet 4.6
+**Commit:** `38f4310`
+**Duration:** ~45 min
+
+### What Was Done
+
+#### 1. Full Architecture Audit
+- Fetched live qudozen.com via WebFetch — confirmed site was still serving **old Arabic v3.1 build** (not English v3.3)
+- Root cause: `public/index.html` had been reverted to Arabic RTL Tailwind between sessions
+- Read `QUDOZEN_BRAIN/MASTER_CONTEXT.md` — full 4-layer system map reviewed
+- Read `index.js` (full, 543 lines) — all routes, cron schedule, webhook logic verified
+- Read `growth/ghost-room.html` — discovered critical simulator loop bug (see below)
+- Read `QUDOZEN_BRAIN/CURRENT_PLAN.md` — confirmed hybrid v3.3 was last known working state
+
+#### 2. Critical Bug Found: Simulator Infinite Loop
+- **Bug:** `public/index.html` embedded `ghost-room.html` via iframe
+- **ghost-room.html** `Start Simulation` button routes to `href="/#simulator"` — back to the homepage
+- This creates a redirect loop: `index.html → iframe → ghost-room.html → /#simulator → index.html`
+- **Fix:** Removed all iframe/overlay code. Simulator section is now a premium teaser panel with all CTAs opening ghost-room.html via `target="_blank"` (new tab)
+
+#### 3. Service Card Routing Fixed
+- All 7 service cards previously had NO individual IDs — nav submenu pointed to `#services` (section top only)
+- Added `id` to each card: `service-receptionist`, `service-realestate`, `service-web`, `service-apps`, `service-automation`, `service-growth`, `service-analytics`
+- Added `scroll-margin-top: 5rem` for menu clearance
+- Updated all 7 nav submenu `<a href>` to deep-link to individual card IDs
+
+#### 4. v3.4 Surface Upgrade Applied
+- **Design tokens:** Midnight darkened to `#040914` (matches ghost-room.html background)
+- **Gold accent system:** `--gold: #C9A84C` applied to section labels (with decorative line prefix), icon panel corner brackets, service impact borders, pricing tier names, footer headings, nav hover
+- **Dot-grid backgrounds:** Subtle radial dot patterns on hero, services, simulator, pricing sections
+- **Service cards:** Teal glass border (`rgba(13,148,136,0.2)`) instead of generic muted border — matches ghost-room.html glass aesthetic
+- **"How it works" sections:** Every service card augmented with a 3-step numbered flow showing the actual bot/growth/calendar execution path
+- **Simulator teaser:** Browser chrome (red/yellow/green dots + URL bar + live KSA system clock), 4 capability cards, social proof pill, primary + secondary CTAs
+- **Icon panels:** Geometric gold corner brackets (::before top-left, ::after bottom-right) on all service visual panels
+- **Operations Room link:** Restored in footer nav (links to `/growth/ghost-room.html` in new tab)
+- **Gradient CTAs:** `btn-primary` uses `linear-gradient(135deg, var(--teal) 0%, #0a7a70 100%)` for depth
+- **GSAP:** All animations updated — `.sim-teaser` replaces removed `.sim-card`/`.sim-browser` selectors
+
+#### 5. File State Issue Documented
+- Discovered that `public/index.html` can be silently reverted to Arabic v3.1 between sessions
+- Added brain insight: "Always confirm file state with Read before writing to public/index.html"
+
+### Files Modified
+- `public/index.html` — full rewrite (973 insertions, 1430 deletions vs Arabic v3.1)
+- `brain/qudozen-brain.json` — bumped to v3.4, updated render_status, added new decisions/insights
+- `QUDOZEN_BRAIN/EXECUTION_LOG.md` — this entry
+- `QUDOZEN_BRAIN/STATUS.md` — deployment status updated
+- `QUDOZEN_BRAIN/CURRENT_PLAN.md` — updated sprint goal
+
+### Bugs Fixed
+| Bug | Root Cause | Fix |
+|---|---|---|
+| Live site showing Arabic | `public/index.html` reverted to Arabic v3.1 | Rewrote English v3.4 |
+| Simulator infinite loop | ghost-room.html routes back to /#simulator | Removed iframe, use target="_blank" |
+| Nav submenu dead links | All 7 items pointed to #services | Individual IDs + deep-links |
+| Simulator iframe CSS dead | `.simulator-frame-wrap` removed but referenced in GSAP | Replaced with `.sim-teaser` |
+
+### Architecture Verified
+- Route `/` → `public/index.html` ✅
+- Route `/growth/ghost-room` → `ghost-room.html` ✅ (opens in new tab from landing page)
+- Route `/api/ghost-dwell` → dwell tracking fires at 30s and 60s on ghost-room.html ✅
+- Route `/dashboard/*` → React SPA (requires pre-built dist/) ✅
+- Route `/webhook` → `bot.js:handleMessage()` ✅
+- Cron jobs: 8 active schedulers verified in index.js ✅
+
+---
+
+## Session: 2026-04-24 (Part 3) — v3.3 English Build (12 Steps)
+
+**Agent:** Claude Sonnet 4.6
+**Commits:** `b000bfc`, `301f651`, `026f7ea`, `6aadf91`, `f542a59`, `48b8162`, `577896a`
+**Duration:** ~2 hours
+
+### What Was Done
+- Rebuilt `public/index.html` from Arabic RTL Tailwind to English LTR vanilla CSS following strict 12-step protocol
+- Step 0: Brain init / pre-build audit
+- Step 1: HTML skeleton + 3-dot navigation overlay
+- Step 2: Global CSS design tokens (Space Grotesk, all custom properties)
+- Step 3: Hero section (floating orb, gradient headline, pulsing badge)
+- Step 4: Services master header + card shell (alternating direction:rtl layout)
+- Step 5: Service 1 — AI Receptionist (12 exact features, simulator preview)
+- Step 6: Services 2-7 content fill (all exact tags/titles/descriptions/CTAs)
+- Step 7: Simulator section — teaser only per spec (two-column sim-card grid)
+- Step 8: Pricing section (3 tiers, exact features/CTAs/setup fees)
+- Step 9: Jake's Letter (exact 4-paragraph copy)
+- Step 10: Footer (hello@qudozen.com, 3-col grid, WhatsApp CTA)
+- Step 11: GSAP scroll animations (DOMContentLoaded guard, stagger per spec)
+- Step 12: Final QA & Compliance Check (entities, tap targets, aria, no banned words)
+
+---
+
 ## Session: 2026-04-24 (Part 2) — Premium Desktop & Global UI Unification
 
 **Agent:** Antigravity AI

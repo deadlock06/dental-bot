@@ -6,17 +6,24 @@
 ---
 
 ## 🎯 Current Sprint Goal
-**Monitor Growth Swarm 3.0 in Production + Refine AI Feedback Loop**
+**Landing Page v3.4 Live + Growth Swarm 3.0 Monitoring**
 
 ---
 
 ## ✅ Completed This Session (2026-04-24)
 
-- [x] Unified desktop and mobile navigation (Global Hamburger).
-- [x] Implemented premium mouse-tracking bento grid.
-- [x] Added GSAP scroll-triggered stagger animations.
-- [x] Protected brand translation strings.
-\n\n- [x] Abandoned v3.2 English layout to satisfy user requirements for Arabic localization.\n- [x] Merged v3.2 logical components (7 services, 3 pricing tiers) into v3.1 Tailwind glassmorphism layout.\n- [x] Restored embedded WhatsApp simulator (#simChat).\n- [x] Built Vercel/Linear-inspired Bento Grid with interactive Modals to fix service routing UX.\n- [x] Deployed successfully to Render.\n\n## ✅ Completed Previous Sessions
+- [x] Full architecture audit: live site, all route files, ghost-room.html, brain files
+- [x] Discovered critical simulator iframe loop bug — `ghost-room.html` bounces back to `/#simulator`
+- [x] Discovered `public/index.html` had been silently reverted to Arabic v3.1
+- [x] Built v3.4 English surface: gold accent system, dot-grid backgrounds, deeper midnight `#040914`
+- [x] Fixed service card routing: 7 unique IDs + nav submenu deep-links
+- [x] Fixed simulator: removed iframe, premium teaser with new-tab CTAs (loop resolved)
+- [x] Added "How it works" 3-step sections to all 7 service cards (maps to actual bot/growth/calendar execution)
+- [x] Restored Operations Room link in footer nav
+- [x] Updated all brain files: `brain/qudozen-brain.json`, `EXECUTION_LOG.md`, `STATUS.md`, `CURRENT_PLAN.md`
+- [x] Committed and pushed as `38f4310`
+
+## ✅ Completed Previous Sessions (2026-04-24)
 
 - [x] Completed **Growth Swarm 3.0 15-Step Epic**
 - [x] Deployed `state-machine.js` for intelligent conversation parsing (GPT-4o-mini intent matching)
@@ -31,7 +38,23 @@
 
 ---
 
-## 🔥 Priority 1: Post-Launch Monitoring (Do These Next)
+## 🔥 Priority 1: Verify v3.4 Deploy (Do This First)
+
+### Verify 0: Confirm Live Site
+- Open qudozen.com after Render deploys commit `38f4310`
+- Confirm: English LTR, gold accents, 7 service cards with "How it works" steps
+- Confirm: Nav submenu deep-links scroll to correct cards
+- Confirm: "Launch Full Simulator" opens ghost-room.html in a new tab (no loop)
+- Confirm: System clock ticks in simulator chrome bar
+
+### Verify 0b: ghost-room.html Alignment
+- ghost-room.html is Arabic RTL — consider an English version for non-Arabic traffic
+- The dwell tracking (`/api/ghost-dwell`) fires at 30s and 60s — verify admin WhatsApp receives alerts
+- Consider adding a Stripe CTA or WhatsApp CTA directly on ghost-room.html (currently only has /#simulator redirect)
+
+---
+
+## 🔥 Priority 2: Post-Launch Monitoring
 
 ### Monitor 1: Feedback Loop Efficacy
 **Goal:** Watch `gs_feedback` in Supabase to see if the AI is generating positive handoffs or hitting too many objections. We may need to refine the prompt in `conversation.js`.

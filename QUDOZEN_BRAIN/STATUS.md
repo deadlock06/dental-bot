@@ -1,6 +1,6 @@
 # 🖥️ STATUS — System Health Snapshot
 
-> Last checked: 2026-04-23 23:30 (AST / UTC+3)
+> Last checked: 2026-04-24 16:00 (KSA / UTC+3)
 > Update this after every deploy or system change.
 
 ---
@@ -12,12 +12,17 @@
 | Render Web Service | ✅ Live | `deadlock06/dental-bot` repo, main branch |
 | Node.js Server | ✅ Running | `node index.js`, port auto-injected by Render |
 | Supabase DB | ✅ Connected | All tables created via schema.sql |
-| Twilio WhatsApp | ✅ Active | Sandbox (for testing) / Production configured |
+| Twilio WhatsApp | ✅ Active | Configured |
 | OpenAI GPT-4o-mini | ✅ Connected | Intent detection + date extraction |
 | Growth Dashboard | ✅ Live | `/growth/dashboard` — JWT Auth |
-| React Dashboard | ⚠️ Unknown | `/dashboard` — may serve stale dist if not rebuilt |
-| Public Landing Page | ✅ Live | `/` serves `public/index.html` |
-| Ghost Room | ✅ Live | `/growth/ghost-room` |
+| React Dashboard | ⚠️ Unknown | `/dashboard` — requires pre-built `dashboard/dist/` |
+| Public Landing Page | 🔄 Deploying | v3.4 commit `38f4310` — English LTR, gold accent, routing fixed |
+| Ghost Room | ✅ Live | `/growth/ghost-room.html` — Arabic RTL teaser, dwell tracking active |
+
+### ⚠️ Landing Page File Warning
+`public/index.html` has been silently reverted to Arabic v3.1 at least twice between sessions.
+**Always `Read` the file before `Write` to confirm it is English v3.4.**
+Check for `<html lang="en">` on line 1. If it shows `<html lang="ar" dir="rtl">` the file has been reverted.
 
 ---
 
