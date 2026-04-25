@@ -8,3 +8,12 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+  - type: worker
+    name: qudozen-worker
+    env: node
+    buildCommand: npm install
+    startCommand: npm run worker
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
