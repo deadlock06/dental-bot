@@ -17,8 +17,7 @@ app.use('/api', apiRoutes);
 
 const growthRouter = require('./growth/index');
 const { handoffLead } = require('./growth/handoff');
-const { createClient } = require('@supabase/supabase-js');
-const growthSupabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const growthSupabase = require('./growth/lib/supabase');
 
 // Stripe Webhook must be handled BEFORE express.json() for raw body access
 app.post('/growth/stripe-webhook', express.raw({ type: 'application/json' }));
@@ -394,136 +393,9 @@ app.post('/cleanup-slots', async (req, res) => {
 // Cron — every 30 minutes for production reminders
 // (Post-booking 1-min reminder is handled by setTimeout in bot.js)
 // ─────────────────────────────────────────────
-try {
-  const cron = require('node-cron');
+// CRON TASKS MOVED TO worker.js FOR SCALABILITY
+// Schedulers are now managed by a dedicated background process.
 
-  // ── Production reminders — every 30 minutes ──
-  cron.schedule('*/30 * * * *', async () => {
-    console.log('[Cron] Running 30-min reminder check...');
-    try {
-      await axios.post(`http://localhost:${process.env.PORT || 3000}/send-reminders`);
-    } catch (e) {
-      console.error('[Cron] Reminder trigger error:', e.message);
-    }
-  });
-
-  // ── Past slot cleanup — every hour at :00 ──
-  cron.schedule('0 * * * *', async () => {
-    console.log('[Cron] Running hourly slot cleanup...');
-    try {
-      await axios.post(`http://localhost:${process.env.PORT || 3000}/cleanup-slots`);
-    } catch (e) {
-      console.error('[Cron] Cleanup trigger error:', e.message);
-    }
-  });
-
-  // ── System health check — every 10 minutes ──
-  cron.schedule('*/10 * * * *', async () => {
-    try {
-      const { runPeriodicCheck } = require('./monitor');
-      const { getClinic } = require('./db');
-      const botPhoneRaw = process.env.WHATSAPP_PHONE_ID || '';
-      const botPhone = botPhoneRaw.replace(/^whatsapp:/i, '').replace(/^\+/, '');
-      const clinic = await getClinic(botPhone);
-      const adminPhone = process.env.ADMIN_PHONE || clinic?.staff_phone || null;
-      await runPeriodicCheck(adminPhone);
-    } catch (e) {
-      console.error('[Cron] Health check error:', e.message);
-    }
-  });
-
-  // ── Growth follow-ups — daily 9 AM Saudi (6 AM UTC) ──
-  cron.schedule('0 6 * * *', async () => {
-    console.log('[Cron] Running daily growth follow-ups...');
-    try {
-      await axios.post(`http://localhost:${process.env.PORT || 3000}/growth/send-followups`);
-    } catch (e) {
-      console.error('[Cron] Follow-up trigger error:', e.message);
-    }
-  });
-
-  // ── Job portal scout — every 6 hours ──
-  cron.schedule('0 */6 * * *', async () => {
-    console.log('[Cron] Running job portal scout (6h)...');
-    try {
-      const { runAllScouts } = require('./growth/scouts/orchestrator');
-      const { createClient } = require('@supabase/supabase-js');
-      const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-      const report = await runAllScouts(sb, { scouts: ['indeed', 'job_portals'], autoSend: false });
-      console.log(`[Cron] Job scout done: ${report.inserted} new leads`);
-    } catch (e) {
-      console.error('[Cron] Job scout error:', e.message);
-    }
-  });
-
-  // ── Google Places scout — weekly Sunday 7 AM Saudi (4 AM UTC) ──
-  cron.schedule('0 4 * * 0', async () => {
-    console.log('[Cron] Running weekly Google Places scout...');
-    try {
-      const { runAllScouts } = require('./growth/scouts/orchestrator');
-      const { createClient } = require('@supabase/supabase-js');
-      const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-      const report = await runAllScouts(sb, { scouts: ['google_places'], autoSend: false });
-      console.log(`[Cron] Places scout done: ${report.inserted} new leads`);
-    } catch (e) {
-      console.error('[Cron] Places scout error:', e.message);
-    }
-  });
-
-  // ── Auto-batch — daily 10 AM Saudi (7 AM UTC), after scout ──
-  cron.schedule('0 7 * * *', async () => {
-    console.log('[Cron] Running daily auto-batch send...');
-    try {
-      const { processBatch } = require('./growth/sender');
-      const { createClient } = require('@supabase/supabase-js');
-      const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-      const results = await processBatch(10);
-      const sent = results.filter(r => r.sent || r.status === 'messaged').length;
-      console.log(`[Cron] Auto-batch done: ${sent} messages sent`);
-    } catch (e) {
-      console.error('[Cron] Auto-batch error:', e.message);
-    }
-  });
-
-  // ── Morning brief — daily 08:30 Saudi (05:30 UTC) ──
-  cron.schedule('30 5 * * *', async () => {
-    console.log('[Cron] Running morning brief...');
-    try {
-      const { DateTime } = require('luxon');
-      const todayISO = DateTime.now().setZone('Asia/Riyadh').toISODate();
-
-      const [{ count: apptCount }, { count: leadCount }] = await Promise.all([
-        growthSupabase.from('appointments').select('*', { count: 'exact', head: true })
-          .eq('preferred_date_iso', todayISO).neq('status', 'cancelled'),
-        growthSupabase.from('growth_leads_v2').select('*', { count: 'exact', head: true })
-          .eq('status', 'pending'),
-      ]);
-
-      const { data: newLeads } = await growthSupabase.from('growth_leads_v2')
-        .select('business_name, city, confidence_score')
-        .gte('created_at', new Date(Date.now() - 86400000).toISOString())
-        .order('confidence_score', { ascending: false })
-        .limit(5);
-
-      const topLeads = (newLeads || [])
-        .map(l => `• ${l.business_name || 'Unknown'} (${l.city || '?'}) — ${l.confidence_score}%`)
-        .join('\n') || 'لا يوجد';
-
-      const adminPhone = process.env.ADMIN_PHONE ? `+${process.env.ADMIN_PHONE}` : null;
-      if (!adminPhone) return;
-
-      const msg = `☀️ صباح الخير جيك — التقرير اليومي\n\n📅 مواعيد اليوم: ${apptCount || 0}\n🔥 عملاء محتملون بانتظار الإرسال: ${leadCount || 0}\n\n🏆 أفضل عملاء أمس:\n${topLeads}\n\n— النظام الذاتي`;
-      await sendMessage(adminPhone, msg);
-      console.log('[Cron] Morning brief sent to admin');
-    } catch (e) {
-      console.error('[Cron] Morning brief error:', e.message);
-    }
-  });
-
-  console.log('[Cron] ✅ All schedulers started: reminders (30m) + cleanup (1h) + health (10m) + follow-ups (daily 9AM) + job scout (6h) + places scout (weekly) + auto-batch (daily 10AM) + morning brief (08:30 SAR)');
-} catch (e) {
-  console.log('[Cron] node-cron not available, reminders must be triggered manually');
-}
 
 // ─────────────────────────────────────────────
 // Admin Dashboard

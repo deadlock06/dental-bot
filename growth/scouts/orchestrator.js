@@ -101,7 +101,7 @@ async function autoSendBatch(supabase) {
 async function runAllScouts(supabase, options = {}) {
   const runScouts = options.scouts || ['job_portals', 'indeed', 'google_places'];
   const autoSend  = options.autoSend || false;
-  const vertical  = options.vertical || 'dental';
+  const industry  = options.industry || 'dental';
 
   console.log(`\n[orchestrator.js] ====== SCOUT RUN STARTED ======`);
   console.log(`[orchestrator.js] Scouts: ${runScouts.join(', ')} | AutoSend: ${autoSend}`);
@@ -134,7 +134,7 @@ async function runAllScouts(supabase, options = {}) {
         source:          'indeed_scout',
         sources:         ['indeed_scout'],
         status:          'new',
-        vertical:        vertical,
+        industry:        industry,
         country:         'SA',
         confidence_score: 55,
         timing_score:    job.timingScore || 60,
@@ -160,7 +160,7 @@ async function runAllScouts(supabase, options = {}) {
 
   if (runScouts.includes('google_places')) {
     try {
-      const leads = await runGooglePlacesScout({ cities: options.cities, vertical: vertical });
+      const leads = await runGooglePlacesScout({ cities: options.cities, industry: industry });
       report.scouts.google_places = leads.length;
       allLeads.push(...leads);
     } catch (e) {

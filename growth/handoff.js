@@ -1,7 +1,6 @@
-const { createClient } = require('@supabase/supabase-js');
 const { sendWhatsApp } = require('./lib/whatsappProvider');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const supabase = require('./lib/supabase');
 
 const ESCALATION_TRIGGERS = [
   'opt_out', 'legal', 'ai_questioned', 'pricing', 'buying_signal', 'stalled', 'low_confidence'
@@ -62,7 +61,18 @@ async function handoffLead(lead, triggerMessage, reason = 'buying_signal') {
     }
 
     await sendWhatsApp(lead.phone, transitionMsg);
-    await supabase.from('gs_leads').update({ status: reason === 'opt_out' ? 'opted_out' : 'handed_off', conversation_state: 'ESCALATED' }).eq('id', lead.id);
+    
+    const newState = reason === 'opt_out' ? 'opted_out' : 'handed_off';
+    await supabase.from('gs_leads').update({ status: newState, conversation_state: 'ESCALATED' }).eq('id', lead.id);
+
+    // Explicitly log the lifecycle event
+    await supabase.from('gs_events').insert({
+      lead_id: lead.id,
+      event_type: 'HANDOFF',
+      old_state: lead.status,
+      new_state: newState,
+      metadata: { reason, triggered_by: triggerMessage }
+    });
 
     console.log(`[handoff] ✅ Handoff complete for ${lead.phone}`);
     return { success: true };

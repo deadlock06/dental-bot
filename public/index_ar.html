@@ -1,13 +1,12 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-i18n="txt_1">Qudozen - The Self-Operating System for Businesses</title>
+  <title>Qudozen - نظام التشغيل الذاتي للأعمال</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-  <script src="/js/i18n.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
     body { font-family: 'Tajawal', sans-serif; background-color: #080C14; color: white; overflow-x: hidden; }
@@ -313,7 +312,6 @@
 </head>
 <body class="antialiased selection:bg-[#0D9488] selection:text-white relative">
 
-
   <!-- Liquid Background -->
   <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
     <div class="absolute top-[10%] -left-[10%] w-[50vw] h-[50vw] bg-[#0D9488]/10 rounded-full blur-[80px] blob1"></div>
@@ -325,58 +323,49 @@
   <nav class="fixed w-full z-50 glass px-6 py-4 transition-all duration-300" id="navbar">
     <div class="max-w-6xl mx-auto w-full flex justify-between items-center">
     <div class="text-xl font-bold tracking-wider flex items-center gap-2">
-      <span class="text-2xl text-gold">⚡</span><span data-i18n="txt_2">QUDOZEN</span></div>
+      <span class="text-2xl text-gold">⚡</span> QUDOZEN
+    </div>
     
     <div class="hidden md:flex gap-6 text-sm font-medium text-gray-300">
       <div class="group relative">
-        <a href="#services" class="hover:text-aqua transition flex items-center gap-1 py-2"><span data-i18n="txt_3">Our Services</span><span class="text-[10px]">▼</span></a>
+        <a href="#services" class="hover:text-aqua transition flex items-center gap-1 py-2">خدماتنا <span class="text-[10px]">▼</span></a>
         <div class="absolute top-full right-0 w-64 pt-2 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-300 z-[100]">
           <div class="glass p-4 rounded-2xl border border-white/10 flex flex-col gap-3 shadow-2xl bg-[#0B1120]/98 backdrop-blur-xl">
             <a href="javascript:void(0)" onclick="scrollToService('reception')" class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
-              <span data-i18n="txt_4">🤖 Receptionist</span>
-              <span class="text-[10px] opacity-40" data-i18n="txt_5">AOS</span>
+              <span>🤖 موظف الاستقبال</span>
+              <span class="text-[10px] opacity-40">AOS</span>
             </a>
-            <a href="javascript:void(0)" onclick="scrollToService('growth')" class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
-              <span data-i18n="txt_6">🎯 Growth Engine</span>
-              <span class="text-[10px] opacity-40" data-i18n="txt_7">SWARM</span>
+            <a href="javascript:void(0)" onclick="scrollToService('growth')"    class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
+              <span>🎯 محرك النمو</span>
+              <span class="text-[10px] opacity-40">SWARM</span>
             </a>
             <a href="javascript:void(0)" onclick="scrollToService('realestate')" class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
-              <span data-i18n="txt_8">🏢 Real Estate Assistant</span>
-              <span class="text-[10px] opacity-40" data-i18n="txt_9">RES</span>
+              <span>🏢 المساعد العقاري</span>
+              <span class="text-[10px] opacity-40">RES</span>
             </a>
-            <a href="javascript:void(0)" onclick="scrollToService('web')" class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
-              <span data-i18n="txt_10">🌐 Web Systems</span>
-              <span class="text-[10px] opacity-40" data-i18n="txt_11">WEB</span>
+            <a href="javascript:void(0)" onclick="scrollToService('web')"        class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
+              <span>🌐 أنظمة الويب</span>
+              <span class="text-[10px] opacity-40">WEB</span>
             </a>
-            <a href="javascript:void(0)" onclick="scrollToService('analytics')" class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
-              <span data-i18n="txt_12">📊 Dashboard</span>
-              <span class="text-[10px] opacity-40" data-i18n="txt_13">DATA</span>
+            <a href="javascript:void(0)" onclick="scrollToService('analytics')"  class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
+              <span>📊 لوحة البيانات</span>
+              <span class="text-[10px] opacity-40">DATA</span>
             </a>
             <div class="h-px bg-white/5 my-1"></div>
             <a href="javascript:void(0)" onclick="scrollToService('enterprise')" class="text-xs text-gold hover:text-white transition text-right px-2 py-1.5 rounded-lg bg-gold/5 border border-gold/10 flex items-center justify-between flex-row-reverse">
-              <span data-i18n="txt_14">💎 Enterprise System</span>
-              <span class="text-[8px] font-bold" data-i18n="txt_15">PRO</span>
+              <span>💎 النظام المؤسسي</span>
+              <span class="text-[8px] font-bold">PRO</span>
             </a>
           </div>
         </div>
       </div>
-      <a href="#simulator" class="hover:text-aqua transition" data-i18n="txt_16">Try the Simulator</a>
-      <a href="#pricing" class="hover:text-aqua transition" data-i18n="txt_17">Investment</a>
-      <a href="#jake" class="hover:text-aqua transition" data-i18n="txt_18">Jake's Message</a>
-      
-      <!-- Language Switcher -->
-      <div class="flex gap-2 items-center ml-6 border-l border-white/10 pl-6">
-        <button onclick="setLanguage('en')" class="lang-btn text-aqua font-bold text-xs" data-lang="en">EN</button>
-        <span class="text-white/20">|</span>
-        <button onclick="setLanguage('es')" class="lang-btn text-gray-400 hover:text-aqua transition text-xs" data-lang="es">ES</button>
-        <span class="text-white/20">|</span>
-        <button onclick="setLanguage('fr')" class="lang-btn text-gray-400 hover:text-aqua transition text-xs" data-lang="fr">FR</button>
-      </div>
-
+      <a href="#simulator" class="hover:text-aqua transition">جرب المحاكي</a>
+      <a href="#pricing"   class="hover:text-aqua transition">الاستثمار</a>
+      <a href="#jake"      class="hover:text-aqua transition">رسالة جيك</a>
     </div>
 
     <div class="flex items-center gap-3">
-      <a href="/growth/ghost-room" class="hidden sm:inline-block bg-gold text-gray-900 px-6 py-2.5 rounded-xl font-bold hover:bg-[#b78a5e] transition transform hover:-translate-y-0.5 shadow-lg shadow-gold/20" data-i18n="txt_19">Operations Room</a>
+      <a href="/growth/ghost-room" class="hidden sm:inline-block bg-gold text-gray-900 px-6 py-2.5 rounded-xl font-bold hover:bg-[#b78a5e] transition transform hover:-translate-y-0.5 shadow-lg shadow-gold/20">غرفة العمليات</a>
       <button id="mobileMenuBtn" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="md:hidden text-gray-300 hover:text-aqua text-2xl">☰</button>
     </div>
     </div>
@@ -384,17 +373,17 @@
   <!-- Mobile Menu -->
   
     <div id="mobileMenu" class="hidden fixed top-[68px] left-0 right-0 z-[60] bg-[#0B1120] border-b border-white/10 px-6 py-10 flex flex-col gap-6 text-center text-gray-300 text-xl font-bold shadow-2xl">
-      <a href="#services" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4" data-i18n="txt_20">Our Services</a>
+      <a href="#services" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4">خدماتنا</a>
       <div class="flex flex-wrap justify-center gap-3 px-4 mb-2">
-         <button onclick="scrollToService('reception')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10" data-i18n="txt_21">Reception</button>
-         <button onclick="scrollToService('growth')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10" data-i18n="txt_22">Growth</button>
-         <button onclick="scrollToService('realestate')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10" data-i18n="txt_23">Real Estate</button>
-         <button onclick="scrollToService('analytics')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10" data-i18n="txt_24">Data</button>
+         <button onclick="scrollToService('reception')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10">الاستقبال</button>
+         <button onclick="scrollToService('growth')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10">النمو</button>
+         <button onclick="scrollToService('realestate')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10">العقارات</button>
+         <button onclick="scrollToService('analytics')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10">البيانات</button>
       </div>
-      <a href="#simulator" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4" data-i18n="txt_25">Try the Simulator</a>
-      <a href="#pricing" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4" data-i18n="txt_26">Investment</a>
-      <a href="#jake" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4"><span data-i18n="txt_27">Message</span><span translate="no" data-i18n="txt_28">Jake</span></a>
-      <a href="/growth/ghost-room" class="bg-gold text-gray-900 px-6 py-4 rounded-2xl font-black shadow-lg shadow-gold/20" data-i18n="txt_29">Operations Room</a>
+      <a href="#simulator" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4">جرب المحاكي</a>
+      <a href="#pricing" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4">الاستثمار</a>
+      <a href="#jake" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4">رسالة <span translate="no">جيك</span></a>
+      <a href="/growth/ghost-room" class="bg-gold text-gray-900 px-6 py-4 rounded-2xl font-black shadow-lg shadow-gold/20">غرفة العمليات</a>
     </div>
 
 
@@ -408,26 +397,33 @@
         <span class="relative flex h-2 w-2">
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
           <span class="relative inline-flex rounded-full h-2 w-2 bg-[#5EEAD4]"></span>
-        </span><span data-i18n="txt_30">Self-Operating System v3.3</span></div>
-      <h1 class="text-6xl md:text-8xl font-black mb-8 leading-[1.05] tracking-tight text-glow"><span data-i18n="txt_31">Your business, running</span><br>
-        <span class="text-transparent bg-clip-text bg-gradient-to-l from-[#5EEAD4] via-[#0D9488] to-[#5EEAD4] bg-[length:200%_auto] animate-gradient-text" data-i18n="txt_32">With Artificial Intelligence</span>
+        </span>
+        نظام التشغيل الذاتي v3.3
+      </div>
+      <h1 class="text-6xl md:text-8xl font-black mb-8 leading-[1.05] tracking-tight text-glow">
+        أعمالك، تعمل <br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-l from-[#5EEAD4] via-[#0D9488] to-[#5EEAD4] bg-[length:200%_auto] animate-gradient-text">بالذكاء الاصطناعي</span>
       </h1>
-      <p class="text-lg md:text-2xl text-gray-400 mb-12 max-w-3xl leading-relaxed font-light" data-i18n="txt_33">We build self-managing systems that take over your operational processes completely — so you can focus on what really matters. The power lies in the three layers of awareness.</p>
+      <p class="text-lg md:text-2xl text-gray-400 mb-12 max-w-3xl leading-relaxed font-light">
+        نبني أنظمة ذاتية الإدارة تتولى عملياتك التشغيلية بالكامل — لتتفرغ أنت لما يهمك حقاً. القوة تكمن في طبقات الوعي الثلاث.
+      </p>
 
                         <div class="flex flex-col sm:flex-row gap-6 w-full justify-center">
                           <a href="#simulator" class="bg-white text-black px-10 py-5 rounded-2xl font-black text-xl hover:bg-gray-200 transition duration-300 shadow-2xl shadow-aqua/20 flex items-center gap-3">
-                            <span data-i18n="txt_34">🚀 Try Live Simulation</span>
+                            <span>🚀 جرب المحاكاة الحية</span>
                           </a>
-                          <a href="#pricing" class="glass px-10 py-5 rounded-2xl font-bold text-xl text-white hover:bg-white/5 transition duration-300 border border-white/10" data-i18n="txt_35">💎 View Investment Plans</a>
+                          <a href="#pricing" class="glass px-10 py-5 rounded-2xl font-bold text-xl text-white hover:bg-white/5 transition duration-300 border border-white/10">
+                            💎 شاهد خطط الاستثمار
+                          </a>
                         </div>
                         <div class="mt-24 grid grid-cols-2 md:grid-cols-4 gap-12 text-center border-t border-white/5 pt-16 w-full">
-                          <div><div class="text-4xl font-black text-white">24/7</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase" data-i18n="txt_36">Operational Availability</div></div>
-                          <div><div class="text-4xl font-black text-aqua" data-i18n="txt_37">&lt;3s</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase" data-i18n="txt_38">Response Speed</div></div>
-                          <div><div class="text-4xl font-black text-gold">94%</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase" data-i18n="txt_39">Conversion Accuracy</div></div>
-                          <div><div class="text-4xl font-black text-white">100%</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase" data-i18n="txt_40">Full Automation</div>
+                          <div><div class="text-4xl font-black text-white">24/7</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase">التوفر التشغيلي</div></div>
+                          <div><div class="text-4xl font-black text-aqua">&lt;3s</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase">سرعة الاستجابة</div></div>
+                          <div><div class="text-4xl font-black text-gold">94%</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase">دقة التحويل</div></div>
+                          <div><div class="text-4xl font-black text-white">100%</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase">أتمتة كاملة</div>
       </div>
     </div>
-  </div></section>
+  </section>
 
   <!-- ══════════════════════════════════════════════════ -->
   <!-- THREE-LAYER ARCHITECTURE                          -->
@@ -435,25 +431,25 @@
   <section id="architecture" class="py-24 px-6 relative z-10 border-b border-white/5 bg-[#0B1120]">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold mb-4"><span data-i18n="txt_41">More than just a chat bot.</span><span class="text-gold" data-i18n="txt_42">Complete Infrastructure.</span></h2>
-        <p class="text-gray-400 text-lg" data-i18n="txt_43">A complete transformation in how the establishment operates. The power lies in the three layers of awareness.</p>
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">أكثر من مجرد بوت محادثة. <span class="text-gold">بنية تحتية كاملة.</span></h2>
+        <p class="text-gray-400 text-lg">تحول كامل في كيفية عمل المنشأة. القوة تكمن في طبقات الوعي الثلاث.</p>
       </div>
       <div class="grid md:grid-cols-3 gap-8 relative">
         <div class="hidden md:block absolute top-[40%] left-0 right-0 h-0.5 bg-gradient-to-r from-teal-900 via-aqua-500 to-gold/30 z-0"></div>
         <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80">
           <div class="w-16 h-16 rounded-2xl bg-teal-900 border border-teal-500 flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(13,148,136,0.4)]">1️⃣</div>
-          <h3 class="text-2xl font-bold mb-3" data-i18n="txt_44">Reception Layer</h3>
-          <p class="text-gray-400 text-sm leading-relaxed" data-i18n="txt_45">The front end via WhatsApp. A self-operating system that responds instantly, understands the situation, and books appointments in proper Arabic.</p>
+          <h3 class="text-2xl font-bold mb-3">طبقة الاستقبال</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">الواجهة الأمامية عبر الواتساب. نظام تشغيل ذاتي يرد فوراً، يستوعب الحالة، ويحجز المواعيد بلغة عربية سليمة.</p>
         </div>
         <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80 mt-12 md:mt-0">
           <div class="w-16 h-16 rounded-2xl border border-[#5EEAD4] flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(94,234,212,0.4)]" style="background:rgba(94,234,212,0.08)">2️⃣</div>
-          <h3 class="text-2xl font-bold mb-3" data-i18n="txt_46">Coordination Layer</h3>
-          <p class="text-gray-400 text-sm leading-relaxed" data-i18n="txt_47">The brain that connects conversation to reality. Instant coordination with the calendar, preventing conflicts, and sending automated reminders.</p>
+          <h3 class="text-2xl font-bold mb-3">طبقة التنسيق</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">الدماغ الذي يربط المحادثة بالواقع. تنسيق فوري مع التقويم، منع التعارضات، وإرسال تذكيرات آلية.</p>
         </div>
         <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80 mt-12 md:mt-0">
           <div class="w-16 h-16 rounded-2xl bg-gold/20 border border-gold flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(212,165,116,0.4)]">3️⃣</div>
-          <h3 class="text-2xl font-bold mb-3 text-gold" data-i18n="txt_48">Learning Layer (Swarm)</h3>
-          <p class="text-gray-400 text-sm leading-relaxed" data-i18n="txt_49">A marketing awareness engine that monitors the market for you. It recovers hesitant customers and gathers reviews silently.</p>
+          <h3 class="text-2xl font-bold mb-3 text-gold">طبقة التعلم (السوارم)</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">محرك وعي تسويقي يراقب السوق من أجلك. يستعيد العملاء المترددين ويجمع التقييمات بصمت.</p>
         </div>
       </div>
     </div>
@@ -466,73 +462,73 @@
   <section id="services" class="py-24 px-6 relative z-10 border-b border-white/5 bg-gradient-to-b from-[#0A0F18] to-[#0B1120]">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-16">
-        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-aqua mb-4 tracking-widest uppercase" data-i18n="txt_50">Our Services</div>
-        <h2 class="text-3xl md:text-4xl font-bold mb-4"><span data-i18n="txt_51">Digital Infrastructure</span><span class="text-aqua" data-i18n="txt_52">Integrated</span></h2>
-        <p class="text-gray-400" data-i18n="txt_53">An intelligent system that connects everything. Click on any card for details.</p>
+        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-aqua mb-4 tracking-widest uppercase">خدماتنا</div>
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">البنية التحتية الرقمية <span class="text-aqua">المتكاملة</span></h2>
+        <p class="text-gray-400">نظام ذكي يربط كل شيء. اضغط على أي بطاقة للتفاصيل.</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- 1. AI Receptionist - REAL SIMULATOR EMBEDDED -->
         <div id="reception-simulator" class="bento-card group glass rounded-3xl relative z-10 md:col-span-2 lg:row-span-2 overflow-hidden" style="background:linear-gradient(135deg,rgba(13,148,136,0.1),rgba(11,17,32,0.8));border-color:rgba(13,148,136,0.4)">
           <div class="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-[#0D9488]/20 to-transparent pointer-events-none z-0"></div>
-          <div class="p-5 pb-2 relative z-10"><div class="flex items-center gap-3 mb-1"><div class="w-10 h-10 rounded-xl bg-teal-900 border border-teal-500 flex items-center justify-center text-xl shadow-[0_0_12px_rgba(13,148,136,0.4)]">🤖</div><div><div class="font-bold text-white text-sm" data-i18n="txt_54">Smart Receptionist</div><div class="text-[11px] text-teal-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-teal-400 rounded-full inline-block animate-pulse"></span><span data-i18n="txt_55">Live System — Try Now</span></div></div></div></div>
+          <div class="p-5 pb-2 relative z-10"><div class="flex items-center gap-3 mb-1"><div class="w-10 h-10 rounded-xl bg-teal-900 border border-teal-500 flex items-center justify-center text-xl shadow-[0_0_12px_rgba(13,148,136,0.4)]">🤖</div><div><div class="font-bold text-white text-sm">موظف الاستقبال الذكي</div><div class="text-[11px] text-teal-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-teal-400 rounded-full inline-block animate-pulse"></span>نظام حي — جرّب الآن</div></div></div></div>
           <div class="flex flex-col lg:flex-row gap-3 px-3 pb-4 relative z-10" onclick="event.stopPropagation()">
-            <div class="flex-shrink-0 mx-auto" style="width:240px"><div class="relative" style="width:240px"><div class="absolute inset-0 rounded-[28px] border-2 border-gray-700 pointer-events-none z-20" style="box-shadow:0 0 30px rgba(13,148,136,0.2)"></div><div id="bsPhoneShell" class="rounded-[26px] overflow-hidden bg-[#111b21]" style="height:400px"><div class="bg-[#111b21] px-4 pt-2 pb-1 flex justify-between items-center text-[10px] text-gray-400"><span>9:41</span><div class="flex gap-1"><svg class="w-2.5 h-2.5 fill-gray-400" viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"></path></svg></div></div><div class="bg-[#202c33] px-3 py-2 flex items-center gap-2 border-b border-gray-800/50"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-sm flex-shrink-0">🤖</div><div class="flex-1 min-w-0"><div class="font-bold text-white text-xs" data-i18n="txt_56">The Intelligent System</div><div class="text-[10px] text-[#5EEAD4]" data-i18n="txt_57">Always Connected</div></div><button onclick="bsReset()" class="text-gray-500 hover:text-rose-400 transition text-sm">↺</button></div><div class="bg-[#111b21] px-3 py-1"><div class="h-1 bg-gray-800 rounded-full overflow-hidden"><div id="bsProgress" style="width:0%"></div></div><div class="text-[9px] text-gray-600 mt-0.5" id="bsStepLabel" style="direction:rtl" data-i18n="txt_58">Step 0 of 10</div></div><div id="bsChat" class="overflow-y-auto px-2.5 py-3 flex flex-col gap-2" style="flex:1;background:#0d1418;height:210px"></div><div id="bsReplies" class="bg-[#111b21] border-t border-gray-800/50 px-2 py-2 flex flex-wrap gap-1.5 min-h-[44px] items-center"><span class="text-gray-600 text-[10px] italic" data-i18n="txt_59">Waiting to start...</span></div><div class="bg-[#202c33] px-2 py-2 flex items-center gap-1.5 border-t border-gray-800/30"><div class="flex-1 bg-[#2a3942] rounded-full px-3 py-1.5"><input id="bsInput" type="text" placeholder="Write a message..." disabled="" class="w-full bg-transparent text-white text-xs outline-none placeholder-gray-600 text-right" style="direction:rtl" data-i18n-placeholder="txt_194"></div><button id="bsSend" disabled="" onclick="bsHandleInput()" class="w-7 h-7 rounded-full bg-[#0D9488] flex items-center justify-center transition hover:bg-teal-600 disabled:opacity-30"><svg class="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg></button></div></div></div><div class="mt-3 text-center"><button id="bsStartBtn" onclick="bsStart()" class="bg-gold text-gray-900 px-6 py-2 rounded-xl font-black text-sm hover:shadow-[0_0_16px_rgba(212,165,116,0.5)] transition" data-i18n="txt_60">▶ Start the experience</button></div></div>
-            <div class="flex-1 min-w-0"><div class="glass rounded-2xl p-4 border border-white/5" style="min-height:200px"><div class="flex items-center gap-2 mb-3"><div class="status-dot"></div><span class="text-[10px] font-bold text-[#22c55e] uppercase tracking-wider" data-i18n="txt_61">Dashboard — Live</span></div><div class="space-y-2"><div class="bg-[#0f1b2d] rounded-xl p-3 border border-teal-500/20 relative overflow-hidden"><div class="absolute top-0 right-0 w-1 h-full bg-teal-500"></div><div class="text-[9px] text-gray-500 mb-1" data-i18n="txt_62">Last operation</div><div id="bsDsName" class="bs-dash-field text-xs font-bold text-white" data-i18n="txt_63">-- Waiting to start --</div></div><div class="grid grid-cols-2 gap-1.5"><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500" data-i18n="txt_64">Treatment</div><div id="bsDsTreat" class="bs-dash-field text-xs font-bold text-white mt-0.5">--</div></div><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500" data-i18n="txt_65">Time</div><div id="bsDsSlot" class="bs-dash-field text-xs font-bold text-aqua mt-0.5">--</div></div><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500" data-i18n="txt_66">Date</div><div id="bsDsDate" class="bs-dash-field text-xs font-bold text-white mt-0.5">--</div></div><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500" data-i18n="txt_67">Synchronization</div><div id="bsDsSync" class="bs-dash-field text-xs font-bold text-aqua mt-0.5">--</div></div></div><div id="bsRevenueBadge" class="hidden bs-revenue-badge"><div class="text-[9px] text-teal-400 font-bold mb-1" data-i18n="txt_68">💰 Realized profits</div><div id="bsRevenueAmt" class="text-lg font-black text-white">--</div><div class="text-[9px] text-gray-400 mt-0.5" data-i18n="txt_69">Cuduzn works while you sleep</div></div></div></div></div>
+            <div class="flex-shrink-0 mx-auto" style="width:240px"><div class="relative" style="width:240px"><div class="absolute inset-0 rounded-[28px] border-2 border-gray-700 pointer-events-none z-20" style="box-shadow:0 0 30px rgba(13,148,136,0.2)"></div><div id="bsPhoneShell" class="rounded-[26px] overflow-hidden bg-[#111b21]" style="height:400px"><div class="bg-[#111b21] px-4 pt-2 pb-1 flex justify-between items-center text-[10px] text-gray-400"><span>9:41</span><div class="flex gap-1"><svg class="w-2.5 h-2.5 fill-gray-400" viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg></div></div><div class="bg-[#202c33] px-3 py-2 flex items-center gap-2 border-b border-gray-800/50"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-sm flex-shrink-0">🤖</div><div class="flex-1 min-w-0"><div class="font-bold text-white text-xs">النظام الذكي</div><div class="text-[10px] text-[#5EEAD4]">متصل دائماً</div></div><button onclick="bsReset()" class="text-gray-500 hover:text-rose-400 transition text-sm">↺</button></div><div class="bg-[#111b21] px-3 py-1"><div class="h-1 bg-gray-800 rounded-full overflow-hidden"><div id="bsProgress" style="width:0%"></div></div><div class="text-[9px] text-gray-600 mt-0.5" id="bsStepLabel" style="direction:rtl">الخطوة 0 من 10</div></div><div id="bsChat" class="overflow-y-auto px-2.5 py-3 flex flex-col gap-2" style="flex:1;background:#0d1418;height:210px"></div><div id="bsReplies" class="bg-[#111b21] border-t border-gray-800/50 px-2 py-2 flex flex-wrap gap-1.5 min-h-[44px] items-center"><span class="text-gray-600 text-[10px] italic">في انتظار البدء...</span></div><div class="bg-[#202c33] px-2 py-2 flex items-center gap-1.5 border-t border-gray-800/30"><div class="flex-1 bg-[#2a3942] rounded-full px-3 py-1.5"><input id="bsInput" type="text" placeholder="اكتب رسالة..." disabled class="w-full bg-transparent text-white text-xs outline-none placeholder-gray-600 text-right" style="direction:rtl"/></div><button id="bsSend" disabled onclick="bsHandleInput()" class="w-7 h-7 rounded-full bg-[#0D9488] flex items-center justify-center transition hover:bg-teal-600 disabled:opacity-30"><svg class="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button></div></div></div><div class="mt-3 text-center"><button id="bsStartBtn" onclick="bsStart()" class="bg-gold text-gray-900 px-6 py-2 rounded-xl font-black text-sm hover:shadow-[0_0_16px_rgba(212,165,116,0.5)] transition">▶ ابدأ التجربة</button></div></div>
+            <div class="flex-1 min-w-0"><div class="glass rounded-2xl p-4 border border-white/5" style="min-height:200px"><div class="flex items-center gap-2 mb-3"><div class="status-dot"></div><span class="text-[10px] font-bold text-[#22c55e] uppercase tracking-wider">لوحة التحكم — مباشر</span></div><div class="space-y-2"><div class="bg-[#0f1b2d] rounded-xl p-3 border border-teal-500/20 relative overflow-hidden"><div class="absolute top-0 right-0 w-1 h-full bg-teal-500"></div><div class="text-[9px] text-gray-500 mb-1">آخر عملية</div><div id="bsDsName" class="bs-dash-field text-xs font-bold text-white">-- في انتظار البدء --</div></div><div class="grid grid-cols-2 gap-1.5"><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500">العلاج</div><div id="bsDsTreat" class="bs-dash-field text-xs font-bold text-white mt-0.5">--</div></div><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500">الوقت</div><div id="bsDsSlot" class="bs-dash-field text-xs font-bold text-aqua mt-0.5">--</div></div><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500">التاريخ</div><div id="bsDsDate" class="bs-dash-field text-xs font-bold text-white mt-0.5">--</div></div><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500">المزامنة</div><div id="bsDsSync" class="bs-dash-field text-xs font-bold text-aqua mt-0.5">--</div></div></div><div id="bsRevenueBadge" class="hidden bs-revenue-badge"><div class="text-[9px] text-teal-400 font-bold mb-1">💰 الأرباح المحققة</div><div id="bsRevenueAmt" class="text-lg font-black text-white">--</div><div class="text-[9px] text-gray-400 mt-0.5">قُدوزن يعمل بينما أنت نائم</div></div></div></div></div>
           </div>
         </div>
 
         <!-- 2. Growth Swarm -->
         <div onclick="openModal('growth')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-2" style="background:rgba(212,165,116,0.05);border-color:rgba(212,165,116,0.2)">
           <div class="w-12 h-12 rounded-xl bg-gold/20 border border-gold/40 flex items-center justify-center text-2xl mb-4 group-hover:rotate-12 transition">🎯</div>
-          <h3 class="text-xl font-bold mb-2 text-gold" data-i18n="txt_70">Automatic growth engine</h3>
-          <p class="text-gray-400 text-sm leading-relaxed" data-i18n="txt_71">It discovers potential customers and sends them personalized AI messages on your behalf.</p>
+          <h3 class="text-xl font-bold mb-2 text-gold">محرك النمو التلقائي</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">يكتشف العملاء المحتملين ويرسل لهم رسائل مخصصة بالذكاء الاصطناعي نيابة عنك.</p>
         </div>
 
         <!-- 3. Real Estate Bot -->
         <div onclick="openModal('realestate')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1" style="border-color:rgba(94,234,212,0.2)">
           <div class="w-12 h-12 rounded-xl bg-aqua/10 border border-aqua/30 flex items-center justify-center text-2xl mb-4 group-hover:-translate-y-1 transition">🏢</div>
-          <h3 class="text-xl font-bold mb-2 text-white" data-i18n="txt_72">Real estate assistant</h3>
-          <p class="text-gray-400 text-sm leading-relaxed" data-i18n="txt_73">Qualifying clients for properties and scheduling visits automatically.</p>
+          <h3 class="text-xl font-bold mb-2 text-white">المساعد العقاري</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">تأهيل العملاء للعقارات وجدولة الزيارات تلقائياً.</p>
         </div>
 
         <!-- 4. Web Systems -->
         <div onclick="openModal('web')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1" style="border-color:rgba(168,85,247,0.3)">
           <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">🌐</div>
-          <h3 class="text-xl font-bold mb-2 text-white" data-i18n="txt_74">Web conversion systems</h3>
-          <p class="text-gray-400 text-sm leading-relaxed" data-i18n="txt_75">Super-fast sites designed specifically to attract customers.</p>
+          <h3 class="text-xl font-bold mb-2 text-white">أنظمة ويب للتحويل</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">مواقع فائقة السرعة مصممة خصيصاً لجلب العملاء.</p>
         </div>
 
         <!-- 5. App Studio -->
         <div onclick="openModal('app')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1" style="border-color:rgba(244,63,94,0.3)">
           <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-2xl mb-4 group-hover:rotate-12 transition">📱</div>
-          <h3 class="text-xl font-bold mb-2 text-white" data-i18n="txt_76">Custom applications</h3>
-          <p class="text-gray-400 text-sm leading-relaxed" data-i18n="txt_77">Internal tools and client applications designed for your business.</p>
+          <h3 class="text-xl font-bold mb-2 text-white">تطبيقات مخصصة</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">أدوات داخلية وتطبيقات عملاء مصممة لأعمالك.</p>
         </div>
 
         <!-- 6. Automation -->
         <div onclick="openModal('auto')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1" style="border-color:rgba(59,130,246,0.3)">
           <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-2xl mb-4 group-hover:-translate-y-1 transition">⚡</div>
-          <h3 class="text-xl font-bold mb-2 text-white" data-i18n="txt_78">Process automation</h3>
-          <p class="text-gray-400 text-sm leading-relaxed" data-i18n="txt_79">Connecting systems and streamlining operations without human intervention.</p>
+          <h3 class="text-xl font-bold mb-2 text-white">أتمتة العمليات</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">ربط الأنظمة وتسيير العمليات دون تدخل بشري.</p>
         </div>
 
         <!-- 7. Analytics -->
         <div onclick="openModal('analytics')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1 flex flex-col justify-between" style="border-color:rgba(94,234,212,0.3)">
           <div>
             <div class="w-10 h-10 rounded-xl bg-aqua/20 border border-aqua/50 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">📊</div>
-            <h3 class="text-lg font-bold mb-2 text-white" data-i18n="txt_80">Live data</h3>
-            <p class="text-gray-400 text-[10px] leading-relaxed" data-i18n="txt_81">See your campaign performance and wasted profits in one dashboard.</p>
+            <h3 class="text-lg font-bold mb-2 text-white">البيانات الحية</h3>
+            <p class="text-gray-400 text-[10px] leading-relaxed">شاهد أداء حملاتك وأرباحك المهدرة في لوحة تحكم واحدة.</p>
           </div>
         </div>
 
         <!-- 8. Enterprise Custom AOS -->
         <div onclick="openModal('enterprise')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-2 lg:col-span-1 flex flex-col justify-between" style="border:1px solid rgba(212,165,116,0.3); background:rgba(212,165,116,0.05)">
-          <div class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-gold/20 text-[8px] text-gold font-bold border border-gold/30 tracking-tighter" data-i18n="txt_82">PREMIUM</div>
+          <div class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-gold/20 text-[8px] text-gold font-bold border border-gold/30 tracking-tighter">PREMIUM</div>
           <div>
             <div class="w-10 h-10 rounded-xl bg-gold/20 border border-gold/50 flex items-center justify-center text-xl mb-4 group-hover:rotate-12 transition">💎</div>
-            <h3 class="text-lg font-bold mb-2 text-gold" data-i18n="txt_83">Enterprise system</h3>
-            <p class="text-gray-400 text-[10px] leading-relaxed" data-i18n="txt_84">Custom infrastructure for large companies with unlimited capacity.</p>
+            <h3 class="text-lg font-bold mb-2 text-gold">النظام المؤسسي</h3>
+            <p class="text-gray-400 text-[10px] leading-relaxed">بنية تحتية مخصصة للشركات الكبرى بسعة غير محدودة.</p>
           </div>
         </div>
       </div>
@@ -546,9 +542,9 @@
   <section id="simulator" class="py-24 px-4 relative z-10 border-b border-white/5 bg-[#070b14]">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-12">
-        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-gold mb-4 tracking-widest uppercase" data-i18n="txt_85">Live simulation</div>
-        <h2 class="text-3xl md:text-4xl font-bold mb-4"><span data-i18n="txt_86">Try</span><span class="text-gold" data-i18n="txt_88">The actual bot</span><span data-i18n="txt_87">Now</span></h2>
-        <p class="text-gray-400 max-w-xl mx-auto" data-i18n="txt_89">This is not a fake demo — this is the same system that works on WhatsApp. Try the full booking from start to confirm.</p>
+        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-gold mb-4 tracking-widest uppercase">محاكاة حية</div>
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">جرّب <span class="text-gold">البوت الفعلي</span> الآن</h2>
+        <p class="text-gray-400 max-w-xl mx-auto">هذه ليست عرضاً وهمياً — هذا هو نفس النظام الذي يعمل على واتساب. جرّب الحجز الكامل من البداية للتأكيد.</p>
       </div>
 
       <div class="flex flex-col lg:flex-row gap-10 items-start justify-center">
@@ -567,8 +563,8 @@
               <div class="bg-[#111b21] px-5 pt-3 pb-1 flex justify-between items-center text-[11px] text-gray-400">
                 <span>9:41</span>
                 <div class="flex gap-1 items-center">
-                  <svg class="w-3 h-3 fill-gray-400" viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"></path></svg>
-                  <svg class="w-3 h-3 fill-gray-400" viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"></path></svg>
+                  <svg class="w-3 h-3 fill-gray-400" viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                  <svg class="w-3 h-3 fill-gray-400" viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
                 </div>
               </div>
 
@@ -576,9 +572,11 @@
               <div class="bg-[#202c33] px-4 py-3 flex items-center gap-3 border-b border-gray-800/50">
                 <div class="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-lg shadow-lg flex-shrink-0">🤖</div>
                 <div class="flex-1 min-w-0">
-                  <div class="font-bold text-white text-sm" data-i18n="txt_90">Smart enterprise system</div>
+                  <div class="font-bold text-white text-sm">النظام الذكي للمنشأة</div>
                   <div class="text-[11px] text-[#5EEAD4] flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 bg-[#5EEAD4] rounded-full inline-block animate-pulse"></span><span data-i18n="txt_91">Always connected</span></div>
+                    <span class="w-1.5 h-1.5 bg-[#5EEAD4] rounded-full inline-block animate-pulse"></span>
+                    متصل دائماً
+                  </div>
                 </div>
                 <div class="flex items-center gap-3">
                   <button onclick="resetSimulator()" class="text-gray-500 hover:text-rose-400 transition" title="إعادة تشغيل / Reset">↺</button>
@@ -591,25 +589,30 @@
                 <div class="h-1 bg-gray-800 rounded-full overflow-hidden">
                   <div id="simProgress" style="width:0%"></div>
                 </div>
-                <div class="text-[10px] text-gray-600 mt-0.5" id="simStepLabel" style="direction:rtl" data-i18n="txt_92">Step 0 of 7</div>
+                <div class="text-[10px] text-gray-600 mt-0.5" id="simStepLabel" style="direction:rtl">الخطوة 0 من 7</div>
               </div>
 
               <!-- Chat body -->
-              <div id="simChat" class="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-3" style="background:#0d1418;background-image:url('https://www.transparenttextures.com/patterns/stardust.png');background-size:200px">
+              <div id="simChat" class="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-3"
+                   style="background:#0d1418;background-image:url('https://www.transparenttextures.com/patterns/stardust.png');background-size:200px">
               </div>
 
               <!-- Quick replies area -->
               <div id="simReplies" class="bg-[#111b21] border-t border-gray-800/50 px-3 py-3 flex flex-wrap gap-2 min-h-[58px] items-center">
-                <span class="text-gray-600 text-xs italic" data-i18n="txt_93">Waiting to start...</span>
+                <span class="text-gray-600 text-xs italic">في انتظار البدء...</span>
               </div>
 
               <!-- Input bar -->
               <div class="bg-[#202c33] px-3 py-2.5 flex items-center gap-2 border-t border-gray-800/30">
                 <div id="simInputWrap" class="flex-1 bg-[#2a3942] rounded-full px-4 py-2 flex items-center gap-2">
-                  <input id="simInput" type="text" placeholder="Write a message..." disabled="" class="flex-1 bg-transparent text-white text-sm outline-none placeholder-gray-600 text-right" style="min-width:0;direction:rtl" data-i18n-placeholder="txt_195">
+                  <input id="simInput" type="text" placeholder="اكتب رسالة..." disabled
+                    class="flex-1 bg-transparent text-white text-sm outline-none placeholder-gray-600 text-right"
+                    style="min-width:0;direction:rtl" />
                 </div>
-                <button id="simSend" disabled="" class="w-9 h-9 rounded-full bg-[#0D9488] flex items-center justify-center transition hover:bg-teal-600 disabled:opacity-30" onclick="handleSimInput()">
-                  <svg class="w-4 h-4 fill-white rtl:rotate-180" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                <button id="simSend" disabled
+                  class="w-9 h-9 rounded-full bg-[#0D9488] flex items-center justify-center transition hover:bg-teal-600 disabled:opacity-30"
+                  onclick="handleSimInput()">
+                  <svg class="w-4 h-4 fill-white rtl:rotate-180" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                 </button>
               </div>
             </div>
@@ -617,37 +620,36 @@
 
           <!-- Start button (below phone) -->
           <div class="mt-6 text-center" style="position:relative;z-index:1001">
-            <button id="simStartBtn" onclick="startSimulator()" class="bg-gold text-gray-900 px-8 py-3 rounded-xl font-black hover:shadow-[0_0_20px_rgba(212,165,116,0.5)] transition" data-i18n="txt_94">▶ Start the simulation</button>
-            <div class="text-xs text-gray-600 mt-2" data-i18n="txt_95">No registration required · Ready in a second</div>
+            <button id="simStartBtn" onclick="startSimulator()"
+              class="bg-gold text-gray-900 px-8 py-3 rounded-xl font-black hover:shadow-[0_0_20px_rgba(212,165,116,0.5)] transition">
+              ▶ ابدأ المحاكاة
+            </button>
+            <div class="text-xs text-gray-600 mt-2">لا يتطلب تسجيل · جاهز خلال ثانية</div>
           </div>
         </div>
 
         
     <!-- Right: Step guide + Dashboard preview -->
     <div class="flex-1 space-y-8 w-full max-w-2xl mx-auto lg:mx-0">
-      
-      <!-- GHOST ROOM IFRAME INJECTION -->
-      <div class="w-full h-[600px] rounded-3xl overflow-hidden border border-teal-900/50 shadow-[0_0_50px_rgba(13,148,136,0.15)] relative z-50">
-         <iframe src="/growth/ghost-room.html?lang=en&clinic=Your%20Business" class="w-full h-full border-0" title="Ghost Room Simulator"></iframe>
-      </div>
-
-      <div class="glass rounded-3xl p-8 border border-white/5 relative overflow-hidden group hidden">
+      <div class="glass rounded-3xl p-8 border border-white/5 relative overflow-hidden group">
         <div class="absolute top-0 right-0 w-32 h-32 bg-aqua/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-aqua/10 transition-colors"></div>
         <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
-          <span class="w-8 h-8 rounded-lg bg-aqua/10 flex items-center justify-center text-aqua text-sm">01</span><span data-i18n="txt_96">Smart customer journey</span></h3>
+          <span class="w-8 h-8 rounded-lg bg-aqua/10 flex items-center justify-center text-aqua text-sm">01</span>
+          رحلة العميل الذكية
+        </h3>
         <div class="space-y-6">
           <div class="flex gap-4">
             <div class="w-1 bg-gradient-to-b from-aqua to-transparent rounded-full h-12"></div>
             <div>
-              <div class="text-white font-bold mb-1" data-i18n="txt_97">Instant response</div>
-              <div class="text-gray-400 text-sm" data-i18n="txt_98">The system responds in less than 3 seconds in a natural local tone.</div>
+              <div class="text-white font-bold mb-1">الاستجابة اللحظية</div>
+              <div class="text-gray-400 text-sm">يقوم النظام بالرد خلال أقل من 3 ثوانٍ بلهجة محلية طبيعية.</div>
             </div>
           </div>
           <div class="flex gap-4 opacity-50">
             <div class="w-1 bg-gray-700 rounded-full h-12"></div>
             <div>
-              <div class="text-white font-bold mb-1" data-i18n="txt_99">Request qualification</div>
-              <div class="text-gray-400 text-sm" data-i18n="txt_100">Automatic sorting of emergencies, bookings, or general inquiries.</div>
+              <div class="text-white font-bold mb-1">تأهيل الطلب</div>
+              <div class="text-gray-400 text-sm">فرز تلقائي للحالات الطارئة، الحجوزات، أو الاستفسارات العامة.</div>
             </div>
           </div>
         </div>
@@ -659,13 +661,13 @@
           <div class="w-3 h-3 rounded-full bg-rose-500/50"></div>
           <div class="w-3 h-3 rounded-full bg-amber-500/50"></div>
           <div class="w-3 h-3 rounded-full bg-emerald-500/50"></div>
-          <div class="text-[10px] text-gray-500 ml-4 tracking-widest uppercase" data-i18n="txt_101">Qudozen Dashboard v3.0</div>
+          <div class="text-[10px] text-gray-500 ml-4 tracking-widest uppercase">Qudozen Dashboard v3.0</div>
         </div>
         <div class="aspect-video bg-[#080C14] rounded-xl border border-white/5 overflow-hidden relative">
           <div class="absolute inset-0 flex items-center justify-center">
             <div class="text-center">
-              <div class="text-aqua text-4xl font-black mb-2 animate-pulse" data-i18n="txt_102">4D Analytics</div>
-              <div class="text-gray-500 text-xs" data-i18n="txt_103">Waiting for simulator trigger...</div>
+              <div class="text-aqua text-4xl font-black mb-2 animate-pulse">4D Analytics</div>
+              <div class="text-gray-500 text-xs">Waiting for simulator trigger...</div>
             </div>
           </div>
           <!-- Mock Chart -->
@@ -686,37 +688,37 @@
             <div class="flex items-center justify-between mb-4">
               <div class="flex items-center gap-2">
                 <div class="status-dot"></div>
-                <span id="dsStatus" class="text-xs font-bold text-[#22c55e] uppercase tracking-wider" data-i18n="txt_104">System active</span>
+                <span id="dsStatus" class="text-xs font-bold text-[#22c55e] uppercase tracking-wider">النظام نشط</span>
               </div>
-              <div class="text-[10px] text-gray-500 tracking-tighter" id="dsTime" data-i18n="txt_105">Update: Now</div>
+              <div class="text-[10px] text-gray-500 tracking-tighter" id="dsTime">تحديث: الآن</div>
             </div>
             
-            <div id="dsTitle" class="text-sm font-bold text-white mb-5 border-b border-white/5 pb-3" data-i18n="txt_106">📊 Enterprise dashboard — Live</div>
+            <div id="dsTitle" class="text-sm font-bold text-white mb-5 border-b border-white/5 pb-3">📊 لوحة تحكم المنشأة — مباشر</div>
             
             <div class="space-y-4">
               <!-- Result Card -->
               <div class="bg-[#0f1b2d] border border-teal-500/30 rounded-xl p-4 shadow-inner relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
                 <div class="flex justify-between items-start mb-2">
-                  <div id="dsConfLabel" class="text-[10px] font-bold text-teal-400 uppercase" data-i18n="txt_107">New confirmed appointment</div>
-                  <div class="text-[10px] text-gray-500" id="dsRef" data-i18n="txt_108">REF: QZ-2026</div>
+                  <div id="dsConfLabel" class="text-[10px] font-bold text-teal-400 uppercase">موعد مؤكد جديد</div>
+                  <div class="text-[10px] text-gray-500" id="dsRef">REF: QZ-2026</div>
                 </div>
                 <div class="text-lg font-black text-white mb-1" id="dsPatientName">--</div>
                 <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-white/5">
                   <div>
-                    <div id="dsTreatLabel" class="text-[9px] text-gray-500 uppercase" data-i18n="txt_109">Type of treatment</div>
+                    <div id="dsTreatLabel" class="text-[9px] text-gray-500 uppercase">نوع العلاج</div>
                     <div id="dsTreatment" class="text-xs text-white font-bold">--</div>
                   </div>
                   <div>
-                    <div id="dsSlotLabel" class="text-[9px] text-gray-500 uppercase" data-i18n="txt_110">Time</div>
+                    <div id="dsSlotLabel" class="text-[9px] text-gray-500 uppercase">الوقت</div>
                     <div id="dsSlot" class="text-xs text-aqua font-bold">--</div>
                   </div>
                   <div>
-                    <div id="dsDateLabel" class="text-[9px] text-gray-500 uppercase" data-i18n="txt_111">Date</div>
+                    <div id="dsDateLabel" class="text-[9px] text-gray-500 uppercase">التاريخ</div>
                     <div id="dsDate" class="text-xs text-white font-bold">--</div>
                   </div>
                   <div>
-                    <div id="dsDocLabel" class="text-[9px] text-gray-500 uppercase" data-i18n="txt_112">Team</div>
+                    <div id="dsDocLabel" class="text-[9px] text-gray-500 uppercase">الفريق</div>
                     <div id="dsDoctor" class="text-xs text-white font-bold">--</div>
                   </div>
                 </div>
@@ -725,37 +727,43 @@
               <!-- Stats Mini -->
               <div class="grid grid-cols-2 gap-3">
                 <div class="bg-[#0f1b2d]/60 rounded-lg p-3 border border-white/5">
-                  <div id="dsSyncLabel" class="text-[9px] text-gray-500" data-i18n="txt_113">Google Calendar</div>
-                  <div class="text-[10px] text-aqua font-bold" data-i18n="txt_114">Synchronization: Successful ✅</div>
+                  <div id="dsSyncLabel" class="text-[9px] text-gray-500">تقويم جوجل</div>
+                  <div class="text-[10px] text-aqua font-bold">مزامنة: ناجحة ✅</div>
                 </div>
                 <div class="bg-[#0f1b2d]/60 rounded-lg p-3 border border-white/5">
-                  <div id="dsRemLabel" class="text-[9px] text-gray-500" data-i18n="txt_115">Reminders</div>
-                  <div class="text-[10px] text-gold font-bold" data-i18n="txt_116">Scheduled 24h+1h</div>
+                  <div id="dsRemLabel" class="text-[9px] text-gray-500">تذكيرات</div>
+                  <div class="text-[10px] text-gold font-bold">مجدولة 24h+1h</div>
                 </div>
               </div>
             </div>
 
-            <a href="https://wa.me/96657436016?text=أريد%20تفعيل%20لوحة%20تحكمي%20الخاصة" target="_blank" class="mt-6 w-full block bg-gold text-gray-900 py-3.5 rounded-xl font-black text-center hover:shadow-[0_0_20px_rgba(212,165,116,0.3)] transition text-sm" data-i18n="txt_117">Activate your system →</a>
+            <a href="https://wa.me/96657436016?text=أريد%20تفعيل%20لوحة%20تحكمي%20الخاصة" target="_blank"
+               class="mt-6 w-full block bg-gold text-gray-900 py-3.5 rounded-xl font-black text-center hover:shadow-[0_0_20px_rgba(212,165,116,0.3)] transition text-sm">
+               تفعيل النظام الخاص بك →
+            </a>
           </div>
 
           <!-- WhatsApp redirect (shown after completion) -->
           <div id="waRedirect" class="glass rounded-2xl p-6 border border-[#25D366]/30 hidden" style="background:rgba(37,211,102,0.04)">
             <div class="flex items-start gap-4">
               <div class="w-12 h-12 rounded-xl bg-[#25D366]/20 flex items-center justify-center flex-shrink-0">
-                <svg viewBox="0 0 24 24" class="w-6 h-6 fill-[#25D366]"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"></path></svg>
+                <svg viewBox="0 0 24 24" class="w-6 h-6 fill-[#25D366]"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
               </div>
               <div class="flex-1">
-                <div class="text-sm font-bold text-white mb-1" data-i18n="txt_118">Your simulations are complete 🎉</div>
-                <p class="text-xs text-gray-400 mb-3 leading-relaxed" data-i18n="txt_119">This is exactly what will happen in your business. Ready to activate your own system?</p>
-                <a href="https://wa.me/96657436016?text=أهلاً%20جيك،%20جربت%20المحاكي%20وأريد%20تفعيل%20النظام%20لعيادتي." target="_blank" class="inline-flex items-center gap-2 bg-[#25D366] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#1da851] transition">
-                  <svg viewBox="0 0 24 24" class="w-4 h-4 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"></path></svg><span data-i18n="txt_120">Talk to Jake now</span></a>
+                <div class="text-sm font-bold text-white mb-1">محاكاتك مكتملة 🎉</div>
+                <p class="text-xs text-gray-400 mb-3 leading-relaxed">هذا بالضبط ما سيحدث في عملك. جاهز لتفعيل نظامك الخاص؟</p>
+                <a href="https://wa.me/96657436016?text=أهلاً%20جيك،%20جربت%20المحاكي%20وأريد%20تفعيل%20النظام%20لعيادتي." target="_blank"
+                   class="inline-flex items-center gap-2 bg-[#25D366] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#1da851] transition">
+                  <svg viewBox="0 0 24 24" class="w-4 h-4 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                  تحدث مع جيك الآن
+                </a>
               </div>
             </div>
           </div>
 
         </div>
       </div>
-    
+    </div>
   </section>
 
   <!-- ══════════════════════════════════════════════════ -->
@@ -764,41 +772,41 @@
   <section id="features" class="py-24 px-6 relative z-10 border-b border-white/5 bg-gradient-to-b from-[#070b14] to-[#0B1120]">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-14">
-        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-aqua mb-4 tracking-widest uppercase" data-i18n="txt_121">Real numbers</div>
-        <h2 class="text-3xl md:text-4xl font-bold mb-3"><span data-i18n="txt_122">Infrastructure</span><span class="text-aqua" data-i18n="txt_123">That speaks its numbers</span></h2>
-        <p class="text-gray-400" data-i18n="txt_124">Not promises — data from clinics currently using the system.</p>
+        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-aqua mb-4 tracking-widest uppercase">أرقام حقيقية</div>
+        <h2 class="text-3xl md:text-4xl font-bold mb-3">البنية التحتية <span class="text-aqua">التي تتحدث أرقامها</span></h2>
+        <p class="text-gray-400">ليست وعوداً — بيانات من عيادات تعمل على النظام الآن.</p>
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div class="feat-card">
           <div class="text-3xl mb-3">⚡</div>
           <div class="feat-counter" id="cnt-response">0</div>
-          <div class="text-gray-500 text-xs mt-1" data-i18n="txt_125">Response time (seconds)</div>
+          <div class="text-gray-500 text-xs mt-1">وقت الرد (ثانية)</div>
         </div>
         <div class="feat-card">
           <div class="text-3xl mb-3">🕐</div>
           <div class="feat-counter" id="cnt-uptime">0</div>
-          <div class="text-gray-500 text-xs mt-1" data-i18n="txt_126">Available hours / day</div>
+          <div class="text-gray-500 text-xs mt-1">ساعة توفر / يوم</div>
         </div>
         <div class="feat-card">
           <div class="text-3xl mb-3">✅</div>
           <div class="feat-counter" id="cnt-confirm">0</div>
-          <div class="text-gray-500 text-xs mt-1" data-i18n="txt_127">Confirmation rate %</div>
+          <div class="text-gray-500 text-xs mt-1">نسبة التأكيد %</div>
         </div>
         <div class="feat-card">
           <div class="text-3xl mb-3">📉</div>
           <div class="feat-counter" id="cnt-noshow">0</div>
-          <div class="text-gray-500 text-xs mt-1" data-i18n="txt_128">Reduce absenteeism %</div>
+          <div class="text-gray-500 text-xs mt-1">تقليل الغياب %</div>
         </div>
         <div class="feat-card">
           <div class="text-3xl mb-3">🌐</div>
           <div class="feat-counter" id="cnt-lang">0</div>
-          <div class="text-gray-500 text-xs mt-1" data-i18n="txt_129">Supported languages</div>
+          <div class="text-gray-500 text-xs mt-1">لغات مدعومة</div>
         </div>
         <div class="feat-card">
           <div class="text-3xl mb-3">📅</div>
           <div class="feat-counter" id="cnt-sync">0</div>
-          <div class="text-gray-500 text-xs mt-1" data-i18n="txt_130">Seconds for synchronization</div>
+          <div class="text-gray-500 text-xs mt-1">ثانية للمزامنة</div>
         </div>
       </div>
 
@@ -807,29 +815,29 @@
         <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-teal-500/30 transition">
           <div class="w-10 h-10 rounded-xl bg-teal-900/50 border border-teal-500/30 flex items-center justify-center text-lg flex-shrink-0">🔒</div>
           <div>
-            <div class="font-bold text-white text-sm mb-1" data-i18n="txt_131">Atomic lock to prevent conflicts</div>
-            <p class="text-gray-500 text-xs leading-relaxed" data-i18n="txt_132">Even if two patients send a request at the same second — only one is booked, and the other sees an alternative time immediately.</p>
+            <div class="font-bold text-white text-sm mb-1">قفل ذري لمنع التعارض</div>
+            <p class="text-gray-500 text-xs leading-relaxed">حتى لو أرسل مريضان طلباً في نفس الثانية — يحجز واحد فقط، والآخر يرى وقتاً بديلاً فوراً.</p>
           </div>
         </div>
         <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-gold/30 transition">
           <div class="w-10 h-10 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-lg flex-shrink-0">🧠</div>
           <div>
-            <div class="font-bold text-white text-sm mb-1" data-i18n="txt_133">Natural understanding of requests</div>
-            <p class="text-gray-500 text-xs leading-relaxed" data-i18n="txt_134">Understands "tomorrow morning" and "next week" and "afternoon" and converts them into actual appointments in the calendar.</p>
+            <div class="font-bold text-white text-sm mb-1">فهم طبيعي للطلبات</div>
+            <p class="text-gray-500 text-xs leading-relaxed">يفهم "بكره الصبح" و"الأسبوع الجاي" و"العصر" ويحولها لمواعيد فعلية في التقويم.</p>
           </div>
         </div>
         <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-aqua/30 transition">
           <div class="w-10 h-10 rounded-xl border border-aqua/30 flex items-center justify-center text-lg flex-shrink-0" style="background:rgba(94,234,212,0.07)">🚨</div>
           <div>
-            <div class="font-bold text-white text-sm mb-1" data-i18n="txt_135">Immediate emergency detection</div>
-            <p class="text-gray-500 text-xs leading-relaxed" data-i18n="txt_136">Recognizes emergency words and displays the nearest available appointment and alerts the team directly.</p>
+            <div class="font-bold text-white text-sm mb-1">كشف الطوارئ الفوري</div>
+            <p class="text-gray-500 text-xs leading-relaxed">يتعرف على كلمات الطوارئ ويعرض أقرب موعد متاح ويُنبّه الفريق مباشرة.</p>
           </div>
         </div>
         <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-purple-500/30 transition">
           <div class="w-10 h-10 rounded-xl border border-purple-500/30 flex items-center justify-center text-lg flex-shrink-0" style="background:rgba(168,85,247,0.07)">🔄</div>
           <div>
-            <div class="font-bold text-white text-sm mb-1" data-i18n="txt_137">Rescheduling and cancellation</div>
-            <p class="text-gray-500 text-xs leading-relaxed" data-i18n="txt_138">The patient reschedules or cancels with one word — the slot returns to the calendar immediately without human intervention.</p>
+            <div class="font-bold text-white text-sm mb-1">إعادة الجدولة والإلغاء</div>
+            <p class="text-gray-500 text-xs leading-relaxed">المريض يعيد الجدولة أو يلغي بكلمة واحدة — الفتحة تعود للتقويم فوراً بدون تدخل بشري.</p>
           </div>
         </div>
       </div>
@@ -843,66 +851,66 @@
   <section id="pricing" class="py-24 px-6 relative z-10 border-b border-white/5 bg-[#0B1120]">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-16">
-        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-teal mb-4 tracking-widest uppercase" data-i18n="txt_139">Your investment</div>
-        <h2 class="text-3xl md:text-4xl font-bold mb-4"><span data-i18n="txt_140">Transparent pricing,</span><span class="text-teal" data-i18n="txt_141">No surprises</span></h2>
-        <p class="text-gray-400" data-i18n="txt_142">No binding contracts. All packages include setup, training, and ongoing support.</p>
+        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-teal mb-4 tracking-widest uppercase">استثمارك</div>
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">تسعير شفاف، <span class="text-teal">بدون مفاجآت</span></h2>
+        <p class="text-gray-400">لا عقود ملزمة. جميع الباقات تشمل الإعداد والتدريب والدعم المستمر.</p>
       </div>
 
       <div class="grid md:grid-cols-3 gap-8">
         <!-- Tier 1 -->
         <div class="glass p-8 rounded-3xl relative z-10 flex flex-col bg-[#0F172A]">
-          <h3 class="text-xl text-[#5EEAD4] mb-2 font-bold" data-i18n="txt_143">Awareness</h3>
-          <p class="text-sm text-gray-400 mb-6" data-i18n="txt_144">For basic presence and immediate response.</p>
+          <h3 class="text-xl text-[#5EEAD4] mb-2 font-bold">الوعي (Awareness)</h3>
+          <p class="text-sm text-gray-400 mb-6">للتواجد الأساسي والرد الفوري.</p>
           <div class="mb-6">
-            <span class="text-4xl font-black">$80</span> <span class="text-gray-500" data-i18n="txt_145">/ 299 SAR</span>
-            <div class="text-sm text-gray-400 mt-1" data-i18n="txt_146">Monthly</div>
+            <span class="text-4xl font-black">$80</span> <span class="text-gray-500">/ 299 SAR</span>
+            <div class="text-sm text-gray-400 mt-1">شهرياً</div>
           </div>
           <ul class="space-y-4 mb-8 flex-1">
-            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span><span data-i18n="txt_147">200 patient conversations / month</span></li>
-            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span><span data-i18n="txt_148">Responses in Arabic and English</span></li>
-            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span><span data-i18n="txt_149">Booking and confirming appointments</span></li>
-            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span><span data-i18n="txt_150">Automating FAQs</span></li>
-            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span><span data-i18n="txt_151">Monthly performance report</span></li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span> 200 محادثة مريض / شهر</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span> الرد بالعربية والإنجليزية</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span> حجز المواعيد وتأكيدها</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span> أتمتة الأسئلة الشائعة</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span> تقرير أداء شهري</li>
           </ul>
-          <a href="https://wa.me/966570733834" class="w-full border border-[#5EEAD4] text-[#5EEAD4] py-3 rounded-xl font-bold text-center hover:bg-[#5EEAD4]/10 transition block" data-i18n="txt_152">Get started now</a>
+          <a href="https://wa.me/966570733834" class="w-full border border-[#5EEAD4] text-[#5EEAD4] py-3 rounded-xl font-bold text-center hover:bg-[#5EEAD4]/10 transition block">ابدأ الآن</a>
         </div>
 
         <!-- Tier 2 -->
         <div class="glass p-8 rounded-3xl relative z-20 flex flex-col transform md:-translate-y-4 shadow-[0_0_40px_rgba(13,148,136,0.3)] bg-gradient-to-b from-[#0F172A] to-[#134E4A]/30 border-teal-500">
-          <h3 class="text-xl text-white mb-2 font-bold" data-i18n="txt_153">The system</h3>
-          <p class="text-sm text-gray-400 mb-6" data-i18n="txt_154">Complete infrastructure to manage your facility.</p>
+          <h3 class="text-xl text-white mb-2 font-bold">النظام (System)</h3>
+          <p class="text-sm text-gray-400 mb-6">بنية تحتية كاملة لإدارة منشأتك.</p>
           <div class="mb-6">
-            <span class="text-4xl font-black">$133</span> <span class="text-gray-400" data-i18n="txt_155">/ 499 SAR</span>
-            <div class="text-sm text-gray-400 mt-1" data-i18n="txt_156">Monthly</div>
-            <div class="text-xs text-gold mt-2 p-2 bg-gold/10 rounded-lg inline-block" data-i18n="txt_157">Setup fee: $186 / 699 SAR</div>
+            <span class="text-4xl font-black">$133</span> <span class="text-gray-400">/ 499 SAR</span>
+            <div class="text-sm text-gray-400 mt-1">شهرياً</div>
+            <div class="text-xs text-gold mt-2 p-2 bg-gold/10 rounded-lg inline-block">رسوم التأسيس: $186 / 699 SAR</div>
           </div>
           <ul class="space-y-4 mb-8 flex-1">
-            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span><span data-i18n="txt_158">Everything in the awareness package</span></li>
-            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span><span data-i18n="txt_159">1000 patient conversations / month</span></li>
-            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span><span data-i18n="txt_160">Complete calendar management</span></li>
-            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span><span data-i18n="txt_161">Sending payment links</span></li>
-            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span><span data-i18n="txt_162">Post-visit campaigns</span></li>
-            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span><span data-i18n="txt_163">Live admin dashboard</span></li>
+            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span> كل ما في باقة الوعي</li>
+            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span> 1000 محادثة مريض / شهر</li>
+            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span> إدارة كاملة للتقويم</li>
+            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span> إرسال روابط الدفع</li>
+            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span> حملات ما بعد الزيارة</li>
+            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span> لوحة تحكم إدارية حية</li>
           </ul>
-          <a href="https://wa.me/966570733834" class="w-full bg-[#0D9488] text-white py-3 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.5)] block" data-i18n="txt_164">Get the system</a>
+          <a href="https://wa.me/966570733834" class="w-full bg-[#0D9488] text-white py-3 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.5)] block">احصل على النظام</a>
         </div>
 
         <!-- Tier 3 -->
         <div class="glass p-8 rounded-3xl relative z-10 flex flex-col bg-[#0F172A]">
-          <h3 class="text-xl text-gold mb-2 font-bold" data-i18n="txt_165">Swarm</h3>
-          <p class="text-sm text-gray-400 mb-6" data-i18n="txt_166">For large companies and multiple branches.</p>
+          <h3 class="text-xl text-gold mb-2 font-bold">السوارم (Swarm)</h3>
+          <p class="text-sm text-gray-400 mb-6">للشركات الكبيرة والفروع المتعددة.</p>
           <div class="mb-6">
-            <span class="text-4xl font-black text-gold" data-i18n="txt_167">Dedicated</span>
-            <div class="text-sm text-gray-400 mt-1" data-i18n="txt_168">To be determined after consultation</div>
+            <span class="text-4xl font-black text-gold">مخصص</span>
+            <div class="text-sm text-gray-400 mt-1">يحدد بعد الاستشارة</div>
           </div>
           <ul class="space-y-4 mb-8 flex-1">
-            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span><span data-i18n="txt_169">Everything in the system package</span></li>
-            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span><span data-i18n="txt_170">Unlimited number of conversations</span></li>
-            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span><span data-i18n="txt_171">Integration with clinic systems (HIS/ERP)</span></li>
-            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span><span data-i18n="txt_172">Dedicated account manager</span></li>
-            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span><span data-i18n="txt_173">Private servers for data</span></li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span> كل ما في باقة النظام</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span> عدد لا محدود من المحادثات</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span> ربط مع أنظمة العيادات (HIS/ERP)</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span> مدير حساب مخصص</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span> خوادم خاصة للبيانات</li>
           </ul>
-          <a href="https://wa.me/966570733834" class="w-full border border-gold text-gold py-3 rounded-xl font-bold text-center hover:bg-gold/10 transition block" data-i18n="txt_174">Contact to customize your plan</a>
+          <a href="https://wa.me/966570733834" class="w-full border border-gold text-gold py-3 rounded-xl font-bold text-center hover:bg-gold/10 transition block">تواصل لتخصيص خطتك</a>
         </div>
       </div>
     </div>
@@ -917,19 +925,21 @@
       <div class="flex flex-col md:flex-row gap-8 items-start relative z-10">
         <div class="w-32 h-32 rounded-3xl bg-[#0D9488]/10 border border-[#0D9488]/30 flex items-center justify-center text-5xl shrink-0 shadow-[0_0_30px_rgba(13,148,136,0.1)]">👨‍💻</div>
         <div>
-          <h3 class="text-3xl font-black mb-4 text-white" data-i18n="txt_175">A message to you from the system founder</h3>
-          <div class="text-sm font-bold text-teal mb-6 tracking-wide" data-i18n="txt_176">From: Jake</div>
+          <h3 class="text-3xl font-black mb-4 text-white">رسالة لك من مؤسس النظام</h3>
+          <div class="text-sm font-bold text-teal mb-6 tracking-wide">من: جيك</div>
           <div class="space-y-4 text-gray-300 leading-relaxed text-lg">
-            <p data-i18n="txt_177">Hello. I’ve seen excellent business owners build establishments worth millions of riyals, only to lose twenty to thirty clients a month in a ridiculous manner. Not due to poor service, but because a regular receptionist cannot respond immediately at midnight when a client needs help and messages the first 5 establishments on Google.</p>
-            <p data-i18n="txt_178">Whoever responds first gets the client. This is the harsh truth of the market.</p>
-            <p data-i18n="txt_179">The self-operating system I built is not just about "automated responses". It’s about protecting your establishment from the hidden daily bleed. The infrastructure takes care of responding, booking, and follow-ups — so you can wake up in the morning to see your schedule automatically filled.</p>
-            <p data-i18n="txt_180">If you’re ready to stop the bleed in your business, click the button below to message me personally.</p>
+            <p>مرحباً. رأيت أصحاب أعمال ممتازين يبنون منشآت بملايين الريالات، ثم يخسرون عشرين إلى ثلاثين عميلاً شهرياً بشكل سخيف. ليس بسبب سوء الخدمة، بل لأن الاستقبال الطبيعي لا يمكنه الرد فوراً في الـ 12 ليلاً حين يحتاج العميل ويراسل أول 5 منشآت على جوجل.</p>
+            <p>من يرد أولاً، يحصل على العميل. هذه هي الحقيقة القاسية للسوق.</p>
+            <p>نظام التشغيل الذاتي الذي بنيته لا يتعلق بمجرد "الرد الآلي". إنه يتعلق بحماية منشأتك من النزيف اليومي الخفي. البنية التحتية تتكفل بالرد، والحجز، والمتابعة — لكي تستيقظ صباحاً وترى جدولك ممتلئاً تلقائياً.</p>
+            <p>إذا كنت جاهزاً لوقف النزيف في عملك، اضغط على الزر أدناه لتراسلني شخصياً.</p>
           </div>
           <div class="mt-10">
             <a href="https://wa.me/96657436016?text=أهلاً%20جيك،%20قرأت%20رسالتك%20وأريد%20تفعيل%20النظام%20لمنشأتي." class="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black hover:bg-gray-200 transition">
-              <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"></path></svg><span data-i18n="txt_181">Talk to Jake personally</span></a>
-            <div class="mt-4 text-sm text-gray-500" data-i18n="txt_182">Email: jake@qudozen.com</div>
-            <div class="mt-1 text-sm text-gray-500" data-i18n="txt_183">WhatsApp: 057436016</div>
+              <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+              تحدث مع جيك شخصياً
+            </a>
+            <div class="mt-4 text-sm text-gray-500">البريد الإلكتروني: jake@qudozen.com</div>
+            <div class="mt-1 text-sm text-gray-500">واتساب: 057436016</div>
           </div>
         </div>
       </div>
@@ -940,22 +950,22 @@
   <footer class="bg-black py-12 px-6 border-t border-gray-900 relative z-10">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
       <div class="text-center md:text-right">
-        <div class="text-xl font-bold tracking-wider mb-2 text-gold" data-i18n="txt_184">⚡ QUDOZEN</div>
-        <p class="text-gray-500 text-sm" data-i18n="txt_185">The infrastructure and smart engine for businesses.</p>
+        <div class="text-xl font-bold tracking-wider mb-2 text-gold">⚡ QUDOZEN</div>
+        <p class="text-gray-500 text-sm">البنية التحتية والمحرك الذكي للأعمال.</p>
       </div>
       <div class="flex gap-8 text-sm font-medium">
-        <a href="#services" class="text-gray-400 hover:text-aqua transition" data-i18n="txt_186">Our services</a>
-        <a href="#simulator" class="text-gray-400 hover:text-aqua transition" data-i18n="txt_187">The simulator</a>
-        <a href="https://wa.me/96657436016" class="text-gray-400 hover:text-aqua transition" data-i18n="txt_188">WhatsApp support</a>
-        <a href="/growth/ghost-room" class="text-gray-400 hover:text-aqua transition" data-i18n="txt_189">The operations room</a>
+        <a href="#services" class="text-gray-400 hover:text-aqua transition">خدماتنا</a>
+        <a href="#simulator" class="text-gray-400 hover:text-aqua transition">المحاكي</a>
+        <a href="https://wa.me/96657436016" class="text-gray-400 hover:text-aqua transition">دعم واتساب</a>
+        <a href="/growth/ghost-room" class="text-gray-400 hover:text-aqua transition">غرفة العمليات</a>
       </div>
-      <div class="text-gray-600 text-sm" data-i18n="txt_190">© 2026 Qudozen. All rights reserved.</div>
+      <div class="text-gray-600 text-sm">© 2026 Qudozen. جميع الحقوق محفوظة.</div>
     </div>
   </footer>
 
   <!-- Floating WhatsApp -->
   <a href="https://wa.me/96657436016" class="chat-widget" aria-label="تواصل عبر واتساب">
-    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"></path></svg>
+    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
   </a>
 
 <!-- ══════════════════════════════════════════════════ -->
@@ -1553,7 +1563,7 @@ gsap.fromTo('.bento-card', { y:40 }, {
   <div id="smOverlay" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md hidden flex-col items-center justify-center p-4 transition-all duration-300 opacity-0" onclick="if(event.target === this) closeModal()">
     <div id="smContent" class="bg-[#0F172A] border border-white/10 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar relative transform scale-95 transition-all duration-300 opacity-0 shadow-2xl flex flex-col">
       <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-gold"></div>
-      <button onclick="closeModal()" class="absolute top-5 left-5 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition">×</button>
+      <button onclick="closeModal()" class="absolute top-5 left-5 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition">&times;</button>
       
       <div class="p-8 md:p-12 pb-0">
         <div id="smIcon" class="text-5xl mb-6"></div>
@@ -1562,12 +1572,14 @@ gsap.fromTo('.bento-card', { y:40 }, {
       </div>
       
       <div class="bg-[#0B1120] p-8 md:p-12 mt-4 border-t border-white/5">
-        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6" data-i18n="txt_191">How the system works (3 steps)</h4>
+        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">كيف يعمل النظام (3 خطوات)</h4>
         <div id="smFlow" class="grid md:grid-cols-3 gap-4 mb-10"></div>
-        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6" data-i18n="txt_192">Main benefits</h4>
+        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">الفوائد الرئيسية</h4>
         <div id="smBenefits" class="grid md:grid-cols-2 gap-4 mb-8">
         </div>
-        <a href="https://wa.me/966570733834" target="_blank" class="inline-flex items-center justify-center gap-2 w-full bg-white text-black py-4 rounded-xl font-bold hover:bg-gray-200 transition text-lg"><span data-i18n="txt_193">Talk about your project</span><span class="text-xl">↗</span>
+        <a href="https://wa.me/966570733834" target="_blank" class="inline-flex items-center justify-center gap-2 w-full bg-white text-black py-4 rounded-xl font-bold hover:bg-gray-200 transition text-lg">
+          تحدث عن مشروعك
+          <span class="text-xl">↗</span>
         </a>
       </div>
     </div>
@@ -2127,6 +2139,5 @@ window.addEventListener('load', () => {
   },3000);
 
   </script>
-
-
-</body></html>
+</body>
+</html>

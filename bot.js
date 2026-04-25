@@ -43,7 +43,7 @@ const LANG_SELECT = '🌐 Welcome! Please choose your language / اختر لغت
 // ─── Smart Menu: tries interactive list, falls back to plain text ───
 async function sendSmartMenu(phone, ar, cl) {
   const clinicName = typeof cl === 'string' ? cl : (cl?.name || 'Our Clinic');
-  const vertical   = cl?.vertical || 'dental';
+  const vertical   = cl?.industry || 'dental';
   const plainText  = ar ? menuAR(cl) : menuEN(cl);
   try {
     await sendMainMenu(phone, clinicName, ar, plainText, vertical);
@@ -56,7 +56,7 @@ async function sendSmartMenu(phone, ar, cl) {
 // Accept either a plain clinic name string or a full clinic object (for feature flags + custom messages)
 function menuEN(clinicOrName) {
   const name = typeof clinicOrName === 'string' ? clinicOrName : (clinicOrName?.name || 'Our Clinic');
-  const vertical = typeof clinicOrName === 'object' ? clinicOrName?.vertical : 'dental';
+  const vertical = typeof clinicOrName === 'object' ? clinicOrName?.industry : 'dental';
   console.log('[Menu] Clinic name:', name, 'Vertical:', vertical);
   
   const cfg  = typeof clinicOrName === 'object' ? clinicOrName?.config : null;
@@ -78,7 +78,7 @@ function menuEN(clinicOrName) {
 
 function menuAR(clinicOrName) {
   const name = typeof clinicOrName === 'string' ? clinicOrName : (clinicOrName?.name || 'عيادتنا');
-  const vertical = typeof clinicOrName === 'object' ? clinicOrName?.vertical : 'dental';
+  const vertical = typeof clinicOrName === 'object' ? clinicOrName?.industry : 'dental';
   console.log('[Menu] Clinic name:', name, 'Vertical:', vertical);
   
   const cfg  = typeof clinicOrName === 'object' ? clinicOrName?.config : null;
@@ -639,7 +639,7 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     // Step 5 — doctor selection: query live from doctor_schedules if cl.doctors JSONB is empty
     const doctors4 = await getClinicDoctors(cl);
     if (doctors4.length > 0) {
-      return sendMessage(phone, doctorSelectionMsg(ar, doctors4, cl.vertical));
+      return sendMessage(phone, doctorSelectionMsg(ar, doctors4, cl.industry));
     }
     // No doctors found anywhere — skip to date selection
     return sendMessage(phone, ar
@@ -692,14 +692,14 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     }
     fd.phone = phone;
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
-    return sendMessage(phone, treatmentMenuMsg(ar, cl.vertical, cl.services));
+    return sendMessage(phone, treatmentMenuMsg(ar, cl.industry, cl.services));
   }
 
   // Step 21 — Custom phone entry
   if (step === 21) {
     fd.phone = val;
     await savePatient(phone, { ...patient, flow_step: 3, flow_data: fd });
-    return sendMessage(phone, treatmentMenuMsg(ar, cl.vertical, cl.services));
+    return sendMessage(phone, treatmentMenuMsg(ar, cl.industry, cl.services));
   }
 
   // Step 3 — Treatment type

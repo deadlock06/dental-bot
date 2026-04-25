@@ -1,0 +1,1725 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qudozen - Ù†Ø¸Ø§Ù… Ø§Ù„ØªØ´ØºÙŠÙ„ Ø§Ù„Ø°Ø§ØªÙŠ Ù„Ù„Ø£Ø¹Ù…Ø§Ù„</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
+    body { font-family: 'Tajawal', sans-serif; background-color: #080C14; color: white; overflow-x: hidden; }
+    .glass {
+      background: rgba(13,148,136,0.03);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass:hover {
+      background: rgba(13,148,136,0.06);
+      border-color: rgba(94,234,212,0.2);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+    .text-glow {
+      text-shadow: 0 0 20px rgba(94,234,212,0.3);
+    }
+    .bento-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .bento-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(94,234,212,0.06), transparent 40%);
+      opacity: 0;
+      transition: opacity 0.5s;
+      pointer-events: none;
+    }
+    .bento-card:hover::before {
+      opacity: 1;
+    }
+
+    .glass {
+      background: rgba(13,148,136,0.05);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(94,234,212,0.1);
+    }
+    .text-teal { color: #0D9488; }
+    .text-aqua { color: #5EEAD4; }
+    .bg-teal  { background-color: #0D9488; }
+    .text-gold { color: #D4A574; }
+    .bg-gold  { background-color: #D4A574; }
+    .bg-gold:hover { background-color: #b78a5e; }
+
+    @keyframes float1 { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-20px) scale(1.05)} }
+    @keyframes float2 { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(30px) scale(0.95)} }
+    .blob1{animation:float1 25s ease-in-out infinite}
+    .blob2{animation:float2 22s ease-in-out infinite reverse}
+
+    ::-webkit-scrollbar{width:8px}
+    ::-webkit-scrollbar-track{background:#0B1120}
+    ::-webkit-scrollbar-thumb{background:#0D9488;border-radius:4px}
+    ::-webkit-scrollbar-thumb:hover{background:#5EEAD4}
+
+    /* â”€â”€ WhatsApp Simulator â”€â”€ */
+    #simChat{scroll-behavior:smooth}
+    .sim-bubble-bot {
+      background:#1e293b;
+      border:1px solid rgba(94,234,212,0.15);
+      border-radius:18px 18px 18px 4px;
+      padding:12px 16px;
+      max-width:82%;
+      align-self:flex-start;
+      font-size:0.92rem;
+      line-height:1.6;
+      animation:bubbleIn .35s ease forwards;
+    }
+    .sim-bubble-user {
+      background:linear-gradient(135deg,#0D9488,#0a7a70);
+      border-radius:18px 18px 4px 18px;
+      padding:12px 16px;
+      max-width:72%;
+      align-self:flex-end;
+      font-size:0.92rem;
+      line-height:1.6;
+      animation:bubbleIn .3s ease forwards;
+    }
+    @keyframes bubbleIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .sim-typing span {
+      display:inline-block;
+      width:7px;height:7px;
+      border-radius:50%;
+      background:#5EEAD4;
+      animation:typingDot 1.2s infinite;
+    }
+    .sim-typing span:nth-child(2){animation-delay:.2s}
+    .sim-typing span:nth-child(3){animation-delay:.4s}
+    @keyframes typingDot{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-6px);opacity:1}}
+
+    /* quick-reply chips */
+    .qr-chip {
+      display:inline-block;
+      padding:8px 18px;
+      border-radius:999px;
+      border:1px solid rgba(94,234,212,0.35);
+      background:rgba(94,234,212,0.07);
+      color:#5EEAD4;
+      font-size:0.82rem;
+      font-weight:600;
+      cursor:pointer;
+      transition:all .2s;
+      white-space:nowrap;
+    }
+    .qr-chip:hover{background:rgba(94,234,212,0.18);border-color:#5EEAD4;transform:translateY(-1px)}
+    .qr-chip:disabled,.qr-chip.used{opacity:.35;pointer-events:none;cursor:default}
+
+    /* â”€â”€ Feature counter cards â”€â”€ */
+    .feat-card{
+      background:rgba(13,148,136,0.04);
+      border:1px solid rgba(94,234,212,0.12);
+      border-radius:20px;
+      padding:28px 20px;
+      text-align:center;
+      transition:transform .3s,border-color .3s;
+    }
+    .autonomous-notice {
+      background: linear-gradient(90deg, transparent, rgba(212,165,116,0.1), transparent);
+      background-size: 200% 100%;
+      animation: shimmer 3s infinite linear;
+      border-top: 1px solid rgba(212,165,116,0.2);
+      border-bottom: 1px solid rgba(212,165,116,0.2);
+      padding: 12px 0;
+      margin: 16px 0;
+      color: #D4A574;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 800;
+      text-align: center;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    .qr-chip {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .qr-chip:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(212,165,116,0.2);
+    }
+    .feat-card:hover{transform:translateY(-5px);border-color:rgba(94,234,212,0.4)}
+    .feat-counter{font-size:2.6rem;font-weight:900;background:linear-gradient(135deg,#5EEAD4,#0D9488);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+    /* â”€â”€ Dashboard preview mockup â”€â”€ */
+    .db-card{
+      background:#0f1b2d;
+      border:1px solid rgba(94,234,212,0.15);
+      border-radius:14px;
+      padding:16px 20px;
+    }
+    .status-dot{
+      width:8px;height:8px;border-radius:50%;
+      background:#22c55e;
+      box-shadow:0 0 8px #22c55e;
+      animation:pulse 2s infinite;
+    }
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+    /* â”€â”€ Services section cards â”€â”€ */
+    .svc-card{
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,0.07);
+      padding:32px;
+      transition:all .3s;
+      cursor:default;
+    }
+    .svc-card:hover{border-color:rgba(94,234,212,0.3);transform:translateY(-4px)}
+    .svc-card.primary{
+      background:linear-gradient(135deg,rgba(13,148,136,0.12),rgba(94,234,212,0.04));
+      border-color:rgba(13,148,136,0.3);
+    }
+
+    /* â”€â”€ completion overlay â”€â”€ */
+    #simComplete{display:none}
+    #simComplete.show{display:flex}
+
+    /* chat-widget */
+    .chat-widget{
+      position:fixed;bottom:24px;right:24px;
+      width:60px;height:60px;
+      background-color:#25D366;
+      border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 4px 20px rgba(37,211,102,0.4);
+      z-index:999;cursor:pointer;
+      transition:transform .3s;
+    }
+    .chat-widget:hover{transform:scale(1.1)}
+
+    /* progress bar */
+    #simProgress{
+      height:3px;background:linear-gradient(90deg,#0D9488,#5EEAD4);
+      border-radius:999px;transition:width .5s ease;
+    }
+  
+    @keyframes gradient-text {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .animate-gradient-text {
+      animation: gradient-text 6s ease infinite;
+    }
+</style>
+</head>
+<body class="antialiased selection:bg-[#0D9488] selection:text-white relative">
+
+  <!-- Liquid Background -->
+  <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+    <div class="absolute top-[10%] -left-[10%] w-[50vw] h-[50vw] bg-[#0D9488]/10 rounded-full blur-[80px] blob1"></div>
+    <div class="absolute bottom-[20%] -right-[10%] w-[40vw] h-[40vw] bg-[#5EEAD4]/10 rounded-full blur-[80px] blob2"></div>
+    <div class="absolute top-[60%] left-[30%] w-[30vw] h-[30vw] bg-[#D4A574]/5 rounded-full blur-[80px] blob1" style="animation-delay:-10s"></div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="fixed w-full z-50 glass px-6 py-4 transition-all duration-300" id="navbar">
+    <div class="max-w-6xl mx-auto w-full flex justify-between items-center">
+    <div class="text-xl font-bold tracking-wider flex items-center gap-2">
+      <span class="text-2xl text-gold">âš¡</span> QUDOZEN
+    </div>
+    
+    <div class="hidden md:flex gap-6 text-sm font-medium text-gray-300">
+      <div class="group relative">
+        <a href="#services" class="hover:text-aqua transition flex items-center gap-1 py-2">Ø®Ø¯Ù…Ø§ØªÙ†Ø§ <span class="text-[10px]">â–¼</span></a>
+        <div class="absolute top-full right-0 w-64 pt-2 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-300 z-[100]">
+          <div class="glass p-4 rounded-2xl border border-white/10 flex flex-col gap-3 shadow-2xl bg-[#0B1120]/98 backdrop-blur-xl">
+            <a href="javascript:void(0)" onclick="scrollToService('reception')" class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
+              <span>ðŸ¤– Ù…ÙˆØ¸Ù Ø§Ù„Ø§Ø³ØªÙ‚Ø¨Ø§Ù„</span>
+              <span class="text-[10px] opacity-40">AOS</span>
+            </a>
+            <a href="javascript:void(0)" onclick="scrollToService('growth')"    class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
+              <span>ðŸŽ¯ Ù…Ø­Ø±Ùƒ Ø§Ù„Ù†Ù…Ùˆ</span>
+              <span class="text-[10px] opacity-40">SWARM</span>
+            </a>
+            <a href="javascript:void(0)" onclick="scrollToService('realestate')" class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
+              <span>ðŸ¢ Ø§Ù„Ù…Ø³Ø§Ø¹Ø¯ Ø§Ù„Ø¹Ù‚Ø§Ø±ÙŠ</span>
+              <span class="text-[10px] opacity-40">RES</span>
+            </a>
+            <a href="javascript:void(0)" onclick="scrollToService('web')"        class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
+              <span>ðŸŒ Ø£Ù†Ø¸Ù…Ø© Ø§Ù„ÙˆÙŠØ¨</span>
+              <span class="text-[10px] opacity-40">WEB</span>
+            </a>
+            <a href="javascript:void(0)" onclick="scrollToService('analytics')"  class="text-xs hover:text-aqua transition text-right px-2 py-1.5 rounded-lg hover:bg-white/5 flex items-center justify-between flex-row-reverse">
+              <span>ðŸ“Š Ù„ÙˆØ­Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª</span>
+              <span class="text-[10px] opacity-40">DATA</span>
+            </a>
+            <div class="h-px bg-white/5 my-1"></div>
+            <a href="javascript:void(0)" onclick="scrollToService('enterprise')" class="text-xs text-gold hover:text-white transition text-right px-2 py-1.5 rounded-lg bg-gold/5 border border-gold/10 flex items-center justify-between flex-row-reverse">
+              <span>ðŸ’Ž Ø§Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ù…Ø¤Ø³Ø³ÙŠ</span>
+              <span class="text-[8px] font-bold">PRO</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <a href="#simulator" class="hover:text-aqua transition">Ø¬Ø±Ø¨ Ø§Ù„Ù…Ø­Ø§ÙƒÙŠ</a>
+      <a href="#pricing"   class="hover:text-aqua transition">Ø§Ù„Ø§Ø³ØªØ«Ù…Ø§Ø±</a>
+      <a href="#jake"      class="hover:text-aqua transition">Ø±Ø³Ø§Ù„Ø© Ø¬ÙŠÙƒ</a>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <a href="/growth/ghost-room" class="hidden sm:inline-block bg-gold text-gray-900 px-6 py-2.5 rounded-xl font-bold hover:bg-[#b78a5e] transition transform hover:-translate-y-0.5 shadow-lg shadow-gold/20">ØºØ±ÙØ© Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª</a>
+      <button id="mobileMenuBtn" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="md:hidden text-gray-300 hover:text-aqua text-2xl">â˜°</button>
+    </div>
+    </div>
+  </nav>
+  <!-- Mobile Menu -->
+  
+    <div id="mobileMenu" class="hidden fixed top-[68px] left-0 right-0 z-[60] bg-[#0B1120] border-b border-white/10 px-6 py-10 flex flex-col gap-6 text-center text-gray-300 text-xl font-bold shadow-2xl">
+      <a href="#services" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4">Ø®Ø¯Ù…Ø§ØªÙ†Ø§</a>
+      <div class="flex flex-wrap justify-center gap-3 px-4 mb-2">
+         <button onclick="scrollToService('reception')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10">Ø§Ù„Ø§Ø³ØªÙ‚Ø¨Ø§Ù„</button>
+         <button onclick="scrollToService('growth')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10">Ø§Ù„Ù†Ù…Ùˆ</button>
+         <button onclick="scrollToService('realestate')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10">Ø§Ù„Ø¹Ù‚Ø§Ø±Ø§Øª</button>
+         <button onclick="scrollToService('analytics')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10">Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª</button>
+      </div>
+      <a href="#simulator" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4">Ø¬Ø±Ø¨ Ø§Ù„Ù…Ø­Ø§ÙƒÙŠ</a>
+      <a href="#pricing" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4">Ø§Ù„Ø§Ø³ØªØ«Ù…Ø§Ø±</a>
+      <a href="#jake" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4">Ø±Ø³Ø§Ù„Ø© <span translate="no">Ø¬ÙŠÙƒ</span></a>
+      <a href="/growth/ghost-room" class="bg-gold text-gray-900 px-6 py-4 rounded-2xl font-black shadow-lg shadow-gold/20">ØºØ±ÙØ© Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª</a>
+    </div>
+
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <!-- HERO                                              -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <section class="min-h-screen flex flex-col justify-center items-center text-center px-6 pt-32 pb-24 relative z-10 border-b border-white/5 overflow-hidden">
+                      <div class="max-w-6xl mx-auto flex flex-col items-center">
+                        
+      <div class="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-xs font-medium text-aqua tracking-widest uppercase border border-aqua/10">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-[#5EEAD4]"></span>
+        </span>
+        Ù†Ø¸Ø§Ù… Ø§Ù„ØªØ´ØºÙŠÙ„ Ø§Ù„Ø°Ø§ØªÙŠ v3.3
+      </div>
+      <h1 class="text-6xl md:text-8xl font-black mb-8 leading-[1.05] tracking-tight text-glow">
+        Ø£Ø¹Ù…Ø§Ù„ÙƒØŒ ØªØ¹Ù…Ù„ <br/>
+        <span class="text-transparent bg-clip-text bg-gradient-to-l from-[#5EEAD4] via-[#0D9488] to-[#5EEAD4] bg-[length:200%_auto] animate-gradient-text">Ø¨Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ</span>
+      </h1>
+      <p class="text-lg md:text-2xl text-gray-400 mb-12 max-w-3xl leading-relaxed font-light">
+        Ù†Ø¨Ù†ÙŠ Ø£Ù†Ø¸Ù…Ø© Ø°Ø§ØªÙŠØ© Ø§Ù„Ø¥Ø¯Ø§Ø±Ø© ØªØªÙˆÙ„Ù‰ Ø¹Ù…Ù„ÙŠØ§ØªÙƒ Ø§Ù„ØªØ´ØºÙŠÙ„ÙŠØ© Ø¨Ø§Ù„ÙƒØ§Ù…Ù„ â€” Ù„ØªØªÙØ±Øº Ø£Ù†Øª Ù„Ù…Ø§ ÙŠÙ‡Ù…Ùƒ Ø­Ù‚Ø§Ù‹. Ø§Ù„Ù‚ÙˆØ© ØªÙƒÙ…Ù† ÙÙŠ Ø·Ø¨Ù‚Ø§Øª Ø§Ù„ÙˆØ¹ÙŠ Ø§Ù„Ø«Ù„Ø§Ø«.
+      </p>
+
+                        <div class="flex flex-col sm:flex-row gap-6 w-full justify-center">
+                          <a href="#simulator" class="bg-white text-black px-10 py-5 rounded-2xl font-black text-xl hover:bg-gray-200 transition duration-300 shadow-2xl shadow-aqua/20 flex items-center gap-3">
+                            <span>ðŸš€ Ø¬Ø±Ø¨ Ø§Ù„Ù…Ø­Ø§ÙƒØ§Ø© Ø§Ù„Ø­ÙŠØ©</span>
+                          </a>
+                          <a href="#pricing" class="glass px-10 py-5 rounded-2xl font-bold text-xl text-white hover:bg-white/5 transition duration-300 border border-white/10">
+                            ðŸ’Ž Ø´Ø§Ù‡Ø¯ Ø®Ø·Ø· Ø§Ù„Ø§Ø³ØªØ«Ù…Ø§Ø±
+                          </a>
+                        </div>
+                        <div class="mt-24 grid grid-cols-2 md:grid-cols-4 gap-12 text-center border-t border-white/5 pt-16 w-full">
+                          <div><div class="text-4xl font-black text-white">24/7</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase">Ø§Ù„ØªÙˆÙØ± Ø§Ù„ØªØ´ØºÙŠÙ„ÙŠ</div></div>
+                          <div><div class="text-4xl font-black text-aqua">&lt;3s</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase">Ø³Ø±Ø¹Ø© Ø§Ù„Ø§Ø³ØªØ¬Ø§Ø¨Ø©</div></div>
+                          <div><div class="text-4xl font-black text-gold">94%</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase">Ø¯Ù‚Ø© Ø§Ù„ØªØ­ÙˆÙŠÙ„</div></div>
+                          <div><div class="text-4xl font-black text-white">100%</div><div class="text-sm text-gray-500 mt-2 tracking-widest uppercase">Ø£ØªÙ…ØªØ© ÙƒØ§Ù…Ù„Ø©</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <!-- THREE-LAYER ARCHITECTURE                          -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <section id="architecture" class="py-24 px-6 relative z-10 border-b border-white/5 bg-[#0B1120]">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Ø£ÙƒØ«Ø± Ù…Ù† Ù…Ø¬Ø±Ø¯ Ø¨ÙˆØª Ù…Ø­Ø§Ø¯Ø«Ø©. <span class="text-gold">Ø¨Ù†ÙŠØ© ØªØ­ØªÙŠØ© ÙƒØ§Ù…Ù„Ø©.</span></h2>
+        <p class="text-gray-400 text-lg">ØªØ­ÙˆÙ„ ÙƒØ§Ù…Ù„ ÙÙŠ ÙƒÙŠÙÙŠØ© Ø¹Ù…Ù„ Ø§Ù„Ù…Ù†Ø´Ø£Ø©. Ø§Ù„Ù‚ÙˆØ© ØªÙƒÙ…Ù† ÙÙŠ Ø·Ø¨Ù‚Ø§Øª Ø§Ù„ÙˆØ¹ÙŠ Ø§Ù„Ø«Ù„Ø§Ø«.</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-8 relative">
+        <div class="hidden md:block absolute top-[40%] left-0 right-0 h-0.5 bg-gradient-to-r from-teal-900 via-aqua-500 to-gold/30 z-0"></div>
+        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80">
+          <div class="w-16 h-16 rounded-2xl bg-teal-900 border border-teal-500 flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(13,148,136,0.4)]">1ï¸âƒ£</div>
+          <h3 class="text-2xl font-bold mb-3">Ø·Ø¨Ù‚Ø© Ø§Ù„Ø§Ø³ØªÙ‚Ø¨Ø§Ù„</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">Ø§Ù„ÙˆØ§Ø¬Ù‡Ø© Ø§Ù„Ø£Ù…Ø§Ù…ÙŠØ© Ø¹Ø¨Ø± Ø§Ù„ÙˆØ§ØªØ³Ø§Ø¨. Ù†Ø¸Ø§Ù… ØªØ´ØºÙŠÙ„ Ø°Ø§ØªÙŠ ÙŠØ±Ø¯ ÙÙˆØ±Ø§Ù‹ØŒ ÙŠØ³ØªÙˆØ¹Ø¨ Ø§Ù„Ø­Ø§Ù„Ø©ØŒ ÙˆÙŠØ­Ø¬Ø² Ø§Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯ Ø¨Ù„ØºØ© Ø¹Ø±Ø¨ÙŠØ© Ø³Ù„ÙŠÙ…Ø©.</p>
+        </div>
+        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80 mt-12 md:mt-0">
+          <div class="w-16 h-16 rounded-2xl border border-[#5EEAD4] flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(94,234,212,0.4)]" style="background:rgba(94,234,212,0.08)">2ï¸âƒ£</div>
+          <h3 class="text-2xl font-bold mb-3">Ø·Ø¨Ù‚Ø© Ø§Ù„ØªÙ†Ø³ÙŠÙ‚</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">Ø§Ù„Ø¯Ù…Ø§Øº Ø§Ù„Ø°ÙŠ ÙŠØ±Ø¨Ø· Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø© Ø¨Ø§Ù„ÙˆØ§Ù‚Ø¹. ØªÙ†Ø³ÙŠÙ‚ ÙÙˆØ±ÙŠ Ù…Ø¹ Ø§Ù„ØªÙ‚ÙˆÙŠÙ…ØŒ Ù…Ù†Ø¹ Ø§Ù„ØªØ¹Ø§Ø±Ø¶Ø§ØªØŒ ÙˆØ¥Ø±Ø³Ø§Ù„ ØªØ°ÙƒÙŠØ±Ø§Øª Ø¢Ù„ÙŠØ©.</p>
+        </div>
+        <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80 mt-12 md:mt-0">
+          <div class="w-16 h-16 rounded-2xl bg-gold/20 border border-gold flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(212,165,116,0.4)]">3ï¸âƒ£</div>
+          <h3 class="text-2xl font-bold mb-3 text-gold">Ø·Ø¨Ù‚Ø© Ø§Ù„ØªØ¹Ù„Ù… (Ø§Ù„Ø³ÙˆØ§Ø±Ù…)</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">Ù…Ø­Ø±Ùƒ ÙˆØ¹ÙŠ ØªØ³ÙˆÙŠÙ‚ÙŠ ÙŠØ±Ø§Ù‚Ø¨ Ø§Ù„Ø³ÙˆÙ‚ Ù…Ù† Ø£Ø¬Ù„Ùƒ. ÙŠØ³ØªØ¹ÙŠØ¯ Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ Ø§Ù„Ù…ØªØ±Ø¯Ø¯ÙŠÙ† ÙˆÙŠØ¬Ù…Ø¹ Ø§Ù„ØªÙ‚ÙŠÙŠÙ…Ø§Øª Ø¨ØµÙ…Øª.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <!-- OUR SERVICES                                      -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  
+  <section id="services" class="py-24 px-6 relative z-10 border-b border-white/5 bg-gradient-to-b from-[#0A0F18] to-[#0B1120]">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16">
+        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-aqua mb-4 tracking-widest uppercase">Ø®Ø¯Ù…Ø§ØªÙ†Ø§</div>
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Ø§Ù„Ø¨Ù†ÙŠØ© Ø§Ù„ØªØ­ØªÙŠØ© Ø§Ù„Ø±Ù‚Ù…ÙŠØ© <span class="text-aqua">Ø§Ù„Ù…ØªÙƒØ§Ù…Ù„Ø©</span></h2>
+        <p class="text-gray-400">Ù†Ø¸Ø§Ù… Ø°ÙƒÙŠ ÙŠØ±Ø¨Ø· ÙƒÙ„ Ø´ÙŠØ¡. Ø§Ø¶ØºØ· Ø¹Ù„Ù‰ Ø£ÙŠ Ø¨Ø·Ø§Ù‚Ø© Ù„Ù„ØªÙØ§ØµÙŠÙ„.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- 1. AI Receptionist (Spans 2 cols, 2 rows on lg) -->
+        <div onclick="openModal('reception')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-2 lg:row-span-2 flex flex-col justify-between overflow-hidden" style="background:linear-gradient(135deg,rgba(13,148,136,0.1),rgba(11,17,32,0.8));border-color:rgba(13,148,136,0.4)">
+          <div class="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-[#0D9488]/20 to-transparent pointer-events-none"></div>
+          <div>
+            <div class="w-16 h-16 rounded-2xl bg-teal-900 border border-teal-500 flex items-center justify-center text-3xl mb-6 shadow-[0_0_20px_rgba(13,148,136,0.4)] group-hover:scale-110 transition">ðŸ¤–</div>
+            <h3 class="text-2xl md:text-3xl font-bold mb-3 text-white">Ù…ÙˆØ¸Ù Ø§Ù„Ø§Ø³ØªÙ‚Ø¨Ø§Ù„ Ø§Ù„Ø°ÙƒÙŠ</h3>
+            <p class="text-gray-400 text-lg leading-relaxed">Ù…ÙˆØ¸Ù Ù„Ø§ ÙŠÙ†Ø§Ù…ØŒ ÙŠØ±Ø¯ ÙÙˆØ±Ø§Ù‹ ÙˆÙŠØ­Ø¬Ø² Ø§Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯ Ø¹Ù„Ù‰ Ù…Ø¯Ø§Ø± Ø§Ù„Ø³Ø§Ø¹Ø©. ÙŠØªØ­ÙƒÙ… Ø¨Ø§Ù„ØªÙ‚ÙˆÙŠÙ… ÙˆÙŠØªØ­Ø¯Ø« Ø§Ù„Ù„ØºØªÙŠÙ† Ø¨Ø·Ù„Ø§Ù‚Ø©.</p>
+          </div>
+          <div class="mt-8 text-teal-400 font-bold flex items-center gap-2 group-hover:gap-4 transition-all">Ø§Ù‚Ø±Ø£ Ø§Ù„Ù…Ø²ÙŠØ¯ <span>â†</span></div>
+        </div>
+
+        <!-- 2. Growth Swarm -->
+        <div onclick="openModal('growth')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-2" style="background:rgba(212,165,116,0.05);border-color:rgba(212,165,116,0.2)">
+          <div class="w-12 h-12 rounded-xl bg-gold/20 border border-gold/40 flex items-center justify-center text-2xl mb-4 group-hover:rotate-12 transition">ðŸŽ¯</div>
+          <h3 class="text-xl font-bold mb-2 text-gold">Ù…Ø­Ø±Ùƒ Ø§Ù„Ù†Ù…Ùˆ Ø§Ù„ØªÙ„Ù‚Ø§Ø¦ÙŠ</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">ÙŠÙƒØªØ´Ù Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ Ø§Ù„Ù…Ø­ØªÙ…Ù„ÙŠÙ† ÙˆÙŠØ±Ø³Ù„ Ù„Ù‡Ù… Ø±Ø³Ø§Ø¦Ù„ Ù…Ø®ØµØµØ© Ø¨Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ù†ÙŠØ§Ø¨Ø© Ø¹Ù†Ùƒ.</p>
+        </div>
+
+        <!-- 3. Real Estate Bot -->
+        <div onclick="openModal('realestate')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1" style="border-color:rgba(94,234,212,0.2)">
+          <div class="w-12 h-12 rounded-xl bg-aqua/10 border border-aqua/30 flex items-center justify-center text-2xl mb-4 group-hover:-translate-y-1 transition">ðŸ¢</div>
+          <h3 class="text-xl font-bold mb-2 text-white">Ø§Ù„Ù…Ø³Ø§Ø¹Ø¯ Ø§Ù„Ø¹Ù‚Ø§Ø±ÙŠ</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">ØªØ£Ù‡ÙŠÙ„ Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ Ù„Ù„Ø¹Ù‚Ø§Ø±Ø§Øª ÙˆØ¬Ø¯ÙˆÙ„Ø© Ø§Ù„Ø²ÙŠØ§Ø±Ø§Øª ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹.</p>
+        </div>
+
+        <!-- 4. Web Systems -->
+        <div onclick="openModal('web')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1" style="border-color:rgba(168,85,247,0.3)">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">ðŸŒ</div>
+          <h3 class="text-xl font-bold mb-2 text-white">Ø£Ù†Ø¸Ù…Ø© ÙˆÙŠØ¨ Ù„Ù„ØªØ­ÙˆÙŠÙ„</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">Ù…ÙˆØ§Ù‚Ø¹ ÙØ§Ø¦Ù‚Ø© Ø§Ù„Ø³Ø±Ø¹Ø© Ù…ØµÙ…Ù…Ø© Ø®ØµÙŠØµØ§Ù‹ Ù„Ø¬Ù„Ø¨ Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡.</p>
+        </div>
+
+        <!-- 5. App Studio -->
+        <div onclick="openModal('app')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1" style="border-color:rgba(244,63,94,0.3)">
+          <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-2xl mb-4 group-hover:rotate-12 transition">ðŸ“±</div>
+          <h3 class="text-xl font-bold mb-2 text-white">ØªØ·Ø¨ÙŠÙ‚Ø§Øª Ù…Ø®ØµØµØ©</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">Ø£Ø¯ÙˆØ§Øª Ø¯Ø§Ø®Ù„ÙŠØ© ÙˆØªØ·Ø¨ÙŠÙ‚Ø§Øª Ø¹Ù…Ù„Ø§Ø¡ Ù…ØµÙ…Ù…Ø© Ù„Ø£Ø¹Ù…Ø§Ù„Ùƒ.</p>
+        </div>
+
+        <!-- 6. Automation -->
+        <div onclick="openModal('auto')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1" style="border-color:rgba(59,130,246,0.3)">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-2xl mb-4 group-hover:-translate-y-1 transition">âš¡</div>
+          <h3 class="text-xl font-bold mb-2 text-white">Ø£ØªÙ…ØªØ© Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">Ø±Ø¨Ø· Ø§Ù„Ø£Ù†Ø¸Ù…Ø© ÙˆØªØ³ÙŠÙŠØ± Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª Ø¯ÙˆÙ† ØªØ¯Ø®Ù„ Ø¨Ø´Ø±ÙŠ.</p>
+        </div>
+
+        <!-- 7. Analytics -->
+        <div onclick="openModal('analytics')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-1 lg:col-span-1 flex flex-col justify-between" style="border-color:rgba(94,234,212,0.3)">
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-aqua/20 border border-aqua/50 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">ðŸ“Š</div>
+            <h3 class="text-lg font-bold mb-2 text-white">Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø­ÙŠØ©</h3>
+            <p class="text-gray-400 text-[10px] leading-relaxed">Ø´Ø§Ù‡Ø¯ Ø£Ø¯Ø§Ø¡ Ø­Ù…Ù„Ø§ØªÙƒ ÙˆØ£Ø±Ø¨Ø§Ø­Ùƒ Ø§Ù„Ù…Ù‡Ø¯Ø±Ø© ÙÙŠ Ù„ÙˆØ­Ø© ØªØ­ÙƒÙ… ÙˆØ§Ø­Ø¯Ø©.</p>
+          </div>
+        </div>
+
+        <!-- 8. Enterprise Custom AOS -->
+        <div onclick="openModal('enterprise')" class="bento-card cursor-pointer group glass p-8 rounded-3xl relative z-10 md:col-span-2 lg:col-span-1 flex flex-col justify-between" style="border:1px solid rgba(212,165,116,0.3); background:rgba(212,165,116,0.05)">
+          <div class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-gold/20 text-[8px] text-gold font-bold border border-gold/30 tracking-tighter">PREMIUM</div>
+          <div>
+            <div class="w-10 h-10 rounded-xl bg-gold/20 border border-gold/50 flex items-center justify-center text-xl mb-4 group-hover:rotate-12 transition">ðŸ’Ž</div>
+            <h3 class="text-lg font-bold mb-2 text-gold">Ø§Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ù…Ø¤Ø³Ø³ÙŠ</h3>
+            <p class="text-gray-400 text-[10px] leading-relaxed">Ø¨Ù†ÙŠØ© ØªØ­ØªÙŠØ© Ù…Ø®ØµØµØ© Ù„Ù„Ø´Ø±ÙƒØ§Øª Ø§Ù„ÙƒØ¨Ø±Ù‰ Ø¨Ø³Ø¹Ø© ØºÙŠØ± Ù…Ø­Ø¯ÙˆØ¯Ø©.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <!-- LIVE SIMULATOR                                    -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <section id="simulator" class="py-24 px-4 relative z-10 border-b border-white/5 bg-[#070b14]">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-gold mb-4 tracking-widest uppercase">Ù…Ø­Ø§ÙƒØ§Ø© Ø­ÙŠØ©</div>
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Ø¬Ø±Ù‘Ø¨ <span class="text-gold">Ø§Ù„Ø¨ÙˆØª Ø§Ù„ÙØ¹Ù„ÙŠ</span> Ø§Ù„Ø¢Ù†</h2>
+        <p class="text-gray-400 max-w-xl mx-auto">Ù‡Ø°Ù‡ Ù„ÙŠØ³Øª Ø¹Ø±Ø¶Ø§Ù‹ ÙˆÙ‡Ù…ÙŠØ§Ù‹ â€” Ù‡Ø°Ø§ Ù‡Ùˆ Ù†ÙØ³ Ø§Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ø°ÙŠ ÙŠØ¹Ù…Ù„ Ø¹Ù„Ù‰ ÙˆØ§ØªØ³Ø§Ø¨. Ø¬Ø±Ù‘Ø¨ Ø§Ù„Ø­Ø¬Ø² Ø§Ù„ÙƒØ§Ù…Ù„ Ù…Ù† Ø§Ù„Ø¨Ø¯Ø§ÙŠØ© Ù„Ù„ØªØ£ÙƒÙŠØ¯.</p>
+      </div>
+
+      <div class="flex flex-col lg:flex-row gap-10 items-start justify-center">
+
+        <!-- Left: Simulator Phone Frame -->
+        <div class="w-full max-w-sm mx-auto lg:mx-0 flex-shrink-0">
+          <!-- Phone frame -->
+          <div class="relative mx-auto" style="width:320px">
+            <!-- Phone chrome -->
+            <div class="absolute inset-0 rounded-[36px] border-2 border-gray-700 pointer-events-none z-20" style="box-shadow:0 0 60px rgba(13,148,136,0.15)"></div>
+
+            <!-- WhatsApp-style container -->
+            <div id="simPhoneShell" class="rounded-[34px] overflow-hidden bg-[#111b21]" style="height:600px;display:flex;flex-direction:column">
+
+              <!-- Status bar -->
+              <div class="bg-[#111b21] px-5 pt-3 pb-1 flex justify-between items-center text-[11px] text-gray-400">
+                <span>9:41</span>
+                <div class="flex gap-1 items-center">
+                  <svg class="w-3 h-3 fill-gray-400" viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                  <svg class="w-3 h-3 fill-gray-400" viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+                </div>
+              </div>
+
+              <!-- Chat header -->
+              <div class="bg-[#202c33] px-4 py-3 flex items-center gap-3 border-b border-gray-800/50">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-lg shadow-lg flex-shrink-0">ðŸ¤–</div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-white text-sm">Ø§Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ø°ÙƒÙŠ Ù„Ù„Ù…Ù†Ø´Ø£Ø©</div>
+                  <div class="text-[11px] text-[#5EEAD4] flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 bg-[#5EEAD4] rounded-full inline-block animate-pulse"></span>
+                    Ù…ØªØµÙ„ Ø¯Ø§Ø¦Ù…Ø§Ù‹
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <button onclick="resetSimulator()" class="text-gray-500 hover:text-rose-400 transition" title="Ø¥Ø¹Ø§Ø¯Ø© ØªØ´ØºÙŠÙ„ / Reset">â†º</button>
+                  <div class="text-gray-500 text-xs">â‹®</div>
+                </div>
+              </div>
+
+              <!-- Progress bar -->
+              <div class="bg-[#111b21] px-4 py-1.5">
+                <div class="h-1 bg-gray-800 rounded-full overflow-hidden">
+                  <div id="simProgress" style="width:0%"></div>
+                </div>
+                <div class="text-[10px] text-gray-600 mt-0.5" id="simStepLabel" style="direction:rtl">Ø§Ù„Ø®Ø·ÙˆØ© 0 Ù…Ù† 7</div>
+              </div>
+
+              <!-- Chat body -->
+              <div id="simChat" class="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-3"
+                   style="background:#0d1418;background-image:url('https://www.transparenttextures.com/patterns/stardust.png');background-size:200px">
+              </div>
+
+              <!-- Quick replies area -->
+              <div id="simReplies" class="bg-[#111b21] border-t border-gray-800/50 px-3 py-3 flex flex-wrap gap-2 min-h-[58px] items-center">
+                <span class="text-gray-600 text-xs italic">ÙÙŠ Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø¨Ø¯Ø¡...</span>
+              </div>
+
+              <!-- Input bar -->
+              <div class="bg-[#202c33] px-3 py-2.5 flex items-center gap-2 border-t border-gray-800/30">
+                <div id="simInputWrap" class="flex-1 bg-[#2a3942] rounded-full px-4 py-2 flex items-center gap-2">
+                  <input id="simInput" type="text" placeholder="Ø§ÙƒØªØ¨ Ø±Ø³Ø§Ù„Ø©..." disabled
+                    class="flex-1 bg-transparent text-white text-sm outline-none placeholder-gray-600 text-right"
+                    style="min-width:0;direction:rtl" />
+                </div>
+                <button id="simSend" disabled
+                  class="w-9 h-9 rounded-full bg-[#0D9488] flex items-center justify-center transition hover:bg-teal-600 disabled:opacity-30"
+                  onclick="handleSimInput()">
+                  <svg class="w-4 h-4 fill-white rtl:rotate-180" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Start button (below phone) -->
+          <div class="mt-6 text-center" style="position:relative;z-index:1001">
+            <button id="simStartBtn" onclick="startSimulator()"
+              class="bg-gold text-gray-900 px-8 py-3 rounded-xl font-black hover:shadow-[0_0_20px_rgba(212,165,116,0.5)] transition">
+              â–¶ Ø§Ø¨Ø¯Ø£ Ø§Ù„Ù…Ø­Ø§ÙƒØ§Ø©
+            </button>
+            <div class="text-xs text-gray-600 mt-2">Ù„Ø§ ÙŠØªØ·Ù„Ø¨ ØªØ³Ø¬ÙŠÙ„ Â· Ø¬Ø§Ù‡Ø² Ø®Ù„Ø§Ù„ Ø«Ø§Ù†ÙŠØ©</div>
+          </div>
+        </div>
+
+        
+    <!-- Right: Step guide + Dashboard preview -->
+    <div class="flex-1 space-y-8 w-full max-w-2xl mx-auto lg:mx-0">
+      <div class="glass rounded-3xl p-8 border border-white/5 relative overflow-hidden group">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-aqua/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-aqua/10 transition-colors"></div>
+        <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-3">
+          <span class="w-8 h-8 rounded-lg bg-aqua/10 flex items-center justify-center text-aqua text-sm">01</span>
+          Ø±Ø­Ù„Ø© Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø§Ù„Ø°ÙƒÙŠØ©
+        </h3>
+        <div class="space-y-6">
+          <div class="flex gap-4">
+            <div class="w-1 bg-gradient-to-b from-aqua to-transparent rounded-full h-12"></div>
+            <div>
+              <div class="text-white font-bold mb-1">Ø§Ù„Ø§Ø³ØªØ¬Ø§Ø¨Ø© Ø§Ù„Ù„Ø­Ø¸ÙŠØ©</div>
+              <div class="text-gray-400 text-sm">ÙŠÙ‚ÙˆÙ… Ø§Ù„Ù†Ø¸Ø§Ù… Ø¨Ø§Ù„Ø±Ø¯ Ø®Ù„Ø§Ù„ Ø£Ù‚Ù„ Ù…Ù† 3 Ø«ÙˆØ§Ù†Ù Ø¨Ù„Ù‡Ø¬Ø© Ù…Ø­Ù„ÙŠØ© Ø·Ø¨ÙŠØ¹ÙŠØ©.</div>
+            </div>
+          </div>
+          <div class="flex gap-4 opacity-50">
+            <div class="w-1 bg-gray-700 rounded-full h-12"></div>
+            <div>
+              <div class="text-white font-bold mb-1">ØªØ£Ù‡ÙŠÙ„ Ø§Ù„Ø·Ù„Ø¨</div>
+              <div class="text-gray-400 text-sm">ÙØ±Ø² ØªÙ„Ù‚Ø§Ø¦ÙŠ Ù„Ù„Ø­Ø§Ù„Ø§Øª Ø§Ù„Ø·Ø§Ø±Ø¦Ø©ØŒ Ø§Ù„Ø­Ø¬ÙˆØ²Ø§ØªØŒ Ø£Ùˆ Ø§Ù„Ø§Ø³ØªÙØ³Ø§Ø±Ø§Øª Ø§Ù„Ø¹Ø§Ù…Ø©.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Mockup for Desktop -->
+      <div class="glass rounded-3xl p-4 border border-white/5 bg-[#0F172A]/50 relative group">
+        <div class="flex items-center gap-2 mb-4 px-2">
+          <div class="w-3 h-3 rounded-full bg-rose-500/50"></div>
+          <div class="w-3 h-3 rounded-full bg-amber-500/50"></div>
+          <div class="w-3 h-3 rounded-full bg-emerald-500/50"></div>
+          <div class="text-[10px] text-gray-500 ml-4 tracking-widest uppercase">Qudozen Dashboard v3.0</div>
+        </div>
+        <div class="aspect-video bg-[#080C14] rounded-xl border border-white/5 overflow-hidden relative">
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="text-center">
+              <div class="text-aqua text-4xl font-black mb-2 animate-pulse">4D Analytics</div>
+              <div class="text-gray-500 text-xs">Waiting for simulator trigger...</div>
+            </div>
+          </div>
+          <!-- Mock Chart -->
+          <div class="absolute bottom-4 left-4 right-4 h-24 flex items-end gap-1 opacity-20">
+            <div class="flex-1 bg-aqua h-[40%] rounded-t"></div>
+            <div class="flex-1 bg-aqua h-[60%] rounded-t"></div>
+            <div class="flex-1 bg-aqua h-[30%] rounded-t"></div>
+            <div class="flex-1 bg-aqua h-[80%] rounded-t"></div>
+            <div class="flex-1 bg-aqua h-[50%] rounded-t"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+          <!-- Dashboard preview (dynamic) -->
+          <div id="dashPreview" class="glass rounded-2xl p-6 border border-[#0D9488]/30 hidden transform scale-95 opacity-0 transition-all duration-500 shadow-[0_0_40px_rgba(13,148,136,0.1)]">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <div class="status-dot"></div>
+                <span id="dsStatus" class="text-xs font-bold text-[#22c55e] uppercase tracking-wider">Ø§Ù„Ù†Ø¸Ø§Ù… Ù†Ø´Ø·</span>
+              </div>
+              <div class="text-[10px] text-gray-500 tracking-tighter" id="dsTime">ØªØ­Ø¯ÙŠØ«: Ø§Ù„Ø¢Ù†</div>
+            </div>
+            
+            <div id="dsTitle" class="text-sm font-bold text-white mb-5 border-b border-white/5 pb-3">ðŸ“Š Ù„ÙˆØ­Ø© ØªØ­ÙƒÙ… Ø§Ù„Ù…Ù†Ø´Ø£Ø© â€” Ù…Ø¨Ø§Ø´Ø±</div>
+            
+            <div class="space-y-4">
+              <!-- Result Card -->
+              <div class="bg-[#0f1b2d] border border-teal-500/30 rounded-xl p-4 shadow-inner relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
+                <div class="flex justify-between items-start mb-2">
+                  <div id="dsConfLabel" class="text-[10px] font-bold text-teal-400 uppercase">Ù…ÙˆØ¹Ø¯ Ù…Ø¤ÙƒØ¯ Ø¬Ø¯ÙŠØ¯</div>
+                  <div class="text-[10px] text-gray-500" id="dsRef">REF: QZ-2026</div>
+                </div>
+                <div class="text-lg font-black text-white mb-1" id="dsPatientName">--</div>
+                <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-white/5">
+                  <div>
+                    <div id="dsTreatLabel" class="text-[9px] text-gray-500 uppercase">Ù†ÙˆØ¹ Ø§Ù„Ø¹Ù„Ø§Ø¬</div>
+                    <div id="dsTreatment" class="text-xs text-white font-bold">--</div>
+                  </div>
+                  <div>
+                    <div id="dsSlotLabel" class="text-[9px] text-gray-500 uppercase">Ø§Ù„ÙˆÙ‚Øª</div>
+                    <div id="dsSlot" class="text-xs text-aqua font-bold">--</div>
+                  </div>
+                  <div>
+                    <div id="dsDateLabel" class="text-[9px] text-gray-500 uppercase">Ø§Ù„ØªØ§Ø±ÙŠØ®</div>
+                    <div id="dsDate" class="text-xs text-white font-bold">--</div>
+                  </div>
+                  <div>
+                    <div id="dsDocLabel" class="text-[9px] text-gray-500 uppercase">Ø§Ù„ÙØ±ÙŠÙ‚</div>
+                    <div id="dsDoctor" class="text-xs text-white font-bold">--</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stats Mini -->
+              <div class="grid grid-cols-2 gap-3">
+                <div class="bg-[#0f1b2d]/60 rounded-lg p-3 border border-white/5">
+                  <div id="dsSyncLabel" class="text-[9px] text-gray-500">ØªÙ‚ÙˆÙŠÙ… Ø¬ÙˆØ¬Ù„</div>
+                  <div class="text-[10px] text-aqua font-bold">Ù…Ø²Ø§Ù…Ù†Ø©: Ù†Ø§Ø¬Ø­Ø© âœ…</div>
+                </div>
+                <div class="bg-[#0f1b2d]/60 rounded-lg p-3 border border-white/5">
+                  <div id="dsRemLabel" class="text-[9px] text-gray-500">ØªØ°ÙƒÙŠØ±Ø§Øª</div>
+                  <div class="text-[10px] text-gold font-bold">Ù…Ø¬Ø¯ÙˆÙ„Ø© 24h+1h</div>
+                </div>
+              </div>
+            </div>
+
+            <a href="https://wa.me/96657436016?text=Ø£Ø±ÙŠØ¯%20ØªÙØ¹ÙŠÙ„%20Ù„ÙˆØ­Ø©%20ØªØ­ÙƒÙ…ÙŠ%20Ø§Ù„Ø®Ø§ØµØ©" target="_blank"
+               class="mt-6 w-full block bg-gold text-gray-900 py-3.5 rounded-xl font-black text-center hover:shadow-[0_0_20px_rgba(212,165,116,0.3)] transition text-sm">
+               ØªÙØ¹ÙŠÙ„ Ø§Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ø®Ø§Øµ Ø¨Ùƒ â†’
+            </a>
+          </div>
+
+          <!-- WhatsApp redirect (shown after completion) -->
+          <div id="waRedirect" class="glass rounded-2xl p-6 border border-[#25D366]/30 hidden" style="background:rgba(37,211,102,0.04)">
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-[#25D366]/20 flex items-center justify-center flex-shrink-0">
+                <svg viewBox="0 0 24 24" class="w-6 h-6 fill-[#25D366]"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+              </div>
+              <div class="flex-1">
+                <div class="text-sm font-bold text-white mb-1">Ù…Ø­Ø§ÙƒØ§ØªÙƒ Ù…ÙƒØªÙ…Ù„Ø© ðŸŽ‰</div>
+                <p class="text-xs text-gray-400 mb-3 leading-relaxed">Ù‡Ø°Ø§ Ø¨Ø§Ù„Ø¶Ø¨Ø· Ù…Ø§ Ø³ÙŠØ­Ø¯Ø« ÙÙŠ Ø¹Ù…Ù„Ùƒ. Ø¬Ø§Ù‡Ø² Ù„ØªÙØ¹ÙŠÙ„ Ù†Ø¸Ø§Ù…Ùƒ Ø§Ù„Ø®Ø§ØµØŸ</p>
+                <a href="https://wa.me/96657436016?text=Ø£Ù‡Ù„Ø§Ù‹%20Ø¬ÙŠÙƒØŒ%20Ø¬Ø±Ø¨Øª%20Ø§Ù„Ù…Ø­Ø§ÙƒÙŠ%20ÙˆØ£Ø±ÙŠØ¯%20ØªÙØ¹ÙŠÙ„%20Ø§Ù„Ù†Ø¸Ø§Ù…%20Ù„Ø¹ÙŠØ§Ø¯ØªÙŠ." target="_blank"
+                   class="inline-flex items-center gap-2 bg-[#25D366] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#1da851] transition">
+                  <svg viewBox="0 0 24 24" class="w-4 h-4 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                  ØªØ­Ø¯Ø« Ù…Ø¹ Ø¬ÙŠÙƒ Ø§Ù„Ø¢Ù†
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <!-- FEATURE HIGHLIGHTS (animated counters)           -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <section id="features" class="py-24 px-6 relative z-10 border-b border-white/5 bg-gradient-to-b from-[#070b14] to-[#0B1120]">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-14">
+        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-aqua mb-4 tracking-widest uppercase">Ø£Ø±Ù‚Ø§Ù… Ø­Ù‚ÙŠÙ‚ÙŠØ©</div>
+        <h2 class="text-3xl md:text-4xl font-bold mb-3">Ø§Ù„Ø¨Ù†ÙŠØ© Ø§Ù„ØªØ­ØªÙŠØ© <span class="text-aqua">Ø§Ù„ØªÙŠ ØªØªØ­Ø¯Ø« Ø£Ø±Ù‚Ø§Ù…Ù‡Ø§</span></h2>
+        <p class="text-gray-400">Ù„ÙŠØ³Øª ÙˆØ¹ÙˆØ¯Ø§Ù‹ â€” Ø¨ÙŠØ§Ù†Ø§Øª Ù…Ù† Ø¹ÙŠØ§Ø¯Ø§Øª ØªØ¹Ù…Ù„ Ø¹Ù„Ù‰ Ø§Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ø¢Ù†.</p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="feat-card">
+          <div class="text-3xl mb-3">âš¡</div>
+          <div class="feat-counter" id="cnt-response">0</div>
+          <div class="text-gray-500 text-xs mt-1">ÙˆÙ‚Øª Ø§Ù„Ø±Ø¯ (Ø«Ø§Ù†ÙŠØ©)</div>
+        </div>
+        <div class="feat-card">
+          <div class="text-3xl mb-3">ðŸ•</div>
+          <div class="feat-counter" id="cnt-uptime">0</div>
+          <div class="text-gray-500 text-xs mt-1">Ø³Ø§Ø¹Ø© ØªÙˆÙØ± / ÙŠÙˆÙ…</div>
+        </div>
+        <div class="feat-card">
+          <div class="text-3xl mb-3">âœ…</div>
+          <div class="feat-counter" id="cnt-confirm">0</div>
+          <div class="text-gray-500 text-xs mt-1">Ù†Ø³Ø¨Ø© Ø§Ù„ØªØ£ÙƒÙŠØ¯ %</div>
+        </div>
+        <div class="feat-card">
+          <div class="text-3xl mb-3">ðŸ“‰</div>
+          <div class="feat-counter" id="cnt-noshow">0</div>
+          <div class="text-gray-500 text-xs mt-1">ØªÙ‚Ù„ÙŠÙ„ Ø§Ù„ØºÙŠØ§Ø¨ %</div>
+        </div>
+        <div class="feat-card">
+          <div class="text-3xl mb-3">ðŸŒ</div>
+          <div class="feat-counter" id="cnt-lang">0</div>
+          <div class="text-gray-500 text-xs mt-1">Ù„ØºØ§Øª Ù…Ø¯Ø¹ÙˆÙ…Ø©</div>
+        </div>
+        <div class="feat-card">
+          <div class="text-3xl mb-3">ðŸ“…</div>
+          <div class="feat-counter" id="cnt-sync">0</div>
+          <div class="text-gray-500 text-xs mt-1">Ø«Ø§Ù†ÙŠØ© Ù„Ù„Ù…Ø²Ø§Ù…Ù†Ø©</div>
+        </div>
+      </div>
+
+      <!-- Feature pills below counters -->
+      <div class="mt-12 grid md:grid-cols-2 gap-4">
+        <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-teal-500/30 transition">
+          <div class="w-10 h-10 rounded-xl bg-teal-900/50 border border-teal-500/30 flex items-center justify-center text-lg flex-shrink-0">ðŸ”’</div>
+          <div>
+            <div class="font-bold text-white text-sm mb-1">Ù‚ÙÙ„ Ø°Ø±ÙŠ Ù„Ù…Ù†Ø¹ Ø§Ù„ØªØ¹Ø§Ø±Ø¶</div>
+            <p class="text-gray-500 text-xs leading-relaxed">Ø­ØªÙ‰ Ù„Ùˆ Ø£Ø±Ø³Ù„ Ù…Ø±ÙŠØ¶Ø§Ù† Ø·Ù„Ø¨Ø§Ù‹ ÙÙŠ Ù†ÙØ³ Ø§Ù„Ø«Ø§Ù†ÙŠØ© â€” ÙŠØ­Ø¬Ø² ÙˆØ§Ø­Ø¯ ÙÙ‚Ø·ØŒ ÙˆØ§Ù„Ø¢Ø®Ø± ÙŠØ±Ù‰ ÙˆÙ‚ØªØ§Ù‹ Ø¨Ø¯ÙŠÙ„Ø§Ù‹ ÙÙˆØ±Ø§Ù‹.</p>
+          </div>
+        </div>
+        <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-gold/30 transition">
+          <div class="w-10 h-10 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center text-lg flex-shrink-0">ðŸ§ </div>
+          <div>
+            <div class="font-bold text-white text-sm mb-1">ÙÙ‡Ù… Ø·Ø¨ÙŠØ¹ÙŠ Ù„Ù„Ø·Ù„Ø¨Ø§Øª</div>
+            <p class="text-gray-500 text-xs leading-relaxed">ÙŠÙÙ‡Ù… "Ø¨ÙƒØ±Ù‡ Ø§Ù„ØµØ¨Ø­" Ùˆ"Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ø¬Ø§ÙŠ" Ùˆ"Ø§Ù„Ø¹ØµØ±" ÙˆÙŠØ­ÙˆÙ„Ù‡Ø§ Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯ ÙØ¹Ù„ÙŠØ© ÙÙŠ Ø§Ù„ØªÙ‚ÙˆÙŠÙ….</p>
+          </div>
+        </div>
+        <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-aqua/30 transition">
+          <div class="w-10 h-10 rounded-xl border border-aqua/30 flex items-center justify-center text-lg flex-shrink-0" style="background:rgba(94,234,212,0.07)">ðŸš¨</div>
+          <div>
+            <div class="font-bold text-white text-sm mb-1">ÙƒØ´Ù Ø§Ù„Ø·ÙˆØ§Ø±Ø¦ Ø§Ù„ÙÙˆØ±ÙŠ</div>
+            <p class="text-gray-500 text-xs leading-relaxed">ÙŠØªØ¹Ø±Ù Ø¹Ù„Ù‰ ÙƒÙ„Ù…Ø§Øª Ø§Ù„Ø·ÙˆØ§Ø±Ø¦ ÙˆÙŠØ¹Ø±Ø¶ Ø£Ù‚Ø±Ø¨ Ù…ÙˆØ¹Ø¯ Ù…ØªØ§Ø­ ÙˆÙŠÙÙ†Ø¨Ù‘Ù‡ Ø§Ù„ÙØ±ÙŠÙ‚ Ù…Ø¨Ø§Ø´Ø±Ø©.</p>
+          </div>
+        </div>
+        <div class="glass rounded-2xl p-5 flex items-start gap-4 hover:border-purple-500/30 transition">
+          <div class="w-10 h-10 rounded-xl border border-purple-500/30 flex items-center justify-center text-lg flex-shrink-0" style="background:rgba(168,85,247,0.07)">ðŸ”„</div>
+          <div>
+            <div class="font-bold text-white text-sm mb-1">Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ø¬Ø¯ÙˆÙ„Ø© ÙˆØ§Ù„Ø¥Ù„ØºØ§Ø¡</div>
+            <p class="text-gray-500 text-xs leading-relaxed">Ø§Ù„Ù…Ø±ÙŠØ¶ ÙŠØ¹ÙŠØ¯ Ø§Ù„Ø¬Ø¯ÙˆÙ„Ø© Ø£Ùˆ ÙŠÙ„ØºÙŠ Ø¨ÙƒÙ„Ù…Ø© ÙˆØ§Ø­Ø¯Ø© â€” Ø§Ù„ÙØªØ­Ø© ØªØ¹ÙˆØ¯ Ù„Ù„ØªÙ‚ÙˆÙŠÙ… ÙÙˆØ±Ø§Ù‹ Ø¨Ø¯ÙˆÙ† ØªØ¯Ø®Ù„ Ø¨Ø´Ø±ÙŠ.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <!-- PRICING                                           -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  
+  <section id="pricing" class="py-24 px-6 relative z-10 border-b border-white/5 bg-[#0B1120]">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16">
+        <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-teal mb-4 tracking-widest uppercase">Ø§Ø³ØªØ«Ù…Ø§Ø±Ùƒ</div>
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">ØªØ³Ø¹ÙŠØ± Ø´ÙØ§ÙØŒ <span class="text-teal">Ø¨Ø¯ÙˆÙ† Ù…ÙØ§Ø¬Ø¢Øª</span></h2>
+        <p class="text-gray-400">Ù„Ø§ Ø¹Ù‚ÙˆØ¯ Ù…Ù„Ø²Ù…Ø©. Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø¨Ø§Ù‚Ø§Øª ØªØ´Ù…Ù„ Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯ ÙˆØ§Ù„ØªØ¯Ø±ÙŠØ¨ ÙˆØ§Ù„Ø¯Ø¹Ù… Ø§Ù„Ù…Ø³ØªÙ…Ø±.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Tier 1 -->
+        <div class="glass p-8 rounded-3xl relative z-10 flex flex-col bg-[#0F172A]">
+          <h3 class="text-xl text-[#5EEAD4] mb-2 font-bold">Ø§Ù„ÙˆØ¹ÙŠ (Awareness)</h3>
+          <p class="text-sm text-gray-400 mb-6">Ù„Ù„ØªÙˆØ§Ø¬Ø¯ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ ÙˆØ§Ù„Ø±Ø¯ Ø§Ù„ÙÙˆØ±ÙŠ.</p>
+          <div class="mb-6">
+            <span class="text-4xl font-black">$80</span> <span class="text-gray-500">/ 299 SAR</span>
+            <div class="text-sm text-gray-400 mt-1">Ø´Ù‡Ø±ÙŠØ§Ù‹</div>
+          </div>
+          <ul class="space-y-4 mb-8 flex-1">
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">âœ“</span> 200 Ù…Ø­Ø§Ø¯Ø«Ø© Ù…Ø±ÙŠØ¶ / Ø´Ù‡Ø±</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">âœ“</span> Ø§Ù„Ø±Ø¯ Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© ÙˆØ§Ù„Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠØ©</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">âœ“</span> Ø­Ø¬Ø² Ø§Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯ ÙˆØªØ£ÙƒÙŠØ¯Ù‡Ø§</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">âœ“</span> Ø£ØªÙ…ØªØ© Ø§Ù„Ø£Ø³Ø¦Ù„Ø© Ø§Ù„Ø´Ø§Ø¦Ø¹Ø©</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">âœ“</span> ØªÙ‚Ø±ÙŠØ± Ø£Ø¯Ø§Ø¡ Ø´Ù‡Ø±ÙŠ</li>
+          </ul>
+          <a href="https://wa.me/966570733834" class="w-full border border-[#5EEAD4] text-[#5EEAD4] py-3 rounded-xl font-bold text-center hover:bg-[#5EEAD4]/10 transition block">Ø§Ø¨Ø¯Ø£ Ø§Ù„Ø¢Ù†</a>
+        </div>
+
+        <!-- Tier 2 -->
+        <div class="glass p-8 rounded-3xl relative z-20 flex flex-col transform md:-translate-y-4 shadow-[0_0_40px_rgba(13,148,136,0.3)] bg-gradient-to-b from-[#0F172A] to-[#134E4A]/30 border-teal-500">
+          <h3 class="text-xl text-white mb-2 font-bold">Ø§Ù„Ù†Ø¸Ø§Ù… (System)</h3>
+          <p class="text-sm text-gray-400 mb-6">Ø¨Ù†ÙŠØ© ØªØ­ØªÙŠØ© ÙƒØ§Ù…Ù„Ø© Ù„Ø¥Ø¯Ø§Ø±Ø© Ù…Ù†Ø´Ø£ØªÙƒ.</p>
+          <div class="mb-6">
+            <span class="text-4xl font-black">$133</span> <span class="text-gray-400">/ 499 SAR</span>
+            <div class="text-sm text-gray-400 mt-1">Ø´Ù‡Ø±ÙŠØ§Ù‹</div>
+            <div class="text-xs text-gold mt-2 p-2 bg-gold/10 rounded-lg inline-block">Ø±Ø³ÙˆÙ… Ø§Ù„ØªØ£Ø³ÙŠØ³: $186 / 699 SAR</div>
+          </div>
+          <ul class="space-y-4 mb-8 flex-1">
+            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">âœ“</span> ÙƒÙ„ Ù…Ø§ ÙÙŠ Ø¨Ø§Ù‚Ø© Ø§Ù„ÙˆØ¹ÙŠ</li>
+            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">âœ“</span> 1000 Ù…Ø­Ø§Ø¯Ø«Ø© Ù…Ø±ÙŠØ¶ / Ø´Ù‡Ø±</li>
+            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">âœ“</span> Ø¥Ø¯Ø§Ø±Ø© ÙƒØ§Ù…Ù„Ø© Ù„Ù„ØªÙ‚ÙˆÙŠÙ…</li>
+            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">âœ“</span> Ø¥Ø±Ø³Ø§Ù„ Ø±ÙˆØ§Ø¨Ø· Ø§Ù„Ø¯ÙØ¹</li>
+            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">âœ“</span> Ø­Ù…Ù„Ø§Øª Ù…Ø§ Ø¨Ø¹Ø¯ Ø§Ù„Ø²ÙŠØ§Ø±Ø©</li>
+            <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">âœ“</span> Ù„ÙˆØ­Ø© ØªØ­ÙƒÙ… Ø¥Ø¯Ø§Ø±ÙŠØ© Ø­ÙŠØ©</li>
+          </ul>
+          <a href="https://wa.me/966570733834" class="w-full bg-[#0D9488] text-white py-3 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.5)] block">Ø§Ø­ØµÙ„ Ø¹Ù„Ù‰ Ø§Ù„Ù†Ø¸Ø§Ù…</a>
+        </div>
+
+        <!-- Tier 3 -->
+        <div class="glass p-8 rounded-3xl relative z-10 flex flex-col bg-[#0F172A]">
+          <h3 class="text-xl text-gold mb-2 font-bold">Ø§Ù„Ø³ÙˆØ§Ø±Ù… (Swarm)</h3>
+          <p class="text-sm text-gray-400 mb-6">Ù„Ù„Ø´Ø±ÙƒØ§Øª Ø§Ù„ÙƒØ¨ÙŠØ±Ø© ÙˆØ§Ù„ÙØ±ÙˆØ¹ Ø§Ù„Ù…ØªØ¹Ø¯Ø¯Ø©.</p>
+          <div class="mb-6">
+            <span class="text-4xl font-black text-gold">Ù…Ø®ØµØµ</span>
+            <div class="text-sm text-gray-400 mt-1">ÙŠØ­Ø¯Ø¯ Ø¨Ø¹Ø¯ Ø§Ù„Ø§Ø³ØªØ´Ø§Ø±Ø©</div>
+          </div>
+          <ul class="space-y-4 mb-8 flex-1">
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">âœ“</span> ÙƒÙ„ Ù…Ø§ ÙÙŠ Ø¨Ø§Ù‚Ø© Ø§Ù„Ù†Ø¸Ø§Ù…</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">âœ“</span> Ø¹Ø¯Ø¯ Ù„Ø§ Ù…Ø­Ø¯ÙˆØ¯ Ù…Ù† Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø§Øª</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">âœ“</span> Ø±Ø¨Ø· Ù…Ø¹ Ø£Ù†Ø¸Ù…Ø© Ø§Ù„Ø¹ÙŠØ§Ø¯Ø§Øª (HIS/ERP)</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">âœ“</span> Ù…Ø¯ÙŠØ± Ø­Ø³Ø§Ø¨ Ù…Ø®ØµØµ</li>
+            <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">âœ“</span> Ø®ÙˆØ§Ø¯Ù… Ø®Ø§ØµØ© Ù„Ù„Ø¨ÙŠØ§Ù†Ø§Øª</li>
+          </ul>
+          <a href="https://wa.me/966570733834" class="w-full border border-gold text-gold py-3 rounded-xl font-bold text-center hover:bg-gold/10 transition block">ØªÙˆØ§ØµÙ„ Ù„ØªØ®ØµÙŠØµ Ø®Ø·ØªÙƒ</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <!-- JAKE'S LETTER                                     -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <section id="jake" class="py-32 border-t border-[#1e293b] relative z-10 bg-[#070b14]">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="flex flex-col md:flex-row gap-8 items-start relative z-10">
+        <div class="w-32 h-32 rounded-3xl bg-[#0D9488]/10 border border-[#0D9488]/30 flex items-center justify-center text-5xl shrink-0 shadow-[0_0_30px_rgba(13,148,136,0.1)]">ðŸ‘¨â€ðŸ’»</div>
+        <div>
+          <h3 class="text-3xl font-black mb-4 text-white">Ø±Ø³Ø§Ù„Ø© Ù„Ùƒ Ù…Ù† Ù…Ø¤Ø³Ø³ Ø§Ù„Ù†Ø¸Ø§Ù…</h3>
+          <div class="text-sm font-bold text-teal mb-6 tracking-wide">Ù…Ù†: Ø¬ÙŠÙƒ</div>
+          <div class="space-y-4 text-gray-300 leading-relaxed text-lg">
+            <p>Ù…Ø±Ø­Ø¨Ø§Ù‹. Ø±Ø£ÙŠØª Ø£ØµØ­Ø§Ø¨ Ø£Ø¹Ù…Ø§Ù„ Ù…Ù…ØªØ§Ø²ÙŠÙ† ÙŠØ¨Ù†ÙˆÙ† Ù…Ù†Ø´Ø¢Øª Ø¨Ù…Ù„Ø§ÙŠÙŠÙ† Ø§Ù„Ø±ÙŠØ§Ù„Ø§ØªØŒ Ø«Ù… ÙŠØ®Ø³Ø±ÙˆÙ† Ø¹Ø´Ø±ÙŠÙ† Ø¥Ù„Ù‰ Ø«Ù„Ø§Ø«ÙŠÙ† Ø¹Ù…ÙŠÙ„Ø§Ù‹ Ø´Ù‡Ø±ÙŠØ§Ù‹ Ø¨Ø´ÙƒÙ„ Ø³Ø®ÙŠÙ. Ù„ÙŠØ³ Ø¨Ø³Ø¨Ø¨ Ø³ÙˆØ¡ Ø§Ù„Ø®Ø¯Ù…Ø©ØŒ Ø¨Ù„ Ù„Ø£Ù† Ø§Ù„Ø§Ø³ØªÙ‚Ø¨Ø§Ù„ Ø§Ù„Ø·Ø¨ÙŠØ¹ÙŠ Ù„Ø§ ÙŠÙ…ÙƒÙ†Ù‡ Ø§Ù„Ø±Ø¯ ÙÙˆØ±Ø§Ù‹ ÙÙŠ Ø§Ù„Ù€ 12 Ù„ÙŠÙ„Ø§Ù‹ Ø­ÙŠÙ† ÙŠØ­ØªØ§Ø¬ Ø§Ù„Ø¹Ù…ÙŠÙ„ ÙˆÙŠØ±Ø§Ø³Ù„ Ø£ÙˆÙ„ 5 Ù…Ù†Ø´Ø¢Øª Ø¹Ù„Ù‰ Ø¬ÙˆØ¬Ù„.</p>
+            <p>Ù…Ù† ÙŠØ±Ø¯ Ø£ÙˆÙ„Ø§Ù‹ØŒ ÙŠØ­ØµÙ„ Ø¹Ù„Ù‰ Ø§Ù„Ø¹Ù…ÙŠÙ„. Ù‡Ø°Ù‡ Ù‡ÙŠ Ø§Ù„Ø­Ù‚ÙŠÙ‚Ø© Ø§Ù„Ù‚Ø§Ø³ÙŠØ© Ù„Ù„Ø³ÙˆÙ‚.</p>
+            <p>Ù†Ø¸Ø§Ù… Ø§Ù„ØªØ´ØºÙŠÙ„ Ø§Ù„Ø°Ø§ØªÙŠ Ø§Ù„Ø°ÙŠ Ø¨Ù†ÙŠØªÙ‡ Ù„Ø§ ÙŠØªØ¹Ù„Ù‚ Ø¨Ù…Ø¬Ø±Ø¯ "Ø§Ù„Ø±Ø¯ Ø§Ù„Ø¢Ù„ÙŠ". Ø¥Ù†Ù‡ ÙŠØªØ¹Ù„Ù‚ Ø¨Ø­Ù…Ø§ÙŠØ© Ù…Ù†Ø´Ø£ØªÙƒ Ù…Ù† Ø§Ù„Ù†Ø²ÙŠÙ Ø§Ù„ÙŠÙˆÙ…ÙŠ Ø§Ù„Ø®ÙÙŠ. Ø§Ù„Ø¨Ù†ÙŠØ© Ø§Ù„ØªØ­ØªÙŠØ© ØªØªÙƒÙÙ„ Ø¨Ø§Ù„Ø±Ø¯ØŒ ÙˆØ§Ù„Ø­Ø¬Ø²ØŒ ÙˆØ§Ù„Ù…ØªØ§Ø¨Ø¹Ø© â€” Ù„ÙƒÙŠ ØªØ³ØªÙŠÙ‚Ø¸ ØµØ¨Ø§Ø­Ø§Ù‹ ÙˆØªØ±Ù‰ Ø¬Ø¯ÙˆÙ„Ùƒ Ù…Ù…ØªÙ„Ø¦Ø§Ù‹ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹.</p>
+            <p>Ø¥Ø°Ø§ ÙƒÙ†Øª Ø¬Ø§Ù‡Ø²Ø§Ù‹ Ù„ÙˆÙ‚Ù Ø§Ù„Ù†Ø²ÙŠÙ ÙÙŠ Ø¹Ù…Ù„ÙƒØŒ Ø§Ø¶ØºØ· Ø¹Ù„Ù‰ Ø§Ù„Ø²Ø± Ø£Ø¯Ù†Ø§Ù‡ Ù„ØªØ±Ø§Ø³Ù„Ù†ÙŠ Ø´Ø®ØµÙŠØ§Ù‹.</p>
+          </div>
+          <div class="mt-10">
+            <a href="https://wa.me/96657436016?text=Ø£Ù‡Ù„Ø§Ù‹%20Ø¬ÙŠÙƒØŒ%20Ù‚Ø±Ø£Øª%20Ø±Ø³Ø§Ù„ØªÙƒ%20ÙˆØ£Ø±ÙŠØ¯%20ØªÙØ¹ÙŠÙ„%20Ø§Ù„Ù†Ø¸Ø§Ù…%20Ù„Ù…Ù†Ø´Ø£ØªÙŠ." class="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black hover:bg-gray-200 transition">
+              <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+              ØªØ­Ø¯Ø« Ù…Ø¹ Ø¬ÙŠÙƒ Ø´Ø®ØµÙŠØ§Ù‹
+            </a>
+            <div class="mt-4 text-sm text-gray-500">Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ: jake@qudozen.com</div>
+            <div class="mt-1 text-sm text-gray-500">ÙˆØ§ØªØ³Ø§Ø¨: 057436016</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-black py-12 px-6 border-t border-gray-900 relative z-10">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+      <div class="text-center md:text-right">
+        <div class="text-xl font-bold tracking-wider mb-2 text-gold">âš¡ QUDOZEN</div>
+        <p class="text-gray-500 text-sm">Ø§Ù„Ø¨Ù†ÙŠØ© Ø§Ù„ØªØ­ØªÙŠØ© ÙˆØ§Ù„Ù…Ø­Ø±Ùƒ Ø§Ù„Ø°ÙƒÙŠ Ù„Ù„Ø£Ø¹Ù…Ø§Ù„.</p>
+      </div>
+      <div class="flex gap-8 text-sm font-medium">
+        <a href="#services" class="text-gray-400 hover:text-aqua transition">Ø®Ø¯Ù…Ø§ØªÙ†Ø§</a>
+        <a href="#simulator" class="text-gray-400 hover:text-aqua transition">Ø§Ù„Ù…Ø­Ø§ÙƒÙŠ</a>
+        <a href="https://wa.me/96657436016" class="text-gray-400 hover:text-aqua transition">Ø¯Ø¹Ù… ÙˆØ§ØªØ³Ø§Ø¨</a>
+        <a href="/growth/ghost-room" class="text-gray-400 hover:text-aqua transition">ØºØ±ÙØ© Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª</a>
+      </div>
+      <div class="text-gray-600 text-sm">Â© 2026 Qudozen. Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø­Ù‚ÙˆÙ‚ Ù…Ø­ÙÙˆØ¸Ø©.</div>
+    </div>
+  </footer>
+
+  <!-- Floating WhatsApp -->
+  <a href="https://wa.me/96657436016" class="chat-widget" aria-label="ØªÙˆØ§ØµÙ„ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨">
+    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+  </a>
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- SIMULATOR STATE MACHINE                           -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<script>
+try { gsap.registerPlugin(ScrollTrigger); } catch(e) { console.warn('[GSAP] Not loaded:', e.message); }
+
+/* â”€â”€â”€ Simulator Architecture: Full Logic Parity (bot.js) â”€â”€â”€â”€ */
+const MESSAGES = {
+  ar: {
+    langSelect: "ðŸŒ Welcome! I am Jake, your autonomous assistant.\nPlease choose your language / Ø§Ø®ØªØ± Ù„ØºØªÙƒ:\n1ï¸âƒ£ English\n2ï¸âƒ£ Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©\n\nðŸ’¡ Tap 1 for English, 2 for Arabic",
+    menu: "Ø£Ù‡Ù„Ø§Ù‹ ÙˆØ³Ù‡Ù„Ø§Ù‹ Ø¨Ùƒ ÙÙŠ Ø¹ÙŠØ§Ø¯ØªÙ†Ø§! ðŸ¦·âœ¨\nØ£Ù†Ø§ *Ø¬ÙŠÙƒ*ØŒ Ù…Ø³Ø§Ø¹Ø¯Ùƒ Ø§Ù„Ø·Ø¨ÙŠ Ø§Ù„Ø°ÙƒÙŠØŒ Ù…ØªØ§Ø­ Ø¹Ù„Ù‰ Ù…Ø¯Ø§Ø± Ø§Ù„Ø³Ø§Ø¹Ø©.\nÙƒÙŠÙ ÙŠÙ…ÙƒÙ†Ù†ÙŠ Ù…Ø³Ø§Ø¹Ø¯ØªÙƒ Ø§Ù„ÙŠÙˆÙ…ØŸ\n\n1ï¸âƒ£ Ø­Ø¬Ø² Ù…ÙˆØ¹Ø¯ ðŸ“…\n2ï¸âƒ£ Ù…ÙˆØ¹Ø¯ÙŠ Ø§Ù„Ø­Ø§Ù„ÙŠ ðŸ“‹\n3ï¸âƒ£ Ø¥Ø¹Ø§Ø¯Ø© Ø¬Ø¯ÙˆÙ„Ø© ðŸ”„\n4ï¸âƒ£ Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ù…ÙˆØ¹Ø¯ âŒ\n5ï¸âƒ£ Ø®Ø¯Ù…Ø§ØªÙ†Ø§ ðŸ¦·\n6ï¸âƒ£ Ø£Ø·Ø¨Ø§Ø¤Ù†Ø§ ðŸ‘¨â€âš•ï¸\n7ï¸âƒ£ Ø§Ù„Ø£Ø³Ø¹Ø§Ø± ðŸ’°\n8ï¸âƒ£ Ø§Ù„Ù…ÙˆÙ‚Ø¹ ðŸ“\n9ï¸âƒ£ ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ù…Ù†Ø´Ø£Ø© â­\nðŸ”Ÿ Ø§Ù„ØªØ­Ø¯Ø« Ù…Ø¹ Ø§Ù„ÙØ±ÙŠÙ‚ ðŸ‘©â€âš•ï¸\n\nðŸ’¡ Ø§Ø¶ØºØ· Ø±Ù‚Ù…Ø§Ù‹ Ø£Ùˆ Ø£Ø®Ø¨Ø±Ù†ÙŠ Ø¨Ù…Ø§ ØªØ­ØªØ§Ø¬ ðŸ˜Š",
+    
+    // Booking Flow
+    bookingSteps: {
+      name: "Ø±Ø§Ø¦Ø¹! Ù„Ù†Ø¨Ø¯Ø£ Ø§Ù„Ø­Ø¬Ø² ðŸ˜Š\nÙ…Ø§ Ø§Ø³Ù…Ùƒ Ø§Ù„ÙƒØ±ÙŠÙ…ØŸ\n\nðŸ’¡ Ø§ÙƒØªØ¨ Ø§Ø³Ù…Ùƒ ÙˆØ£Ø±Ø³Ù„\n0ï¸âƒ£ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©",
+      phone: (p) => `Ø´ÙƒØ±Ø§Ù‹! ðŸ˜Š\nØ±Ù‚Ù… ÙˆØ§ØªØ³Ø§Ø¨ Ø§Ù„Ø®Ø§Øµ Ø¨Ùƒ Ù‡Ùˆ: *${p}*\nÙ‡Ù„ Ù‡Ø°Ø§ ØµØ­ÙŠØ­ØŸ\n\n1ï¸âƒ£ Ù†Ø¹Ù…ØŒ Ù‡Ø°Ø§ ØµØ­ÙŠØ­\n2ï¸âƒ£ Ù„Ø§ØŒ Ø£Ø±ÙŠØ¯ Ø±Ù‚Ù…Ø§Ù‹ Ø¢Ø®Ø±\n\nðŸ’¡ Ø§Ø¶ØºØ· 1 Ù„Ù„ØªØ£ÙƒÙŠØ¯ Ø£Ùˆ 2 Ù„Ù„ØªØºÙŠÙŠØ±\n0ï¸âƒ£ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©`,
+      phoneReq: "Ù…Ù† ÙØ¶Ù„Ùƒ Ø£Ø¯Ø®Ù„ Ø±Ù‚Ù… Ù‡Ø§ØªÙÙƒ:\n\nðŸ’¡ Ø§ÙƒØªØ¨ Ø±Ù‚Ù… Ù‡Ø§ØªÙÙƒ ÙˆØ£Ø±Ø³Ù„",
+      treatment: "Ø§Ø®ØªØ± Ù†ÙˆØ¹ Ø§Ù„Ø®Ø¯Ù…Ø©: ðŸ¦·\n\n1ï¸âƒ£ ØªÙ†Ø¸ÙŠÙ ÙˆØªÙ„Ù…ÙŠØ¹ ðŸ¦·\n2ï¸âƒ£ Ø­Ø´ÙˆØ§Øª\n3ï¸âƒ£ ØªÙ‚ÙˆÙŠÙ… Ø§Ù„Ø£Ø³Ù†Ø§Ù† ðŸ“\n4ï¸âƒ£ ØªØ¨ÙŠÙŠØ¶ Ø§Ù„Ø£Ø³Ù†Ø§Ù† âšª\n5ï¸âƒ£ Ø®Ù„Ø¹\n6ï¸âƒ£ Ø²Ø±Ø§Ø¹Ø© Ø£Ø³Ù†Ø§Ù† ðŸ”¬\n7ï¸âƒ£ Ø¹Ù„Ø§Ø¬ Ø§Ù„Ø¹ØµØ¨ ðŸ¥\n8ï¸âƒ£ Ø£Ø®Ø±Ù‰ / ØºÙŠØ± Ù…ØªØ£ÙƒØ¯\n\nðŸ’¡ Ø§Ø¶ØºØ· Ø±Ù‚Ù…Ø§Ù‹ Ø£Ùˆ Ø§Ø®ØªØ± Ù…Ù† Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©",
+      notes: "Ù‡Ù„ Ù„Ø¯ÙŠÙƒ Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø£Ùˆ ÙˆØµÙ Ù„Ù„Ø­Ø§Ù„Ø©ØŸ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)\n\nðŸ’¡ Ø§ÙƒØªØ¨ Ù…Ù„Ø§Ø­Ø¸ØªÙƒ Ø£Ùˆ Ø£Ø±Ø³Ù„ *0* Ù„Ù„ØªØ®Ø·ÙŠ\n0ï¸âƒ£ ØªØ®Ø·ÙŠ Ø§Ù„Ø®Ø·ÙˆØ©",
+      doctor: "Ø§Ø®ØªØ± Ø§Ù„ÙØ±ÙŠÙ‚ Ø§Ù„Ù…ÙØ¶Ù„: ðŸ‘¨â€âš•ï¸\n\n1ï¸âƒ£ Ø¯. Ø£Ø­Ù…Ø¯ (Ø£Ø®ØµØ§Ø¦ÙŠ Ø²Ø±Ø§Ø¹Ø©)\n2ï¸âƒ£ Ø¯. Ø³Ø§Ø±Ø© (Ø£Ø®ØµØ§Ø¦ÙŠØ© ØªÙ‚ÙˆÙŠÙ…)\n3ï¸âƒ£ Ø£ÙŠ ÙØ±ÙŠÙ‚ Ù…ØªØ§Ø­\n\nðŸ’¡ Ø§Ø¶ØºØ· Ø±Ù‚Ù…Ø§Ù‹ Ù„Ù„Ø§Ø®ØªÙŠØ§Ø±",
+      date: (doc) => `Ù…ØªÙ‰ ØªÙØ¶Ù„ Ù…ÙˆØ¹Ø¯Ùƒ ${doc}ØŸ ðŸ“…\n\n1ï¸âƒ£ ØºØ¯Ø§Ù‹ (Ø§Ù„Ø«Ù„Ø§Ø«Ø§Ø¡)\n2ï¸âƒ£ Ø§Ù„Ø£Ø±Ø¨Ø¹Ø§Ø¡\n3ï¸âƒ£ Ø§Ù„Ø®Ù…ÙŠØ³\n4ï¸âƒ£ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ù‚Ø§Ø¯Ù…\n\nðŸ’¡ Ø§Ø¶ØºØ· Ø±Ù‚Ù…Ø§Ù‹ Ø£Ùˆ Ø§ÙƒØªØ¨ Ø£ÙŠ ØªØ§Ø±ÙŠØ® Ù…Ø«Ù„ "Ø¨ÙƒØ±Ø©"`,
+      slot: (date) => `Ø§Ù„Ø£ÙˆÙ‚Ø§Øª Ø§Ù„Ù…ØªØ§Ø­Ø© Ù„Ù‡Ø°Ø§ Ø§Ù„ÙŠÙˆÙ… (${date}): ðŸ“‹\n\n1ï¸âƒ£ 10:00 ØµØ¨Ø§Ø­Ø§Ù‹\n2ï¸âƒ£ 12:00 Ù…Ø³Ø§Ø¡Ù‹\n3ï¸âƒ£ 04:00 Ù…Ø³Ø§Ø¡Ù‹\n4ï¸âƒ£ 06:30 Ù…Ø³Ø§Ø¡Ù‹\n\nðŸ’¡ Ø§Ø®ØªØ± Ø§Ù„ÙˆÙ‚Øª Ø§Ù„Ù…Ù†Ø§Ø³Ø¨ Ù„Ùƒ`,
+      securing: "ðŸ”’ Ø¬Ø§Ø±ÙŠ ØªØ£Ù…ÙŠÙ† Ù…ÙˆØ¹Ø¯Ùƒ...\nØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„ØªØ¹Ø§Ø±Ø¶Ø§Øª ÙÙŠ Ø§Ù„ØªÙ‚ÙˆÙŠÙ…...",
+      confirmed: "âœ… *ØªÙ… Ø§Ù„Ø­Ø¬Ø² Ø¨Ù†Ø¬Ø§Ø­!* ðŸŽ‰",
+      summary: (d) => `ðŸ“‹ *ØªÙØ§ØµÙŠÙ„ Ù…ÙˆØ¹Ø¯Ùƒ:*\nðŸ‘¤ Ø§Ù„Ø§Ø³Ù…: ${d.name}\nðŸ¦· Ø§Ù„Ø¹Ù„Ø§Ø¬: ${d.treatment}\nðŸ“… Ø§Ù„ØªØ§Ø±ÙŠØ®: ${d.date}\nâ° Ø§Ù„ÙˆÙ‚Øª: ${d.slot}\nðŸ‘¨â€âš•ï¸ Ø§Ù„ÙØ±ÙŠÙ‚: ${d.doctor}\n\nðŸ“… ØªÙ… Ø§Ù„ØªØ³Ø¬ÙŠÙ„ ÙÙŠ ØªÙ‚ÙˆÙŠÙ… Ø§Ù„Ù…Ù†Ø´Ø£Ø©\nðŸ”” Ø³ØªØµÙ„Ùƒ ØªØ°ÙƒÙŠØ±Ø§Øª ØªÙ„Ù‚Ø§Ø¦ÙŠØ© Ù‚Ø¨Ù„ Ø§Ù„Ù…ÙˆØ¹Ø¯`
+    },
+
+    // Reminder Preview (The "Sales" moment)
+    reminderPreview: (name, date, slot, treat) => `ðŸ”” *ØªØ°ÙƒÙŠØ± ØªÙ„Ù‚Ø§Ø¦ÙŠ (Ø¨Ø¹Ø¯ 24 Ø³Ø§Ø¹Ø©)*\n\nÙ…Ø±Ø­Ø¨Ø§Ù‹ ${name}ØŒ Ù†Ø°ÙƒØ±Ùƒ Ø¨Ù…ÙˆØ¹Ø¯Ùƒ ØºØ¯Ø§Ù‹:\nðŸ“… ${date} Ø§Ù„Ø³Ø§Ø¹Ø© â° ${slot}\nðŸ¦· Ø§Ù„Ø¹Ù„Ø§Ø¬: ${treat}\n\nÙ†Ø±Ø§Ùƒ Ù‚Ø±ÙŠØ¨Ø§Ù‹! ðŸ˜Š Ø¥Ø°Ø§ Ø£Ø±Ø¯Øª ØªØºÙŠÙŠØ± Ø§Ù„Ù…ÙˆØ¹Ø¯ØŒ ÙÙ‚Ø· Ø£Ø±Ø³Ù„ "Ø¥Ø¹Ø§Ø¯Ø© Ø¬Ø¯ÙˆÙ„Ø©".`,
+
+    // My Appointment Flow
+    myAppt: (d) => `ðŸ“‹ *Ù…ÙˆØ¹Ø¯Ùƒ Ø§Ù„Ø­Ø§Ù„ÙŠ:*\nðŸ“… ${d.date} Ø§Ù„Ø³Ø§Ø¹Ø© ${d.slot}\nðŸ‘¨â€âš•ï¸ Ø§Ù„ÙØ±ÙŠÙ‚: ${d.doctor}\n\n1ï¸âƒ£ Ø¥Ø¹Ø§Ø¯Ø© Ø¬Ø¯ÙˆÙ„Ø© ðŸ”„\n2ï¸âƒ£ Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ù…ÙˆØ¹Ø¯ âŒ\n3ï¸âƒ£ Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©`,
+    
+    // Reschedule Flow
+    resched: {
+      date: "Ø£Ù‡Ù„Ø§Ù‹ Ø¨Ùƒ! Ù„ØªØºÙŠÙŠØ± Ù…ÙˆØ¹Ø¯ÙƒØŒ Ø§Ø®ØªØ± Ø§Ù„ØªØ§Ø±ÙŠØ® Ø§Ù„Ø¬Ø¯ÙŠØ¯:\n\n1ï¸âƒ£ ØºØ¯Ø§Ù‹\n2ï¸âƒ£ Ø¨Ø¹Ø¯ ØºØ¯\n3ï¸âƒ£ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ù‚Ø§Ø¯Ù…",
+      confirm: (d, s) => `ØªÙ… Ø§Ù„ØªØ­Ø¯ÙŠØ«! Ù…ÙˆØ¹Ø¯Ùƒ Ø§Ù„Ø¬Ø¯ÙŠØ¯ Ù‡Ùˆ:\nðŸ“… ${d} Ø§Ù„Ø³Ø§Ø¹Ø© ${s}\n\nâœ… ØªÙ… ØªØ­Ø¯ÙŠØ« Ø§Ù„ØªÙ‚ÙˆÙŠÙ… Ø¨Ù†Ø¬Ø§Ø­.`
+    },
+
+    // Cancel Flow
+    cancel: {
+      confirm: "Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø¥Ù„ØºØ§Ø¡ Ù…ÙˆØ¹Ø¯ÙƒØŸ âŒ\n\n1ï¸âƒ£ Ù†Ø¹Ù…ØŒ Ø£Ù„ØºÙ Ø§Ù„Ù…ÙˆØ¹Ø¯\n2ï¸âƒ£ Ù„Ø§ØŒ Ø§Ø­ØªÙØ¸ Ø¨Ø§Ù„Ù…ÙˆØ¹Ø¯",
+      success: "âœ… ØªÙ… Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ù…ÙˆØ¹Ø¯ Ø¨Ù†Ø¬Ø§Ø­. Ù†Ø£Ù…Ù„ Ø±Ø¤ÙŠØªÙƒ Ù‚Ø±ÙŠØ¨Ø§Ù‹!"
+    },
+
+    // Info Messages
+    prices: "ðŸ’° *Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø£Ø³Ø¹Ø§Ø± Ø§Ù„ØªÙ‚Ø±ÙŠØ¨ÙŠØ©:*\nâ€¢ ØªÙ†Ø¸ÙŠÙ: 200 Ø±ÙŠØ§Ù„\nâ€¢ Ø­Ø´Ùˆ: 350 Ø±ÙŠØ§Ù„\nâ€¢ ØªÙ‚ÙˆÙŠÙ…: ÙŠØ¨Ø¯Ø£ Ù…Ù† 3000 Ø±ÙŠØ§Ù„\nâ€¢ Ø²Ø±Ø§Ø¹Ø©: ÙŠØ¨Ø¯Ø£ Ù…Ù† 4500 Ø±ÙŠØ§Ù„\n\nðŸ’¡ Ù‡Ø°Ù‡ Ø§Ù„Ø£Ø³Ø¹Ø§Ø± Ø£ÙˆÙ„ÙŠØ© ÙˆØªØ®Ø¶Ø¹ Ù„Ù„ÙØ­Øµ.",
+    services: "ðŸ¦· *Ø®Ø¯Ù…Ø§Øª Ø§Ù„Ù…Ù†Ø´Ø£Ø©:*\nâ€¢ Ø²Ø±Ø§Ø¹Ø© Ø§Ù„Ø£Ø³Ù†Ø§Ù† Ø§Ù„Ù…ØªÙ‚Ø¯Ù…Ø©\nâ€¢ ØªÙ‚ÙˆÙŠÙ… Ø§Ù„Ø£Ø³Ù†Ø§Ù† Ø§Ù„Ø´ÙØ§Ù ÙˆØ§Ù„Ø¹Ø§Ø¯ÙŠ\nâ€¢ Ø·Ø¨ Ø£Ø³Ù†Ø§Ù† Ø§Ù„Ø£Ø·ÙØ§Ù„\nâ€¢ ØªØ¨ÙŠÙŠØ¶ Ø§Ù„Ø£Ø³Ù†Ø§Ù† Ø¨Ø§Ù„Ù„ÙŠØ²Ø±",
+    location: "ðŸ“ *Ù…ÙˆÙ‚Ø¹ Ø§Ù„Ù…Ù†Ø´Ø£Ø©:*\nÙŠÙ‚Ø¹ Ù…Ø¬Ù…Ø¹Ù†Ø§ ÙÙŠ Ù‚Ù„Ø¨ Ø§Ù„Ø®Ø¨Ø±ØŒ Ø´Ø§Ø±Ø¹ Ø§Ù„Ø£Ù…ÙŠØ± ØªØ±ÙƒÙŠ.\n\nðŸ—ºï¸ Ø±Ø§Ø¨Ø· Ø®Ø±Ø§Ø¦Ø· Ø¬ÙˆØ¬Ù„:\nhttps://maps.google.com/?q=Qudozen+Clinic\n\nðŸ’¡ ÙŠÙ…ÙƒÙ†Ùƒ Ø¯Ø§Ø¦Ù…Ø§Ù‹ Ø·Ù„Ø¨ Ø§Ù„Ù…ÙˆÙ‚Ø¹ ÙˆØ³Ø£Ø±Ø³Ù„Ù‡ Ù„Ùƒ ÙÙˆØ±Ø§Ù‹!",
+    reviews: "â­ *Ø¢Ø±Ø§Ø¡ Ø¹Ù…Ù„Ø§Ø¦Ù†Ø§:*\nâ€¢ 'ØªØ¹Ø§Ù…Ù„ Ø±Ø§Ù‚ÙŠ Ø¬Ø¯Ø§Ù‹ ÙˆÙ†Ø¸Ø§Ù… Ø¯Ù‚ÙŠÙ‚' - Ø®Ø§Ù„Ø¯\nâ€¢ 'Ø£ÙØ¶Ù„ Ù…Ù†Ø´Ø£Ø© ØªØ¹Ø§Ù…Ù„Øª Ù…Ø¹Ù‡Ø§ ÙÙŠ Ø§Ù„Ø´Ø±Ù‚ÙŠØ©' - Ø³Ø§Ø±Ø©\n\nðŸ”— ÙŠÙ…ÙƒÙ†Ùƒ Ù‚Ø±Ø§Ø¡Ø© Ø§Ù„Ù…Ø²ÙŠØ¯ Ø£Ùˆ ÙˆØ¶Ø¹ ØªÙ‚ÙŠÙŠÙ…Ùƒ Ù‡Ù†Ø§:\nhttps://g.page/qudozen/review",
+    staff: "ðŸ‘©â€âš•ï¸ Ø¬Ø§Ø±ÙŠ ØªØ­ÙˆÙŠÙ„Ùƒ Ù„Ù„ØªØ­Ø¯Ø« Ù…Ø¹ Ø§Ù„ÙØ±ÙŠÙ‚...\nÙŠØ±Ø¬Ù‰ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø± Ù„Ø­Ø¸Ø©.",
+    
+    completion: (name) => `Ø¨ÙƒÙ„ Ø³Ø±ÙˆØ± ${name}! ðŸ˜Š\nÙ†ØªØ·Ù„Ø¹ Ù„Ø§Ø³ØªÙ‚Ø¨Ø§Ù„Ùƒ. Ø¥Ø°Ø§ Ø§Ø­ØªØ¬Øª Ø£ÙŠ Ù…Ø³Ø§Ø¹Ø¯Ø© Ø¥Ø¶Ø§ÙÙŠØ© Ù†Ø­Ù† Ù‡Ù†Ø§.\n\n-- Ø§Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ø°ÙƒÙŠ Ù„Ù„Ù…Ù†Ø´Ø£Ø© ðŸ¤–`,
+    dash: { status:'Ù†Ø´Ø·', title:'Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…', conf:'Ù…ÙˆØ¹Ø¯ Ø¬Ø¯ÙŠØ¯', treat:'Ø§Ù„Ø¹Ù„Ø§Ø¬', time:'Ø§Ù„ÙˆÙ‚Øª', date:'Ø§Ù„ØªØ§Ø±ÙŠØ®', doc:'Ø§Ù„ÙØ±ÙŠÙ‚', sync:'Ù…Ø²Ø§Ù…Ù†Ø©', rem:'ØªØ°ÙƒÙŠØ±' }
+  },
+  en: {
+    langSelect: "ðŸŒ Welcome! I'm Jake, your AI assistant.\nPlease choose your language / Ø§Ø®ØªØ± Ù„ØºØªÙƒ:\n1ï¸âƒ£ English\n2ï¸âƒ£ Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©\n\nðŸ’¡ Tap 1 for English, 2 for Arabic",
+    menu: "Welcome to our clinic! ðŸ¦·âœ¨\nI'm *Jake*, your AI medical assistant, available 24/7.\nHow can I help you today?\n\n1ï¸âƒ£ Book appointment ðŸ“…\n2ï¸âƒ£ My appointment ðŸ“‹\n3ï¸âƒ£ Reschedule ðŸ”„\n4ï¸âƒ£ Cancel appointment âŒ\n5ï¸âƒ£ Our services ðŸ¦·\n6ï¸âƒ£ Our doctors ðŸ‘¨â€âš•ï¸\n7ï¸âƒ£ Prices ðŸ’°\n8ï¸âƒ£ Location ðŸ“\n9ï¸âƒ£ Leave a review â­\nðŸ”Ÿ Talk to staff ðŸ‘©â€âš•ï¸\n\nðŸ’¡ Tap a number or tell me what you need ðŸ˜Š",
+    
+    // Booking Flow
+    bookingSteps: {
+      name: "Great! Let's book your appointment ðŸ˜Š\nWhat's your full name?\n\nðŸ’¡ Type your name and send\n0ï¸âƒ£ Main menu",
+      phone: (p) => `Thanks! ðŸ˜Š\nYour WhatsApp number is: *${p}*\nIs this correct?\n\n1ï¸âƒ£ Yes, that's correct\n2ï¸âƒ£ No, use a different number\n\nðŸ’¡ Tap 1 to confirm or 2 to change\n0ï¸âƒ£ Main menu`,
+      phoneReq: "Please enter your phone number:\n\nðŸ’¡ Type your phone number and send",
+      treatment: "Select service type: ðŸ¦·\n\n1ï¸âƒ£ Cleaning & Polishing ðŸ¦·\n2ï¸âƒ£ Fillings\n3ï¸âƒ£ Braces & Orthodontics ðŸ“\n4ï¸âƒ£ Teeth Whitening âšª\n5ï¸âƒ£ Extraction\n6ï¸âƒ£ Dental Implants ðŸ”¬\n7ï¸âƒ£ Root Canal ðŸ¥\n8ï¸âƒ£ Other / Not sure\n\nðŸ’¡ Tap a number or pick from the list",
+      notes: "Any notes or description of your issue? (optional)\n\nðŸ’¡ Type your note or send *0* to skip\n0ï¸âƒ£ Skip step",
+      doctor: "Select your preferred doctor: ðŸ‘¨â€âš•ï¸\n\n1ï¸âƒ£ Dr. Ahmed (Implants)\n2ï¸âƒ£ Dr. Sarah (Braces)\n3ï¸âƒ£ Any available doctor\n\nðŸ’¡ Tap a number to select",
+      date: (doc) => `When would you like your appointment with ${doc}? ðŸ“…\n\n1ï¸âƒ£ Tomorrow (Tuesday)\n2ï¸âƒ£ Wednesday\n3ï¸âƒ£ Thursday\n4ï¸âƒ£ Next week\n\nðŸ’¡ Tap a number or type a date like "tomorrow"`,
+      slot: (date) => `Available slots for ${date}: ðŸ“‹\n\n1ï¸âƒ£ 10:00 AM\n2ï¸âƒ£ 12:00 PM\n3ï¸âƒ£ 04:00 PM\n4ï¸âƒ£ 06:30 PM\n\nðŸ’¡ Pick the best time for you`,
+      securing: "ðŸ”’ Securing your slot...\nChecking calendar for conflicts...",
+      confirmed: "âœ… *Booking Successful!* ðŸŽ‰",
+      summary: (d) => `ðŸ“‹ *Your Details:*\nðŸ‘¤ Name: ${d.name}\nðŸ¦· Treatment: ${d.treatment}\nðŸ“… Date: ${d.date}\nâ° Time: ${d.slot}\nðŸ‘¨â€âš•ï¸ Doctor: ${d.doctor}\n\nðŸ“… Registered in clinic calendar\nðŸ”” Auto-reminders scheduled`
+    },
+
+    // Reminder Preview
+    reminderPreview: (name, date, slot, treat) => `ðŸ”” *Auto-Reminder (24h later)*\n\nHi ${name}, reminding you of your appointment tomorrow:\nðŸ“… ${date} at â° ${slot}\nðŸ¦· Treatment: ${treat}\n\nSee you then! ðŸ˜Š If you need to change the time, just reply 'reschedule'.`,
+
+    // My Appointment Flow
+    myAppt: (d) => `ðŸ“‹ *Your Current Appointment:*\nðŸ“… ${d.date} at ${d.slot}\nðŸ‘¨â€âš•ï¸ Doctor: ${d.doctor}\n\n1ï¸âƒ£ Reschedule ðŸ”„\n2ï¸âƒ£ Cancel âŒ\n3ï¸âƒ£ Back to Main Menu`,
+
+    // Reschedule Flow
+    resched: {
+      date: "Welcome! To change your time, select a new date:\n\n1ï¸âƒ£ Tomorrow\n2ï¸âƒ£ Day after\n3ï¸âƒ£ Next week",
+      confirm: (d, s) => `Updated! Your new appointment is:\nðŸ“… ${d} at ${s}\n\nâœ… Calendar updated successfully.`
+    },
+
+    // Cancel Flow
+    cancel: {
+      confirm: "Are you sure you want to cancel? âŒ\n\n1ï¸âƒ£ Yes, cancel it\n2ï¸âƒ£ No, keep it",
+      success: "âœ… Appointment cancelled. We hope to see you soon!"
+    },
+
+    prices: "ðŸ’° *Estimated Price List:*\nâ€¢ Cleaning: 200 SAR\nâ€¢ Fillings: 350 SAR\nâ€¢ Braces: from 3000 SAR\nâ€¢ Implants: from 4500 SAR\n\nðŸ’¡ Final price depends on clinical exam.",
+    services: "ðŸ¦· *Our Services:*\nâ€¢ Dental Implants\nâ€¢ Clear Aligners\nâ€¢ Pediatric Dentistry\nâ€¢ Laser Whitening",
+    location: "ðŸ“ *Our Location:*\nWe are located in the heart of Khobar, Prince Turki St.\n\nðŸ—ºï¸ Google Maps Link:\nhttps://maps.google.com/?q=Qudozen+Clinic\n\nðŸ’¡ You can always ask for the location and I'll send it!",
+    reviews: "â­ *Patient Reviews:*\nâ€¢ 'Amazing experience and very professional' - Khalid\nâ€¢ 'Best clinic in the Eastern Province' - Sarah\n\nðŸ”— Read more or leave a review here:\nhttps://g.page/qudozen/review",
+    staff: "ðŸ‘©â€âš•ï¸ Connecting you to our team...\nPlease hold for a moment.",
+
+    completion: (name) => `You're welcome, ${name}! ðŸ˜Š\nWe look forward to seeing you. Let us know if you need anything else.\n\n-- Qudozen OS ðŸ¤–`,
+    dash: { status:'ACTIVE', title:'Management DB', conf:'New Booking', treat:'Treatment', time:'Time', date:'Date', doc:'Doctor', sync:'Sync', rem:'Remind' }
+  }
+};
+
+let simStep = 0;
+let simFlow = ''; // 'booking', 'reschedule', 'cancel', 'my_appt'
+let simData = { name: 'Visitor', treatment: 'Consultation', date: 'Tomorrow', slot: '10:00 AM', doctor: 'Dr. Ahmed', lang: 'ar', phone: '+96657436016', booked: false };
+let simRunning = false;
+let simIsInitializing = false;
+
+const getSim = () => {
+  const elements = {
+    chat: document.getElementById('simChat'),
+    replies: document.getElementById('simReplies'),
+    input: document.getElementById('simInput'),
+    sendBtn: document.getElementById('simSend'),
+    progress: document.getElementById('simProgress'),
+    stepLbl: document.getElementById('simStepLabel')
+  };
+  // Log if any critical element is missing for debugging
+  if (!elements.chat || !elements.replies) console.warn('[Sim] Critical DOM elements missing:', elements);
+  return elements;
+};
+
+function setProgress(n) {
+  const { progress, stepLbl } = getSim();
+  if(!progress) return;
+  progress.style.width = ((n / 10) * 100) + '%';
+  if (stepLbl) {
+    stepLbl.textContent = (simData.lang === 'ar' ? 'Ø§Ù„Ù…Ø±Ø­Ù„Ø© ' : 'Phase ') + Math.min(n, 10) + ' / 10';
+  }
+  document.querySelectorAll('.step-item').forEach(el => {
+    const s = parseInt(el.dataset.step);
+    const indicator = el.querySelector('div');
+    if (!indicator) return;
+    if (s < n) indicator.style.cssText='background:#0D9488;border-color:#0D9488;color:white;opacity:1';
+    else if (s === n) indicator.style.cssText='background:rgba(212,165,116,0.2);border-color:#D4A574;color:#D4A574;opacity:1';
+    else indicator.style.opacity='0.35';
+  });
+}
+
+function scrollChat() { 
+  const { chat } = getSim();
+  if(chat) setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 80); 
+}
+
+async function addBotBubble(html) {
+  const { chat } = getSim();
+  if(!chat) return;
+  
+  try {
+    const typing = document.createElement('div');
+    typing.className = 'sim-typing flex items-center gap-1 px-3 py-2 rounded-xl self-start mb-2';
+    typing.style.cssText = 'background:#1e293b;border:1px solid rgba(94,234,212,0.1)';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    chat.appendChild(typing);
+    scrollChat();
+
+    await new Promise(r => setTimeout(r, 650 + Math.random()*350));
+    
+    // Check if parent still exists (it might have been cleared by resetSimulator)
+    if(typing.parentNode === chat) chat.removeChild(typing);
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'sim-bubble-bot mb-2 whitespace-pre-wrap text-right';
+    bubble.innerHTML = html;
+    const ts = document.createElement('div');
+    ts.className = 'text-[10px] text-gray-600 mt-1.5';
+    ts.textContent = new Date().toLocaleTimeString(simData.lang==='ar'?'ar-SA':'en-US',{hour:'2-digit',minute:'2-digit'});
+    bubble.appendChild(ts);
+    chat.appendChild(bubble);
+    scrollChat();
+  } catch (e) {
+    console.error('[Sim] addBotBubble failed:', e);
+  }
+}
+
+function addUserBubble(text) {
+  const { chat } = getSim();
+  if(!chat) return;
+  const bubble = document.createElement('div');
+  bubble.className = 'sim-bubble-user mb-2 text-right';
+  bubble.innerHTML = text;
+  const ts = document.createElement('div');
+  ts.className = 'text-[10px] text-teal-200/60 mt-1.5 text-left';
+  ts.textContent = new Date().toLocaleTimeString(simData.lang==='ar'?'ar-SA':'en-US',{hour:'2-digit',minute:'2-digit'});
+  ts.innerHTML += ' <span class="text-teal-400">âœ“âœ“</span>';
+  bubble.appendChild(ts);
+  chat.appendChild(bubble);
+  scrollChat();
+}
+
+function setReplies(chips) {
+  const { replies } = getSim();
+  if(!replies) return;
+  replies.innerHTML = '';
+  if (!chips || chips.length === 0) { enableInput(); return; }
+  disableInput();
+  chips.forEach(({ label, value, emoji }) => {
+    const btn = document.createElement('button');
+    btn.className = 'qr-chip';
+    btn.textContent = (emoji ? emoji + ' ' : '') + label;
+    btn.onclick = () => {
+      document.querySelectorAll('.qr-chip').forEach(b => b.classList.add('used'));
+      addUserBubble(btn.textContent);
+      nextStep(value || label);
+    };
+    replies.appendChild(btn);
+  });
+}
+
+function enableInput() { 
+  const { input, sendBtn, replies } = getSim();
+  if(!input) return;
+  input.disabled = false; sendBtn.disabled = false; input.focus(); replies.innerHTML = ''; 
+}
+function disableInput() { 
+  const { input, sendBtn } = getSim();
+  if(!input) return;
+  input.disabled = true; sendBtn.disabled = true; 
+}
+
+function handleSimInput() {
+  const { input } = getSim();
+  if(!input) return;
+  const val = input.value.trim();
+  if (!val || input.disabled) return;
+  input.value = '';
+  addUserBubble(val);
+  nextStep(val);
+}
+if(document.getElementById('simInput')) {
+  document.getElementById('simInput').addEventListener('keydown', e => { if(e.key==='Enter') handleSimInput(); });
+}
+
+async function nextStep(ui) {
+  disableInput();
+  let m = MESSAGES[simData.lang];
+  const u = ui.toLowerCase();
+
+  // --- Neural Language Pivot ---
+  // Detect Arabic characters and switch language context immediately
+  const isAr = /[\u0600-\u06FF]/.test(ui);
+  if (isAr && simData.lang !== 'ar') {
+    simData.lang = 'ar';
+    m = MESSAGES.ar;
+    console.log('[Sim] Language pivoted to AR');
+  }
+
+  const b = m.bookingSteps;
+
+  // --- Contextual Simulation Controls ---
+  const isControlZero = (u === '0' || u === 'menu' || u === 'back' || u === 'Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©');
+  
+  // Rule: '0' only resets to menu if:
+  // 1. Not in a specific data-entry step that uses '0' as a value (like Step 5/Notes)
+  // 2. Or if explicitly typing 'menu'
+  const inNotesStep = (simFlow === 'booking' && simStep === 6);
+  if (isControlZero && !inNotesStep) {
+    simFlow = ''; simStep = 1;
+    await addBotBubble(m.menu);
+    return setReplies([
+      {label: simData.lang==='en'?'1ï¸âƒ£ Book':'1ï¸âƒ£ Ø­Ø¬Ø²', value:'1'},
+      {label: simData.lang==='en'?'2ï¸âƒ£ My Appt':'2ï¸âƒ£ Ù…ÙˆØ¹Ø¯ÙŠ', value:'2'},
+      {label: simData.lang==='en'?'7ï¸âƒ£ Prices':'7ï¸âƒ£ Ø§Ù„Ø£Ø³Ø¹Ø§Ø±', value:'7'},
+      {label: simData.lang==='en'?'8ï¸âƒ£ Location':'8ï¸âƒ£ Ø§Ù„Ù…ÙˆÙ‚Ø¹', value:'8'},
+    ]);
+  }
+
+  // --- Main Menu Routing ---
+  if (!simFlow || simStep === 0) {
+    if (simStep === 0) { // Lang Select
+      simData.lang = (u==='en' || u.includes('1') || u.includes('en')) ? 'en' : 'ar';
+      m = MESSAGES[simData.lang];
+      simStep = 1; 
+      setProgress(2);
+      await addBotBubble(m.menu);
+      return setReplies([
+        {label: simData.lang==='en'?'1ï¸âƒ£ Book Appt':'1ï¸âƒ£ Ø­Ø¬Ø² Ù…ÙˆØ¹Ø¯', value:'1'},
+        {label: simData.lang==='en'?'2ï¸âƒ£ My Appt':'2ï¸âƒ£ Ù…ÙˆØ¹Ø¯ÙŠ', value:'2'},
+        {label: simData.lang==='en'?'7ï¸âƒ£ Prices':'7ï¸âƒ£ Ø§Ù„Ø£Ø³Ø¹Ø§Ø±', value:'7'},
+        {label: simData.lang==='en'?'8ï¸âƒ£ Location':'8ï¸âƒ£ Ø§Ù„Ù…ÙˆÙ‚Ø¹', value:'8'},
+      ]);
+    }
+    
+    if (u === '1' || u.includes('book')) { simFlow = 'booking'; simStep = 2; return processBooking(u, m); }
+    if (u === '2' || u.includes('my')) { simFlow = 'my_appt'; return processMyAppt(u, m); }
+    if (u === '3' || u.includes('resched')) { simFlow = 'reschedule'; simStep = 1; return processReschedule(u, m); }
+    if (u === '4' || u.includes('cancel')) { simFlow = 'cancel'; simStep = 1; return processCancel(u, m); }
+    if (u === '5' || u.includes('service')) { await addBotBubble(m.services); return setReplies([{label: '0ï¸âƒ£ Main Menu', value:'0'}]); }
+    if (u === '7' || u.includes('price')) { await addBotBubble(m.prices); return setReplies([{label: '0ï¸âƒ£ Main Menu', value:'0'}]); }
+    if (u === '8' || u.includes('location')) { await addBotBubble(m.location); return setReplies([{label: '0ï¸âƒ£ Main Menu', value:'0'}]); }
+    if (u === '9' || u.includes('staff')) { await addBotBubble(m.staff); return setTimeout(() => resetSimulator(), 3000); }
+    // Natural Language Intents
+    if (u.includes('ÙˆÙŠÙ†') || u.includes('Ù…ÙˆÙ‚Ø¹') || u.includes('where')) { await addBotBubble(m.location); return setReplies([{label: '0ï¸âƒ£ Menu', value:'0'}]); }
+    if (u.includes('Ø³Ø¹Ø±') || u.includes('Ø¨ÙƒÙ…') || u.includes('cost')) { await addBotBubble(m.prices); return setReplies([{label: '0ï¸âƒ£ Menu', value:'0'}]); }
+  }
+
+  // --- Flow Controllers ---
+  if (simFlow === 'booking') return processBooking(ui, m);
+  if (simFlow === 'my_appt') return processMyAppt(ui, m);
+  if (simFlow === 'reschedule') return processReschedule(ui, m);
+  if (simFlow === 'cancel') return processCancel(ui, m);
+}
+
+// â”€â”€ Booking Logic â”€â”€
+async function processBooking(ui, m) {
+  const b = m.bookingSteps;
+  switch(simStep) {
+    case 2: simStep = 3; setProgress(3); await addBotBubble(b.name); enableInput(); break;
+    case 3: 
+      simData.name = ui; simStep = 4; setProgress(4); 
+      await addBotBubble(b.phone(simData.phone)); 
+      setReplies([{label:m.lang==='en'?'1ï¸âƒ£ Yes':'1ï¸âƒ£ Ù†Ø¹Ù…', value:'1'}, {label:m.lang==='en'?'2ï¸âƒ£ No':'2ï¸âƒ£ Ù„Ø§', value:'2'}]); 
+      break;
+    case 4: 
+      if (ui==='1') { simStep = 5; setProgress(5); await addBotBubble(b.treatment); setReplies([{label:m.lang==='en'?'1ï¸âƒ£ Cleaning':'1ï¸âƒ£ ØªÙ†Ø¸ÙŠÙ', value:'1'}, {label:m.lang==='en'?'2ï¸âƒ£ Filling':'2ï¸âƒ£ Ø­Ø´ÙˆØ§Øª', value:'2'}]); }
+      else { simStep = 44; await addBotBubble(b.phoneReq); enableInput(); }
+      break;
+    case 44: simData.phone = ui; simStep = 5; setProgress(5); await addBotBubble(b.treatment); setReplies([{label:m.lang==='en'?'1ï¸âƒ£ Cleaning':'1ï¸âƒ£ ØªÙ†Ø¸ÙŠÙ', value:'1'}, {label:m.lang==='en'?'2ï¸âƒ£ Filling':'2ï¸âƒ£ Ø­Ø´ÙˆØ§Øª', value:'2'}]); break;
+    case 5: 
+      simData.treatment = ui==='1' ? (m.lang==='en'?'Cleaning':'ØªÙ†Ø¸ÙŠÙ') : ui==='2' ? (m.lang==='en'?'Filling':'Ø­Ø´ÙˆØ§Øª') : ui;
+      simStep = 6; setProgress(6);
+      await addBotBubble(b.notes); 
+      setReplies([{label: m.lang==='ar'?'0ï¸âƒ£ ØªØ®Ø·ÙŠ':'0ï¸âƒ£ Skip', value:'__skip__'}]); 
+      break;
+    case 6: 
+      simData.notes = (ui === '__skip__' || ui === '0') ? '' : ui;
+      simStep = 7; setProgress(7);
+      await addBotBubble(b.doctor); 
+      setReplies([{label:m.lang==='en'?'1ï¸âƒ£ Dr. Ahmed':'1ï¸âƒ£ Ø¯. Ø£Ø­Ù…Ø¯', value:'1'}, {label:m.lang==='en'?'2ï¸âƒ£ Dr. Sarah':'2ï¸âƒ£ Ø¯. Ø³Ø§Ø±Ø©', value:'2'}, {label: m.lang==='ar'?'3ï¸âƒ£ Ø£ÙŠ ÙØ±ÙŠÙ‚':'3ï¸âƒ£ Any Doctor', value:'3'}]); 
+      break;
+    case 7: 
+      if (ui==='1') simData.doctor = m.lang==='en'?'Dr. Ahmed':'Ø¯. Ø£Ø­Ù…Ø¯';
+      else if (ui==='2') simData.doctor = m.lang==='en'?'Dr. Sarah':'Ø¯. Ø³Ø§Ø±Ø©';
+      else simData.doctor = m.lang==='ar'?'Ø£ÙŠ ÙØ±ÙŠÙ‚ Ù…ØªØ§Ø­':'Any doctor';
+      simStep = 8; setProgress(8);
+      await addBotBubble(b.date(simData.doctor)); 
+      setReplies([{label: m.lang==='ar'?'1ï¸âƒ£ ØºØ¯Ø§Ù‹':'1ï¸âƒ£ Tomorrow', value:'1'}, {label: m.lang==='ar'?'2ï¸âƒ£ Ø§Ù„Ø£Ø±Ø¨Ø¹Ø§Ø¡':'2ï¸âƒ£ Wednesday', value:'2'}]); 
+      break;
+    case 8: 
+      simData.date = ui==='1'?(m.lang==='en'?'Tomorrow':'ØºØ¯Ø§Ù‹'):(m.lang==='en'?'Wednesday':'Ø§Ù„Ø£Ø±Ø¨Ø¹Ø§Ø¡'); 
+      simStep = 9; setProgress(9);
+      await addBotBubble(b.slot(simData.date)); 
+      setReplies([{label: m.lang==='en'?'1ï¸âƒ£ 10:00 AM':'1ï¸âƒ£ 10:00 ØµØ¨Ø§Ø­Ø§Ù‹', value:'1'}, {label:m.lang==='en'?'2ï¸âƒ£ 04:00 PM':'2ï¸âƒ£ 04:00 Ù…Ø³Ø§Ø¡Ù‹', value:'2'}]); 
+      break;
+    case 9: 
+      simData.slot = ui==='1'?(m.lang==='en'?'10:00 AM':'10:00 ØµØ¨Ø§Ø­Ø§Ù‹'):(m.lang==='en'?'04:00 PM':'04:00 Ù…Ø³Ø§Ø¡Ù‹'); 
+      simData.booked = true; simStep = 10; setProgress(10);
+      await addBotBubble(b.securing);
+      await addBotBubble(b.confirmed + "\n\n" + b.summary(simData));
+      updateDashboardData(m);
+      showWhatsAppRedirect();
+      simFlow = ''; 
+      setReplies([{label: simData.lang==='en'?'0ï¸âƒ£ Main Menu':'0ï¸âƒ£ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©', value:'0'}]);
+      setTimeout(() => triggerAutonomousReminder(m), 4000);
+      break;
+  }
+}
+
+// â”€â”€ My Appointment Logic â”€â”€
+async function processMyAppt(ui, m) {
+  if (!simData.booked) { 
+    await addBotBubble(simData.lang==='ar'?'Ù„ÙŠØ³ Ù„Ø¯ÙŠÙƒ Ù…ÙˆØ¹Ø¯ Ø­Ø§Ù„ÙŠ. Ù‡Ù„ ØªØ±ÙŠØ¯ Ø§Ù„Ø­Ø¬Ø²ØŸ':'You have no active appointment.'); 
+    return setReplies([
+      {label: simData.lang==='ar'?'1ï¸âƒ£ Ø­Ø¬Ø² Ù…ÙˆØ¹Ø¯':'1ï¸âƒ£ Book Now', value:'1'}, 
+      {label: simData.lang==='ar'?'0ï¸âƒ£ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©':'0ï¸âƒ£ Menu', value:'0'}
+    ]); 
+  }
+  if (ui === '2' || ui.includes('my') || ui.includes('Ù…ÙˆØ¹Ø¯ÙŠ')) {
+    await addBotBubble(m.myAppt(simData));
+    setReplies([
+      {label: simData.lang==='ar'?'1ï¸âƒ£ Ø¥Ø¹Ø§Ø¯Ø© Ø¬Ø¯ÙˆÙ„Ø©':'1ï¸âƒ£ Reschedule', value:'resched'}, 
+      {label: simData.lang==='ar'?'2ï¸âƒ£ Ø¥Ù„ØºØ§Ø¡':'2ï¸âƒ£ Cancel', value:'cancel'},
+      {label: simData.lang==='ar'?'3ï¸âƒ£ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©':'3ï¸âƒ£ Menu', value:'0'}
+    ]);
+  } else if (ui === 'resched') { simFlow = 'reschedule'; simStep = 1; processReschedule('', m); }
+    else if (ui === 'cancel') { simFlow = 'cancel'; simStep = 1; processCancel('', m); }
+}
+
+// â”€â”€ Reschedule Logic â”€â”€
+async function processReschedule(ui, m) {
+  const r = m.resched;
+  if (simStep === 1) { 
+    simStep = 2; 
+    await addBotBubble(r.date); 
+    setReplies([
+      {label: simData.lang==='ar'?'1ï¸âƒ£ ØºØ¯Ø§Ù‹':'1ï¸âƒ£ Tomorrow', value:'1'}, 
+      {label: simData.lang==='ar'?'2ï¸âƒ£ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ù‚Ø§Ø¯Ù…':'2ï¸âƒ£ Next Week', value:'2'}
+    ]); 
+  }
+  else if (simStep === 2) { 
+    simData.date = ui==='1'?(simData.lang==='ar'?'ØºØ¯Ø§Ù‹':'Tomorrow'):(simData.lang==='ar'?'Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ù‚Ø§Ø¯Ù…':'Next Week');
+    await addBotBubble(r.confirm(simData.date, simData.slot));
+    updateDashboardData(m);
+    simFlow = ''; simStep = 1; 
+    setReplies([{label: simData.lang==='ar'?'0ï¸âƒ£ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©':'0ï¸âƒ£ Main Menu', value:'0'}]);
+  }
+}
+
+// â”€â”€ Cancel Logic â”€â”€
+async function processCancel(ui, m) {
+  const c = m.cancel;
+  if (simStep === 1) { 
+    simStep = 2; 
+    await addBotBubble(c.confirm); 
+    setReplies([
+      {label: simData.lang==='ar'?'1ï¸âƒ£ Ù†Ø¹Ù…ØŒ Ø£Ù„ØºÙ':'1ï¸âƒ£ Yes', value:'1'}, 
+      {label: simData.lang==='ar'?'2ï¸âƒ£ Ù„Ø§ØŒ Ø§Ø­ØªÙØ¸':'2ï¸âƒ£ No', value:'2'}
+    ]); 
+  }
+  else if (simStep === 2) {
+    if (ui === '1') {
+      simData.booked = false; await addBotBubble(c.success); updateDashboardData(m);
+    } else { await addBotBubble(simData.lang==='ar'?'ØªÙ… Ø§Ù„Ø§Ø­ØªÙØ§Ø¸ Ø¨Ø§Ù„Ù…ÙˆØ¹Ø¯!':'Great! Appointment kept.'); }
+    simFlow = ''; simStep = 1; setReplies([{label: simData.lang==='ar'?'0ï¸âƒ£ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©':'0ï¸âƒ£ Main Menu', value:'0'}]);
+  }
+}
+
+// â”€â”€ Autonomous Sales Machine Moment â”€â”€
+async function triggerAutonomousReminder(m) {
+  // Highlight bubble to show it's "Autonomous"
+  const { chat } = getSim();
+  const notice = document.createElement('div');
+  notice.className = 'autonomous-notice';
+  notice.textContent = m.lang === 'ar' ? 'â”€â”€â”€ Ø£ØªÙ…ØªØ© Ø§Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ø°Ø§ØªÙŠ â”€â”€â”€' : 'â”€â”€â”€ Autonomous System Automation â”€â”€â”€';
+  if(chat) chat.appendChild(notice);
+  
+  const reminder = m.reminderPreview(simData.name, simData.date, simData.slot, simData.treatment);
+  await addBotBubble(reminder);
+}
+
+function updateDashboardData(m) {
+  const dp = document.getElementById('dashPreview');
+  if (!dp) return;
+  if (!simData.booked) { 
+    dp.classList.add('hidden'); 
+    dp.style.opacity = '0'; 
+    dp.style.transform = 'scale(0.95)'; 
+    return; 
+  }
+  dp.classList.remove('hidden');
+  // Force reflow then animate in
+  requestAnimationFrame(() => {
+    dp.style.opacity = '1';
+    dp.style.transform = 'scale(1)';
+  });
+  document.getElementById('dsPatientName').textContent = simData.name;
+  document.getElementById('dsTreatment').textContent = simData.treatment;
+  document.getElementById('dsSlot').textContent = simData.slot;
+  document.getElementById('dsDate').textContent = simData.date;
+  document.getElementById('dsDoctor').textContent = simData.doctor;
+  // Update ref number with timestamp
+  const ref = document.getElementById('dsRef');
+  if (ref) ref.textContent = 'REF: QZ-' + Date.now().toString().slice(-6);
+  // Update dashboard labels based on language
+  const d = m.dash;
+  const el = (id, txt) => { const e = document.getElementById(id); if(e) e.textContent = txt; };
+  el('dsStatus', d.status);
+  el('dsConfLabel', d.conf);
+  el('dsTreatLabel', d.treat);
+  el('dsSlotLabel', d.time);
+  el('dsDateLabel', d.date);
+  el('dsDocLabel', d.doc);
+  el('dsSyncLabel', d.sync);
+  el('dsRemLabel', d.rem);
+}
+
+function showWhatsAppRedirect() {
+  const wa = document.getElementById('waRedirect');
+  if (wa) {
+    wa.classList.remove('hidden');
+    wa.style.opacity = '0';
+    requestAnimationFrame(() => {
+      wa.style.transition = 'opacity 0.5s ease';
+      wa.style.opacity = '1';
+    });
+  }
+}
+
+async function startSimulator() {
+  if (simIsInitializing) return;
+  simIsInitializing = true;
+
+  const { chat, replies } = getSim();
+  simRunning = true; 
+  simStep = 0; 
+  simFlow = ''; 
+  simData = { name:'Visitor', treatment:'Consultation', date:'Tomorrow', slot:'10:00 AM', doctor:'Dr. Ahmed', lang:'ar', phone:'+96657436016', booked: false };
+  
+  // Ensure visibility and clean slate
+  if(chat) {
+    chat.innerHTML = ''; 
+    const phone = document.getElementById('simPhoneShell');
+    if(phone) {
+      phone.style.opacity = '1';
+      phone.style.display = 'flex';
+    }
+  }
+  if(replies) replies.innerHTML = '';
+  
+  setProgress(1);
+  const startBtn = document.getElementById('simStartBtn');
+  if(startBtn) startBtn.style.display = 'none';
+  
+  console.log('[Sim] Starting with language select...');
+  try {
+    await addBotBubble(MESSAGES.ar.langSelect);
+    setReplies([{label:'1ï¸âƒ£ English', value:'en'}, {label:'2ï¸âƒ£ Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©', value:'ar'}]);
+  } catch (e) {
+    console.error('[Sim] Startup failed:', e);
+  } finally {
+    simIsInitializing = false;
+  }
+}
+
+function resetSimulator() {
+  const { chat, replies } = getSim();
+  simRunning = false; simStep = 0; simFlow = '';
+  simData = { name:'Visitor', treatment:'Consultation', date:'Tomorrow', slot:'10:00 AM', doctor:'Dr. Ahmed', lang:'ar', phone:'+96657436016', booked: false };
+  if(chat) chat.innerHTML = '';
+  if(replies) replies.innerHTML = '<span class="text-gray-600 text-xs italic">ÙÙŠ Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„Ø¨Ø¯Ø¡...</span>';
+  disableInput(); setProgress(0);
+  const startBtn = document.getElementById('simStartBtn');
+  if(startBtn) startBtn.style.display = 'block';
+  // Hide side panels
+  const dp = document.getElementById('dashPreview');
+  if(dp) { dp.classList.add('hidden'); dp.style.opacity = '0'; dp.style.transform = 'scale(0.95)'; }
+  const wa = document.getElementById('waRedirect');
+  if(wa) { wa.classList.add('hidden'); wa.style.opacity = '0'; }
+}
+
+
+
+
+
+
+
+/* â”€â”€ Navbar scroll â”€â”€ */
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  if (nav) {
+    if (window.scrollY > 50) nav.classList.add('border-b','border-[#1e293b]','shadow-lg','bg-[#0B1120]/90');
+    else nav.classList.remove('border-b','border-[#1e293b]','shadow-lg','bg-[#0B1120]/90');
+  }
+});
+
+try {
+/* â”€â”€ Feature counter animations (ScrollTrigger) â”€â”€ */
+const counters = [
+  { id:'cnt-response', target:3,   suffix:'s', decimals:0 },
+  { id:'cnt-uptime',   target:24,  suffix:'',  decimals:0 },
+  { id:'cnt-confirm',  target:94,  suffix:'%', decimals:0 },
+  { id:'cnt-noshow',   target:40,  suffix:'%', decimals:0 },
+  { id:'cnt-lang',     target:2,   suffix:'',  decimals:0 },
+  { id:'cnt-sync',     target:1,   suffix:'s', decimals:0 },
+];
+
+counters.forEach(({ id, target, suffix, decimals }) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const obj = { val: 0 };
+  ScrollTrigger.create({
+    trigger: '#features',
+    start: 'top 75%',
+    once: true,
+    onEnter: () => {
+      gsap.to(obj, {
+        val: target,
+        duration: 1.8,
+        ease: 'power2.out',
+        onUpdate: () => {
+          el.textContent = (decimals > 0 ? obj.val.toFixed(decimals) : Math.floor(obj.val)) + suffix;
+        }
+      });
+    }
+  });
+});
+
+/* â”€â”€ Feat-card stagger on scroll â”€â”€ */
+gsap.fromTo('.feat-card', { opacity:0, y:30 }, {
+  opacity:1, y:0, duration:0.6, stagger:0.1, ease:'power2.out',
+  scrollTrigger: { trigger:'#features', start:'top 80%', once:true }
+});
+
+gsap.fromTo('.bento-card', { y:40 }, {
+  opacity:1, y:0, duration:0.7, stagger:0.12, ease:'power2.out',
+  scrollTrigger: { trigger:'#services', start:'top 80%', once:true }
+});
+} catch(e) { console.warn('[GSAP Animations] Skipped:', e.message); }
+</script>
+
+  <!-- Linear/Vercel Inspired Modal -->
+  <div id="smOverlay" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md hidden flex-col items-center justify-center p-4 transition-all duration-300 opacity-0" onclick="if(event.target === this) closeModal()">
+    <div id="smContent" class="bg-[#0F172A] border border-white/10 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar relative transform scale-95 transition-all duration-300 opacity-0 shadow-2xl flex flex-col">
+      <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-gold"></div>
+      <button onclick="closeModal()" class="absolute top-5 left-5 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition">&times;</button>
+      
+      <div class="p-8 md:p-12 pb-0">
+        <div id="smIcon" class="text-5xl mb-6"></div>
+        <h3 id="smTitle" class="text-3xl md:text-4xl font-bold mb-4 text-white tracking-tight"></h3>
+        <p id="smDesc" class="text-gray-300 text-lg leading-relaxed mb-8"></p>
+      </div>
+      
+      <div class="bg-[#0B1120] p-8 md:p-12 mt-4 border-t border-white/5">
+        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">ÙƒÙŠÙ ÙŠØ¹Ù…Ù„ Ø§Ù„Ù†Ø¸Ø§Ù… (3 Ø®Ø·ÙˆØ§Øª)</h4>
+        <div id="smFlow" class="grid md:grid-cols-3 gap-4 mb-10"></div>
+        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">Ø§Ù„ÙÙˆØ§Ø¦Ø¯ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©</h4>
+        <div id="smBenefits" class="grid md:grid-cols-2 gap-4 mb-8">
+        </div>
+        <a href="https://wa.me/966570733834" target="_blank" class="inline-flex items-center justify-center gap-2 w-full bg-white text-black py-4 rounded-xl font-bold hover:bg-gray-200 transition text-lg">
+          ØªØ­Ø¯Ø« Ø¹Ù† Ù…Ø´Ø±ÙˆØ¹Ùƒ
+          <span class="text-xl">â†—</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+<script>
+const serviceDB = {
+  "reception": {
+    "icon": "ðŸ¤–",
+    "title": "Ù…ÙˆØ¸Ù Ø§Ù„Ø§Ø³ØªÙ‚Ø¨Ø§Ù„ Ø§Ù„Ø°ÙƒÙŠ",
+    "desc": "Ù†Ø¸Ø§Ù… Ø§Ø³ØªÙ‚Ø¨Ø§Ù„ Ø°Ø§ØªÙŠ Ù…ØªÙƒØ§Ù…Ù„ Ø¹Ø¨Ø± Ø§Ù„ÙˆØ§ØªØ³Ø§Ø¨ ÙŠØ¯ÙŠØ± Ø§Ù„Ù…Ø±Ø¶Ù‰ Ù…Ù† Ø§Ù„Ø·Ù„Ø¨ Ø­ØªÙ‰ Ø§Ù„Ø­Ø¶ÙˆØ±.",
+    "flow": [
+      "Ø§Ø³ØªÙ„Ø§Ù… Ø§Ù„Ø·Ù„Ø¨ ÙˆØªØ­Ù„ÙŠÙ„Ù‡",
+      "ØªÙ†Ø³ÙŠÙ‚ Ø§Ù„ÙˆÙ‚Øª Ù…Ø¹ Ø§Ù„ØªÙ‚ÙˆÙŠÙ…",
+      "ØªØ£ÙƒÙŠØ¯ ÙˆØ­Ø¬Ø² Ø§Ù„Ù…ÙˆØ¹Ø¯ Ø¢Ù„ÙŠØ§Ù‹"
+    ],
+    "benefits": [
+      "Ø­Ø¬Ø² Ø¢Ù„ÙŠ Ø¨Ù†Ø³Ø¨Ø© 100%",
+      "ØªØ°ÙƒÙŠØ±Ø§Øª ØªÙ‚Ù„Ù„ Ø§Ù„ØºÙŠØ§Ø¨ 80%",
+      "Ø¯Ø¹Ù… Ø«Ù†Ø§Ø¦ÙŠ Ø§Ù„Ù„ØºØ©",
+      "Ù…Ø²Ø§Ù…Ù†Ø© ØªÙ‚ÙˆÙŠÙ… Ø¬ÙˆØ¬Ù„"
+    ]
+  },
+  "growth": {
+    "icon": "ðŸŽ¯",
+    "title": "Ù…Ø­Ø±Ùƒ Ø§Ù„Ù†Ù…Ùˆ Ø§Ù„ØªÙ„Ù‚Ø§Ø¦ÙŠ",
+    "desc": "ÙˆÙƒØ§Ù„Ø© ØªØ³ÙˆÙŠÙ‚ Ø±Ù‚Ù…ÙŠØ© ÙÙŠ Ù†Ø¸Ø§Ù… ÙˆØ§Ø­Ø¯ Ù„Ù„Ø¨Ø­Ø« Ø¹Ù† Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ ÙˆØ¨Ù†Ø§Ø¡ Ø§Ù„Ø«Ù‚Ø©.",
+    "flow": [
+      "Ø§Ø³ØªØ®Ø±Ø§Ø¬ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¬Ù…Ù‡ÙˆØ±",
+      "Ø¥Ø±Ø³Ø§Ù„ Ø±Ø³Ø§Ø¦Ù„ Ù…Ø®ØµØµØ© AI",
+      "Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ Ø§Ù„Ù…ØªØ±Ø¯Ø¯ÙŠÙ†"
+    ],
+    "benefits": [
+      "Ø§Ø³ØªÙ‡Ø¯Ø§Ù Ø¬ØºØ±Ø§ÙÙŠ Ø¯Ù‚ÙŠÙ‚",
+      "Ø±Ø³Ø§Ø¦Ù„ AI Ø¹Ø§Ù„ÙŠØ© Ø§Ù„ØªØ­ÙˆÙŠÙ„",
+      "Ù…ØªØ§Ø¨Ø¹Ø© Ø¢Ù„ÙŠØ© Ø°ÙƒÙŠØ©",
+      "ØªÙ‚Ø§Ø±ÙŠØ± Ø£Ø¯Ø§Ø¡ Ø­ÙŠØ©"
+    ]
+  },
+  "realestate": {
+    "icon": "ðŸ¢",
+    "title": "Ø§Ù„Ù…Ø³Ø§Ø¹Ø¯ Ø§Ù„Ø¹Ù‚Ø§Ø±ÙŠ",
+    "desc": "ØªØ£Ù‡ÙŠÙ„ Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ ÙˆØ¬Ø¯ÙˆÙ„Ø© Ø§Ù„Ù…Ø¹Ø§ÙŠÙ†Ø§Øª ÙˆØªÙˆØ²ÙŠØ¹ Ø§Ù„ÙØ±Øµ Ø¹Ù„Ù‰ Ø§Ù„ÙˆÙƒÙ„Ø§Ø¡.",
+    "flow": [
+      "ØªØ£Ù‡ÙŠÙ„ Ù…ÙŠØ²Ø§Ù†ÙŠØ© Ø§Ù„Ø¹Ù…ÙŠÙ„",
+      "Ø¹Ø±Ø¶ Ø§Ù„ÙˆØ­Ø¯Ø§Øª Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø©",
+      "Ø¬Ø¯ÙˆÙ„Ø© Ø§Ù„Ù…Ø¹Ø§ÙŠÙ†Ø© Ù„Ù„ÙˆÙƒÙŠÙ„"
+    ],
+    "benefits": [
+      "ØªØ£Ù‡ÙŠÙ„ ÙÙˆØ±ÙŠ Ù„Ù„Ù…Ø´ØªØ±ÙŠÙ†",
+      "ÙØ±Ø² Ø§Ù„Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ø¹Ù‚Ø§Ø±ÙŠØ©",
+      "Ù…Ø²Ø§Ù…Ù†Ø© Ù…Ø¹Ø§ÙŠÙ†Ø§Øª Ø­ÙŠØ©",
+      "ØªÙ†Ø¨ÙŠÙ‡Ø§Øª Ù…Ø¨ÙŠØ¹Ø§Øª Ø³Ø§Ø®Ù†Ø©"
+    ]
+  },
+  "web": {
+    "icon": "ðŸŒ",
+    "title": "Ø£Ù†Ø¸Ù…Ø© ÙˆÙŠØ¨ Ù„Ù„ØªØ­ÙˆÙŠÙ„",
+    "desc": "Ù…Ø³Ø§Ø±Ø§Øª Ø¨ÙŠØ¹ (Funnels) Ø³Ø±ÙŠØ¹Ø© ØªØ±Ø¨Ø· Ø§Ù„Ø¹Ù…ÙŠÙ„ Ù…Ø¨Ø§Ø´Ø±Ø© Ø¨Ù†Ø¸Ø§Ù… Ø§Ù„ÙˆØ§ØªØ³Ø§Ø¨.",
+    "flow": [
+      "ØªØµÙ…ÙŠÙ… ÙˆØ§Ø¬Ù‡Ø© ØªØ­ÙˆÙŠÙ„",
+      "ØªØ­Ù…ÙŠÙ„ ÙØ§Ø¦Ù‚ Ø§Ù„Ø³Ø±Ø¹Ø©",
+      "Ø±Ø¨Ø· Ø²Ø± Ø§Ù„Ø¹Ù…Ù„ Ø¨Ø§Ù„Ø¨ÙˆØª"
+    ],
+    "benefits": [
+      "ØªØ­ÙˆÙŠÙ„ Ø²ÙˆØ§Ø± Ù„Ø¹Ù…Ù„Ø§Ø¡",
+      "Ø³Ø±Ø¹Ø© ØªØ­Ù…ÙŠÙ„ < 1.5Ø«",
+      "ØªØ­Ø³ÙŠÙ† Ù…Ø­Ø±ÙƒØ§Øª Ø§Ù„Ø¨Ø­Ø«",
+      "ØªØµÙ…ÙŠÙ… Ø¹ØµØ±ÙŠ Ù…ØªØ¬Ø§ÙˆØ¨"
+    ]
+  },
+  "app": {
+    "icon": "ðŸ“±",
+    "title": "ØªØ·Ø¨ÙŠÙ‚Ø§Øª Ø§Ù„Ø£Ø¹Ù…Ø§Ù„",
+    "desc": "ØªØ·ÙˆÙŠØ± Ø£Ø¯ÙˆØ§Øª Ù…Ø®ØµØµØ© Ù„Ù…Ù†Ø´Ø£ØªÙƒ Ù„ØªØ³Ù‡ÙŠÙ„ Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª Ø£Ùˆ Ø®Ø¯Ù…Ø© Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡.",
+    "flow": [
+      "ØªØ­Ø¯ÙŠØ¯ Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„Ø¹Ù…Ù„",
+      "ØªØ·ÙˆÙŠØ± ÙˆØ§Ø¬Ù‡Ø§Øª Ù…Ø®ØµØµØ©",
+      "Ø¥Ø·Ù„Ø§Ù‚ ÙˆØªÙƒØ§Ù…Ù„ Ø§Ù„Ø£Ù†Ø¸Ù…Ø©"
+    ],
+    "benefits": [
+      "ØªØ·Ø¨ÙŠÙ‚Ø§Øª PWA Ø³Ø±ÙŠØ¹Ø©",
+      "ÙˆØ§Ø¬Ù‡Ø§Øª API Ù…Ø®ØµØµØ©",
+      "Ø£Ù…Ø§Ù† Ø¨ÙŠØ§Ù†Ø§Øª Ù…Ø´ÙØ±",
+      "Ø³Ù‡ÙˆÙ„Ø© Ø§Ù„Ø§Ø³ØªØ®Ø¯Ø§Ù…"
+    ]
+  },
+  "auto": {
+    "icon": "âš¡",
+    "title": "Ø£ØªÙ…ØªØ© Ø§Ù„Ø¹Ù…Ù„ÙŠØ§Øª",
+    "desc": "Ø±Ø¨Ø· Ø¬Ù…ÙŠØ¹ Ø¨Ø±Ø§Ù…Ø¬Ùƒ Ù„ØªØ¹Ù…Ù„ Ù…Ø¹Ø§Ù‹ ÙƒØ¢Ù„Ø© ÙˆØ§Ø­Ø¯Ø© Ø¯ÙˆÙ† ØªØ¯Ø®Ù„ Ø¨Ø´Ø±ÙŠ.",
+    "flow": [
+      "ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ù…Ù‡Ø§Ù… Ø§Ù„Ù…ØªÙƒØ±Ø±Ø©",
+      "Ø±Ø¨Ø· Ø§Ù„Ø£Ù†Ø¸Ù…Ø© (Zapier/API)",
+      "ØªÙØ¹ÙŠÙ„ Ø§Ù„ØªØ¯ÙÙ‚ Ø§Ù„Ø¢Ù„ÙŠ"
+    ],
+    "benefits": [
+      "ØªÙˆÙÙŠØ± 100+ Ø³Ø§Ø¹Ø© Ø´Ù‡Ø±ÙŠØ§Ù‹",
+      "Ø±Ø¨Ø· 5000+ ØªØ·Ø¨ÙŠÙ‚",
+      "ØµÙØ± Ø£Ø®Ø·Ø§Ø¡ Ø¨Ø´Ø±ÙŠØ©",
+      "Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ù„Ø­Ø¸ÙŠØ©"
+    ]
+  },
+  "analytics": {
+    "icon": "ðŸ“Š",
+    "title": "Ù„ÙˆØ­Ø© Ø§Ù„Ù‚ÙŠØ§Ø¯Ø© Ø§Ù„Ø°ÙƒÙŠØ©",
+    "desc": "Ø¨ÙŠØ§Ù†Ø§Øª Ø­ÙŠØ© ØªÙƒØ´Ù Ø§Ù„Ø£Ø±Ø¨Ø§Ø­ Ø§Ù„Ù…Ù‡Ø¯Ø±Ø© ÙˆØªÙˆØ¬Ù‡ Ù‚Ø±Ø§Ø±Ø§Øª Ø§Ù„Ù†Ù…Ùˆ.",
+    "flow": [
+      "Ø¬Ù…Ø¹ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ù…Ù† Ø§Ù„Ù‚Ù†ÙˆØ§Øª",
+      "ØªØ­Ù„ÙŠÙ„ Ø§Ù„Ø¹Ø§Ø¦Ø¯ ÙˆØ§Ù„Ø£Ø±Ø¨Ø§Ø­",
+      "ØªÙˆÙ„ÙŠØ¯ ØªÙ‚Ø§Ø±ÙŠØ± Ø§ØªØ®Ø§Ø° Ø§Ù„Ù‚Ø±Ø§Ø±"
+    ],
+    "benefits": [
+      "ØªØªØ¨Ø¹ Ø£Ø±Ø¨Ø§Ø­ Ù…Ù‡Ø¯Ø±Ø©",
+      "Ø¨ÙŠØ§Ù†Ø§Øª Ø­ÙŠØ© Ø¨Ø§Ù„Ø«Ø§Ù†ÙŠØ©",
+      "ØªØ­Ù„ÙŠÙ„ Ø£Ø¯Ø§Ø¡ Ø§Ù„ÙØ±ÙŠÙ‚",
+      "ROI Ø¯Ù‚ÙŠÙ‚ Ù„Ù„Ø­Ù…Ù„Ø§Øª"
+    ]
+  },
+  "enterprise": {
+    "icon": "ðŸ’Ž",
+    "title": "Ø§Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ù…Ø¤Ø³Ø³ÙŠ",
+    "desc": "Ø¨Ù†ÙŠØ© ØªØ­ØªÙŠØ© Ù…Ø³ØªÙ‚Ù„Ø© (Private SaaS) Ù„Ù„Ø´Ø±ÙƒØ§Øª Ø§Ù„ÙƒØ¨Ø±Ù‰ ÙˆØ§Ù„Ø¹ÙŠØ§Ø¯Ø§Øª Ø§Ù„Ù…ØªØ¹Ø¯Ø¯Ø©.",
+    "flow": [
+      "ØªØ®ØµÙŠØµ Ø§Ù„Ø®Ø§Ø¯Ù… Ø§Ù„Ù…Ø³ØªÙ‚Ù„",
+      "ØªÙƒØ§Ù…Ù„ Ø§Ù„Ø£Ù†Ø¸Ù…Ø© Ø§Ù„Ù…Ø±ÙƒØ²ÙŠØ©",
+      "ØªÙØ¹ÙŠÙ„ Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª ÙˆØ§Ù„Ø£Ù…Ø§Ù†"
+    ],
+    "benefits": [
+      "Ø®ØµÙˆØµÙŠØ© Ø¨ÙŠØ§Ù†Ø§Øª ÙƒØ§Ù…Ù„Ø©",
+      "Ø³Ø¹Ø© Ù…Ø¹Ø§Ù„Ø¬Ø© ØºÙŠØ± Ù…Ø­Ø¯ÙˆØ¯Ø©",
+      "Ø¯Ø¹Ù… ÙÙ†ÙŠ Ø§Ø³ØªØ±Ø§ØªÙŠØ¬ÙŠ",
+      "ØªØ®ØµÙŠØµ AI Ù…ØªÙ‚Ø¯Ù…"
+    ]
+  }
+};
+
+function openModal(id) {
+  const d = serviceDB[id];
+  if(!d) return;
+  document.getElementById('smIcon').textContent = d.icon;
+  document.getElementById('smTitle').textContent = d.title;
+  document.getElementById('smDesc').textContent = d.desc;
+  
+  const fDiv = document.getElementById('smFlow');
+  if(fDiv) {
+    fDiv.innerHTML = '';
+    d.flow.forEach((step, idx) => {
+      fDiv.innerHTML += '<div class="bg-white/5 p-3 rounded-xl border border-white/5 text-center"><div class="text-aqua font-bold mb-1 text-xs">Ø®Ø·ÙˆØ© ' + (idx+1) + '</div><div class="text-[10px] text-gray-400">' + step + '</div></div>';
+    });
+  }
+
+  const bDiv = document.getElementById('smBenefits');
+  bDiv.innerHTML = '';
+  d.benefits.forEach(b => {
+    bDiv.innerHTML += '<div class="flex items-start gap-3 bg-white/5 rounded-lg p-4 border border-white/5"><span class="text-[#5EEAD4]">âœ“</span> <span class="text-gray-300 font-medium">' + b + '</span></div>';
+  });
+  const ov = document.getElementById('smOverlay');
+  const ct = document.getElementById('smContent');
+  ov.classList.remove('hidden');
+  ov.classList.add('flex');
+  void ov.offsetWidth;
+  ov.classList.remove('opacity-0');
+  ct.classList.remove('opacity-0','scale-95');
+  document.body.style.overflow='hidden';
+}
+
+function closeModal() {
+  const ov = document.getElementById('smOverlay');
+  const ct = document.getElementById('smContent');
+  ov.classList.add('opacity-0');
+  ct.classList.add('opacity-0','scale-95');
+  document.body.style.overflow='';
+  setTimeout(()=> { ov.classList.remove('flex'); ov.classList.add('hidden'); }, 300);
+}
+</script>
+
+<script>
+document.querySelectorAll('.bento-card').forEach(card => {
+  card.onmousemove = e => {
+    const rect = card.getBoundingClientRect(),
+          x = e.clientX - rect.left,
+          y = e.clientY - rect.top;
+    card.style.setProperty('--mouse-x', `${x}px`);
+    card.style.setProperty('--mouse-y', `${y}px`);
+  };
+});
+</script>
+
+<script>
+window.addEventListener('load', () => {
+  gsap.from('.bento-card', {
+    scrollTrigger: {
+      trigger: '#services',
+      start: 'top 80%',
+    },
+    y: 100,
+    /* opacity: 0, */
+    duration: 1,
+    stagger: 0.15,
+    ease: 'power4.out'
+  });
+
+  gsap.from('#pricing .glass', {
+    scrollTrigger: {
+      trigger: '#pricing',
+      start: 'top 80%',
+    },
+    scale: 0.9,
+    opacity: 0,
+    duration: 1,
+    stagger: 0.2,
+    ease: 'back.out(1.7)'
+  });
+});
+</script>
+
+<script>
+  function scrollToService(id) {
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileMenu) mobileMenu.classList.add('hidden');
+    
+    const section = document.getElementById('services');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => {
+        if (typeof openModal === 'function') openModal(id);
+      }, 800);
+    }
+  }
+</script>
+</body>
+</html>
+

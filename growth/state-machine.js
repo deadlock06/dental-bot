@@ -3,12 +3,12 @@
 // Brain Step 6: Core logic for handling inbound replies
 // ═══════════════════════════════════════════════════════════════
 
-const { createClient } = require('@supabase/supabase-js');
+
 const { classifyIntent, generateResponse } = require('./conversation');
 const { sendWhatsApp } = require('./lib/whatsappProvider');
 const { handoffLead } = require('./handoff');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const supabase = require('./lib/supabase');
 
 /**
  * Handle an incoming message from a Growth Swarm lead.
@@ -122,13 +122,44 @@ async function handleInboundMessage(lead, messageText, messageSid) {
             last_replied_at: new Date().toISOString(),
             last_contacted_at: new Date().toISOString()
           }).eq('id', lead.id);
+
+          // Log reply event
+          await supabase.from('gs_events').insert({
+            lead_id: lead.id,
+            event_type: 'REPLIED',
+            old_state: lead.status,
+            new_state: 'engaged',
+            metadata: { intent, message: messageText }
+          });
         } else {
           console.error(`[state-machine] ❌ Failed to send reply to ${lead.phone}:`, sendResult.error);
         }
         break;
 
       default:
-        console.warn(`[state-machine] ⚠️ Unknown intent: ${intent}`);
+        console.warn(`[state-machine] ⚠️ Unknown intent: ${intent} for lead ${lead.phone}`);
+        // CRITICAL-2 Fix: Do not silently drop. Generate a generic response.
+        const defaultReply = await generateResponse(lead, messageText, history || [], intent);
+        const defaultSendResult = await sendWhatsApp(lead.phone, defaultReply);
+        
+        if (defaultSendResult.success) {
+          await supabase.from('gs_conversations').insert({
+            lead_id: lead.id,
+            campaign_id: lead.campaign_id,
+            channel: 'whatsapp',
+            direction: 'outbound',
+            message_text: defaultReply,
+            status: 'sent',
+            ai_generated: true,
+            sent_at: new Date().toISOString()
+          });
+
+          await supabase.from('gs_leads').update({ 
+            status: 'engaged',
+            last_replied_at: new Date().toISOString(),
+            last_contacted_at: new Date().toISOString()
+          }).eq('id', lead.id);
+        }
         break;
     }
 

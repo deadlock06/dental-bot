@@ -102,30 +102,38 @@ async function detectIntent(messageText, currentFlow = null, currentStep = 0) {
     ? `Today is ${today}.\nCurrent flow: ${currentFlow}, Current step: ${currentStep}\nPatient message: ${messageText}`
     : `Today is ${today}.\nNo active flow (patient is on main menu)\nPatient message: ${messageText}`;
 
-  try {
-    const res = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: 'gpt-4o-mini',
-        temperature: 0,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: contextMsg }
-        ],
-        tools: [INTENT_FUNCTION],
-        tool_choice: { type: 'function', function: { name: 'detect_intent' } }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${OPENAI_KEY}`,
-          'Content-Type': 'application/json'
+    const { wrapAI } = require('./lib/resilience');
+    const resData = await wrapAI(async () => {
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4o-mini',
+          temperature: 0,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: contextMsg }
+          ],
+          tools: [INTENT_FUNCTION],
+          tool_choice: { type: 'function', function: { name: 'detect_intent' } }
         },
-        timeout: 8000
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${OPENAI_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 8000
+        }
+      );
+      return response.data;
+    }, { fallbackType: 'intent_detection', text: messageText, currentFlow });
+
+    if (typeof resData === 'string') {
+      // It returned the hard fallback string
+      return keywordFallback(messageText, currentFlow);
+    }
 
     // Extract function call result — guaranteed structured output
-    const toolCall = res.data.choices[0].message.tool_calls?.[0];
+    const toolCall = resData.choices[0].message.tool_calls?.[0];
     if (toolCall && toolCall.function?.arguments) {
       const parsed = JSON.parse(toolCall.function.arguments);
       console.log(`[AI] CustomGPT: msg="${messageText}" → intent=${parsed.intent} lang=${parsed.detected_language} val="${parsed.extracted_value}" conf=${parsed.confidence}`);
@@ -138,7 +146,7 @@ async function detectIntent(messageText, currentFlow = null, currentStep = 0) {
     }
 
     // Fallback: try old-style content parsing if no tool call
-    const content = res.data.choices[0].message.content;
+    const content = resData.choices[0].message.content;
     if (content) {
       try {
         const parsed = JSON.parse(content);
@@ -155,12 +163,7 @@ async function detectIntent(messageText, currentFlow = null, currentStep = 0) {
 
     return keywordFallback(messageText, currentFlow);
   } catch (err) {
-    console.error('[AI] detectIntent error:', err.response?.data || err.message);
-    // Log to monitor if available
-    try {
-      const { logError } = require('./monitor');
-      logError('ai', err, { messageText, currentFlow, currentStep });
-    } catch (_) { /* monitor not loaded yet */ }
+    console.error('[AI] detectIntent error:', err.message);
     return keywordFallback(messageText, currentFlow);
   }
 }
@@ -255,26 +258,34 @@ async function extractDate(text) {
   console.log(`[AI] extractDate called with: "${text}"`);
   try {
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const res = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: 'gpt-4o-mini',
-        temperature: 0,
-        messages: [{
-          role: 'user',
-          content: `Today is ${today}. Extract the appointment date from this text. ALWAYS include the year. Return format: "DayName, Month Day, Year" (e.g. "Monday, April 21, 2026"). Rules: "tomorrow"=next day, "next Monday"=next occurrence, "بكرة/غداً"=tomorrow, "الاثنين الجاي"=next Monday. Arabic months: يناير=January, فبراير=February, مارس=March, أبريل=April, مايو=May, يونيو=June, يوليو=July, أغسطس=August, سبتمبر=September, أكتوبر=October, نوفمبر=November, ديسمبر=December. If the date has no year, use the CURRENT year (or next year if the date has already passed). If no date can be extracted, return "null". Return ONLY the date string, nothing else. Text: "${text}"`
-        }]
-      },
-      {
-        headers: { Authorization: `Bearer ${OPENAI_KEY}`, 'Content-Type': 'application/json' },
-        timeout: 8000
-      }
-    );
-    const result = res.data.choices[0].message.content.trim().replace(/^["']|["']$/g, '');
+    const { wrapAI } = require('./lib/resilience');
+    
+    const resData = await wrapAI(async () => {
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4o-mini',
+          temperature: 0,
+          messages: [{
+            role: 'user',
+            content: `Today is ${today}. Extract the appointment date from this text. ALWAYS include the year. Return format: "DayName, Month Day, Year" (e.g. "Monday, April 21, 2026"). Rules: "tomorrow"=next day, "next Monday"=next occurrence, "بكرة/غداً"=tomorrow, "الاثنين الجاي"=next Monday. Arabic months: يناير=January, فبراير=February, مارس=March, أبريل=April, مايو=May, يونيو=June, يوليو=July, أغسطس=August, سبتمبر=September, أكتوبر=October, نوفمبر=November, ديسمبر=December. If the date has no year, use the CURRENT year (or next year if the date has already passed). If no date can be extracted, return "null". Return ONLY the date string, nothing else. Text: "${text}"`
+          }]
+        },
+        {
+          headers: { Authorization: `Bearer ${OPENAI_KEY}`, 'Content-Type': 'application/json' },
+          timeout: 8000
+        }
+      );
+      return response.data;
+    }, "null");
+
+    if (resData === "null") return text;
+    
+    const result = resData.choices[0].message.content.trim().replace(/^["']|["']$/g, '');
     console.log(`[AI] extractDate: "${text}" → "${result}"`);
     return result;
   } catch (err) {
-    console.error('[AI] extractDate error:', err.response?.data || err.message);
+    console.error('[AI] extractDate error:', err.message);
     return text;
   }
 }
@@ -284,27 +295,35 @@ async function extractDate(text) {
 // ─────────────────────────────────────────────
 async function extractTimeSlot(text, slots) {
   try {
-    const res = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: 'gpt-4o-mini',
-        temperature: 0,
-        messages: [{
-          role: 'user',
-          content: `Available time slots: ${slots.join(', ')}. Match this time request to the closest available slot. Rules: morning/الصبح/صباحاً→"9:00 AM", noon/الظهر→"1:00 PM", afternoon/بعد الظهر/العصر→"2:00 PM", evening/المساء/مساء/المغرب/after work→"5:00 PM". If the requested time is completely outside available slots return exactly the word null. Otherwise return ONLY the exact slot string. Time request: "${text}"`
-        }]
-      },
-      {
-        headers: { Authorization: `Bearer ${OPENAI_KEY}`, 'Content-Type': 'application/json' },
-        timeout: 8000
-      }
-    );
-    const result = res.data.choices[0].message.content.trim().replace(/^["']|["']$/g, '');
+    const { wrapAI } = require('./lib/resilience');
+    
+    const resData = await wrapAI(async () => {
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4o-mini',
+          temperature: 0,
+          messages: [{
+            role: 'user',
+            content: `Available time slots: ${slots.join(', ')}. Match this time request to the closest available slot. Rules: morning/الصبح/صباحاً→"9:00 AM", noon/الظهر→"1:00 PM", afternoon/بعد الظهر/العصر→"2:00 PM", evening/المساء/مساء/المغرب/after work→"5:00 PM". If the requested time is completely outside available slots return exactly the word null. Otherwise return ONLY the exact slot string. Time request: "${text}"`
+          }]
+        },
+        {
+          headers: { Authorization: `Bearer ${OPENAI_KEY}`, 'Content-Type': 'application/json' },
+          timeout: 8000
+        }
+      );
+      return response.data;
+    }, "null");
+
+    if (resData === "null") return null;
+
+    const result = resData.choices[0].message.content.trim().replace(/^["']|["']$/g, '');
     console.log(`[AI] extractTimeSlot: "${text}" → "${result}"`);
     if (result === 'null' || result === 'NULL') return null;
     return slots.includes(result) ? result : null;
   } catch (err) {
-    console.error('[AI] extractTimeSlot error:', err.response?.data || err.message);
+    console.error('[AI] extractTimeSlot error:', err.message);
     return null;
   }
 }

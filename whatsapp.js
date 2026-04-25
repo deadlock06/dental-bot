@@ -6,11 +6,14 @@ async function sendMessage(to, text) {
     const authToken  = process.env.TWILIO_AUTH_TOKEN;
     const from       = process.env.TWILIO_WHATSAPP_FROM;
 
+    const { wrapTwilio } = require('./lib/resilience');
     const client = twilio(accountSid, authToken);
-    await client.messages.create({
-      from: from,
-      to:   `whatsapp:+${to}`,
-      body: text
+    await wrapTwilio(async () => {
+      return await client.messages.create({
+        from: from,
+        to:   `whatsapp:+${to}`,
+        body: text
+      });
     });
   } catch (err) {
     console.error('sendMessage error:', err.message);
@@ -44,7 +47,10 @@ async function sendInteractiveList(to, header, body, buttonText, sections, fallb
     }
     text += '\nReply with a number to choose.';
 
-    await client.messages.create({ from, to: `whatsapp:+${to}`, body: text });
+    const { wrapTwilio } = require('./lib/resilience');
+    await wrapTwilio(async () => {
+      return await client.messages.create({ from, to: `whatsapp:+${to}`, body: text });
+    });
   } catch (err) {
     console.error('[WhatsApp] sendInteractiveList error:', err.message);
     // Fallback to plain text
@@ -55,9 +61,9 @@ async function sendInteractiveList(to, header, body, buttonText, sections, fallb
 }
 
 // ─────────────────────────────────────────────
-// Vertical Icons Helper
+// industry Icons Helper
 // ─────────────────────────────────────────────
-function getVerticalIcon(vertical) {
+function getindustryIcon(industry) {
   const icons = {
     dental:      '🦷',
     physio:      '🧘',
@@ -67,14 +73,14 @@ function getVerticalIcon(vertical) {
     orthopedic:  '🦴',
     pediatric:   '👶'
   };
-  return icons[vertical] || '🩺';
+  return icons[industry] || '🩺';
 }
 
 // ─────────────────────────────────────────────
 // Main menu interactive sections (EN)
 // ─────────────────────────────────────────────
-function getMenuSectionsEN(vertical = 'dental') {
-  const vIcon = getVerticalIcon(vertical);
+function getMenuSectionsEN(industry = 'dental') {
+  const vIcon = getindustryIcon(industry);
   return [
     {
       title: 'Appointments',
@@ -102,8 +108,8 @@ function getMenuSectionsEN(vertical = 'dental') {
 // ─────────────────────────────────────────────
 // Main menu interactive sections (AR)
 // ─────────────────────────────────────────────
-function getMenuSectionsAR(vertical = 'dental') {
-  const vIcon = getVerticalIcon(vertical);
+function getMenuSectionsAR(industry = 'dental') {
+  const vIcon = getindustryIcon(industry);
   return [
     {
       title: 'المواعيد',
@@ -132,15 +138,15 @@ function getMenuSectionsAR(vertical = 'dental') {
 // Send the main menu as an interactive list
 // Falls back to plain text on failure.
 // ─────────────────────────────────────────────
-async function sendMainMenu(to, clinicName, ar, plainTextFallback, vertical = 'dental') {
-  const vIcon = getVerticalIcon(vertical);
+async function sendMainMenu(to, clinicName, ar, plainTextFallback, industry = 'dental') {
+  const vIcon = getindustryIcon(industry);
   if (ar) {
     await sendInteractiveList(
       to,
       `أهلاً في ${clinicName}! ${vIcon}`,
       'كيف يمكنني مساعدتك اليوم؟',
       'اختر خدمة',
-      getMenuSectionsAR(vertical),
+      getMenuSectionsAR(industry),
       plainTextFallback
     );
   } else {
@@ -149,7 +155,7 @@ async function sendMainMenu(to, clinicName, ar, plainTextFallback, vertical = 'd
       `Welcome to ${clinicName}! ${vIcon}`,
       `I'm your AI autonomous assistant. How can I help you today?`,
       'Choose an option',
-      getMenuSectionsEN(vertical),
+      getMenuSectionsEN(industry),
       plainTextFallback
     );
   }
@@ -159,7 +165,7 @@ async function sendMainMenu(to, clinicName, ar, plainTextFallback, vertical = 'd
 // Doctor selection interactive list
 // doctors: [{ id, name, name_ar, degree, degree_ar, specialization, specialization_ar, available, available_ar }]
 // ─────────────────────────────────────────────
-async function sendDoctorMenu(to, ar, doctors, plainTextFallback, vertical = 'dental') {
+async function sendDoctorMenu(to, ar, doctors, plainTextFallback, industry = 'dental') {
   const rows = doctors.map((doc, i) => ({
     id:          String(i + 1),
     title:       ar ? `د. ${doc.name_ar || doc.name}` : `Dr. ${doc.name}`,
@@ -180,7 +186,7 @@ async function sendDoctorMenu(to, ar, doctors, plainTextFallback, vertical = 'de
     dermatology: { ar: 'أطباؤنا المختصون', en: 'Our Specialists' },
     general:     { ar: 'فريقنا الطبي', en: 'Our Medical Team' }
   };
-  const titleSet = teamTitle[vertical] || teamTitle.general;
+  const titleSet = teamTitle[industry] || teamTitle.general;
 
   await sendInteractiveList(
     to,
@@ -195,8 +201,8 @@ async function sendDoctorMenu(to, ar, doctors, plainTextFallback, vertical = 'de
 // ─────────────────────────────────────────────
 // Treatment selection interactive list
 // ─────────────────────────────────────────────
-async function sendTreatmentMenu(to, ar, plainTextFallback, vertical = 'dental', customServices = []) {
-  const vIcon = getVerticalIcon(vertical);
+async function sendTreatmentMenu(to, ar, plainTextFallback, industry = 'dental', customServices = []) {
+  const vIcon = getindustryIcon(industry);
   
   // 1. Use custom services if provided (from clinics.services JSONB)
   let rows = [];
@@ -207,7 +213,7 @@ async function sendTreatmentMenu(to, ar, plainTextFallback, vertical = 'dental',
       description: ar ? (s.desc_ar || s.desc || '') : (s.desc || s.desc_ar || '')
     }));
   } else {
-    // 2. Fallback to vertical defaults
+    // 2. Fallback to industry defaults
     const defaults = {
       dental: ar
         ? [
@@ -246,7 +252,7 @@ async function sendTreatmentMenu(to, ar, plainTextFallback, vertical = 'dental',
             { id: '5', title: 'Home Physio 🏠',          description: 'At-home therapy visit' }
           ]
     };
-    rows = defaults[vertical] || defaults.dental;
+    rows = defaults[industry] || defaults.dental;
   }
 
   await sendInteractiveList(
@@ -296,7 +302,10 @@ async function sendButtonMessage(to, body, buttons, fallbackText) {
     let text = `${body}\n`;
     buttons.forEach((b, i) => { text += `\n${i + 1}. ${b.title}`; });
     text += '\n\nReply with a number to choose.';
-    await client.messages.create({ from, to: `whatsapp:+${to}`, body: text });
+    const { wrapTwilio } = require('./lib/resilience');
+    await wrapTwilio(async () => {
+      return await client.messages.create({ from, to: `whatsapp:+${to}`, body: text });
+    });
   } catch (err) {
     console.error('[WhatsApp] sendButtonMessage error:', err.message);
     if (fallbackText) {

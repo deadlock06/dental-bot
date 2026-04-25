@@ -4,12 +4,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 require('dotenv').config();
-const { createClient } = require('@supabase/supabase-js');
+
 const OpenAI = require('openai');
 const { sendWhatsApp } = require('./lib/whatsappProvider');
 const { getGhostRoomUrl, detectLanguage } = require('./brain');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const supabase = require('./lib/supabase');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
 /**
@@ -169,6 +169,19 @@ async function processSequences() {
  */
 async function startSequence(leadId, totalSteps = 2, delayDays = 3) {
   try {
+    // CRITICAL-4 Fix: Prevent duplicate sequences
+    const { data: existing } = await supabase
+      .from('gs_sequences')
+      .select('id')
+      .eq('lead_id', leadId)
+      .eq('is_completed', false)
+      .maybeSingle();
+
+    if (existing) {
+      console.log(`[nurture] Sequence already exists for lead ${leadId}, skipping insertion.`);
+      return;
+    }
+
     const nextSend = new Date();
     nextSend.setDate(nextSend.getDate() + delayDays);
 

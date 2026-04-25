@@ -11,7 +11,19 @@
       "Bash(RAILWAY_TOKEN=b9d8a930-a7f5-49b3-b45d-428e185d8473 railway status)",
       "Bash(RAILWAY_TOKEN=b9d8a930-a7f5-49b3-b45d-428e185d8473 railway service dental-bot)",
       "Bash(RAILWAY_TOKEN=b9d8a930-a7f5-49b3-b45d-428e185d8473 railway list)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "WebFetch(domain:qudozen.com)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'fix\\(services\\): update subtitle to match Step 4 spec *)",
+      "Bash(git commit -m 'feat\\(service-1\\): AI Receptionist card — exact Step 5 spec *)",
+      "Bash(git commit -m 'feat\\(services\\): Step 6 — exact copy for cards 2-7 *)",
+      "Bash(git commit -m 'feat\\(simulator\\): Step 7 — teaser section, remove embedded iframe *)",
+      "Bash(git commit -m 'feat: Steps 9-12 — Jake letter, footer fix, GSAP, QA pass *)",
+      "WebFetch(domain:www.linear.app)",
+      "WebFetch(domain:www.vercel.com)",
+      "WebFetch(domain:www.anthropic.com)"
     ]
   }
 }

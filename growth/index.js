@@ -11,7 +11,7 @@ const path = require('path');
 router.get('/', (req, res) => {
   res.redirect('/growth/dashboard');
 });
-const { createClient } = require('@supabase/supabase-js');
+
 
 const { parseRawInput } = require('./lib/smartParser');
 const { autoVerify } = require('./lib/autoVerify');
@@ -33,7 +33,7 @@ function getStripe() {
   return _stripe;
 }
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const supabase = require('./lib/supabase');
 
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'qudozen_growth_swarm_secret_key';
@@ -111,6 +111,8 @@ router.get('/login', (req, res) => {
 router.post('/login', (req, res) => {
   const { user, pass } = req.body;
   const adminUser = process.env.ADMIN_USER || 'admin';
+  const { getAdminPhone } = require('./lib/phone');
+  const adminPhone = getAdminPhone();
   const adminPass = process.env.ADMIN_PASS || 'password123';
 
   if (user === adminUser && pass === adminPass) {
@@ -183,16 +185,7 @@ router.post('/stripe-webhook', async (req, res) => {
   res.json({ received: true });
 });
 
-/**
- * Helper to normalize phone for DB lookup
- */
-function normalizePhone(p) {
-  if (!p) return '';
-  let cleaned = p.replace(/\D/g, '');
-  if (cleaned.startsWith('0')) cleaned = '966' + cleaned.slice(1);
-  if (!cleaned.startsWith('+')) cleaned = '+' + cleaned;
-  return cleaned;
-}
+const { normalizePhone } = require('./lib/phone');
 
 router.get('/ghost-room', (req, res) => {
   res.sendFile(path.join(__dirname, 'ghost-room.html'));
@@ -251,7 +244,7 @@ router.get('/stats', async (req, res) => {
  * POST /growth/add-and-fire
  * One endpoint: paste raw data, system does everything
  */
-router.post('/add-and-fire', async (req, res) => {
+router.post('/add-and-fire', jwtAuth, async (req, res) => {
   const { raw_input, force_verify = false, skip_if_duplicate = true } = req.body;
   
   if (!raw_input || typeof raw_input !== 'string') {
@@ -346,6 +339,16 @@ router.post('/add-and-fire', async (req, res) => {
           whatsapp_provider: sendResult.provider,
           message_count: 1
         }).eq('id', lead.id);
+
+        // Bridge to GS 3.0 State Machine (CRITICAL-3 Fix)
+        await supabase.from('gs_leads').upsert({
+          id: lead.id,
+          phone: parsed.phone,
+          company_name: parsed.name,
+          owner_name: verification.website?.ownerName || parsed.name,
+          status: 'engaged',
+          source: 'add-and-fire'
+        });
 
         // Start GS 3.0 Nurture Sequence
         await startSequence(lead.id);
@@ -443,18 +446,28 @@ router.post('/send-batch', jwtAuth, async (req, res) => {
 
     const result = await sendWhatsApp(lead.phone, message);
 
-    if (result.success) {
-      await supabase.from('growth_leads_v2').update({
-        status: 'messaged',
-        last_message_sent: message,
-        last_contacted_at: new Date().toISOString(),
-        first_contacted_at: lead.first_contacted_at || new Date().toISOString(),
-        message_count: (lead.message_count || 0) + 1
-      }).eq('id', lead.id);
+      if (result.success) {
+        await supabase.from('growth_leads_v2').update({
+          status: 'messaged',
+          last_message_sent: message,
+          last_contacted_at: new Date().toISOString(),
+          first_contacted_at: lead.first_contacted_at || new Date().toISOString(),
+          message_count: (lead.message_count || 0) + 1
+        }).eq('id', lead.id);
 
-      // Start GS 3.0 Nurture Sequence
-      await startSequence(lead.id);
-    }
+        // Bridge to GS 3.0 State Machine (CRITICAL-3 Fix)
+        await supabase.from('gs_leads').upsert({
+          id: lead.id,
+          phone: lead.phone,
+          company_name: lead.business_name || lead.name,
+          owner_name: lead.website_owner_name || lead.name,
+          status: 'engaged',
+          source: 'send-batch'
+        });
+
+        // Start GS 3.0 Nurture Sequence
+        await startSequence(lead.id);
+      }
     
     results.push({
       leadId: lead.id,
@@ -557,6 +570,13 @@ router.get('/dashboard', jwtAuth, async (req, res) => {
   const { data: leads } = await query;
   const all = leads || [];
 
+  // Fetch GS3.0 states for enrichment
+  const { data: gsData } = await supabase.from('gs_leads').select('id, status, conversation_state');
+  const gsMap = (gsData || []).reduce((acc, l) => {
+    acc[l.id] = l;
+    return acc;
+  }, {});
+
   const s = {
     total:      all.length,
     new:        all.filter(l => l.status === 'new').length,
@@ -576,6 +596,15 @@ router.get('/dashboard', jwtAuth, async (req, res) => {
     opted_out: '#95a5a6', needs_review: '#9b59b6', dropped: '#e74c3c',
   };
 
+  const GS_COLORS = {
+    AWAITING_REPLY: '#8e44ad',
+    QUALIFYING: '#3498db',
+    OBJECTION_HANDLING: '#e67e22',
+    ESCALATED: '#e74c3c',
+    BOOKING_PITCH: '#2ecc71',
+    OPT_OUT: '#7f8c8d'
+  };
+
   function hotness(score) {
     if (score >= 80) return '🔥';
     if (score < 50)  return '❄️';
@@ -585,11 +614,18 @@ router.get('/dashboard', jwtAuth, async (req, res) => {
   const rows = all.map(l => {
     const color = STATUS_COLORS[l.status] || '#666';
     const isOptOut = l.status === 'opted_out';
+    const gsLead = gsMap[l.id];
+    const gsBadge = gsLead && gsLead.conversation_state ? 
+      `<span class="badge" style="background:${GS_COLORS[gsLead.conversation_state] || '#666'}22;color:${GS_COLORS[gsLead.conversation_state] || '#666'};border:1px solid ${GS_COLORS[gsLead.conversation_state] || '#666'}44;margin-top:4px;display:inline-block;font-size:10px;">⚡ ${gsLead.conversation_state}</span>` : '';
+
     return `<tr class="lead-row">
       <td>${hotness(l.confidence_score || 0)} ${l.name || '-'}</td>
       <td>${l.business_name || '-'}</td>
       <td>${l.city || '-'}</td>
-      <td><span class="badge" style="background:${color}22;color:${color};border:1px solid ${color}44;${isOptOut ? 'text-decoration:line-through' : ''}">${l.status}</span></td>
+      <td>
+        <span class="badge" style="background:${color}22;color:${color};border:1px solid ${color}44;${isOptOut ? 'text-decoration:line-through' : ''}">${l.status}</span><br/>
+        ${gsBadge}
+      </td>
       <td class="score" style="color:${(l.confidence_score||0)>=70?'#2ecc71':(l.confidence_score||0)>=50?'#f39c12':'#e74c3c'}">${l.confidence_score || 0}</td>
       <td>${l.pain_signal || '-'}</td>
       <td>${l.last_contacted_at ? new Date(l.last_contacted_at).toLocaleDateString('en-GB') : '-'}</td>

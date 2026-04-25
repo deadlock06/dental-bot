@@ -124,14 +124,22 @@ STRICT WHATSAPP CONSTRAINTS:
 
 Write the message now.`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'system', content: systemPrompt }],
-      temperature: 0.7,
-      max_tokens: 150
-    });
+    const { wrapAI } = require('../lib/resilience');
+    const resData = await wrapAI(async () => {
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'system', content: systemPrompt }],
+        temperature: 0.7,
+        max_tokens: 150
+      });
+      return response;
+    }, "FALLBACK");
 
-    let msg = response.choices[0].message.content.trim();
+    if (resData === "FALLBACK") {
+      return applyGuardrails(fallbackTemplate(lead));
+    }
+
+    let msg = resData.choices[0].message.content.trim();
     msg = applyGuardrails(msg);
     
     console.log(`[brain] 🧠 Generated personalized PAS message for ${company}:\n${msg}`);
