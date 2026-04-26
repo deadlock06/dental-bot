@@ -1,5 +1,5 @@
 const db = require('../db.js');
-const { sendWhatsApp } = require('../whatsapp.js');
+const { sendMessage: sendWhatsApp } = require('../whatsapp.js');
 const { generatePassword } = require('../utils/encrypt.js');
 
 const ONBOARDING_STATES = {
