@@ -484,5 +484,83 @@ module.exports = {
   getDoctorsByClinic,
   getOnboardingByPhone, getOnboardingById, createOnboarding, updateOnboarding, logOnboardingMessage,
   createCronJob, getPendingCronJobs, markCronJobExecuted, getRandomHotLeads,
-  verifyDashboardCredentials, getDashboardMetrics, getDashboardFeed, getDashboardCalendar
+  verifyDashboardCredentials, getDashboardMetrics, getDashboardFeed, getDashboardCalendar,
+  createGrowthConversation, countRecentAutoReplies, countUnclearIntents, getLeadByPhone, updateLeadStatus, getLeadById
 };
+
+async function createGrowthConversation(data) {
+  try {
+    await axios.post(`${SUPABASE_URL}/rest/v1/growth_conversations`, data, { headers });
+  } catch (err) {
+    console.error('createGrowthConversation error:', err.response?.data || err.message);
+  }
+}
+
+async function countRecentAutoReplies(leadId, hours) {
+  try {
+    const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/growth_conversations?lead_id=eq.${leadId}&auto_replied=eq.true&created_at=gte.${since}&select=count`,
+      { headers: { ...headers, Prefer: 'count=exact' } }
+    );
+    // Axios response with Prefer: count=exact puts the count in headers
+    const count = parseInt(res.headers['content-range']?.split('/')?.[1] || '0');
+    return count;
+  } catch (err) {
+    console.error('countRecentAutoReplies error:', err.message);
+    return 0;
+  }
+}
+
+async function countUnclearIntents(leadId, hours) {
+  try {
+    const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/growth_conversations?lead_id=eq.${leadId}&intent_classified=eq.unclear&created_at=gte.${since}&select=count`,
+      { headers: { ...headers, Prefer: 'count=exact' } }
+    );
+    const count = parseInt(res.headers['content-range']?.split('/')?.[1] || '0');
+    return count;
+  } catch (err) {
+    console.error('countUnclearIntents error:', err.message);
+    return 0;
+  }
+}
+
+async function getLeadByPhone(phone) {
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/growth_leads_v2?phone=eq.${encodeURIComponent(phone)}&select=*`,
+      { headers }
+    );
+    return res.data?.[0] || null;
+  } catch (err) {
+    console.error('getLeadByPhone error:', err.message);
+    return null;
+  }
+}
+
+async function updateLeadStatus(leadId, status) {
+  try {
+    await axios.patch(
+      `${SUPABASE_URL}/rest/v1/growth_leads_v2?id=eq.${leadId}`,
+      { status },
+      { headers }
+    );
+  } catch (err) {
+    console.error('updateLeadStatus error:', err.response?.data || err.message);
+  }
+}
+
+async function getLeadById(leadId) {
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/growth_leads_v2?id=eq.${leadId}&select=*`,
+      { headers }
+    );
+    return res.data?.[0] || null;
+  } catch (err) {
+    console.error('getLeadById error:', err.message);
+    return null;
+  }
+}
