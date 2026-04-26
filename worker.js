@@ -31,6 +31,17 @@ cron.schedule('0 * * * *', async () => {
   }
 });
 
+// 2b. Onboarding Follow-ups - Hourly
+cron.schedule('5 * * * *', async () => {
+  log('Running onboarding state machine follow-ups...');
+  try {
+    const runOnboardingCron = require('./cron/jobs/onboarding');
+    await runOnboardingCron();
+  } catch (e) {
+    console.error('[Worker] Onboarding cron error:', e.message);
+  }
+});
+
 // 3. System Health Check - Every 10 minutes
 cron.schedule('*/10 * * * *', async () => {
   log('Running system health check...');

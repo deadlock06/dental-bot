@@ -102,9 +102,8 @@ function menuAR(clinicOrName) {
 // ─────────────────────────────────────────────
 // Main entry point
 // ─────────────────────────────────────────────
-const onboarding = require('./growth/onboarding-state-machine.js');
-
 async function handleMessage(phone, text, clinic) {
+  const onboarding = require('./growth/onboarding-state-machine.js');
   // ── Processing lock — skip duplicate/retry messages ──
   if (processingLocks.get(phone)) {
     console.log(`[Bot] ⏳ Skipping duplicate message from ${phone} (lock active)`);
