@@ -33,7 +33,10 @@ function getStripe() {
   return _stripe;
 }
 
+const { normalizePhone } = require('./lib/phone');
 const supabase = require('./lib/supabase');
+const { alertAdmin } = require('../utils/alertAdmin');
+
 
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'qudozen_growth_swarm_secret_key';
@@ -171,6 +174,7 @@ router.post('/stripe-webhook', async (req, res) => {
 
     if (error) {
       console.error('[Stripe Webhook] DB Update Error:', error);
+      await alertAdmin('STRIPE_DB_UPDATE_FAILED', { email: customerEmail, phone, error: error.message }, 'CRITICAL');
     } else if (lead) {
       // CRITICAL: Trigger automated handoff so the bot knows they are a customer now
       try {
@@ -178,7 +182,11 @@ router.post('/stripe-webhook', async (req, res) => {
         console.log(`[Stripe] Handoff successful for ${lead.phone}`);
       } catch (hErr) {
         console.error('[Stripe Webhook] Handoff Error:', hErr);
+        await alertAdmin('STRIPE_HANDOFF_FAILED', { phone: lead.phone, error: hErr.message }, 'CRITICAL');
       }
+    } else {
+      // Payment received but no matching lead found — manual activation needed
+      await alertAdmin('STRIPE_LEAD_NOT_FOUND', { email: customerEmail, phone, session: session.id }, 'CRITICAL');
     }
   }
 
@@ -196,17 +204,17 @@ router.get('/room', (req, res) => {
   res.sendFile(path.join(__dirname, 'ghost-room.html'));
 });
 
-router.post('/leads', async (req, res) => {
+router.post('/leads', jwtAuth, async (req, res) => {
   const { data, error } = await supabase.from('growth_leads_v2').insert(req.body);
   res.json({ success: !error, data, error });
 });
 
-router.get('/leads', async (req, res) => {
+router.get('/leads', jwtAuth, async (req, res) => {
   const { data, error } = await supabase.from('growth_leads_v2').select('*');
   res.json({ success: !error, data, error });
 });
 
-router.post('/send', async (req, res) => {
+router.post('/send', jwtAuth, async (req, res) => {
   const { id } = req.body;
   const { data: lead } = await supabase.from('growth_leads_v2').select('*').eq('id', id).single();
   if (lead) {

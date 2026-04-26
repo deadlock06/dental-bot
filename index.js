@@ -120,12 +120,31 @@ app.post('/webhook/status', async (req, res) => {
 // Incoming WhatsApp messages
 // ─────────────────────────────────────────────
 // Incoming WhatsApp messages — Secured with Twilio Signature Verification
+// ── MessageSid deduplication (prevents Twilio retry double-processing) ──
+const _processedSids = new Map(); // sid → timestamp
+const SID_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 app.post('/webhook', twilio.webhook(), async (req, res) => {
   res.status(200).end();
 
   const fromPhone = req.body.From?.replace('whatsapp:', '') || '';
   const messageTextRaw = req.body.Body || '';
-  
+  const messageSid = req.body.MessageSid || '';
+
+  // ── Deduplication: ignore Twilio retries for same MessageSid ──
+  if (messageSid) {
+    if (_processedSids.has(messageSid)) {
+      console.log(`[Webhook] Duplicate SID ${messageSid} — ignoring Twilio retry`);
+      return;
+    }
+    _processedSids.set(messageSid, Date.now());
+    // Prune old entries to prevent memory leak
+    const cutoff = Date.now() - SID_TTL_MS;
+    for (const [sid, ts] of _processedSids) {
+      if (ts < cutoff) _processedSids.delete(sid);
+    }
+  }
+
   // --- GROWTH SWARM: AUTONOMOUS REPLY CLASSIFIER (PHASE 7) ---
   try {
     const lead = await db.getLeadByPhone(fromPhone);
@@ -188,13 +207,20 @@ app.post('/webhook', twilio.webhook(), async (req, res) => {
     const patientPhone = fromRaw.replace(/^whatsapp:\+/, '');
     console.log(`[Webhook] patientPhone="${patientPhone}" messageText="${messageText}"`);
 
-    const botPhoneRaw = process.env.WHATSAPP_PHONE_ID || '';
-    const botPhone = botPhoneRaw.replace(/^whatsapp:/i, '').replace(/^\+/, '');
-    const clinic   = await getClinic(botPhone);
-    console.log(`[Webhook] botPhone="${botPhone}" (raw="${botPhoneRaw}") clinic=${clinic ? clinic.name : 'NOT FOUND'}`);
-    if (!clinic) console.error(`[Webhook] ⚠️ Clinic not found for botPhone="${botPhone}" — check WHATSAPP_PHONE_ID env var and clinics.whatsapp_number in DB`);
+    // ─── MULTI-TENANT CLINIC ROUTING ───────────────────────────────
+    // Resolve clinic from the Twilio "To" field on this message.
+    // This supports unlimited clinics on separate Twilio numbers without
+    // any env var change. Each number maps to a row in clinics.whatsapp_number.
+    const toRaw = body?.To || process.env.WHATSAPP_PHONE_ID || '';
+    const botPhone = toRaw.replace(/^whatsapp:/i, '').replace(/^\+/, '');
+    const clinic = await getClinic(botPhone);
+    console.log(`[Webhook] botPhone="${botPhone}" (from To="${toRaw}") clinic=${clinic ? clinic.name : 'NOT FOUND'}`);
+    if (!clinic) {
+      console.error(`[Webhook] ⚠️ No clinic found for number "${botPhone}" — add this number to clinics.whatsapp_number in Supabase`);
+    }
 
     await handleMessage(patientPhone, messageText, clinic);
+
 
   } catch (err) {
     console.error('[Webhook] Error:', err.message);

@@ -3,6 +3,10 @@ const axios = require('axios');
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
+// 8-second timeout on all Supabase REST calls.
+// Prevents webhook handlers from hanging indefinitely on Supabase latency spikes.
+const AXIOS_TIMEOUT_MS = 8000;
+
 const headers = {
   apikey: SUPABASE_KEY,
   Authorization: `Bearer ${SUPABASE_KEY}`,
@@ -18,7 +22,7 @@ async function getPatient(phone) {
   try {
     const res = await axios.get(
       `${SUPABASE_URL}/rest/v1/patients?phone=eq.${encodeURIComponent(phone)}&select=*`,
-      { headers }
+      { headers, timeout: AXIOS_TIMEOUT_MS }
     );
     return res.data[0] || null;
   } catch (err) {
@@ -418,11 +422,18 @@ async function getRandomHotLeads(count) {
 
 async function verifyDashboardCredentials(username, password) {
   try {
+    // SECURITY FIX: Fetch by username only. Never send password in URL params
+    // (URL params appear in server logs, Supabase logs, and any proxy layer).
     const res = await axios.get(
-      `${SUPABASE_URL}/rest/v1/onboarding_states?dashboard_username=eq.${encodeURIComponent(username)}&dashboard_password=eq.${encodeURIComponent(password)}&select=business_id,clinic_name`,
-      { headers }
+      `${SUPABASE_URL}/rest/v1/onboarding_states?dashboard_username=eq.${encodeURIComponent(username)}&select=business_id,clinic_name,dashboard_password`,
+      { headers, timeout: AXIOS_TIMEOUT_MS }
     );
-    return res.data?.[0] || null;
+    const row = res.data?.[0];
+    if (!row) return null;
+    // Compare in application layer — keeps password out of URL
+    // TODO: migrate to bcrypt hash comparison once passwords are hashed on creation
+    if (row.dashboard_password !== password) return null;
+    return { business_id: row.business_id, clinic_name: row.clinic_name };
   } catch (err) {
     console.error('verifyDashboardCredentials error:', err.message);
     return null;

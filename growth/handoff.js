@@ -126,8 +126,35 @@ async function handoffLead(lead, triggerMessage, reason = 'buying_signal') {
   }
 }
 
+// ─── Unified Objection Handler — called by reply-classifier ───
+async function handleObjection(leadId, businessId, message, lang, phone) {
+  const { sendWhatsApp } = require('./lib/whatsappProvider');
+
+  const objection = detectObjection(message);
+
+  if (!objection) {
+    // No known objection matched — send generic re-engagement
+    const fallback = lang === 'ar'
+      ? 'شكراً على تواصلك. يسعدنا الإجابة على أي سؤال لديك حول نظامنا. ما الذي يشغل بالك؟'
+      : 'Thanks for reaching out. Happy to answer any questions about the system. What\'s on your mind?';
+    await sendWhatsApp(phone, fallback);
+    return fallback;
+  }
+
+  const response = lang === 'ar' ? objection.response_ar : objection.response_en;
+  await sendWhatsApp(phone, response);
+
+  // If the objection type warrants escalation (e.g. price objection)
+  if (objection.escalate) {
+    await handoffLead({ phone, id: leadId, company_name: 'Unknown' }, message, 'pricing');
+  }
+
+  return response;
+}
+
 module.exports = {
   handoffLead,
   checkEscalationTriggers,
-  detectObjection
+  detectObjection,
+  handleObjection
 };
