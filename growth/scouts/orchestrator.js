@@ -10,7 +10,7 @@ const { runJobPortalScout }    = require('./jobPortals');
 const { runGooglePlacesScout } = require('./googlePlaces');
 const { runIndeedScout }       = require('./indeed');
 
-const AUTO_SEND_THRESHOLD = 75; // confidence_score minimum to auto-send
+const AUTO_SEND_THRESHOLD = 50; // Mass outreach strategy: net approach
 
 async function deduplicateAgainstDB(supabase, leads) {
   if (!leads.length) return leads;

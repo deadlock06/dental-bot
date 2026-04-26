@@ -37,10 +37,12 @@ RULES:
 1. MUST be extremely short (under 30 words).
 2. MUST sound like a real human texting (casual, direct, no emojis except maybe one).
 3. Do NOT repeat the exact same pitch. 
-4. If Step 1: "Just bubbling this up. Did you get a chance to look at the numbers?"
-5. If Step 2: "Last message from me on this. If timing changes, let me know."
-6. Language: ${lang === 'ar' ? 'Arabic (Saudi dialect, casual professional)' : 'English'}
-7. Always include this link naturally: ${url}
+4. If Step 1: "Did you get a chance to take a look?"
+5. If Step 2: "Just bumping this in case it got buried."
+6. If Step 3: Use social proof. "Another clinic nearby just deployed this and booked 4 implants this weekend."
+7. If Step 4: "Last message from me on this. If timing changes, let me know."
+8. Language: ${lang === 'ar' ? 'Arabic (Saudi dialect, casual professional)' : 'English'}
+9. Always include this link naturally: ${url}
 
 Generate the follow-up message now.`;
 
@@ -60,6 +62,14 @@ Generate the follow-up message now.`;
       return lang === 'ar' 
         ? `دكتور هل كان لديك وقت للاطلاع؟ ${url} -جيك`
         : `Did you get a chance to take a look? ${url} -Jake`;
+    } else if (stepNumber === 2) {
+      return lang === 'ar' 
+        ? `فقط أذكرك بالموضوع في حال انشغلت. ${url} -جيك`
+        : `Just bumping this in case it got buried. ${url} -Jake`;
+    } else if (stepNumber === 3) {
+      return lang === 'ar' 
+        ? `عيادة أخرى قريبة بدأت باستخدام النظام وحققت 4 حجوزات زراعة هذا الأسبوع. ${url} -جيك`
+        : `Another clinic nearby just deployed this and booked 4 implants this weekend. ${url} -Jake`;
     } else {
       return lang === 'ar' 
         ? `هذه آخر رسالة مني. إذا تغير الوقت، أنا موجود. ${url} -جيك`
@@ -99,8 +109,8 @@ async function processSequences() {
 
       const nextStep = seq.current_step + 1;
       
-      // We only support a 2-step sequence by default (Bump 1, Bump 2)
-      if (nextStep > 2 || nextStep > seq.total_steps) {
+      // We only support a 4-step sequence by default
+      if (nextStep > 4 || nextStep > seq.total_steps) {
         await supabase.from('gs_sequences').update({ is_completed: true }).eq('id', seq.id);
         results.completed++;
         continue;
@@ -134,20 +144,23 @@ async function processSequences() {
           sent_at: new Date().toISOString()
         });
 
-        // Calculate next send date (+4 days for Step 2, else complete)
+        // Calculate next send date (+3d, +6d, +11d to map to Days 4, 10, 21)
         const nextSend = new Date();
-        nextSend.setDate(nextSend.getDate() + 4);
+        if (nextStep === 1) nextSend.setDate(nextSend.getDate() + 3);
+        else if (nextStep === 2) nextSend.setDate(nextSend.getDate() + 6);
+        else if (nextStep === 3) nextSend.setDate(nextSend.getDate() + 11);
+        else nextSend.setDate(nextSend.getDate() + 30);
         
         // Update sequence
         await supabase.from('gs_sequences').update({
           current_step: nextStep,
           next_send_at: nextSend.toISOString(),
           whatsapp_sent: seq.whatsapp_sent + 1,
-          is_completed: nextStep >= 2 // Mark complete if we hit step 2
+          is_completed: nextStep >= 4 // Mark complete if we hit step 4
         }).eq('id', seq.id);
 
         results.sent++;
-        if (nextStep >= 2) results.completed++;
+        if (nextStep >= 4) results.completed++;
         console.log(`[nurture] ✅ Sent Step ${nextStep} to ${lead.phone}`);
       } else {
         console.error(`[nurture] ❌ Failed to send Step ${nextStep} to ${lead.phone}:`, sendResult.error);
@@ -167,7 +180,7 @@ async function processSequences() {
 /**
  * Start a new sequence for a lead (called when the first message is sent).
  */
-async function startSequence(leadId, totalSteps = 2, delayDays = 3) {
+async function startSequence(leadId, totalSteps = 4, delayDays = 3) {
   try {
     // CRITICAL-4 Fix: Prevent duplicate sequences
     const { data: existing } = await supabase
