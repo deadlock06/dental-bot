@@ -105,3 +105,43 @@ pm run worker to package.json for independent scaling on platforms like Render o
 - **AI Reliability**: Wrapped all OpenAI completions in i.js and growth/brain.js to ensure keyword fallback or template-based messaging if the API fails.
 - **Twilio Stability**: Hardened all WhatsApp delivery methods with retry logic and localized error handling to minimize message loss.
 - **Enterprise Ready**: The system now handles partial outages gracefully without crashing the main service loop.
+
+## [2026-04-26] Phase 5 Completed: Atomic Lock & Stress Test (Bilingual Hardening)
+- **Atomic Locking**: Replaced unsafe read-then-write booking logic with book_slot_atomic SQL RPC to prevent race conditions.
+- **Stress Test Verified**: Confirmed 1/49 success/rejection split under 50 concurrent requests.
+- **Partial Unique Index**: Implemented partial index on appointments (clinic, doctor, date, time) where status != 'cancelled', allowing immediate re-booking of released slots.
+- **Media Support**: Added bilingual fallback for unsupported media (photos/voice) to ensure the bot never fails silently.
+
+## [2026-04-26] Phase 6 Completed: Operator Command Center (ROI Dashboard)
+- **Vanilla Pivot**: Deleted legacy React scaffolding in favor of a lean, high-performance Vanilla HTML/JS dashboard.
+- **Session Auth**: Implemented secure express-session authentication with httpOnly cookies, replacing stateless JWT for the admin interface.
+- **Honest Metrics**: Built dashboard_metrics_view for real-time ROI tracking (Appointments, Reminders, Conversations).
+- **Revenue Fix (6.1)**: Implemented treatment-specific revenue math (e.g., Cleaning 150, Implants 5000) instead of flat estimates, ensuring absolute data integrity for clinic owners.
+- **Live Feed & Calendar**: Added a real-time interaction feed and a color-coded weekly schedule view.
+
+## [2026-04-26] Phase 7 Completed: Autonomous Growth Swarm (The Reply Classifier)
+- **Human Bottleneck Removed**: Built a bilingual intent classifier in growth/swarm/reply-classifier.js to automate lead engagement.
+- **Intent Mapping**: Handles Pricing, Demo/Simulator, Objections, and Opt-outs with personalized auto-replies in English and Arabic.
+- **Hot Lead Escalation**: Automated direct WhatsApp alerts to Jake for high-intent leads, including full conversation context.
+- **Safety Guardrails**: Implemented 24h rate limiting (3 replies max) and human override after 3 unclear messages to ensure system sanity.
+- **Conversation Audit**: Added growth_conversations table to log every AI interaction for sales optimization.
+
+## [2026-04-26] Phase 5 Completed: Atomic Lock & Stress Test (Bilingual Hardening)
+- **Atomic Locking**: Replaced unsafe read-then-write booking logic with book_slot_atomic SQL RPC to prevent race conditions.
+- **Stress Test Verified**: Confirmed 1/49 success/rejection split under 50 concurrent requests.
+- **Partial Unique Index**: Implemented partial index on appointments (clinic, doctor, date, time) where status != 'cancelled', allowing immediate re-booking of released slots.
+- **Media Support**: Added bilingual fallback for unsupported media (photos/voice) to ensure the bot never fails silently.
+
+## [2026-04-26] Phase 6 Completed: Operator Command Center (ROI Dashboard)
+- **Vanilla Pivot**: Deleted legacy React scaffolding in favor of a lean, high-performance Vanilla HTML/JS dashboard.
+- **Session Auth**: Implemented secure express-session authentication with httpOnly cookies, replacing stateless JWT for the admin interface.
+- **Honest Metrics**: Built dashboard_metrics_view for real-time ROI tracking (Appointments, Reminders, Conversations).
+- **Revenue Fix (6.1)**: Implemented treatment-specific revenue math (e.g., Cleaning 150, Implants 5000) instead of flat estimates, ensuring absolute data integrity for clinic owners.
+- **Live Feed & Calendar**: Added a real-time interaction feed and a color-coded weekly schedule view.
+
+## [2026-04-26] Phase 7 Completed: Autonomous Growth Swarm (The Reply Classifier)
+- **Human Bottleneck Removed**: Built a bilingual intent classifier in growth/swarm/reply-classifier.js to automate lead engagement.
+- **Intent Mapping**: Handles Pricing, Demo/Simulator, Objections, and Opt-outs with personalized auto-replies in English and Arabic.
+- **Hot Lead Escalation**: Automated direct WhatsApp alerts to Jake for high-intent leads, including full conversation context.
+- **Safety Guardrails**: Implemented 24h rate limiting (3 replies max) and human override after 3 unclear messages to ensure system sanity.
+- **Conversation Audit**: Added growth_conversations table to log every AI interaction for sales optimization.

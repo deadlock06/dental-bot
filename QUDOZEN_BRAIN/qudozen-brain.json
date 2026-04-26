@@ -1,152 +1,30 @@
 {
-  "meta": {
-    "project": "Qudozen",
-    "version": "3.2.0-FUNNEL",
-    "last_updated": "2026-04-25T02:51:00+03:00",
-    "schema": "2.0"
-  },
-  "system_status": {
-    "overall_health": "healthy",
-    "active_modules": [
-      "growth-swarm",
-      "bot",
-      "dashboard",
-      "landing-page-v3.2-ar-funnel",
-      "bento-simulator",
-      "fomo-ticker",
-      "revenue-bleed-hook",
-      "voice-note-closer"
-    ],
-    "broken_modules": [],
-    "render_status": "deployed — v3.1.2 Arabic Master (Optimized) | local v3.2 FUNNEL pending push"
-  },
-  "execution_state": {
-    "current_step": 17,
-    "step_name": "Unstoppable Sales Funnel — 5-Phase UX Wiring",
-    "status": "completed"
-  },
-  "landing_page": {
-    "version": "3.2.0-FUNNEL",
-    "status": "Production-Ready",
-    "language": "Arabic (ar)",
-    "direction": "rtl",
-    "file": "public/index.html",
-    "backup_file": "public/index_backup_before_funnel.html",
-    "service_grid": {
-      "count": 8,
-      "hierarchy": "Fixed-Stable",
-      "modals": "Fully Populated (ServiceDB v2.0)",
-      "ai_receptionist_card": {
-        "type": "interactive-simulator",
-        "id": "reception-simulator",
-        "contains": ["bsPhoneShell", "bsChat", "bsInput", "bsSend", "bsProgress", "bsReplies", "bsStartBtn", "bsDash", "bsDsName", "bsDsTreat", "bsDsSlot", "bsDsDate", "bsDsSync", "bsRevenueBadge"],
-        "js_prefix": "bs",
-        "onclick_guard": "event.stopPropagation() prevents modal open when interacting with phone"
-      }
-    },
-    "nav": {
-      "type": "Sticky Glassmorphism",
-      "features": ["Desktop Submenu Dropdown", "Mobile Quick-Chips", "Modal Trigger Routing"],
-      "alignment": "RTL-Optimized"
-    },
-    "simulator_section": {
-      "id": "simulator",
-      "status": "showcase-only-non-functional",
-      "overlay": "sim-showcase-overlay div catches all clicks and redirects to #reception-simulator",
-      "revenue_hook": {
-        "element": "revenueInput",
-        "purpose": "Prospect enters their avg profit per patient — stored in window._qzRevenue — shown in revenue badge after booking"
-      },
-      "redirect_fn": "redirectToRealSim()"
-    }
-  },
-  "sales_funnel_v3_2": {
-    "phase_1": {
-      "name": "Real Simulator in Bento Card",
-      "target_id": "reception-simulator",
-      "js_functions": ["bsStart", "bsReset", "bsHandleInput", "bsNext", "bsProcessBooking", "bsAddBot", "bsAddUser", "bsSetChips", "bsEnableInput", "bsDisableInput", "bsUpdateDash", "bsTriggerReminder", "bsAddVoiceNote", "bsPlayVoice"],
-      "state_vars": ["bsStep", "bsFlow", "bsRunning", "bsIsInit", "bsData"],
-      "message_bank": "BS_MSGS (ar + en)",
-      "psychology": "Product IS the demo. Zero cognitive distance between promise and proof."
-    },
-    "phase_2": {
-      "name": "Showcase Redirect + Revenue Bleed Hook",
-      "trigger_fn": "redirectToRealSim()",
-      "revenue_storage": "window._qzRevenue",
-      "psychology": "Loss aversion. Prospect quantifies their OWN money before engaging."
-    },
-    "phase_3": {
-      "name": "Live Mini-Dashboard",
-      "elements": ["bsDsName", "bsDsTreat", "bsDsSlot", "bsDsDate", "bsDsSync", "bsRevenueBadge", "bsRevenueAmt"],
-      "update_fn": "bsUpdateDash()",
-      "animation": "bsDashPulse — 0.6s ease x2 per field update",
-      "psychology": "A-ha coordination moment. CRM updates DURING the conversation."
-    },
-    "phase_4": {
-      "name": "Ghost Room FOMO Ticker",
-      "element_id": "fomoTicker",
-      "css_class": "fomo-item",
-      "messages_count": 10,
-      "interval_ms": "6000 + random(3000)",
-      "display_duration_ms": 4000,
-      "position": "fixed bottom-left z-998",
-      "psychology": "Social proof + FOMO. System feels alive and already adopted."
-    },
-    "phase_5": {
-      "name": "Voice Note Closer",
-      "trigger": "After bsTriggerReminder fires (3.5s post-booking)",
-      "fn": "bsAddVoiceNote(), bsPlayVoice()",
-      "audio": "Web Audio API tone (AudioContext + OscillatorNode)",
-      "visual": "WhatsApp-style waveform with 8 animated spans",
-      "psychology": "Premium signal. Very few bots do voice. Kills price objection at $133/mo."
-    }
-  },
-  "critical_rules": [
-    "ALWAYS maintain the 8-card grid structure in index.html.",
-    "NEVER leave dangling div tags in the services section.",
-    "Maintain the Tajawal font and Gold/Teal theme strictly.",
-    "Bento simulator IDs use 'bs' prefix — NEVER reuse these for the original simulator.",
-    "Original simulator #simulator section must remain visually intact.",
-    "event.stopPropagation() must remain on the bento phone container div.",
-    "window._qzRevenue must be read by bsUpdateDash() for the revenue badge to show."
+  "step_number": 19,
+  "step_name": "Phase 7: Autonomous Growth Swarm",
+  "timestamp_completed": "2026-04-26T22:58:00Z",
+  "files_created": [
+    "growth/swarm/reply-classifier.js",
+    "scripts/phase7_swarm.sql"
   ],
-  "completed_steps": [
-    {
-      "step_number": 16,
-      "step_name": "Global Service DB Audit & Syntax Repair",
-      "timestamp_completed": "2026-04-24T16:48:00+03:00",
-      "files_modified": ["public/index.html", "growth/ghost-room.html"],
-      "insights": [
-        "Extra div tags in the grid hierarchy caused visual jumping on refresh.",
-        "Missing modal data in ServiceDB led to inactive service cards.",
-        "RTL dropdown positioning requires 'right-0' anchoring to avoid heading overlap."
-      ]
-    },
-    {
-      "step_number": 17,
-      "step_name": "Unstoppable Sales Funnel — 5-Phase UX Wiring",
-      "timestamp_completed": "2026-04-25T02:50:00+03:00",
-      "files_modified": ["public/index.html", "QUDOZEN_BRAIN/EXECUTION_LOG.md", "QUDOZEN_BRAIN/qudozen-brain.json", "QUDOZEN_BRAIN/STATUS.md", "QUDOZEN_BRAIN/CURRENT_PLAN.md"],
-      "backup_created": "public/index_backup_before_funnel.html",
-      "css_added": [
-        ".bs-bubble-bot", ".bs-bubble-user", ".bs-typing", "#bsProgress", ".bs-qr-chip",
-        ".bs-autonomous-notice", ".sim-showcase-overlay", ".bs-dash-field", "@keyframes bsDashPulse",
-        "#fomoTicker", ".fomo-item", "@keyframes fomoSlideIn/Out", ".voice-note-bubble",
-        ".voice-play-btn", ".voice-waveform", "@keyframes waveAnim", ".revenue-input-wrap"
-      ],
-      "js_added": [
-        "redirectToRealSim()", "bsStart()", "bsReset()", "bsHandleInput()", "bsNext()",
-        "bsProcessBooking()", "bsAddBot()", "bsAddUser()", "bsSetChips()", "bsEnableInput()",
-        "bsDisableInput()", "bsUpdateDash()", "bsTriggerReminder()", "bsAddVoiceNote()",
-        "bsPlayVoice()", "showFomoItem()", "BS_MSGS object", "FOMO_MSGS array"
-      ],
-      "insights": [
-        "PowerShell string replacement fails on CRLF vs LF mismatch — use File.WriteAllText for safety.",
-        "Regex approach with (?s) multiline mode is the only reliable way to replace large HTML blocks.",
-        "event.stopPropagation() is critical — without it, clicking the phone input opens the modal.",
-        "HTML entity encoding must be used in PowerShell here-strings to avoid injection issues.",
-        "Original simulator section preserved 100% visually — only start button + overlay changed."
-      ]
-    }
-  ]
+  "files_modified": [
+    "db.js",
+    "index.js",
+    "schema.sql"
+  ],
+  "features_added": [
+    "Bilingual intent classification (not_interested, pricing, simulator, hot_lead, objection, unclear)",
+    "Automated pricing response with honest SAR values",
+    "Personalized simulator link generation",
+    "Hot lead escalation to Jake with full context",
+    "Opt-out handling with status update",
+    "Rate limiting (3 auto-replies per 24h)",
+    "Human override after 3 unclear intents",
+    "Growth conversation logging table"
+  ],
+  "ui_upgrades": [],
+  "issues_found": [],
+  "fixes_applied": [
+    "Integrated growth lead reply routing before patient bot logic"
+  ],
+  "status": "production_ready"
 }

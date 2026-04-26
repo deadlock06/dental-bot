@@ -33,8 +33,9 @@
 │  The actual product. AI WhatsApp receptionist that books,        │
 │  reschedules, cancels, reminds, and follows up with patients.    │
 ├─────────────────────────────────────────────────────────────────┤
-│  LAYER 4: ADMIN DASHBOARD (dashboard/ → React SPA)              │
-│  Clinic staff management panel. Appointments, patients, leads.   │
+├─────────────────────────────────────────────────────────────────┤
+│  LAYER 4: OPERATOR COMMAND CENTER (public/dashboard/)           │
+│  ROI Dashboard for clinic owners. Appointments, Feed, Metrics.   │
 └─────────────────────────────────────────────────────────────────┘
 All four layers share: index.js (server) + Supabase (database)
 ```
@@ -57,7 +58,8 @@ All four layers share: index.js (server) + Supabase (database)
 | `calendar.js` | 6.1KB | **Google Calendar API integration + date utils** | `createCalendarEvent()`, `updateCalendarEvent()`, `deleteCalendarEvent()` |
 | `audio.js` | 5.3KB | **OpenAI Whisper voice transcription** | `transcribeAudio(mediaUrl)` — downloads from Twilio, sends to Whisper |
 | `monitor.js` | 12KB | **Self-healing health monitoring system** | `healthCheck()`, `runPeriodicCheck()`, `withMonitor()`, `logError()`, `validateFlowState()`, `alertStaffIfCritical()` |
-| `schema.sql` | 6.6KB | **Supabase Postgres schema** | Tables: patients, clinics, appointments, doctor_schedules, doctor_slots, growth_leads_v2, message_logs |
+| `growth_conversations` | 4.2KB | **Phase 7: Autonomous reply history** | Intent logs, auto-reply status |
+| `schema.sql` | 6.6KB | **Supabase Postgres schema** | Tables: patients, clinics, appointments, doctor_schedules, doctor_slots, growth_leads_v2, growth_conversations, onboarding_states |
 | `render.yaml` | 197B | **Render deployment config** | buildCommand: npm install, startCommand: node index.js ⚠️ Does NOT build dashboard |
 | `package.json` | 785B | **Root dependencies** | express, helmet, twilio, openai, @supabase/supabase-js, axios, cheerio, luxon, node-cron, googleapis, stripe |
 
@@ -67,6 +69,7 @@ All four layers share: index.js (server) + Supabase (database)
 
 | File | Size | Role | Key Functions |
 |---|---|---|---|
+| `growth/swarm/reply-classifier.js` | 8.2KB | **Phase 7: Autonomous Intent Classifier** | `classify()`, `processInbound()` — handles sales replies |
 | `growth/index.js` | 29KB | **Express router: all /growth/* endpoints + Growth HTML dashboard** | 20+ routes (see below) |
 | `growth/state-machine.js` | 3.5KB | **LLM Intent Classifier & Core Router** | Intercepts all inbound Growth Swarm replies |
 | `growth/conversation.js` | 4.2KB | **"Jake" Persona & Objection Handling** | Uses "Illusion Architecture" GPT-4o-mini prompts |
@@ -103,34 +106,18 @@ All four layers share: index.js (server) + Supabase (database)
 
 ---
 
-### `dashboard/` — React Admin SPA
+### `public/dashboard/` — Operator Command Center (Vanilla)
 
-**Stack:** React 18 + TypeScript + Vite + Supabase SDK  
-**Built to:** `dashboard/dist/` (must be pre-built or added to Render build command)  
-**Served at:** `/dashboard/*` by Express static middleware  
+**Stack:** Vanilla HTML + CSS + JS  
+**Auth:** Session-based (`express-session`) + httpOnly cookies  
+**Served at:** `/dashboard/*` (Protected)  
 
-| File/Folder | Role |
+| File | Role |
 |---|---|
-| `src/main.tsx` | React entry point |
-| `src/App.tsx` | Router: Login → Layout → Pages |
-| `src/index.css` | Global styles |
-| `src/pages/Dashboard.tsx` | KPI cards, activity feed, stats from /api/dashboard/stats |
-| `src/pages/Appointments.tsx` | Full appointment table, status updates, filters |
-| `src/pages/Patients.tsx` | Patient records, flow state, history |
-| `src/pages/Doctors.tsx` | Doctor profiles, schedules, working days |
-| `src/pages/Clinics.tsx` | Multi-clinic management, config editor |
-| `src/pages/Leads.tsx` | Growth Swarm lead table |
-| `src/pages/Analytics.tsx` | Revenue/conversion charts (Period: 7d/30d/90d) |
-| `src/pages/Settings.tsx` | Clinic config, API keys, bot settings |
-| `src/pages/Login.tsx` | Auth against /api/auth/login (env credentials) |
-| `src/components/layout/Layout.tsx` | Shell: Sidebar + TopBar + content area |
-| `src/components/layout/Sidebar.tsx` | Nav menu with icons for all pages |
-| `src/components/layout/TopBar.tsx` | Header: clinic name, notifications, user menu |
-| `src/hooks/useAuth.tsx` | Auth state, login/logout, token storage |
-| `src/hooks/useSupabase.ts` | Direct Supabase SDK queries for dashboard data |
-| `src/lib/mockData.ts` | Fallback mock data (used when API fails) |
-| `src/lib/utils.ts` | Date formatting, number formatting helpers |
-| `src/types/index.ts` | TypeScript interfaces: Clinic, Doctor, Patient, Appointment, Lead, DashboardStats, User |
+| `login.html` | Branded midnight/teal login interface |
+| `index.html` | Main dashboard layout (Scoreboard, Feed, Calendar) |
+| `app.js` | Data fetching & DOM rendering |
+| `style.css` | Premium midnight theme styling |
 
 ---
 

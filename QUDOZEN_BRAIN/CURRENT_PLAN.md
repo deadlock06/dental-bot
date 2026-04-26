@@ -1,26 +1,15 @@
-# Qudozen v3.2.0-FUNNEL — Current Plan
+# Qudozen v3.5.0-AUTONOMOUS — Current Plan
 
-## ✅ Completed: Unstoppable Sales Funnel (2026-04-25)
+## ✅ Completed: Production Hardening & Automation (Phases 5-7)
 
-- [x] Restore High-Fidelity Arabic v3.1 index.html
-- [x] Add Advanced Navbar (Desktop Submenu + Mobile Chips)
-- [x] Implement Modal Routing (Nav → Open Modal)
-- [x] Fix Service Grid Hierarchy (Syntax Cleanup)
-- [x] Fully Populate ServiceDB (8/8 Services)
-- [x] Optimize Operation Room (Dual CTAs + Gold Theme)
-- [x] Sync Qudozen Brain to v3.1.2-STABLE
-- [x] **PHASE 1** — Embed real WhatsApp simulator in AI Receptionist bento card
-- [x] **PHASE 2** — Convert showcase simulator to Revenue Bleed hook + redirect
-- [x] **PHASE 3** — Wire live mini-dashboard to bento simulator (real-time CRM sync)
-- [x] **PHASE 4** — Ghost Room FOMO ticker (floating bottom-left, 10 activity messages)
-- [x] **PHASE 5** — Voice note closer (post-booking WhatsApp voice bubble)
+- [x] **PHASE 5** — Atomic Locking & Stress Test (Race condition elimination)
+- [x] **PHASE 6** — Operator Command Center (ROI Dashboard with Honest Revenue)
+- [x] **PHASE 7** — Autonomous Growth Swarm (Reply Classifier & Intent Automation)
+- [x] Deploy to Render (Live verified)
+- [x] Refactor `index.js` routing to secure growth funnel before patient bot
 
-## 🔜 Next Phase: Production Hardening
+## 🔜 Next Phase: Phase 8 — Multi-Industrial Scale
 
-- [ ] Push v3.2 to Render (deploy live)
-- [ ] Full mobile QA at 375px — verify bento phone + dashboard stack correctly
-- [ ] Record real Jake voice message and embed as hosted .mp3 for the voice note closer
-- [ ] Store `window._qzRevenue` in localStorage for cross-scroll persistence
-- [ ] A/B test CTA copy in showcase simulator section
-- [ ] Connect "Enterprise" modal directly to high-ticket payment link
-- [ ] Refactor `bot.js` into modular sub-receptionists
+- [ ] **Phase 8.1**: Abstract \`ReplyClassifier\` into a "Swarm Engine" that can handle Salons, Real Estate, and Gyms.
+- [ ] **Phase 8.2**: Multi-City Scraper (Automate Google Places sweep for Riyadh, Jeddah, Dammam).
+- [ ] **Phase 8.3**: Advanced Analytics (CTR, Conversation Depth, and Churn Prediction in Command Center).

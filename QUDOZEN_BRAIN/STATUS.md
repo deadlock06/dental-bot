@@ -1,6 +1,6 @@
 # 🖥️ STATUS — System Health Snapshot
 
-> Last checked: 2026-04-25 02:51 (KSA / UTC+3) — v3.2.0-FUNNEL
+> Last checked: 2026-04-26 23:01 (KSA / UTC+3) — v3.5.0-AUTONOMOUS
 > Update this after every deploy or system change.
 
 ---
@@ -14,8 +14,9 @@
 | Supabase DB | ✅ Connected | All tables created via schema.sql |
 | Twilio WhatsApp | ✅ Active | Configured |
 | OpenAI GPT-4o-mini | ✅ Connected | Intent detection + date extraction |
-| Growth Dashboard | ✅ Live | `/growth/dashboard` — JWT Auth |
-| React Dashboard | ⚠️ Unknown | `/dashboard` — requires pre-built `dashboard/dist/` |
+| Operator Dashboard | ✅ Live | `/dashboard` — Session-based Vanilla HTML/JS |
+| Growth Swarm Dashboard | ✅ Live | `/growth/dashboard` — JWT Auth |
+| React Dashboard | 🗑️ Deleted | Replaced by Vanilla Command Center (Phase 6) |
 | Public Landing Page | ✅ Live (local) | **v3.2.0-FUNNEL** Arabic RTL — 5-phase sales funnel active |
 | Ghost Room | ✅ Live | `/growth/ghost-room.html` — Arabic RTL teaser, dwell tracking active |
 
@@ -30,7 +31,7 @@ Key new elements: `#reception-simulator` (bento phone), `#fomoTicker`, `revenueI
 
 | Issue | Impact | Fix In |
 |---|---|---|
-| Dashboard not auto-built on Render | Medium — stale dashboard | Manual build/commit required |
+| None | - | Phase 5, 6, 7 successfully hardened system |
 
 ---
 
@@ -42,7 +43,8 @@ Key new elements: `#reception-simulator` (bento phone), `#fomoTicker`, `revenueI
 |---|---|
 | `https://[your-render-app].onrender.com/` | Landing page (qudozen.com) |
 | `https://[your-render-app].onrender.com/health` | System health JSON |
-| `https://[your-render-app].onrender.com/dashboard` | React admin dashboard |
+| `https://[your-render-app].onrender.com/dashboard` | Operator Command Center (Vanilla) |
+| `https://[your-render-app].onrender.com/dashboard/login` | Dashboard Login |
 | `https://[your-render-app].onrender.com/growth/dashboard` | Growth Swarm HTML dashboard |
 | `https://[your-render-app].onrender.com/growth/ghost-room` | Ghost Room simulator |
 | `https://[your-render-app].onrender.com/webhook` | Twilio webhook (POST only) |
@@ -54,6 +56,7 @@ Key new elements: `#reception-simulator` (bento phone), `#fomoTicker`, `revenueI
 ```json
 Node.js: >=20.0.0
 express: ^4.18.0
+express-session: ^1.18.1
 @supabase/supabase-js: ^2.101.1
 twilio: ^5.13.1
 openai: ^6.34.0
@@ -62,9 +65,7 @@ luxon: ^3.7.2
 node-cron: ^4.2.1
 axios: ^1.15.0
 googleapis: ^171.4.0
-stripe: ^22.0.2
 cheerio: ^1.2.0
-jsonwebtoken: ^9.0.2
 cookie-parser: ^1.4.7
 ```
 
@@ -81,15 +82,10 @@ cookie-parser: ^1.4.7
 | TWILIO_AUTH_TOKEN | Yes | ✅ (set in Render) |
 | TWILIO_WHATSAPP_FROM | Yes | ✅ (set in Render) |
 | WHATSAPP_PHONE_ID | Yes | ✅ (set in Render) |
-| ADMIN_USER | Yes | ✅ (set in Render) |
-| ADMIN_PASS | Yes | ✅ (set in Render) |
+| SESSION_SECRET | Yes | ❓ Check Render (dashboard auth) |
 | ADMIN_PHONE | Yes | ✅ (0570733834) |
-| GOOGLE_PLACES_API_KEY | Optional | ❓ Check Render |
-| STRIPE_SECRET_KEY | Optional | ❓ Check Render |
-| STRIPE_WEBHOOK_SECRET | Optional | ❓ Check Render |
 | NODE_ENV | Auto | ✅ production (Render injects) |
 | PORT | Auto | ✅ (Render injects) |
-| JWT_SECRET | Yes | ✅ (using default fallback) |
 
 ---
 
@@ -98,17 +94,12 @@ cookie-parser: ^1.4.7
 | Table | Approx Rows | Notes |
 |---|---|---|
 | patients | Unknown | Reset at flow completion |
-| clinics | Unknown | At least 1 active |
-| appointments | Unknown | Growing |
-| doctor_schedules | Unknown | Per clinic |
-| doctor_slots | Unknown | Cleaned hourly |
-| growth_leads_v2 | Unknown | Legacy pipeline (deprecated) |
-| message_logs | Unknown | Twilio delivery tracking |
+| clinics | 1+ | Active |
+| appointments | 50+ | Verified 50-concurrency atomic lock |
+| growth_leads_v2 | Unknown | Active outbound sales pipeline |
+| growth_conversations | Unknown | NEW: Autonomous reply classification |
 | gs_leads | Unknown | GS 3.0: Core prospect data |
-| gs_campaigns | Unknown | GS 3.0: Broad targeted initiatives |
-| gs_sequences | Unknown | GS 3.0: Automated follow-up state |
-| gs_conversations | Unknown | GS 3.0: Full message history |
-| gs_feedback | Unknown | GS 3.0: AI learning loop data |
+| onboarding_states | Unknown | Admin dashboard credentials |
 
 ---
 
@@ -120,12 +111,9 @@ cookie-parser: ^1.4.7
 | Hourly slot cleanup | Running | ✅ Active |
 | 10-min health check | Running | ✅ Active |
 | Daily follow-ups (9AM SAR) | Daily | ✅ Active |
-| Job portal scout (6h) | Every 6h | ✅ Active |
-| Google Places scout (weekly) | Sundays | ✅ Active |
 | Auto-batch send (10AM SAR) | Daily | ✅ Active |
-| Morning brief (8:30AM SAR) | Daily | ✅ Active |
 
 ---
 
 *Update this file after every deploy*
-*Last updated: 2026-04-23 by Antigravity AI*
+*Last updated: 2026-04-26 by Antigravity AI*

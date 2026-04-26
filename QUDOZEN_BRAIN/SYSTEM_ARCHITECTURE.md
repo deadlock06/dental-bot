@@ -20,10 +20,9 @@ graph TD
     Split -->|Patient| Lock[bot.js Atomic Lock]
     Lock --> DentalBot[bot.js State Machine]
     
-    Split -->|Clinic Lead| GSCheck{Intent?}
-    GSCheck -->|Opt Out| OptOut(growth/index.js)
-    GSCheck -->|Engaged| GSState[growth/state-machine.js]
-    GSCheck -->|Escalate| GSHandoff[growth/handoff.js]
+    Split -->|Clinic Lead| Classifier[growth/swarm/reply-classifier.js]
+    Classifier -->|Auto Reply| Outbound[Twilio Outbound]
+    Classifier -->|Hot Lead| JakeAlert[WhatsApp to Admin]
 ```
 
 ---
@@ -70,9 +69,9 @@ graph TD
 - **Job**: The daily auto-batch engine. At 10 AM, it grabs the top uncontacted leads, generates a highly personalized cold-outreach WhatsApp message (using the pain signal), and sends it.
 - **Output**: Bridges the lead from the legacy table into the GS 3.0 `gs_leads` state machine and logs the sent message to `gs_conversations`.
 
-#### `growth/state-machine.js` (The Negotiator)
-- **Job**: When a clinic owner replies to the cold outreach, this script takes over. It uses OpenAI to classify their intent (`QUALIFYING`, `OBJECTION_HANDLING`, `BOOKING_PITCH`, `ESCALATED`) and generates a persuasive, context-aware response based on the Qudozen playbook.
-- **Output**: Updates `gs_leads.conversation_state`, saves the chat history to `gs_conversations`, and sends the WhatsApp reply.
+#### \`growth/swarm/reply-classifier.js\` (The Autonomous Agent)
+- **Job**: Intercepts all inbound Growth Swarm replies. It uses bilingual regex patterns to classify intent (Pricing, Demo, Hot Lead, Opt-out).
+- **Output**: Generates auto-responses, updates lead status, logs the conversation, and escalates hot leads to Jake via WhatsApp alert.
 
 #### `growth/nurture.js` (The Follow-Up Engine)
 - **Job**: Runs daily to check for leads who stopped replying. It generates a 2-step drip campaign (e.g., waiting 4 days, then sending a soft bump like "Did you see my last message?").
@@ -102,9 +101,9 @@ graph TD
 - **Job**: Contains the Express routes for the HTML-based Admin Dashboard (`/growth/dashboard`). 
 - **Output**: Renders a dark-mode table unifying data from both `growth_leads_v2` (new scout leads) and `gs_leads` (active AI conversations), allowing the human operator to monitor the entire pipeline, manually trigger batches, or manually intervene.
 
-#### React `/dashboard` (Clinic Owner Portal)
-- **Job**: A standalone React/Vite application. Once a clinic buys the system, they log in here to view their own metrics (Appointments, Leads, Doctors).
-- **Output**: A compiled SPA (Single Page Application) served statically, communicating with Supabase.
+#### Operator Command Center (\`/dashboard\`)
+- **Job**: A high-fidelity Vanilla HTML/JS portal for clinic owners. Provides real-time metrics (Honest Revenue, Reminders, Appointments), a live patient interaction feed, and a color-coded weekly calendar.
+- **Output**: A secure, session-protected ROI "receipt" that justifies the monthly subscription.
 
 ---
 
