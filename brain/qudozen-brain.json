@@ -12,8 +12,8 @@
     "render_status": "deploying — commit 38f4310 pushed. Surface upgrade + routing fix + simulator loop resolved."
   },
   "execution_state": {
-    "current_step": 13,
-    "step_name": "Surface Upgrade + Architecture Audit",
+    "current_step": 14,
+    "step_name": "Phase 1+2: Dynamic Personalization + ROI Ticker",
     "status": "completed",
     "blocker": ""
   },
@@ -250,6 +250,17 @@
         "Escape closes nav, backdrop click closes nav"
       ],
       "ui_upgrades": []
+    },
+    {
+      "step_number": 14,
+      "step_name": "Phase 1+2: Dynamic Personalization + ROI Ticker",
+      "timestamp_completed": "2026-04-26T03:30:00+03:00",
+      "files_created": [],
+      "files_modified": ["public/index.html"],
+      "features_added": ["URL param parser","Dynamic greeting injection","ROI ticker","Checkmate modal","Deep dive modal"],
+      "ui_upgrades": ["Personalized hero per clinic","Value counter on simulator","Pre-filled WhatsApp messages"],
+      "issues_found": [],
+      "fixes_applied": []
     }
   ],
   "pending_steps": [],

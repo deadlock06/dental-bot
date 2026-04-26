@@ -409,14 +409,14 @@
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
           <span class="relative inline-flex rounded-full h-2 w-2 bg-[#5EEAD4]"></span>
         </span><span data-i18n="txt_30">Self-Operating System v3.3</span></div>
-      <h1 class="text-6xl md:text-8xl font-black mb-8 leading-[1.05] tracking-tight text-glow"><span data-i18n="txt_31">Your business, running</span><br>
-        <span class="text-transparent bg-clip-text bg-gradient-to-l from-[#5EEAD4] via-[#0D9488] to-[#5EEAD4] bg-[length:200%_auto] animate-gradient-text" data-i18n="txt_32">With Artificial Intelligence</span>
+      <h1 id="hero-title" class="text-6xl md:text-8xl font-black mb-8 leading-[1.05] tracking-tight text-glow"><span data-i18n="txt_31">Your business, running</span><br>
+        <span id="hero-sub" class="text-transparent bg-clip-text bg-gradient-to-l from-[#5EEAD4] via-[#0D9488] to-[#5EEAD4] bg-[length:200%_auto] animate-gradient-text" data-i18n="txt_32">With Artificial Intelligence</span>
       </h1>
       <p class="text-lg md:text-2xl text-gray-400 mb-12 max-w-3xl leading-relaxed font-light" data-i18n="txt_33">We build self-managing systems that take over your operational processes completely — so you can focus on what really matters. The power lies in the three layers of awareness.</p>
 
                         <div class="flex flex-col sm:flex-row gap-6 w-full justify-center">
-                          <a href="#simulator" class="bg-white text-black px-10 py-5 rounded-2xl font-black text-xl hover:bg-gray-200 transition duration-300 shadow-2xl shadow-aqua/20 flex items-center gap-3">
-                            <span data-i18n="txt_34">🚀 Try Live Simulation</span>
+                          <a href="#simulator" id="sim-cta" class="bg-white text-black px-10 py-5 rounded-2xl font-black text-xl hover:bg-gray-200 transition duration-300 shadow-2xl shadow-aqua/20 flex items-center gap-3">
+                            <span id="sim-cta-text" data-i18n="txt_34">🚀 Try Live Simulation</span>
                           </a>
                           <a href="#pricing" class="glass px-10 py-5 rounded-2xl font-bold text-xl text-white hover:bg-white/5 transition duration-300 border border-white/10" data-i18n="txt_35">💎 View Investment Plans</a>
                         </div>
@@ -475,9 +475,16 @@
         <!-- 1. AI Receptionist - REAL SIMULATOR EMBEDDED -->
         <div id="reception-simulator" class="bento-card group glass rounded-3xl relative z-10 md:col-span-2 lg:row-span-2 overflow-hidden" style="background:linear-gradient(135deg,rgba(13,148,136,0.1),rgba(11,17,32,0.8));border-color:rgba(13,148,136,0.4)">
           <div class="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-[#0D9488]/20 to-transparent pointer-events-none z-0"></div>
-          <div class="p-5 pb-2 relative z-10"><div class="flex items-center gap-3 mb-1"><div class="w-10 h-10 rounded-xl bg-teal-900 border border-teal-500 flex items-center justify-center text-xl shadow-[0_0_12px_rgba(13,148,136,0.4)]">🤖</div><div><div class="font-bold text-white text-sm" data-i18n="txt_54">Smart Receptionist</div><div class="text-[11px] text-teal-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-teal-400 rounded-full inline-block animate-pulse"></span><span data-i18n="txt_55">Live System — Try Now</span></div></div></div></div>
+          <div class="p-5 pb-2 relative z-10"><div class="flex items-center justify-between mb-1"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-teal-900 border border-teal-500 flex items-center justify-center text-xl shadow-[0_0_12px_rgba(13,148,136,0.4)]">🤖</div><div><div class="font-bold text-white text-sm" data-i18n="txt_54">Smart Receptionist</div><div class="text-[11px] text-teal-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-teal-400 rounded-full inline-block animate-pulse"></span><span data-i18n="txt_55">Live System — Try Now</span></div></div></div></div></div>
           <div class="flex flex-col lg:flex-row gap-3 px-3 pb-4 relative z-10" onclick="event.stopPropagation()">
-            <div class="flex-shrink-0 mx-auto" style="width:240px"><div class="relative" style="width:240px"><div class="absolute inset-0 rounded-[28px] border-2 border-gray-700 pointer-events-none z-20" style="box-shadow:0 0 30px rgba(13,148,136,0.2)"></div><div id="bsPhoneShell" class="rounded-[26px] overflow-hidden bg-[#111b21]" style="height:400px"><div class="bg-[#111b21] px-4 pt-2 pb-1 flex justify-between items-center text-[10px] text-gray-400"><span>9:41</span><div class="flex gap-1"><svg class="w-2.5 h-2.5 fill-gray-400" viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"></path></svg></div></div><div class="bg-[#202c33] px-3 py-2 flex items-center gap-2 border-b border-gray-800/50"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-sm flex-shrink-0">🤖</div><div class="flex-1 min-w-0"><div class="font-bold text-white text-xs" data-i18n="txt_56">The Intelligent System</div><div class="text-[10px] text-[#5EEAD4]" data-i18n="txt_57">Always Connected</div></div><button onclick="bsReset()" class="text-gray-500 hover:text-rose-400 transition text-sm">↺</button></div><div class="bg-[#111b21] px-3 py-1"><div class="h-1 bg-gray-800 rounded-full overflow-hidden"><div id="bsProgress" style="width:0%"></div></div><div class="text-[9px] text-gray-600 mt-0.5" id="bsStepLabel" style="direction:rtl" data-i18n="txt_58">Step 0 of 10</div></div><div id="bsChat" class="overflow-y-auto px-2.5 py-3 flex flex-col gap-2" style="flex:1;background:#0d1418;height:210px"></div><div id="bsReplies" class="bg-[#111b21] border-t border-gray-800/50 px-2 py-2 flex flex-wrap gap-1.5 min-h-[44px] items-center"><span class="text-gray-600 text-[10px] italic" data-i18n="txt_59">Waiting to start...</span></div><div class="bg-[#202c33] px-2 py-2 flex items-center gap-1.5 border-t border-gray-800/30"><div class="flex-1 bg-[#2a3942] rounded-full px-3 py-1.5"><input id="bsInput" type="text" placeholder="Write a message..." disabled="" class="w-full bg-transparent text-white text-xs outline-none placeholder-gray-600 text-right" style="direction:rtl" data-i18n-placeholder="txt_194"></div><button id="bsSend" disabled="" onclick="bsHandleInput()" class="w-7 h-7 rounded-full bg-[#0D9488] flex items-center justify-center transition hover:bg-teal-600 disabled:opacity-30"><svg class="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg></button></div></div></div><div class="mt-3 text-center"><button id="bsStartBtn" onclick="bsStart()" class="bg-gold text-gray-900 px-6 py-2 rounded-xl font-black text-sm hover:shadow-[0_0_16px_rgba(212,165,116,0.5)] transition" data-i18n="txt_60">▶ Start the experience</button></div></div>
+            <div class="flex-shrink-0 mx-auto" style="width:240px; position:relative;">
+              <div class="relative" style="width:240px"><div class="absolute inset-0 rounded-[28px] border-2 border-gray-700 pointer-events-none z-20" style="box-shadow:0 0 30px rgba(13,148,136,0.2)"></div><div id="bsPhoneShell" class="rounded-[26px] overflow-hidden bg-[#111b21]" style="height:400px"><div class="bg-[#111b21] px-4 pt-2 pb-1 flex justify-between items-center text-[10px] text-gray-400"><span>9:41</span><div class="flex gap-1"><svg class="w-2.5 h-2.5 fill-gray-400" viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"></path></svg></div></div><div class="bg-[#202c33] px-3 py-2 flex items-center gap-2 border-b border-gray-800/50"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-sm flex-shrink-0">🤖</div><div class="flex-1 min-w-0"><div class="font-bold text-white text-xs" data-i18n="txt_56">The Intelligent System</div><div class="text-[10px] text-[#5EEAD4]" data-i18n="txt_57">Always Connected</div></div><button onclick="bsReset()" class="text-gray-500 hover:text-rose-400 transition text-sm">↺</button></div><div class="bg-[#111b21] px-3 py-1"><div class="h-1 bg-gray-800 rounded-full overflow-hidden"><div id="bsProgress" style="width:0%"></div></div><div class="text-[9px] text-gray-600 mt-0.5" id="bsStepLabel" style="direction:rtl" data-i18n="txt_58">Step 0 of 10</div></div><div id="bsChat" class="overflow-y-auto px-2.5 py-3 flex flex-col gap-2" style="flex:1;background:#0d1418;height:210px"></div><div id="bsReplies" class="bg-[#111b21] border-t border-gray-800/50 px-2 py-2 flex flex-wrap gap-1.5 min-h-[44px] items-center"><span class="text-gray-600 text-[10px] italic" data-i18n="txt_59">Waiting to start...</span></div><div class="bg-[#202c33] px-2 py-2 flex items-center gap-1.5 border-t border-gray-800/30"><div class="flex-1 bg-[#2a3942] rounded-full px-3 py-1.5"><input id="bsInput" type="text" placeholder="Write a message..." disabled="" class="w-full bg-transparent text-white text-xs outline-none placeholder-gray-600 text-right" style="direction:rtl" data-i18n-placeholder="txt_194"></div><button id="bsSend" disabled="" onclick="bsHandleInput()" class="w-7 h-7 rounded-full bg-[#0D9488] flex items-center justify-center transition hover:bg-teal-600 disabled:opacity-30"><svg class="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg></button></div></div></div><div class="mt-3 text-center"><button id="bsStartBtn" onclick="bsStart()" class="bg-gold text-gray-900 px-6 py-2 rounded-xl font-black text-sm hover:shadow-[0_0_16px_rgba(212,165,116,0.5)] transition" data-i18n="txt_60">▶ Start the experience</button></div>
+              <!-- Floating ROI Ticker -->
+              <div id="roiTicker" class="hidden absolute bottom-[-5px] left-0 right-0 glass border border-teal-500/50 rounded-xl p-2 shadow-[0_0_15px_rgba(94,234,212,0.3)] z-50 transform translate-y-full transition-transform duration-500">
+                <div class="text-[10px] text-gray-300 text-center font-bold" id="roiLabel">Appointments Secured This Session</div>
+                <div class="text-lg font-black text-aqua text-center text-glow" id="roiValue">0 SAR</div>
+              </div>
+            </div>
             <div class="flex-1 min-w-0"><div class="glass rounded-2xl p-4 border border-white/5" style="min-height:200px"><div class="flex items-center gap-2 mb-3"><div class="status-dot"></div><span class="text-[10px] font-bold text-[#22c55e] uppercase tracking-wider" data-i18n="txt_61">Dashboard — Live</span></div><div class="space-y-2"><div class="bg-[#0f1b2d] rounded-xl p-3 border border-teal-500/20 relative overflow-hidden"><div class="absolute top-0 right-0 w-1 h-full bg-teal-500"></div><div class="text-[9px] text-gray-500 mb-1" data-i18n="txt_62">Last operation</div><div id="bsDsName" class="bs-dash-field text-xs font-bold text-white" data-i18n="txt_63">-- Waiting to start --</div></div><div class="grid grid-cols-2 gap-1.5"><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500" data-i18n="txt_64">Treatment</div><div id="bsDsTreat" class="bs-dash-field text-xs font-bold text-white mt-0.5">--</div></div><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500" data-i18n="txt_65">Time</div><div id="bsDsSlot" class="bs-dash-field text-xs font-bold text-aqua mt-0.5">--</div></div><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500" data-i18n="txt_66">Date</div><div id="bsDsDate" class="bs-dash-field text-xs font-bold text-white mt-0.5">--</div></div><div class="bg-[#0f1b2d] rounded-lg p-2 border border-white/5"><div class="text-[9px] text-gray-500" data-i18n="txt_67">Synchronization</div><div id="bsDsSync" class="bs-dash-field text-xs font-bold text-aqua mt-0.5">--</div></div></div><div id="bsRevenueBadge" class="hidden bs-revenue-badge"><div class="text-[9px] text-teal-400 font-bold mb-1" data-i18n="txt_68">💰 Realized profits</div><div id="bsRevenueAmt" class="text-lg font-black text-white">--</div><div class="text-[9px] text-gray-400 mt-0.5" data-i18n="txt_69">Cuduzn works while you sleep</div></div></div></div></div>
           </div>
         </div>
@@ -650,112 +657,142 @@
               <div class="text-gray-400 text-sm" data-i18n="txt_100">Automatic sorting of emergencies, bookings, or general inquiries.</div>
             </div>
           </div>
+  <!-- AI Receptionist Section & Simulator -->
+  <section id="receptionist" class="py-24 px-6 bg-[#070b14]">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
+          The Autonomous Receptionist
+        </h2>
+        <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+          Jake doesn't just chat. He manages your entire front desk with clinical precision, 24/7.
+        </p>
+      </div>
+
+      <!-- Key Features Highlight Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
+        <div class="bg-[#161b22] border border-teal-500/20 p-8 rounded-2xl hover:border-teal-400/50 transition-all group relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 rounded-full blur-2xl -mr-8 -mt-8"></div>
+          <div class="w-12 h-12 bg-teal-500/10 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-white">24/7 Appointment Capture</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            Capture every lead, even at 3 AM. Jake handles scheduling, rescheduling, and triage without human intervention.
+          </p>
+        </div>
+
+        <div class="bg-[#161b22] border border-blue-500/20 p-8 rounded-2xl hover:border-blue-400/50 transition-all group relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl -mr-8 -mt-8"></div>
+          <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-white">Clinical Context Engine</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            Deep understanding of medical procedures and insurance. Jake qualifies patients and filters emergencies automatically.
+          </p>
+        </div>
+
+        <div class="bg-[#161b22] border border-purple-500/20 p-8 rounded-2xl hover:border-purple-400/50 transition-all group relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl -mr-8 -mt-8"></div>
+          <div class="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3 text-white">No-Show Recovery</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            Multilingual smart reminders. Patients confirm or reschedule in one tap, keeping your clinic calendar 100% full.
+          </p>
         </div>
       </div>
 
-      <!-- Dashboard Mockup for Desktop -->
-      <div class="glass rounded-3xl p-4 border border-white/5 bg-[#0F172A]/50 relative group">
-        <div class="flex items-center gap-2 mb-4 px-2">
-          <div class="w-3 h-3 rounded-full bg-rose-500/50"></div>
-          <div class="w-3 h-3 rounded-full bg-amber-500/50"></div>
-          <div class="w-3 h-3 rounded-full bg-emerald-500/50"></div>
-          <div class="text-[10px] text-gray-500 ml-4 tracking-widest uppercase" data-i18n="txt_101">Qudozen Dashboard v3.0</div>
-        </div>
-        <div class="aspect-video bg-[#080C14] rounded-xl border border-white/5 overflow-hidden relative">
-          <div class="absolute inset-0 flex items-center justify-center">
-            <div class="text-center">
-              <div class="text-aqua text-4xl font-black mb-2 animate-pulse" data-i18n="txt_102">4D Analytics</div>
-              <div class="text-gray-500 text-xs" data-i18n="txt_103">Waiting for simulator trigger...</div>
+      <!-- Simulator Entry -->
+      <div id="simulator-trigger" class="flex flex-col lg:flex-row gap-16 items-center">
+        <!-- Left: Phone Simulator UI (Existing Logic) -->
+        <div class="relative w-full max-w-[340px] flex-shrink-0" style="perspective:1000px">
+          <!-- Glass glow -->
+          <div class="absolute -inset-10 bg-teal-500/20 rounded-full blur-[100px] opacity-30 animate-pulse"></div>
+          
+          <div class="rounded-[34px] overflow-hidden border-[6px] border-[#222] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] bg-[#111b21] h-[600px] flex flex-col relative z-20">
+            <!-- Simulator Header -->
+            <div class="bg-[#202c33] px-4 py-3 flex items-center gap-3 border-b border-gray-800/30">
+              <div class="w-10 h-10 rounded-full bg-teal-900/50 flex items-center justify-center overflow-hidden border border-teal-500/30">
+                 <img src="https://ui-avatars.com/api/?name=Jake&background=0D9488&color=fff" alt="Jake" class="w-full h-full object-cover">
+              </div>
+              <div class="flex-1">
+                <div class="text-white text-sm font-bold flex items-center gap-1.5">
+                  Jake <span class="bg-teal-500/20 text-teal-400 text-[8px] px-1 rounded uppercase tracking-widest">AI Agent</span>
+                </div>
+                <div class="text-[10px] text-teal-500 font-medium" data-i18n="txt_92">Online Always</div>
+              </div>
+              <div class="flex gap-3 text-gray-400">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0-1-.45-1-1v-3.5l4 4v-11l-4 4z"></path></svg>
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-4H6v-2h12v2z"></path></svg>
+              </div>
+            </div>
+
+            <!-- Chat body -->
+            <div id="simChat" class="flex-1 overflow-y-auto px-3 py-4 flex flex-col gap-3"
+                 style="background:#0d1418;background-image:url('https://www.transparenttextures.com/patterns/stardust.png');background-size:200px">
+            </div>
+
+            <!-- Quick replies area -->
+            <div id="simReplies" class="bg-[#111b21] border-t border-gray-800/50 px-3 py-3 flex flex-wrap gap-2 min-h-[58px] items-center">
+              <span class="text-gray-600 text-xs italic" data-i18n="txt_93">Waiting to start...</span>
+            </div>
+
+            <!-- Input bar -->
+            <div class="bg-[#202c33] px-3 py-2.5 flex items-center gap-2 border-t border-gray-800/30">
+              <div id="simInputWrap" class="flex-1 bg-[#2a3942] rounded-full px-4 py-2 flex items-center gap-2">
+                <input id="simInput" type="text" placeholder="Write a message..." disabled class="flex-1 bg-transparent text-white text-sm outline-none placeholder-gray-600 text-right" style="min-width:0;direction:rtl">
+              </div>
+              <button id="simSend" disabled class="w-9 h-9 rounded-full bg-[#0D9488] flex items-center justify-center transition hover:bg-teal-600 disabled:opacity-30" onclick="handleSimInput()">
+                <svg class="w-4 h-4 fill-white rtl:rotate-180" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+              </button>
             </div>
           </div>
-          <!-- Mock Chart -->
-          <div class="absolute bottom-4 left-4 right-4 h-24 flex items-end gap-1 opacity-20">
-            <div class="flex-1 bg-aqua h-[40%] rounded-t"></div>
-            <div class="flex-1 bg-aqua h-[60%] rounded-t"></div>
-            <div class="flex-1 bg-aqua h-[30%] rounded-t"></div>
-            <div class="flex-1 bg-aqua h-[80%] rounded-t"></div>
-            <div class="flex-1 bg-aqua h-[50%] rounded-t"></div>
+
+          <!-- Start button -->
+          <div class="mt-8 text-center relative z-30">
+            <button id="simStartBtn" onclick="startSimulator()" class="bg-gradient-to-r from-teal-500 to-blue-600 text-white px-10 py-4 rounded-2xl font-black shadow-lg hover:shadow-teal-500/40 transition-all hover:scale-105">
+              ▶ START LIVE SIMULATION
+            </button>
+            <p class="text-xs text-gray-500 mt-3">Experience the high-fidelity patient journey in seconds</p>
+          </div>
+        </div>
+
+        <!-- Right: Ghost Room & Marketing Upsell -->
+        <div class="flex-1 w-full space-y-12">
+          <!-- GHOST ROOM IFRAME -->
+          <div class="w-full h-[550px] rounded-[32px] overflow-hidden border border-white/5 shadow-2xl relative">
+             <iframe src="/growth/ghost-room.html?lang=en&clinic=Your%20Business" class="w-full h-full border-0" title="Ghost Room Simulator"></iframe>
+          </div>
+
+          <!-- Ecosystem Upsell Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white/5 border border-white/5 p-6 rounded-2xl">
+              <div class="text-xl mb-3">🗄️</div>
+              <h4 class="text-white font-bold mb-1">Custom CRM</h4>
+              <p class="text-gray-500 text-xs">Seamless patient management built for your clinic's scale.</p>
+            </div>
+            <div class="bg-white/5 border border-white/5 p-6 rounded-2xl">
+              <div class="text-xl mb-3">🌐</div>
+              <h4 class="text-white font-bold mb-1">Conversion Sites</h4>
+              <p class="text-gray-500 text-xs">High-speed landing pages optimized for clinical lead capture.</p>
+            </div>
+            <div class="bg-white/5 border border-white/5 p-6 rounded-2xl">
+              <div class="text-xl mb-3">📊</div>
+              <h4 class="text-white font-bold mb-1">Owner Analytics</h4>
+              <p class="text-gray-500 text-xs">Real-time revenue and ROI tracking in one beautiful dashboard.</p>
+            </div>
+            <div class="bg-white/5 border border-white/5 p-6 rounded-2xl border-teal-500/20">
+              <div class="text-xl mb-3">🚀</div>
+              <h4 class="text-white font-bold mb-1">Growth Swarm</h4>
+              <p class="text-gray-500 text-xs">Autonomous scouting and outreach engine to fill empty slots.</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
-
-          <!-- Dashboard preview (dynamic) -->
-          <div id="dashPreview" class="glass rounded-2xl p-6 border border-[#0D9488]/30 hidden transform scale-95 opacity-0 transition-all duration-500 shadow-[0_0_40px_rgba(13,148,136,0.1)]">
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center gap-2">
-                <div class="status-dot"></div>
-                <span id="dsStatus" class="text-xs font-bold text-[#22c55e] uppercase tracking-wider" data-i18n="txt_104">System active</span>
-              </div>
-              <div class="text-[10px] text-gray-500 tracking-tighter" id="dsTime" data-i18n="txt_105">Update: Now</div>
-            </div>
-            
-            <div id="dsTitle" class="text-sm font-bold text-white mb-5 border-b border-white/5 pb-3" data-i18n="txt_106">📊 Enterprise dashboard — Live</div>
-            
-            <div class="space-y-4">
-              <!-- Result Card -->
-              <div class="bg-[#0f1b2d] border border-teal-500/30 rounded-xl p-4 shadow-inner relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
-                <div class="flex justify-between items-start mb-2">
-                  <div id="dsConfLabel" class="text-[10px] font-bold text-teal-400 uppercase" data-i18n="txt_107">New confirmed appointment</div>
-                  <div class="text-[10px] text-gray-500" id="dsRef" data-i18n="txt_108">REF: QZ-2026</div>
-                </div>
-                <div class="text-lg font-black text-white mb-1" id="dsPatientName">--</div>
-                <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-white/5">
-                  <div>
-                    <div id="dsTreatLabel" class="text-[9px] text-gray-500 uppercase" data-i18n="txt_109">Type of treatment</div>
-                    <div id="dsTreatment" class="text-xs text-white font-bold">--</div>
-                  </div>
-                  <div>
-                    <div id="dsSlotLabel" class="text-[9px] text-gray-500 uppercase" data-i18n="txt_110">Time</div>
-                    <div id="dsSlot" class="text-xs text-aqua font-bold">--</div>
-                  </div>
-                  <div>
-                    <div id="dsDateLabel" class="text-[9px] text-gray-500 uppercase" data-i18n="txt_111">Date</div>
-                    <div id="dsDate" class="text-xs text-white font-bold">--</div>
-                  </div>
-                  <div>
-                    <div id="dsDocLabel" class="text-[9px] text-gray-500 uppercase" data-i18n="txt_112">Team</div>
-                    <div id="dsDoctor" class="text-xs text-white font-bold">--</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Stats Mini -->
-              <div class="grid grid-cols-2 gap-3">
-                <div class="bg-[#0f1b2d]/60 rounded-lg p-3 border border-white/5">
-                  <div id="dsSyncLabel" class="text-[9px] text-gray-500" data-i18n="txt_113">Google Calendar</div>
-                  <div class="text-[10px] text-aqua font-bold" data-i18n="txt_114">Synchronization: Successful ✅</div>
-                </div>
-                <div class="bg-[#0f1b2d]/60 rounded-lg p-3 border border-white/5">
-                  <div id="dsRemLabel" class="text-[9px] text-gray-500" data-i18n="txt_115">Reminders</div>
-                  <div class="text-[10px] text-gold font-bold" data-i18n="txt_116">Scheduled 24h+1h</div>
-                </div>
-              </div>
-            </div>
-
-            <a href="https://wa.me/96657436016?text=أريد%20تفعيل%20لوحة%20تحكمي%20الخاصة" target="_blank" class="mt-6 w-full block bg-gold text-gray-900 py-3.5 rounded-xl font-black text-center hover:shadow-[0_0_20px_rgba(212,165,116,0.3)] transition text-sm" data-i18n="txt_117">Activate your system →</a>
-          </div>
-
-          <!-- WhatsApp redirect (shown after completion) -->
-          <div id="waRedirect" class="glass rounded-2xl p-6 border border-[#25D366]/30 hidden" style="background:rgba(37,211,102,0.04)">
-            <div class="flex items-start gap-4">
-              <div class="w-12 h-12 rounded-xl bg-[#25D366]/20 flex items-center justify-center flex-shrink-0">
-                <svg viewBox="0 0 24 24" class="w-6 h-6 fill-[#25D366]"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"></path></svg>
-              </div>
-              <div class="flex-1">
-                <div class="text-sm font-bold text-white mb-1" data-i18n="txt_118">Your simulations are complete 🎉</div>
-                <p class="text-xs text-gray-400 mb-3 leading-relaxed" data-i18n="txt_119">This is exactly what will happen in your business. Ready to activate your own system?</p>
-                <a href="https://wa.me/96657436016?text=أهلاً%20جيك،%20جربت%20المحاكي%20وأريد%20تفعيل%20النظام%20لعيادتي." target="_blank" class="inline-flex items-center gap-2 bg-[#25D366] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#1da851] transition">
-                  <svg viewBox="0 0 24 24" class="w-4 h-4 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"></path></svg><span data-i18n="txt_120">Talk to Jake now</span></a>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    
   </section>
 
   <!-- ══════════════════════════════════════════════════ -->
@@ -1993,17 +2030,25 @@ window.addEventListener('load', () => {
         await bsAddBot(b.securing);
         await bsAddBot(b.confirmed+'\n\n'+b.summary(bsData));
         bsUpdateDash();
+        
+        // Add to ROI Ticker
+        const procedureValue = getProcedureValue(bsData.treatment);
+        addRoiValue(procedureValue);
+
         // WhatsApp CTA
         const {chat}=bsGet();
         if(chat){
           const waDiv=document.createElement('div');
           waDiv.className='bs-bubble-bot mb-1.5';
-          waDiv.innerHTML='<a href="https://wa.me/96657436016?text='+encodeURIComponent('أهلاً جيك، جربت المحاكي وأريد تفعيل النظام.')+'" target="_blank" class="text-[#25D366] font-bold text-xs underline">تحدث مع جيك لتفعيل نظامك ←</a>';
+          waDiv.innerHTML='<a href="https://wa.me/966570733834?text='+encodeURIComponent(personalization.waMessage)+'" target="_blank" class="text-[#25D366] font-bold text-xs underline">'+(bsData.lang==='ar'?'تحدث مع جيك لتفعيل نظامك ←':'Talk to Jake to activate your system ←')+'</a>';
           chat.appendChild(waDiv);
         }
         bsFlow='';
         bsSetChips([{label:'0️⃣ '+(bsData.lang==='ar'?'القائمة الرئيسية':'Main Menu'),value:'0'}]);
         setTimeout(()=>bsTriggerReminder(m),3500);
+        
+        // Show Checkmate Modal after a short delay
+        setTimeout(showCheckmateModal, 5000);
         break;
     }
   }
@@ -2126,7 +2171,229 @@ window.addEventListener('load', () => {
     setInterval(()=>showFomoItem(), 6000+Math.random()*3000);
   },3000);
 
+  /* ═══════════════════════════════════════════════════════
+     PHASE 1 & 2: PERSONALIZATION AND ROI LOGIC
+  ═══════════════════════════════════════════════════════ */
+  
+  // 1. URL Parameter Engine
+  const params = new URLSearchParams(window.location.search);
+  let sessionParams = JSON.parse(sessionStorage.getItem('qudozen_params') || '{}');
+  
+  if(params.has('clinic')) sessionParams.clinic = params.get('clinic');
+  if(params.has('owner')) sessionParams.owner = params.get('owner');
+  if(params.has('lang')) sessionParams.lang = params.get('lang');
+  
+  sessionStorage.setItem('qudozen_params', JSON.stringify(sessionParams));
+
+  const personalization = {
+    clinic: sessionParams.clinic || '',
+    owner: sessionParams.owner || '',
+    lang: sessionParams.lang || 'en',
+    waMessage: "Hi Jake, I saw the demo. Let's activate the trial."
+  };
+
+  if(personalization.clinic) {
+    personalization.waMessage = `Hi Jake, I saw the demo for ${personalization.clinic}. Let's activate the trial.`;
+    
+    // Inject Dynamic Greetings
+    const heroTitle = document.getElementById('hero-title');
+    const heroSub = document.getElementById('hero-sub');
+    const simCta = document.getElementById('sim-cta-text');
+
+    if(heroTitle && heroSub) {
+      if(personalization.lang === 'ar' || bsData.lang === 'ar') {
+        heroTitle.innerHTML = `<span style="font-size: 0.75em;">مرحباً ${personalization.owner} — شاهد كيف تعمل</span><br><span class="text-transparent bg-clip-text bg-gradient-to-l from-[#5EEAD4] via-[#0D9488] to-[#5EEAD4] bg-[length:200%_auto] animate-gradient-text">${personalization.clinic} بذكاء</span>`;
+        if(simCta) simCta.textContent = `🚀 جرب استجابة ${personalization.clinic} الآن`;
+      } else {
+        heroTitle.innerHTML = `<span style="font-size: 0.75em;">${personalization.owner} — See How</span><br><span class="text-transparent bg-clip-text bg-gradient-to-l from-[#5EEAD4] via-[#0D9488] to-[#5EEAD4] bg-[length:200%_auto] animate-gradient-text">${personalization.clinic} Operates With Intelligence</span>`;
+        if(simCta) simCta.textContent = `🚀 Experience ${personalization.clinic}'s Receptionist Live`;
+      }
+    }
+  }
+
+  // 2. ROI Ticker Logic
+  const treatmentsMap = {
+    'Cleaning': 150, 'تنظيف': 150,
+    'Fillings': 300, 'حشوات': 300,
+    'Braces': 2000, 'تقويم': 2000,
+    'Implants': 5000, 'زراعة': 5000,
+    'Root Canal': 1200, 'عصب': 1200,
+    'Extraction': 400, 'خلع': 400,
+    'Whitening': 800, 'تبييض': 800
+  };
+
+  let currentRoiTotal = 0;
+
+  function getProcedureValue(treatmentName) {
+    return treatmentsMap[treatmentName] || 250; // Fallback average
+  }
+
+  function addRoiValue(amount) {
+    currentRoiTotal += amount;
+    const ticker = document.getElementById('roiTicker');
+    const valueEl = document.getElementById('roiValue');
+    const labelEl = document.getElementById('roiLabel');
+    
+    if(ticker) {
+      ticker.classList.remove('hidden');
+      // Slide up animation
+      setTimeout(() => { ticker.style.transform = 'translateY(0)'; }, 100);
+      
+      labelEl.textContent = (bsData.lang === 'ar') ? 'قيمة المواعيد المؤكدة هذه الجلسة' : 'Appointments Secured This Session';
+      
+      // Animate Number
+      let startValue = currentRoiTotal - amount;
+      let duration = 1500;
+      let startTime = null;
+      
+      function updateNumber(timestamp) {
+        if (!startTime) startTime = timestamp;
+        let progress = timestamp - startTime;
+        let current = Math.min(startValue + (amount * (progress / duration)), currentRoiTotal);
+        valueEl.textContent = Math.floor(current).toLocaleString() + ' SAR';
+        if (progress < duration) {
+          window.requestAnimationFrame(updateNumber);
+        }
+      }
+      window.requestAnimationFrame(updateNumber);
+    }
+  }
+
+  // Checkmate Modal
+  function showCheckmateModal() {
+    const modal = document.getElementById('checkmateModal');
+    if(!modal) return;
+    
+    const clinicName = personalization.clinic || (bsData.lang === 'ar' ? 'عيادتك' : 'Your Clinic');
+    const titleEl = document.getElementById('checkmateTitle');
+    const subEl = document.getElementById('checkmateSub');
+    const btnEl = document.getElementById('checkmateBtn');
+    
+    if(bsData.lang === 'ar') {
+      titleEl.textContent = `${clinicName} حصدت ${currentRoiTotal.toLocaleString()} ريال في 3 دقائق`;
+      subEl.textContent = `هذا يمثل تقريباً ${(currentRoiTotal * 4).toLocaleString()} ريال كقيمة أسبوعية إضافية.`;
+      btnEl.innerHTML = `تفعيل نظام ${clinicName} الآن <span>→</span>`;
+    } else {
+      titleEl.textContent = `${clinicName} captured ${currentRoiTotal.toLocaleString()} SAR in bookings in 3 minutes`;
+      subEl.textContent = `This represents approximately ${(currentRoiTotal * 4).toLocaleString()} SAR in weekly value.`;
+      btnEl.innerHTML = `Activate ${clinicName} OS <span>→</span>`;
+    }
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => { modal.style.opacity = '1'; }, 50);
+  }
+
+  function closeCheckmateModal() {
+    const modal = document.getElementById('checkmateModal');
+    if(modal) {
+      modal.style.opacity = '0';
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }, 300);
+    }
+  }
+
+  function openDeepDive() {
+    closeCheckmateModal();
+    const modal = document.getElementById('deepDiveModal');
+    if(modal) {
+      if(bsData.lang === 'ar') {
+        document.getElementById('dd-en').classList.add('hidden');
+        document.getElementById('dd-ar').classList.remove('hidden');
+      } else {
+        document.getElementById('dd-ar').classList.add('hidden');
+        document.getElementById('dd-en').classList.remove('hidden');
+      }
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => { modal.style.opacity = '1'; }, 50);
+    }
+  }
+
+  function closeDeepDive() {
+    const modal = document.getElementById('deepDiveModal');
+    if(modal) {
+      modal.style.opacity = '0';
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }, 300);
+    }
+  }
+
+  // WhatsApp Redirect
+  function goToCheckmateWA() {
+    window.open(`https://wa.me/966570733834?text=${encodeURIComponent(personalization.waMessage)}`, '_blank');
+  }
+
+  // Close modals on Escape
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') {
+      closeCheckmateModal();
+      closeDeepDive();
+    }
+  });
+
   </script>
 
+  <!-- MODALS -->
+  <!-- Checkmate Modal -->
+  <div id="checkmateModal" class="hidden fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm items-center justify-center p-4" style="opacity: 0; transition: opacity 0.3s ease;">
+    <div class="glass max-w-lg w-full rounded-3xl p-8 relative border border-aqua/30 text-center" onclick="event.stopPropagation()">
+      <button onclick="closeCheckmateModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
+      <div class="w-16 h-16 mx-auto bg-teal-900/50 border border-teal-500 rounded-2xl flex items-center justify-center text-3xl mb-6">💰</div>
+      <h2 id="checkmateTitle" class="text-2xl md:text-3xl font-black mb-3 text-white">Clinic captured 5000 SAR</h2>
+      <p id="checkmateSub" class="text-gray-400 mb-8 font-medium">This represents approximately weekly value.</p>
+      
+      <button onclick="goToCheckmateWA()" id="checkmateBtn" class="w-full bg-gold text-gray-900 py-4 rounded-xl font-black text-lg mb-4 hover:bg-[#b78a5e] transition shadow-[0_0_20px_rgba(212,165,116,0.3)]">Activate OS</button>
+      <button onclick="openDeepDive()" class="text-aqua font-medium text-sm hover:underline">See Full Feature List</button>
+    </div>
+  </div>
+
+  <!-- Deep Dive Modal -->
+  <div id="deepDiveModal" class="hidden fixed inset-0 z-[1000] bg-black/90 backdrop-blur-md items-center justify-center p-4" style="opacity: 0; transition: opacity 0.3s ease;" onclick="closeDeepDive()">
+    <div class="glass max-w-2xl w-full max-h-[85vh] overflow-y-auto rounded-3xl p-8 relative border border-teal-500/30" onclick="event.stopPropagation()">
+      <button onclick="closeDeepDive()" class="absolute top-6 right-6 text-gray-400 hover:text-white text-xl">✕</button>
+      
+      <div id="dd-en">
+        <h2 class="text-2xl font-black mb-6 text-white border-b border-white/10 pb-4">Clinical Capabilities — What the System Handles</h2>
+        <ul class="space-y-4 text-gray-300">
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">→</span> <div><strong class="text-white">Instant Response</strong> — Under 3 seconds, 24/7 availability.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">→</span> <div><strong class="text-white">Smart Treatment Routing</strong> — Distinguishes between 7+ procedure types.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">→</span> <div><strong class="text-white">Doctor Selection</strong> — Real-time clinic roster assignment.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">→</span> <div><strong class="text-white">Atomic Slot Locking</strong> — Zero double bookings, guaranteed.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">→</span> <div><strong class="text-white">Google Calendar Sync</strong> — Auto-push to your existing schedule.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">→</span> <div><strong class="text-white">Automated Reminders</strong> — 24h and 1h precision outreach.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">→</span> <div><strong class="text-white">No-Show Recovery</strong> — Auto-reachout 2 hours after missed slots.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">→</span> <div><strong class="text-white">Emergency Triage</strong> — Keyword escalation (e.g. "pain", "bleeding") directly to staff.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">→</span> <div><strong class="text-white">Multi-Language</strong> — Seamless Arabic & English toggling.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">→</span> <div><strong class="text-white">Post-Visit Reviews</strong> — Gentle Google review prompts post-appointment.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">→</span> <div><strong class="text-white">Reschedule/Cancel</strong> — Self-service flows without human touch.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">→</span> <div><strong class="text-white">Complete State Reset</strong> — Clean contextual memory per patient interaction.</div></li>
+        </ul>
+      </div>
+
+      <div id="dd-ar" class="hidden text-right" style="direction: rtl;">
+        <h2 class="text-2xl font-black mb-6 text-white border-b border-white/10 pb-4">القدرات السريرية — مهام النظام الذكي</h2>
+        <ul class="space-y-4 text-gray-300">
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">←</span> <div><strong class="text-white">استجابة فورية</strong> — أقل من 3 ثوانٍ، متاح 24/7.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">←</span> <div><strong class="text-white">توجيه العلاج الذكي</strong> — يميز بين 7+ أنواع من الإجراءات الطبية.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">←</span> <div><strong class="text-white">اختيار الطبيب</strong> — جدول الأطباء وتوفرهم في الوقت الفعلي.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">←</span> <div><strong class="text-white">حجز المواعيد الآمن</strong> — لا يوجد تعارض في المواعيد مطلقاً.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">←</span> <div><strong class="text-white">تزامن تقويم جوجل</strong> — دفع تلقائي لجدولك الحالي.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">←</span> <div><strong class="text-white">تذكيرات تلقائية</strong> — تنبيهات دقيقة قبل 24 ساعة وساعة واحدة.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">←</span> <div><strong class="text-white">استعادة المتغيبين</strong> — تواصل آلي بعد ساعتين من المواعيد الفائتة.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">←</span> <div><strong class="text-white">فرز حالات الطوارئ</strong> — تصعيد الحالات (ألم، نزيف) لموظفي العيادة فوراً.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">←</span> <div><strong class="text-white">لغات متعددة</strong> — انتقال سلس بين العربية والإنجليزية.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">←</span> <div><strong class="text-white">تقييمات ما بعد الزيارة</strong> — طلب تقييم جوجل بلطف بعد الموعد.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">←</span> <div><strong class="text-white">إعادة الجدولة والإلغاء</strong> — خدمة ذاتية للمرضى بدون تدخل بشري.</div></li>
+          <li class="flex items-start gap-3"><span class="text-aqua mt-0.5">←</span> <div><strong class="text-white">ذاكرة نظيفة</strong> — سياق جديد لكل مريض مع الاحتفاظ بالبيانات المهمة.</div></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
 
 </body></html>
