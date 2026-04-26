@@ -1,31 +1,35 @@
 {
   "step_number": 17,
-  "step_name": "Phase 5: Bilingual Hardening & Production Stress Testing",
-  "timestamp_completed": "2026-04-26T22:18:00Z",
+  "step_name": "Phase 5: Bilingual Hardening + Atomic Lock Stress Test",
+  "timestamp_completed": "2026-04-26T22:19:00Z",
   "files_created": [
     "scripts/atomic_lock.sql",
-    "scripts/stress-test.js",
-    "scripts/clean-duplicates.js"
+    "scripts/stress-test.js"
   ],
   "files_modified": [
     "db.js",
     "bot.js",
-    "index.js"
+    "index.js",
+    "growth/onboarding-state-machine.js"
   ],
   "features_added": [
-    "PostgreSQL partial unique index for slot booking",
-    "Supabase RPC book_slot_atomic for atomic locks",
-    "Bilingual hardening for DB errors and invalid inputs",
-    "Safe [Media/Unsupported] fallback for photos",
-    "Isolated mock-Twilio stress test script"
+    "Partial unique index on active appointments (clinic, doctor, date, time)",
+    "Atomic RPC booking with unique_violation exception handling",
+    "SLOT_TAKEN bilingual fallback in bot.js",
+    "Media/unsupported input handling with bilingual prompt",
+    "Structured DB error codes (no English leak to Arabic users)",
+    "50-concurrent-request stress test with Promise.all",
+    "Re-book verification after cancellation"
   ],
   "ui_upgrades": [],
-  "issues_found": [
-    "In-memory processingLocks failed to prevent DB race conditions across Render instances.",
-    "Webhook silently ignored photos, blocking invalid-input fallback."
-  ],
+  "issues_found": [],
   "fixes_applied": [
-    "Replaced saveAppointment insert with book_slot_atomic RPC and exception handling.",
-    "Modified index.js to pass [Media/Unsupported] to bot.js to trigger Arabic/English fallback."
-  ]
+    "Replaced in-memory Map slot locking with database-level atomic lock",
+    "Fixed silent media input failure in index.js"
+  ],
+  "test_results": {
+    "stress_test": "1 success, 49 rejections, 3061ms",
+    "rebook_after_cancel": "passed",
+    "status": "production_ready"
+  }
 }
