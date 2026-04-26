@@ -422,17 +422,19 @@ async function getRandomHotLeads(count) {
 
 async function verifyDashboardCredentials(username, password) {
   try {
-    // SECURITY FIX: Fetch by username only. Never send password in URL params
-    // (URL params appear in server logs, Supabase logs, and any proxy layer).
+    // Fetch by username only
     const res = await axios.get(
       `${SUPABASE_URL}/rest/v1/onboarding_states?dashboard_username=eq.${encodeURIComponent(username)}&select=business_id,clinic_name,dashboard_password`,
       { headers, timeout: AXIOS_TIMEOUT_MS }
     );
     const row = res.data?.[0];
     if (!row) return null;
-    // Compare in application layer — keeps password out of URL
-    // TODO: migrate to bcrypt hash comparison once passwords are hashed on creation
-    if (row.dashboard_password !== password) return null;
+
+    // Secure comparison
+    const bcrypt = require('bcryptjs');
+    const isMatch = await bcrypt.compare(password, row.dashboard_password);
+    if (!isMatch) return null;
+
     return { business_id: row.business_id, clinic_name: row.clinic_name };
   } catch (err) {
     console.error('verifyDashboardCredentials error:', err.message);

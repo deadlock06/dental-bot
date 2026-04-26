@@ -36,6 +36,8 @@ function getStripe() {
 const { normalizePhone } = require('./lib/phone');
 const supabase = require('./lib/supabase');
 const { alertAdmin } = require('../utils/alertAdmin');
+const { provisionClinic } = require('./activation');
+
 
 
 const jwt = require('jsonwebtoken');
@@ -176,13 +178,18 @@ router.post('/stripe-webhook', async (req, res) => {
       console.error('[Stripe Webhook] DB Update Error:', error);
       await alertAdmin('STRIPE_DB_UPDATE_FAILED', { email: customerEmail, phone, error: error.message }, 'CRITICAL');
     } else if (lead) {
-      // CRITICAL: Trigger automated handoff so the bot knows they are a customer now
-      try {
-        await handoffLead(lead, 'STRIPE_PAYMENT_COMPLETED');
-        console.log(`[Stripe] Handoff successful for ${lead.phone}`);
-      } catch (hErr) {
-        console.error('[Stripe Webhook] Handoff Error:', hErr);
-        await alertAdmin('STRIPE_HANDOFF_FAILED', { phone: lead.phone, error: hErr.message }, 'CRITICAL');
+      // CRITICAL: Auto-provision clinic infrastructure
+      const provisionResult = await provisionClinic(lead);
+
+      if (provisionResult.success) {
+        // Trigger automated handoff now that clinic exists
+        try {
+          await handoffLead(lead, 'STRIPE_PAYMENT_COMPLETED');
+          console.log(`[Stripe] Handoff successful for ${lead.phone}`);
+        } catch (hErr) {
+          console.error('[Stripe Webhook] Handoff Error:', hErr);
+          await alertAdmin('STRIPE_HANDOFF_FAILED', { phone: lead.phone, error: hErr.message }, 'CRITICAL');
+        }
       }
     } else {
       // Payment received but no matching lead found — manual activation needed
