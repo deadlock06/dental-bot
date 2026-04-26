@@ -1,7 +1,7 @@
 {
   "step_number": 18,
   "step_name": "Phase 6: Operator Command Center",
-  "timestamp_completed": "2026-04-26T22:43:00Z",
+  "timestamp_completed": "2026-04-26T22:44:00Z",
   "files_created": [
     "public/dashboard/index.html",
     "public/dashboard/login.html",
@@ -14,27 +14,29 @@
   ],
   "files_modified": [
     "index.js",
-    "db.js",
     "schema.sql"
   ],
   "features_added": [
-    "Session-based authentication for clinic owners",
-    "Dashboard metrics view (appointments, reminders, booking value, conversations)",
+    "Session-based authentication with httpOnly cookies",
+    "Honest scoreboard (appointments, reminders, conversations)",
     "Live patient interaction feed",
-    "Weekly calendar with color-coded status",
-    "Protected dashboard routes with auth middleware"
+    "Weekly color-coded calendar (teal/red/gray)",
+    "Protected dashboard routes with auth middleware",
+    "dashboard_metrics_view SQL view"
   ],
   "ui_upgrades": [
     "Vanilla HTML dashboard replacing React scaffolding",
     "Midnight/teal branded login page"
   ],
-  "issues_found": [],
-  "fixes_applied": [
-    "Removed unused React dashboard to reduce complexity"
+  "issues_found": [
+    "Booking Value metric uses flat 500 SAR estimate instead of actual treatment values"
   ],
-  "test_results": {
-    "metrics_view": "verified (conversations_handled: 2)",
-    "auth_middleware": "session-based verified",
-    "status": "production_ready"
+  "fixes_applied": [
+    "Removed unused React dashboard to reduce complexity",
+    "Replaced JWT with session-based auth"
+  ],
+  "next_action": {
+    "step": "6.1",
+    "instruction": "Fix Booking Value to use actual treatment prices from appointments table"
   }
 }
