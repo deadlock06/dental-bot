@@ -158,15 +158,9 @@ class OnboardingStateMachine {
 
   // ─── GROWTH SWARM: Gift 5 leads ───
   async giftLeads(clinicName, phone, count) {
-    // Use existing finder.js but with "gift" flag
-    const { findNearbyClinics } = require('./finder.js');
-    
     // Find leads similar to the client's industry/area
     // For now, return 5 high-confidence leads from the database
     const leads = await db.getRandomHotLeads(count);
-    
-    // Format as a shareable list
-    // const leadList = leads.map((l, i) => `${i+1}. ${l.company_name} — ${l.phone}`).join('\n');
     
     return leads || [];
   }
