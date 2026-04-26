@@ -416,6 +416,64 @@ async function getRandomHotLeads(count) {
   }
 }
 
+async function verifyDashboardCredentials(username, password) {
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/onboarding_states?dashboard_username=eq.${encodeURIComponent(username)}&dashboard_password=eq.${encodeURIComponent(password)}&select=business_id,clinic_name`,
+      { headers }
+    );
+    return res.data?.[0] || null;
+  } catch (err) {
+    console.error('verifyDashboardCredentials error:', err.message);
+    return null;
+  }
+}
+
+async function getDashboardMetrics(clinicId) {
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/dashboard_metrics_view?clinic_id=eq.${clinicId}&select=*`,
+      { headers }
+    );
+    return res.data?.[0] || null;
+  } catch (err) {
+    console.error('getDashboardMetrics error:', err.message);
+    return null;
+  }
+}
+
+async function getDashboardFeed(clinicId) {
+  try {
+    // Recent appointments as a proxy for "conversations" in MVP
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/appointments?clinic_id=eq.${clinicId}&order=created_at.desc&limit=20&select=*`,
+      { headers }
+    );
+    return res.data || [];
+  } catch (err) {
+    console.error('getDashboardFeed error:', err.message);
+    return [];
+  }
+}
+
+async function getDashboardCalendar(clinicId) {
+  try {
+    // Current week appointments
+    const startOfWeek = new Date();
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const startISO = startOfWeek.toISOString().split('T')[0];
+
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/appointments?clinic_id=eq.${clinicId}&preferred_date_iso=gte.${startISO}&order=preferred_date_iso.asc,time_slot.asc&select=*`,
+      { headers }
+    );
+    return res.data || [];
+  } catch (err) {
+    console.error('getDashboardCalendar error:', err.message);
+    return [];
+  }
+}
+
 module.exports = {
   getPatient, insertPatient, savePatient, deletePatient,
   getClinic, getClinicById,
@@ -425,5 +483,6 @@ module.exports = {
   getAppointmentsDueTomorrow, getAppointmentsDueInOneHour, getAppointmentsDueFollowUp,
   getDoctorsByClinic,
   getOnboardingByPhone, getOnboardingById, createOnboarding, updateOnboarding, logOnboardingMessage,
-  createCronJob, getPendingCronJobs, markCronJobExecuted, getRandomHotLeads
+  createCronJob, getPendingCronJobs, markCronJobExecuted, getRandomHotLeads,
+  verifyDashboardCredentials, getDashboardMetrics, getDashboardFeed, getDashboardCalendar
 };

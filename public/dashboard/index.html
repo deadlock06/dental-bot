@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Qudozen Command Center</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo-area">
+            <span class="logo-text">QU<span class="teal">DOZEN</span></span>
+            <span id="clinicNameDisplay" class="subtitle" style="margin-left: 10px; border-left: 1px solid #30363d; padding-left: 10px;">Loading Clinic...</span>
+        </div>
+        <div class="header-actions">
+            <span id="logoutBtn" class="logout-link">Logout</span>
+        </div>
+    </header>
+
+    <main>
+        <!-- The Scoreboard -->
+        <div class="scoreboard">
+            <div class="stat-card">
+                <h3>Appointments This Week</h3>
+                <div id="stat_appts" class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Reminders Sent</h3>
+                <div id="stat_reminders" class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Booking Value</h3>
+                <div id="stat_revenue" class="stat-value">0 <span style="font-size: 0.8rem">SAR</span></div>
+            </div>
+            <div class="stat-card">
+                <h3>Conversations Handled</h3>
+                <div id="stat_convos" class="stat-value">0</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- The Live Feed -->
+            <section class="feed-section">
+                <h2>Live Patient Feed</h2>
+                <div class="card">
+                    <div id="feedList" class="feed-list">
+                        <div class="empty-msg">Loading recent interactions...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- The Calendar -->
+            <section class="calendar-section">
+                <h2>Weekly Schedule</h2>
+                <div class="card">
+                    <div class="calendar-grid">
+                        <div class="calendar-day-header">SUN</div>
+                        <div class="calendar-day-header">MON</div>
+                        <div class="calendar-day-header">TUE</div>
+                        <div class="calendar-day-header">WED</div>
+                        <div class="calendar-day-header">THU</div>
+                        <div class="calendar-day-header">FRI</div>
+                        <div class="calendar-day-header">SAT</div>
+                        
+                        <div id="day_0" class="calendar-cell"></div>
+                        <div id="day_1" class="calendar-cell"></div>
+                        <div id="day_2" class="calendar-cell"></div>
+                        <div id="day_3" class="calendar-cell"></div>
+                        <div id="day_4" class="calendar-cell"></div>
+                        <div id="day_5" class="calendar-cell"></div>
+                        <div id="day_6" class="calendar-cell"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

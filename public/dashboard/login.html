@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Qudozen Command Center</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo-area">
+                <span class="logo-text">QU<span class="teal">DOZEN</span></span>
+                <p class="subtitle">Operator Command Center</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="admin@clinic.qd" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••••••" required>
+                </div>
+                
+                <div id="errorMsg" class="error-msg hidden"></div>
+                
+                <button type="submit" id="loginBtn">Login to Dashboard</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
+            const error = document.getElementById('errorMsg');
+            
+            btn.disabled = true;
+            btn.innerText = 'Authenticating...';
+            error.classList.add('hidden');
+
+            try {
+                const res = await fetch('/api/dashboard/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    window.location.href = '/dashboard';
+                } else {
+                    error.innerText = data.error === 'INVALID_CREDENTIALS' ? 'Invalid username or password.' : 'Login failed. Try again.';
+                    error.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.innerText = 'Login to Dashboard';
+                }
+            } catch (err) {
+                error.innerText = 'Connection error. Check your server.';
+                error.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerText = 'Login to Dashboard';
+            }
+        });
+
+        // Check if already logged in
+        fetch('/api/dashboard/me').then(res => res.json()).then(data => {
+            if (data.authenticated) window.location.href = '/dashboard';
+        });
+    </script>
+</body>
+</html>

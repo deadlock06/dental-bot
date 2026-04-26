@@ -5,7 +5,19 @@ const helmet  = require('helmet');
 const twilio  = require('twilio');
 const { DateTime } = require('luxon');
 const path    = require('path');
+const session = require('express-session');
 const app     = express();
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'qudozen_secret_123',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', 
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    httpOnly: true
+  }
+}));
 
 app.use(cookieParser());
 app.use(require('morgan')('dev'));
@@ -19,6 +31,9 @@ app.use('/api', apiRoutes);
 const growthRouter = require('./growth/index');
 const { handoffLead } = require('./growth/handoff');
 const growthSupabase = require('./growth/lib/supabase');
+const dashboardApi = require('./dashboard-api');
+
+app.use('/api/dashboard', dashboardApi);
 
 // Stripe Webhook must be handled BEFORE express.json() for raw body access
 app.post('/growth/stripe-webhook', express.raw({ type: 'application/json' }));
@@ -402,12 +417,27 @@ app.post('/cleanup-slots', async (req, res) => {
 
 
 // ─────────────────────────────────────────────
-// Admin Dashboard
+// Admin Dashboard (Vanilla HTML/JS)
 // ─────────────────────────────────────────────
-app.use('/dashboard', express.static(path.join(__dirname, 'dashboard', 'dist')));
-app.get('/dashboard/*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dashboard', 'dist', 'index.html'));
+// Middleware for static files
+function requireDashboardAuth(req, res, next) {
+  if (!req.session.clinicId && !req.path.includes('login')) {
+    return res.redirect('/dashboard/login');
+  }
+  next();
+}
+
+app.get('/dashboard/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard', 'login.html'));
 });
+
+app.get('/dashboard', (req, res) => {
+  if (!req.session.clinicId) return res.redirect('/dashboard/login');
+  res.sendFile(path.join(__dirname, 'public', 'dashboard', 'index.html'));
+});
+
+// Serve dashboard static assets
+app.use('/dashboard', requireDashboardAuth, express.static(path.join(__dirname, 'public', 'dashboard')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
