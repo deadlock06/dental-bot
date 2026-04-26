@@ -2,7 +2,7 @@ services:
   - type: web
     name: dental-bot
     env: node
-    buildCommand: npm install && npm run build
+    buildCommand: bash build.sh
     startCommand: node index.js
     plan: free
     envVars:
