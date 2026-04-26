@@ -6,6 +6,49 @@ const ESCALATION_TRIGGERS = [
   'opt_out', 'legal', 'ai_questioned', 'pricing', 'buying_signal', 'stalled', 'low_confidence'
 ];
 
+const OBJECTIONS = {
+  data_safety: {
+    triggers: ['data safe', 'patient data', 'privacy', 'hipaa', 'secure', 'معلومات المرضى', 'خصوصية', 'آمن'],
+    response_en: `All patient data is encrypted and stored in Saudi-hosted Supabase infrastructure. We do not share, sell, or train third-party models on your data. You can request full deletion at any time.`,
+    response_ar: `جميع بيانات المرضى مشفرة ومخزنة على خوادم Supabase في السعودية. لا نشارك أو نبيع البيانات. يمكنك طلب الحذف الكامل في أي وقت.`,
+    escalate: false
+  },
+  surgery_pause: {
+    triggers: ['surgery', 'turn off', 'pause', 'during operation', 'عملية', 'أوقف', 'إيقاف'],
+    response_en: `Yes. Send "PAUSE" anytime and the bot goes silent instantly. Send "RESUME" when you're ready. You have full control.`,
+    response_ar: `نعم. أرسل "توقف" في أي وقت وسيصمت البوت فوراً. أرسل "استئناف" عندما تكون جاهزاً. التحكم الكامل بيدك.`,
+    escalate: false
+  },
+  wrong_procedure: {
+    triggers: ['wrong booking', 'wrong procedure', 'mistake', 'خطأ', 'حجز خاطئ'],
+    response_en: `The bot confirms every detail before locking the slot. Patients can also reschedule or cancel via WhatsApp without calling your clinic.`,
+    response_ar: `البوت يؤكد كل تفصيل قبل تأكيد الحجز. ويمكن للمرضى إعادة الجدولة أو الإلغاء عبر الواتساب دون الاتصال.`,
+    escalate: false
+  },
+  have_receptionist: {
+    triggers: ['already have', 'receptionist', 'secretary', 'موظفة', 'استقبال', 'عندي موظفة'],
+    response_en: `This handles the overflow — nights, weekends, and busy hours when your receptionist is overwhelmed or off-duty. Your staff focuses on in-clinic patients.`,
+    response_ar: `هذا النظام يغطي الفترات المزدحمة والليل والعطلات عندما تكون موظفة الاستقبال مشغولة أو خارج الدوام. فريقك يركز على المرضى داخل العيادة.`,
+    escalate: false
+  },
+  too_expensive: {
+    triggers: ['expensive', 'cost too much', 'price high', 'غالي', 'سعر', 'تكلفة'],
+    response_en: `Most clinics recover the monthly cost within the first 2-3 bookings the bot captures after hours. Would you like to see a 7-day free trial first?`,
+    response_ar: `معظم العيادات تسترجع التكلفة الشهرية من أول حجزين أو ثلاثة يتمكن البوت من استلامهم بعد الدوام. هل تريد تجربة مجانية لمدة 7 أيام أولاً؟`,
+    escalate: true
+  }
+};
+
+function detectObjection(message) {
+  const lower = message.toLowerCase();
+  for (const [key, obj] of Object.entries(OBJECTIONS)) {
+    if (obj.triggers.some(t => lower.includes(t.toLowerCase()))) {
+      return { type: key, ...obj };
+    }
+  }
+  return null;
+}
+
 async function checkEscalationTriggers(lead, messageText, intent) {
   const lowerMsg = messageText.toLowerCase();
   
@@ -85,5 +128,6 @@ async function handoffLead(lead, triggerMessage, reason = 'buying_signal') {
 
 module.exports = {
   handoffLead,
-  checkEscalationTriggers
+  checkEscalationTriggers,
+  detectObjection
 };
