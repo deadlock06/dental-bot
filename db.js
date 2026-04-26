@@ -121,30 +121,35 @@ async function getClinic(whatsappNumber) {
 
 async function saveAppointment(data) {
   try {
-    const res = await axios.post(
-      `${SUPABASE_URL}/rest/v1/appointments`,
-      {
-        phone:               data.phone,
-        clinic_id:           data.clinic_id || null,
-        name:                data.name,
-        treatment:           data.treatment,
-        description:         data.description || '',
-        preferred_date:      data.preferred_date,
-        preferred_date_iso:  data.preferred_date_iso || null,
-        time_slot:           data.time_slot,
-        doctor_id:           data.doctor_id || null,
-        doctor_name:         data.doctor_name || null,
-        status:              'confirmed',
-        reminder_sent_24h:   false,
-        reminder_sent_1h:    false,
-        follow_up_sent:      false
-      },
-      { headers: { ...headers, Prefer: 'return=representation' } }
+    const rpcPayload = {
+      p_clinic_id: data.clinic_id || null,
+      p_doctor_name: data.doctor_name || null,
+      p_preferred_date_iso: data.preferred_date_iso || null,
+      p_time_slot: data.time_slot || null,
+      p_phone: data.phone || null,
+      p_name: data.name || null,
+      p_treatment: data.treatment || null
+    };
+
+    const rpcRes = await axios.post(
+      `${SUPABASE_URL}/rest/v1/rpc/book_slot_atomic`,
+      rpcPayload,
+      { headers }
     );
-    return res.data[0] || null;
+
+    if (rpcRes.data && rpcRes.data.success) {
+      return { id: rpcRes.data.appointment_id, ...data, status: 'confirmed' };
+    } else {
+      console.warn('[DB] Atomic booking rejected: Slot already taken');
+      return { error: 'SLOT_TAKEN' };
+    }
   } catch (err) {
-    console.error('saveAppointment error:', err.response?.data || err.message);
-    return null;
+    // If RPC is missing (SQL not run yet), or other errors
+    const errData = err.response?.data || err.message;
+    console.error('saveAppointment RPC error:', errData);
+    
+    // Return a structured error so bot.js can handle it bilingual
+    return { error: 'DB_ERROR', details: errData };
   }
 }
 

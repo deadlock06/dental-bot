@@ -113,6 +113,15 @@ async function handleMessage(phone, text, clinic) {
 
   try {
     const msg = text.trim();
+
+    if (msg === '[Media/Unsupported]') {
+      const patient = await getPatient(phone);
+      const ar = patient?.language === 'ar';
+      return sendMessage(phone, ar 
+        ? 'عذراً، لا يمكنني معالجة الصور أو الملفات. يرجى إرسال رسالة نصية أو صوتية.' 
+        : 'Sorry, I cannot process images or files. Please send a text or voice message.'
+      );
+    }
     
     // 1. Check for onboarding intent FIRST
     const activation = await onboarding.handleActivation(phone, msg, clinic || {});
@@ -1178,6 +1187,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
           doctor_name:        fd.doctor_name || null
         });
         if (!savedAppt) throw new Error('saveAppointment returned null');
+        if (savedAppt.error === 'SLOT_TAKEN') throw new Error('SLOT_TAKEN');
+        if (savedAppt.error) throw new Error(savedAppt.details || 'DB_ERROR');
       } catch (saveErr) {
         console.error('[Booking] saveAppointment FAILED:', saveErr.message);
         // Release the slot we just locked — otherwise it's stuck as 'booked' with no appointment
@@ -1190,6 +1201,14 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
             console.error('[Booking] Slot release also failed:', releaseErr.message);
           }
         }
+
+        if (saveErr.message === 'SLOT_TAKEN') {
+          return sendMessage(phone, ar
+            ? 'عذراً، تم حجز هذا الموعد للتو! يرجى اختيار وقت آخر.\n\n0️⃣ القائمة الرئيسية'
+            : 'Sorry, this slot was just taken! Please choose another time.\n\n0️⃣ Main menu'
+          );
+        }
+
         return sendMessage(phone, ar
           ? 'عذراً، حدث خطأ أثناء تأكيد الحجز. يرجى المحاولة مرة أخرى.\n\n0️⃣ القائمة الرئيسية'
           : 'Sorry, there was an error confirming your booking. Please try again.\n\n0️⃣ Main menu'

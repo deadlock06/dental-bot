@@ -1,26 +1,31 @@
 {
-  "step_number": 16,
-  "step_name": "Phase 4: Owner Finder + Objections + Bilingual",
-  "timestamp_completed": "2026-04-26T21:47:00Z",
+  "step_number": 17,
+  "step_name": "Phase 5: Bilingual Hardening & Production Stress Testing",
+  "timestamp_completed": "2026-04-26T22:18:00Z",
   "files_created": [
-    "growth/scouts/owner-finder.js"
+    "scripts/atomic_lock.sql",
+    "scripts/stress-test.js",
+    "scripts/clean-duplicates.js"
   ],
   "files_modified": [
-    "growth/handoff.js",
-    "public/index.html",
-    "growth/brain.js"
+    "db.js",
+    "bot.js",
+    "index.js"
   ],
   "features_added": [
-    "Owner name enrichment from Google + website",
-    "Confidence scoring with manual fallback",
-    "Data safety objection handler",
-    "Surgery pause objection handler",
-    "Wrong procedure objection handler",
-    "Receptionist conflict objection handler",
-    "Price objection with trial close",
-    "Arabic parity for all Phase 3-4 strings"
+    "PostgreSQL partial unique index for slot booking",
+    "Supabase RPC book_slot_atomic for atomic locks",
+    "Bilingual hardening for DB errors and invalid inputs",
+    "Safe [Media/Unsupported] fallback for photos",
+    "Isolated mock-Twilio stress test script"
   ],
   "ui_upgrades": [],
-  "issues_found": [],
-  "fixes_applied": []
+  "issues_found": [
+    "In-memory processingLocks failed to prevent DB race conditions across Render instances.",
+    "Webhook silently ignored photos, blocking invalid-input fallback."
+  ],
+  "fixes_applied": [
+    "Replaced saveAppointment insert with book_slot_atomic RPC and exception handling.",
+    "Modified index.js to pass [Media/Unsupported] to bot.js to trigger Arabic/English fallback."
+  ]
 }

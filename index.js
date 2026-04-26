@@ -183,7 +183,6 @@ app.post('/webhook', twilio.webhook(), async (req, res) => {
       return;
     }
 
-    // Voice note: has media and content type is audio
     if (numMedia > 0 && mediaContentType.startsWith('audio/') && mediaUrl) {
       console.log('[Voice] Detected voice note — transcribing...');
       const transcribed = await transcribeAudio(mediaUrl);
@@ -193,6 +192,10 @@ app.post('/webhook', twilio.webhook(), async (req, res) => {
       } else {
         console.log('[Voice] Transcription failed — ignoring message');
         return;
+      }
+    } else if (numMedia > 0) {
+      if (!messageText) {
+        messageText = '[Media/Unsupported]';
       }
     }
 
