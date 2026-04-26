@@ -289,6 +289,128 @@ async function getDoctorsByClinic(clinicId) {
   }
 }
 
+// ─────────────────────────────────────────────
+// Onboarding State Machine (Phase 3)
+// ─────────────────────────────────────────────
+
+async function getOnboardingByPhone(phone) {
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/onboarding_states?owner_phone=eq.${encodeURIComponent(phone)}&select=*&order=created_at.desc&limit=1`,
+      { headers }
+    );
+    return res.data[0] || null;
+  } catch (err) {
+    console.error('getOnboardingByPhone error:', err.message);
+    return null;
+  }
+}
+
+async function getOnboardingById(id) {
+  try {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/onboarding_states?id=eq.${id}&select=*`,
+      { headers }
+    );
+    return res.data[0] || null;
+  } catch (err) {
+    console.error('getOnboardingById error:', err.message);
+    return null;
+  }
+}
+
+async function createOnboarding(data) {
+  try {
+    const res = await axios.post(
+      `${SUPABASE_URL}/rest/v1/onboarding_states`,
+      data,
+      { headers: { ...headers, Prefer: 'return=representation' } }
+    );
+    return res.data[0] || null;
+  } catch (err) {
+    console.error('createOnboarding error:', err.response?.data || err.message);
+    return null;
+  }
+}
+
+async function updateOnboarding(id, fields) {
+  try {
+    fields.updated_at = new Date().toISOString();
+    await axios.patch(
+      `${SUPABASE_URL}/rest/v1/onboarding_states?id=eq.${id}`,
+      fields,
+      { headers }
+    );
+  } catch (err) {
+    console.error('updateOnboarding error:', err.response?.data || err.message);
+  }
+}
+
+async function logOnboardingMessage(onboardingId, day, type, content) {
+  try {
+    await axios.post(
+      `${SUPABASE_URL}/rest/v1/onboarding_logs`,
+      { onboarding_id: onboardingId, day, message_type: type, content },
+      { headers }
+    );
+  } catch (err) {
+    console.error('logOnboardingMessage error:', err.response?.data || err.message);
+  }
+}
+
+async function createCronJob(data) {
+  try {
+    await axios.post(
+      `${SUPABASE_URL}/rest/v1/cron_jobs`,
+      data,
+      { headers }
+    );
+  } catch (err) {
+    console.error('createCronJob error:', err.response?.data || err.message);
+  }
+}
+
+async function getPendingCronJobs() {
+  try {
+    // type IN ('followup', 'checkin', 'review') AND run_at <= NOW() AND executed = false
+    const now = new Date().toISOString();
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/cron_jobs?executed=eq.false&run_at=lte.${now}&type=in.(followup,checkin,review)&select=*`,
+      { headers }
+    );
+    return res.data || [];
+  } catch (err) {
+    console.error('getPendingCronJobs error:', err.message);
+    return [];
+  }
+}
+
+async function markCronJobExecuted(id) {
+  try {
+    await axios.patch(
+      `${SUPABASE_URL}/rest/v1/cron_jobs?id=eq.${id}`,
+      { executed: true },
+      { headers }
+    );
+  } catch (err) {
+    console.error('markCronJobExecuted error:', err.response?.data || err.message);
+  }
+}
+
+async function getRandomHotLeads(count) {
+  try {
+    // In a real app we might query randomly, but for now just get top N
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/gs_leads?status=eq.new&order=total_score.desc&limit=${count}&select=*`,
+      { headers }
+    );
+    return res.data || [];
+  } catch (err) {
+    console.error('getRandomHotLeads error:', err.message);
+    return [];
+  }
+}
+
 module.exports = {
   getPatient, insertPatient, savePatient, deletePatient,
   getClinic, getClinicById,
@@ -296,5 +418,7 @@ module.exports = {
   checkDuplicateBooking, getAppointmentCountsForDate,
   getAppointmentsForReminder,
   getAppointmentsDueTomorrow, getAppointmentsDueInOneHour, getAppointmentsDueFollowUp,
-  getDoctorsByClinic
+  getDoctorsByClinic,
+  getOnboardingByPhone, getOnboardingById, createOnboarding, updateOnboarding, logOnboardingMessage,
+  createCronJob, getPendingCronJobs, markCronJobExecuted, getRandomHotLeads
 };

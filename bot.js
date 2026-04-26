@@ -102,6 +102,8 @@ function menuAR(clinicOrName) {
 // ─────────────────────────────────────────────
 // Main entry point
 // ─────────────────────────────────────────────
+const onboarding = require('./growth/onboarding-state-machine.js');
+
 async function handleMessage(phone, text, clinic) {
   // ── Processing lock — skip duplicate/retry messages ──
   if (processingLocks.get(phone)) {
@@ -112,6 +114,13 @@ async function handleMessage(phone, text, clinic) {
 
   try {
     const msg = text.trim();
+    
+    // 1. Check for onboarding intent FIRST
+    const activation = await onboarding.handleActivation(phone, msg, clinic || {});
+    if (activation.handled) {
+      return; // Stop here. Onboarding state machine took over.
+    }
+    
     // ... rest of logic
 
   const cl = clinic || {

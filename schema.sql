@@ -315,3 +315,62 @@ CREATE TABLE IF NOT EXISTS gs_feedback (
 CREATE INDEX IF NOT EXISTS idx_gs_feedback_lead ON gs_feedback(lead_id);
 CREATE INDEX IF NOT EXISTS idx_gs_feedback_type ON gs_feedback(feedback_type);
 
+-- ══════════════════════════════════════════════════════
+-- PHASE 3: ONBOARDING STATE MACHINE
+-- ══════════════════════════════════════════════════════
+
+-- Onboarding state tracking
+CREATE TABLE IF NOT EXISTS onboarding_states (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  business_id UUID REFERENCES clinics(id),
+  clinic_name TEXT NOT NULL,
+  owner_name TEXT,
+  owner_phone TEXT NOT NULL,
+  current_state TEXT DEFAULT 'activation_requested',
+  lang TEXT DEFAULT 'en',
+  
+  -- Day 0 checkpoints
+  calendar_connected BOOLEAN DEFAULT false,
+  calendar_id TEXT,
+  dashboard_credentials_sent BOOLEAN DEFAULT false,
+  dashboard_username TEXT,
+  dashboard_password TEXT,
+  leads_gifted INT DEFAULT 0,
+  
+  -- Sequence tracking
+  last_sequence_sent TIMESTAMPTZ,
+  sequence_day INT DEFAULT 0,
+  
+  -- Human handoff
+  jake_notified BOOLEAN DEFAULT false,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_onboarding_phone ON onboarding_states(owner_phone);
+CREATE INDEX IF NOT EXISTS idx_onboarding_state ON onboarding_states(current_state);
+
+-- Track onboarding messages separately
+CREATE TABLE IF NOT EXISTS onboarding_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  onboarding_id UUID REFERENCES onboarding_states(id),
+  day INT,
+  message_type TEXT, -- welcome | calendar_request | credentials | followup | checkin | review_call
+  content TEXT,
+  sent_at TIMESTAMPTZ DEFAULT NOW(),
+  delivered BOOLEAN DEFAULT false
+);
+
+-- Cron Jobs tracking for scheduled automated tasks
+CREATE TABLE IF NOT EXISTS cron_jobs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  onboarding_id UUID REFERENCES onboarding_states(id),
+  run_at TIMESTAMPTZ NOT NULL,
+  type TEXT NOT NULL,
+  executed BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_cron_jobs_run_at ON cron_jobs(run_at);
+CREATE INDEX IF NOT EXISTS idx_cron_jobs_executed ON cron_jobs(executed);

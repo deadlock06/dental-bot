@@ -8,6 +8,7 @@ const path    = require('path');
 const app     = express();
 
 app.use(cookieParser());
+app.use(require('morgan')('dev'));
 
 app.use(helmet({
   contentSecurityPolicy: false, // allow external assets/scripts for now
@@ -44,7 +45,7 @@ app.use((req, res, next) => {
 });
 
 // Root health check
-app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

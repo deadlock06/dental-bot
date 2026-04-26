@@ -12,8 +12,8 @@
     "render_status": "deploying — commit 38f4310 pushed. Surface upgrade + routing fix + simulator loop resolved."
   },
   "execution_state": {
-    "current_step": 14,
-    "step_name": "Phase 1+2: Dynamic Personalization + ROI Ticker",
+    "current_step": 15,
+    "step_name": "Phase 3: Onboarding State Machine",
     "status": "completed",
     "blocker": ""
   },
@@ -261,6 +261,32 @@
       "ui_upgrades": ["Personalized hero per clinic","Value counter on simulator","Pre-filled WhatsApp messages"],
       "issues_found": [],
       "fixes_applied": []
+    },
+    {
+      "step_number": 15,
+      "step_name": "Phase 3: Onboarding State Machine",
+      "timestamp_completed": "2026-04-26T03:55:00+03:00",
+      "files_created": [
+        "growth/onboarding-state-machine.js",
+        "cron/jobs/onboarding.js"
+      ],
+      "files_modified": [
+        "schema.sql",
+        "bot.js",
+        "db.js"
+      ],
+      "features_added": [
+        "Activation intent detection",
+        "Day 0-7 onboarding sequence",
+        "Auto-generated dashboard credentials",
+        "Google Calendar sync request",
+        "5-lead Growth Swarm gift",
+        "Jake handoff on Day 7",
+        "Bilingual onboarding messages"
+      ],
+      "ui_upgrades": [],
+      "issues_found": ["Database uses Supabase REST API via Axios, so raw db.query from the brief didn't work."],
+      "fixes_applied": ["Wrote wrapper methods in db.js to use Axios instead of raw SQL queries."]
     }
   ],
   "pending_steps": [],

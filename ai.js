@@ -102,6 +102,7 @@ async function detectIntent(messageText, currentFlow = null, currentStep = 0) {
     ? `Today is ${today}.\nCurrent flow: ${currentFlow}, Current step: ${currentStep}\nPatient message: ${messageText}`
     : `Today is ${today}.\nNo active flow (patient is on main menu)\nPatient message: ${messageText}`;
 
+  try {
     const { wrapAI } = require('./lib/resilience');
     const resData = await wrapAI(async () => {
       const response = await axios.post(
