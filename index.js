@@ -35,6 +35,129 @@ const dashboardApi = require('./dashboard-api');
 
 app.use('/api/dashboard', dashboardApi);
 
+const { generatePassword } = require('./utils/encrypt.js');
+const db = require('./db.js');
+
+// ─── WEB CHAT API ───
+
+// Start trial from embedded chat
+app.post('/api/start-trial', async (req, res) => {
+  const { clinic_name, session_id, lang } = req.body;
+  
+  if (!clinic_name || !session_id) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'MISSING_FIELDS' 
+    });
+  }
+
+  try {
+    // Generate credentials
+    const cleanName = clinic_name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const username = `admin@${cleanName}.qd`;
+    const password = generatePassword(12);
+    
+    // Create trial record in database
+    let trialId = session_id;
+    if (typeof db.createTrial === 'function') {
+      const trial = await db.createTrial({
+        clinic_name,
+        username,
+        password,
+        session_id,
+        lang: lang || 'en',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      });
+      trialId = trial.id || session_id;
+    }
+
+    // Trigger Day 0 onboarding sequence
+    const onboarding = require('./growth/onboarding-state-machine.js');
+    await onboarding.startFromWebChat({
+      clinic_name,
+      username,
+      password,
+      trial_id: trialId,
+      lang: lang || 'en'
+    });
+
+    res.json({
+      success: true,
+      username,
+      password,
+      dashboard_url: 'https://qudozen.com/dashboard',
+      trial_id: trialId,
+      expires_in: '7 days'
+    });
+
+  } catch (e) {
+    console.error('Trial activation failed:', e);
+    res.status(500).json({ 
+      success: false, 
+      error: 'ACTIVATION_FAILED',
+      message: e.message 
+    });
+  }
+});
+
+// General chat handler
+app.post('/api/chat', async (req, res) => {
+  const { message, session_id, clinic, lang } = req.body;
+  
+  if (!message) {
+    return res.status(400).json({ error: 'NO_MESSAGE' });
+  }
+
+  const lower = message.toLowerCase().trim();
+  const isArabic = lang === 'ar';
+
+  // Intent detection
+  if (lower.match(/price|cost|pricing|how much|سعر|تكلفة|بكم|كم/)) {
+    return res.json({
+      reply: isArabic 
+        ? '💳 أسعار Qudozen:\n\n• وعي (فردي): 299 ريال/شهر\n• نظام (متعدد): 499 ريال/شهر + 699 إعداد\n• سرب: حسب الطلب\n\nجميع الباقات تشمل استقبال 24/7 ولوحة تحكم.'
+        : '💳 Qudozen Pricing:\n\n• Awareness (Solo): 299 SAR/month\n• System (Multi-doctor): 499 SAR/month + 699 SAR setup\n• Swarm (Enterprise): Custom\n\nAll plans include 24/7 reception and dashboard.',
+      buttons: [
+        { text: isArabic ? 'ابدأ التجربة' : 'Start Free Trial', action: 'trial' }
+      ]
+    });
+  }
+
+  if (lower.match(/demo|try|show|see|work|عرض|جرب|أشوف|كيف/)) {
+    return res.json({
+      reply: isArabic ? 'سأبدأ العرض الحي الآن...' : 'Starting live demo now...',
+      action: 'demo'
+    });
+  }
+
+  if (lower.match(/help|support|assist|مساعدة|دعم/)) {
+    return res.json({
+      reply: isArabic 
+        ? 'أنا هنا لمساعدتك! يمكنني:\n• عرض النظام\n• شرح الأسعار\n• تفعيل تجربتك المجانية\n\nماذا تفضل؟'
+        : 'I\\'m here to help! I can:\n• Show you a demo\n• Explain pricing\n• Activate your free trial\n\nWhat would you like?',
+      buttons: [
+        { text: isArabic ? 'عرض حي' : 'Live Demo', action: 'demo' },
+        { text: isArabic ? 'الأسعار' : 'Pricing', action: 'pricing' },
+        { text: isArabic ? 'تجربة مجانية' : 'Free Trial', action: 'trial' }
+      ]
+    });
+  }
+
+  // Default response
+  res.json({
+    reply: isArabic 
+      ? 'أفهم. هل تريد عرضاً للنظام، أو معرفة الأسعار، أو تفعيل التجربة المجانية؟'
+      : 'I understand. Would you like a demo, pricing details, or to start your free trial?',
+    buttons: [
+      { text: isArabic ? 'عرض حي' : 'Live Demo', action: 'demo' },
+      { text: isArabic ? 'الأسعار' : 'Pricing', action: 'pricing' },
+      { text: isArabic ? 'تجربة مجانية' : 'Free Trial', action: 'trial' }
+    ]
+  });
+});
+
 // ─────────────────────────────────────────────
 // Stripe — checkout creation (public) + webhook
 // ─────────────────────────────────────────────

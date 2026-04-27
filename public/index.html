@@ -901,7 +901,7 @@
             <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span><span data-i18n="txt_150">Automating FAQs</span></li>
             <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span><span data-i18n="txt_151">Monthly performance report</span></li>
           </ul>
-          <button onclick="startCheckout('awareness')" id="cta-awareness" class="w-full border border-[#5EEAD4] text-[#5EEAD4] py-3 rounded-xl font-bold text-center hover:bg-[#5EEAD4]/10 transition block" data-i18n="txt_152">Activate Your System</button>
+          <button onclick="qdChat.toggle()" id="cta-awareness" class="w-full border border-[#5EEAD4] text-[#5EEAD4] py-3 rounded-xl font-bold text-center hover:bg-[#5EEAD4]/10 transition block" data-i18n="txt_152">Activate Your System</button>
         </div>
 
         <!-- Tier 2 -->
@@ -921,7 +921,7 @@
             <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span><span data-i18n="txt_162">Post-visit campaigns</span></li>
             <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span><span data-i18n="txt_163">Live admin dashboard</span></li>
           </ul>
-          <button onclick="startCheckout('system')" id="cta-system" class="w-full bg-[#0D9488] text-white py-3 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.5)] block" data-i18n="txt_164">Activate Your System</button>
+          <button onclick="qdChat.toggle()" id="cta-system" class="w-full bg-[#0D9488] text-white py-3 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.5)] block" data-i18n="txt_164">Activate Your System</button>
         </div>
 
         <!-- Tier 3 -->
@@ -939,7 +939,7 @@
             <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span><span data-i18n="txt_172">Dedicated account manager</span></li>
             <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span><span data-i18n="txt_173">Private servers for data</span></li>
           </ul>
-          <button onclick="startCheckout('system')" id="cta-swarm" class="w-full border border-gold text-gold py-3 rounded-xl font-bold text-center hover:bg-gold/10 transition block" data-i18n="txt_174">Contact to customize your plan</button>
+          <button onclick="qdChat.toggle()" id="cta-swarm" class="w-full border border-gold text-gold py-3 rounded-xl font-bold text-center hover:bg-gold/10 transition block" data-i18n="txt_174">Contact to customize your plan</button>
         </div>
       </div>
     </div>
@@ -963,7 +963,7 @@
             <p data-i18n="txt_180">If you’re ready to stop the bleed in your business, click the button below to message me personally.</p>
           </div>
           <div class="mt-10 space-y-4">
-            <button onclick="startCheckout('system')" id="cta-jake" class="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black hover:bg-gray-200 transition">
+            <button onclick="qdChat.toggle()" id="cta-jake" class="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black hover:bg-gray-200 transition">
               <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <span data-i18n="txt_181">Activate Your System</span>
             </button>
@@ -993,7 +993,7 @@
   </footer>
 
   <!-- Floating Checkout CTA (replaces WhatsApp widget) -->
-  <button onclick="startCheckout('system')" class="chat-widget" aria-label="Activate your system" id="floating-cta" style="background:linear-gradient(135deg,#0D9488,#5EEAD4)">
+  <button onclick="qdChat.toggle()" class="chat-widget" aria-label="Activate your system" id="floating-cta" style="background:linear-gradient(135deg,#0D9488,#5EEAD4)">
     <svg viewBox="0 0 24 24" class="w-8 h-8 fill-white"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
   </button>
 
@@ -1008,25 +1008,7 @@ try { gsap.registerPlugin(ScrollTrigger); } catch(e) { console.warn('[GSAP] Not 
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function startCheckout(plan = 'system') {
-  // Skipping Stripe temporarily
-  const lang = sessionStorage.getItem('qd_lang') || 'en';
-  const phone = '966570733834'; // Autonomous bot number
-  const msg = lang === 'ar' ? 'أريد تفعيل النظام لمنشأتي' : 'I want to activate the system for my clinic';
-  
-  const btn = document.activeElement;
-  const originalHTML = btn ? btn.innerHTML : '';
-  if (btn && btn.tagName === 'BUTTON') {
-    btn.innerHTML = lang === 'ar' ? '⏳ جاري التحويل...' : '⏳ Redirecting to Setup...';
-    btn.disabled = true;
-  }
-
-  setTimeout(() => {
-    window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-    if (btn && btn.tagName === 'BUTTON') {
-      btn.innerHTML = originalHTML;
-      btn.disabled = false;
-    }
-  }, 800);
+  if (window.qdChat) qdChat.toggle();
 }
 
 async function requestSupport() {
@@ -1652,7 +1634,7 @@ gsap.fromTo('.bento-card', { y:40 }, {
         <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6" data-i18n="txt_192">Main benefits</h4>
         <div id="smBenefits" class="grid md:grid-cols-2 gap-4 mb-8">
         </div>
-        <button onclick="startCheckout('system')" class="inline-flex items-center justify-center gap-2 w-full bg-white text-black py-4 rounded-xl font-bold hover:bg-gray-200 transition text-lg"><span data-i18n="txt_193">Activate Your System</span><span class="text-xl">↗</span>
+        <button onclick="qdChat.toggle()" class="inline-flex items-center justify-center gap-2 w-full bg-white text-black py-4 rounded-xl font-bold hover:bg-gray-200 transition text-lg"><span data-i18n="txt_193">Activate Your System</span><span class="text-xl">↗</span>
         </button>
       </div>
     </div>
@@ -2562,4 +2544,5 @@ window.addEventListener('load', () => {
     </div>
   </div>
 
+  <script src="/chat-widget.js"></script>
 </body></html>
