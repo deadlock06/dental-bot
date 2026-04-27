@@ -200,7 +200,6 @@ router.post('/stripe-webhook', async (req, res) => {
   res.json({ received: true });
 });
 
-const { normalizePhone } = require('./lib/phone');
 
 router.get('/ghost-room', (req, res) => {
   res.sendFile(path.join(__dirname, 'ghost-room.html'));
