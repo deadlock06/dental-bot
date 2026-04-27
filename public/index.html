@@ -1832,8 +1832,10 @@ function openModal(id) {
   const ct = document.getElementById('smContent');
   if (!ov || !ct) return;
 
-  // Use style.display directly — avoids Tailwind hidden !important conflict
-  ov.style.display = 'flex';
+  // Remove Tailwind's hidden class so !important doesn't override display
+  ov.classList.remove('hidden');
+  ov.classList.add('flex');
+  
   ov.style.opacity = '0';
   document.body.style.overflow = 'hidden';
 
@@ -1860,7 +1862,8 @@ function closeModal() {
   }
   document.body.style.overflow = '';
   setTimeout(() => {
-    ov.style.display = 'none';
+    ov.classList.remove('flex');
+    ov.classList.add('hidden');
   }, 280);
 }
 </script>
