@@ -39,8 +39,12 @@ app.use('/api/dashboard', dashboardApi);
 // Stripe — checkout creation (public) + webhook
 // ─────────────────────────────────────────────
 const { createCheckoutSession } = require('./api/stripe-checkout.js');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
+let _stripe;
+function getStripe() {
+  if (!_stripe) _stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  return _stripe;
+}
 // POST /api/create-checkout — generates a personalised Stripe Checkout URL
 app.post('/api/create-checkout', express.json(), async (req, res) => {
   const { clinic_name, email, plan, lang } = req.body;
@@ -83,7 +87,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    event = getStripe().webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (e) {
     console.error('[Stripe Webhook] Signature verification failed:', e.message);
     return res.status(400).send(`Webhook Error: ${e.message}`);
