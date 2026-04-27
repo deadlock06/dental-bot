@@ -1806,13 +1806,14 @@ const serviceDB = {
 
 function openModal(id) {
   const d = serviceDB[id];
-  if(!d) return;
-  document.getElementById('smIcon').textContent = d.icon;
+  if (!d) return;
+
+  document.getElementById('smIcon').textContent  = d.icon;
   document.getElementById('smTitle').textContent = d.title;
-  document.getElementById('smDesc').textContent = d.desc;
-  
+  document.getElementById('smDesc').textContent  = d.desc;
+
   const fDiv = document.getElementById('smFlow');
-  if(fDiv) {
+  if (fDiv) {
     fDiv.innerHTML = '';
     d.flow.forEach((step, idx) => {
       fDiv.innerHTML += '<div class="bg-white/5 p-3 rounded-xl border border-white/5 text-center"><div class="text-aqua font-bold mb-1 text-xs">خطوة ' + (idx+1) + '</div><div class="text-[10px] text-gray-400">' + step + '</div></div>';
@@ -1820,27 +1821,47 @@ function openModal(id) {
   }
 
   const bDiv = document.getElementById('smBenefits');
-  bDiv.innerHTML = '';
-  d.benefits.forEach(b => {
-    bDiv.innerHTML += '<div class="flex items-start gap-3 bg-white/5 rounded-lg p-4 border border-white/5"><span class="text-[#5EEAD4]">✓</span> <span class="text-gray-300 font-medium">' + b + '</span></div>';
-  });
+  if (bDiv) {
+    bDiv.innerHTML = '';
+    d.benefits.forEach(b => {
+      bDiv.innerHTML += '<div class="flex items-start gap-3 bg-white/5 rounded-lg p-4 border border-white/5"><span class="text-[#5EEAD4]">✓</span> <span class="text-gray-300 font-medium">' + b + '</span></div>';
+    });
+  }
+
   const ov = document.getElementById('smOverlay');
   const ct = document.getElementById('smContent');
-  ov.classList.remove('hidden');
-  ov.classList.add('flex');
-  void ov.offsetWidth;
-  ov.classList.remove('opacity-0');
-  ct.classList.remove('opacity-0','scale-95');
-  document.body.style.overflow='hidden';
+  if (!ov || !ct) return;
+
+  // Use style.display directly — avoids Tailwind hidden !important conflict
+  ov.style.display = 'flex';
+  ov.style.opacity = '0';
+  document.body.style.overflow = 'hidden';
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      ov.style.opacity = '1';
+      ov.style.transition = 'opacity 0.25s ease';
+      ct.style.opacity = '1';
+      ct.style.transform = 'scale(1)';
+      ct.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+    });
+  });
 }
 
 function closeModal() {
   const ov = document.getElementById('smOverlay');
   const ct = document.getElementById('smContent');
-  ov.classList.add('opacity-0');
-  ct.classList.add('opacity-0','scale-95');
-  document.body.style.overflow='';
-  setTimeout(()=> { ov.classList.remove('flex'); ov.classList.add('hidden'); }, 300);
+  if (!ov) return;
+
+  ov.style.opacity = '0';
+  if (ct) {
+    ct.style.opacity = '0';
+    ct.style.transform = 'scale(0.95)';
+  }
+  document.body.style.overflow = '';
+  setTimeout(() => {
+    ov.style.display = 'none';
+  }, 280);
 }
 </script>
 
