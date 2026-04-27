@@ -7,13 +7,13 @@ const serviceDB = {
     "icon": "🤖",
     "ar": {
       "title": "موظف الاستقبال الذكي",
-      "desc": "نظام استقبال ذاتي متكامل عبر الواتساب يدير المرضى من الطلب حتى الحضور.",
+      "desc": "نظام استقبال ذكي متكامل عبر الدردشة يدير المرضى من الطلب حتى الحضور.",
       "flow": ["استلام الطلب وتحليله", "تنسيق الوقت مع التقويم", "تأكيد وحجز الموعد آلياً"],
       "benefits": ["حجز آلي بنسبة 100%", "تذكيرات تقلل الغياب 80%", "دعم ثنائي اللغة", "مزامنة تقويم جوجل"]
     },
     "en": {
       "title": "Smart Receptionist",
-      "desc": "Autonomous system that manages patients via WhatsApp from initial request to booking.",
+      "desc": "Autonomous system that manages patients via Smart Chat from initial request to booking.",
       "flow": ["Inquiry analysis", "Calendar coordination", "Automated confirmation"],
       "benefits": ["100% Automated booking", "Reduce no-shows by 80%", "Bilingual support", "Google Calendar sync"]
     }
@@ -189,7 +189,7 @@ function closeModal() {
     ::-webkit-scrollbar-thumb{background:#0D9488;border-radius:4px}
     ::-webkit-scrollbar-thumb:hover{background:#5EEAD4}
 
-    /* ── WhatsApp Simulator ── */
+    /* ── AI Chat Simulator ── */
     #simChat{scroll-behavior:smooth}
     .sim-bubble-bot {
       background:#1e293b;
@@ -563,7 +563,7 @@ function closeModal() {
         <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80">
           <div class="w-16 h-16 rounded-2xl bg-teal-900 border border-teal-500 flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(13,148,136,0.4)]">1️⃣</div>
           <h3 class="text-2xl font-bold mb-3">طبقة الاستقبال</h3>
-          <p class="text-gray-400 text-sm leading-relaxed">الواجهة الأمامية عبر الواتساب. نظام تشغيل ذاتي يرد فوراً، يستوعب الحالة، ويحجز المواعيد بلغة عربية سليمة.</p>
+          <p class="text-gray-400 text-sm leading-relaxed">الواجهة الأمامية عبر الدردشة الذكية. نظام تشغيل ذاتي يرد فوراً، يستوعب الحالة، ويحجز المواعيد بلغة عربية سليمة.</p>
         </div>
         <div class="glass p-8 rounded-3xl relative z-10 hover:-translate-y-2 transition duration-300 bg-[#0B1120]/80 mt-12 md:mt-0">
           <div class="w-16 h-16 rounded-2xl border border-[#5EEAD4] flex items-center justify-center text-2xl mb-6 shadow-[0_0_20px_rgba(94,234,212,0.4)]" style="background:rgba(94,234,212,0.08)">2️⃣</div>
@@ -691,7 +691,7 @@ function closeModal() {
       <div class="text-center mb-12">
         <div class="inline-block px-4 py-1 rounded-full glass text-xs font-bold text-gold mb-4 tracking-widest uppercase">محاكاة حية</div>
         <h2 class="text-3xl md:text-4xl font-bold mb-4">جرّب <span class="text-gold">البوت الفعلي</span> الآن</h2>
-        <p class="text-gray-400 max-w-xl mx-auto">هذه ليست عرضاً وهمياً — هذا هو نفس النظام الذي يعمل على واتساب. جرّب الحجز الكامل من البداية للتأكيد.</p>
+        <p class="text-gray-400 max-w-xl mx-auto">هذه ليست عرضاً وهمياً — هذا هو نفس النظام الذي يعمل على الدردشة الذكية. جرّب الحجز الكامل من البداية للتأكيد.</p>
       </div>
 
       <div class="flex flex-col lg:flex-row gap-10 items-start justify-center">
@@ -703,7 +703,7 @@ function closeModal() {
             <!-- Phone chrome -->
             <div class="absolute inset-0 rounded-[36px] border-2 border-gray-700 pointer-events-none z-20" style="box-shadow:0 0 60px rgba(13,148,136,0.15)"></div>
 
-            <!-- WhatsApp-style container -->
+            <!-- Chat-style container -->
             <div id="simPhoneShell" class="rounded-[34px] overflow-hidden bg-[#111b21]" style="height:600px;display:flex;flex-direction:column">
 
               <!-- Status bar -->
@@ -890,18 +890,18 @@ function closeModal() {
             </a>
           </div>
 
-          <!-- WhatsApp redirect (shown after completion) -->
-          <div id="waRedirect" class="glass rounded-2xl p-6 border border-[#25D366]/30 hidden" style="background:rgba(37,211,102,0.04)">
+          <!-- Chat CTA (shown after completion) -->
+          <div id="waRedirect" class="glass rounded-2xl p-6 border border-teal-500/30 hidden" style="background:rgba(13,148,136,0.04)">
             <div class="flex items-start gap-4">
-              <div class="w-12 h-12 rounded-xl bg-[#25D366]/20 flex items-center justify-center flex-shrink-0">
-                <svg viewBox="0 0 24 24" class="w-6 h-6 fill-[#25D366]"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+              <div class="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center flex-shrink-0">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-teal-400"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
               </div>
               <div class="flex-1">
                 <div class="text-sm font-bold text-white mb-1">محاكاتك مكتملة 🎉</div>
                 <p class="text-xs text-gray-400 mb-3 leading-relaxed">هذا بالضبط ما سيحدث في عملك. جاهز لتفعيل نظامك الخاص؟</p>
                 <a href="#?text=أهلاً%20جيك،%20جربت%20المحاكي%20وأريد%20تفعيل%20النظام%20لعيادتي." target="_blank"
-                   class="inline-flex items-center gap-2 bg-[#25D366] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#1da851] transition">
-                  <svg viewBox="0 0 24 24" class="w-4 h-4 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                   class="inline-flex items-center gap-2 bg-teal-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-teal-600 transition">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                   تحدث مع جيك الآن
                 </a>
               </div>
@@ -1082,11 +1082,10 @@ function closeModal() {
           </div>
           <div class="mt-10">
             <button onclick="window.qdChat.open('activate')" class="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black hover:bg-gray-200 transition">
-              <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
-              تحدث مع جيك شخصياً
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              تحدث مع جيك عبر الدردشة
             </button>
             <div class="mt-4 text-sm text-gray-500">البريد الإلكتروني: jake@qudozen.com</div>
-            <div class="mt-1 text-sm text-gray-500">واتساب: 057436016</div>
           </div>
         </div>
       </div>
@@ -1103,16 +1102,16 @@ function closeModal() {
       <div class="flex gap-8 text-sm font-medium">
         <a href="#services" class="text-gray-400 hover:text-aqua transition">خدماتنا</a>
         <a href="#simulator" class="text-gray-400 hover:text-aqua transition">المحاكي</a>
-        <a href="#" class="text-gray-400 hover:text-aqua transition">دعم واتساب</a>
+        <a href="javascript:void(0)" onclick="window.qdChat.open('support')" class="text-gray-400 hover:text-aqua transition">الدعم المباشر</a>
         <a href="/growth/ghost-room" class="text-gray-400 hover:text-aqua transition">غرفة العمليات</a>
       </div>
       <div class="text-gray-600 text-sm">© 2026 Qudozen. جميع الحقوق محفوظة.</div>
     </div>
   </footer>
 
-  <!-- Floating WhatsApp -->
-  <button onclick="window.qdChat.open()" class="chat-widget" aria-label="تواصل مع جيك">
-    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+  <!-- Floating Chat Button -->
+  <button onclick="window.qdChat.open()" class="fixed bottom-6 left-6 z-[999] w-14 h-14 bg-teal-500 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform md:hidden" aria-label="تواصل مع جيك">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
   </button>
 
 <!-- ══════════════════════════════════════════════════ -->
@@ -1130,7 +1129,7 @@ const MESSAGES = {
     // Booking Flow
     bookingSteps: {
       name: "رائع! لنبدأ الحجز 😊\nما اسمك الكريم؟\n\n💡 اكتب اسمك وأرسل\n0️⃣ القائمة الرئيسية",
-      phone: (p) => `شكراً! 😊\nرقم واتساب الخاص بك هو: *${p}*\nهل هذا صحيح؟\n\n1️⃣ نعم، هذا صحيح\n2️⃣ لا، أريد رقماً آخر\n\n💡 اضغط 1 للتأكيد أو 2 للتغيير\n0️⃣ القائمة الرئيسية`,
+      phone: (p) => `شكراً! 😊\nرقمك المسجل هو: *${p}*\nهل هذا صحيح؟\n\n1️⃣ نعم، هذا صحيح\n2️⃣ لا، أريد رقماً آخر\n\n💡 اضغط 1 للتأكيد أو 2 للتغيير\n0️⃣ القائمة الرئيسية`,
       phoneReq: "من فضلك أدخل رقم هاتفك:\n\n💡 اكتب رقم هاتفك وأرسل",
       treatment: "اختر نوع الخدمة: 🦷\n\n1️⃣ تنظيف وتلميع 🦷\n2️⃣ حشوات\n3️⃣ تقويم الأسنان 📐\n4️⃣ تبييض الأسنان ⚪\n5️⃣ خلع\n6️⃣ زراعة أسنان 🔬\n7️⃣ علاج العصب 🏥\n8️⃣ أخرى / غير متأكد\n\n💡 اضغط رقماً أو اختر من القائمة",
       notes: "هل لديك ملاحظات أو وصف للحالة؟ (اختياري)\n\n💡 اكتب ملاحظتك أو أرسل *0* للتخطي\n0️⃣ تخطي الخطوة",
@@ -1177,7 +1176,7 @@ const MESSAGES = {
     // Booking Flow
     bookingSteps: {
       name: "Great! Let's book your appointment 😊\nWhat's your full name?\n\n💡 Type your name and send\n0️⃣ Main menu",
-      phone: (p) => `Thanks! 😊\nYour WhatsApp number is: *${p}*\nIs this correct?\n\n1️⃣ Yes, that's correct\n2️⃣ No, use a different number\n\n💡 Tap 1 to confirm or 2 to change\n0️⃣ Main menu`,
+      phone: (p) => `Thanks! 😊\nYour registered number is: *${p}*\nIs this correct?\n\n1️⃣ Yes, that's correct\n2️⃣ No, use a different number\n\n💡 Tap 1 to confirm or 2 to change\n0️⃣ Main menu`,
       phoneReq: "Please enter your phone number:\n\n💡 Type your phone number and send",
       treatment: "Select service type: 🦷\n\n1️⃣ Cleaning & Polishing 🦷\n2️⃣ Fillings\n3️⃣ Braces & Orthodontics 📐\n4️⃣ Teeth Whitening ⚪\n5️⃣ Extraction\n6️⃣ Dental Implants 🔬\n7️⃣ Root Canal 🏥\n8️⃣ Other / Not sure\n\n💡 Tap a number or pick from the list",
       notes: "Any notes or description of your issue? (optional)\n\n💡 Type your note or send *0* to skip\n0️⃣ Skip step",
@@ -1466,7 +1465,7 @@ async function processBooking(ui, m) {
       await addBotBubble(b.securing);
       await addBotBubble(b.confirmed + "\n\n" + b.summary(simData));
       updateDashboardData(m);
-      showWhatsAppRedirect();
+      showChatRedirect();
       simFlow = ''; 
       setReplies([{label: simData.lang==='en'?'0️⃣ Main Menu':'0️⃣ القائمة الرئيسية', value:'0'}]);
       setTimeout(() => triggerAutonomousReminder(m), 4000);
@@ -1582,7 +1581,7 @@ function updateDashboardData(m) {
   el('dsRemLabel', d.rem);
 }
 
-function showWhatsAppRedirect() {
+function showChatRedirect() {
   const wa = document.getElementById('waRedirect');
   if (wa) {
     wa.innerHTML = `
@@ -1963,7 +1962,7 @@ window.addEventListener('load', () => {
         await bsAddBot(b.securing);
         await bsAddBot(b.confirmed+'\n\n'+b.summary(bsData));
         bsUpdateDash();
-        // WhatsApp CTA
+        // Chat CTA
         const {chat}=bsGet();
         if(chat){
           const waDiv=document.createElement('div');
