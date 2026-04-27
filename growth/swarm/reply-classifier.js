@@ -13,12 +13,16 @@ class ReplyClassifier {
         ar: ['كم السعر', 'التكلفة', 'السعر', 'رسوم', 'غالي', 'رخيص', 'بكم']
       },
       simulator: {
-        en: ['demo', 'try', 'see it', 'how does it work', 'show me', 'test', 'trial'],
-        ar: ['جرب', 'تجربة', 'عرض', 'كيف يعمل', 'اختبار', 'أشوف']
+        en: ['demo', 'see it', 'how does it work', 'show me', 'test'],
+        ar: ['جرب', 'عرض', 'كيف يعمل', 'اختبار', 'أشوف']
+      },
+      trial: {
+        en: ['trial', 'try', 'free', 'start trial', '7 day', '7-day'],
+        ar: ['تجربة', 'تجربه', 'مجاني', 'ابدأ التجربة', '7 أيام']
       },
       hot_lead: {
-        en: ['book a call', 'talk to someone', 'schedule', 'meeting', 'call me', 'interested', 'sign up', 'activate', 'lets go'],
-        ar: ['احجز مكالمة', 'اتصلوا فيني', 'مهتم', 'أريد الاشتراك', 'ابدأ', 'فعل', 'نبي نتكلم']
+        en: ['book a call', 'talk to someone', 'schedule', 'meeting', 'call me', 'interested', 'sign up', 'activate', 'lets go', 'ready'],
+        ar: ['احجز مكالمة', 'اتصلوا فيني', 'مهتم', 'أريد الاشتراك', 'ابدأ', 'فعل', 'نبي نتكلم', 'جاهز']
       },
       objection: {
         en: ['already have', 'too expensive', 'not sure', 'maybe later', 'compare', 'think about it', 'data safe', 'surgery'],
@@ -29,7 +33,7 @@ class ReplyClassifier {
 
   classify(message, lang = 'en') {
     const lower = (message || '').toLowerCase().trim();
-    
+
     // Check each intent
     for (const [intent, patterns] of Object.entries(this.patterns)) {
       const langPatterns = patterns[lang] || patterns.en;
@@ -54,16 +58,16 @@ class ReplyClassifier {
     // 0. Safety Guardrail: Rate Limiting
     const { limited } = await this.checkRateLimit(leadId);
     if (limited) {
-        console.log(`[Classifier] Rate limit reached for lead ${leadId}. Skipping auto-reply.`);
-        return { replied: false, reason: 'rate_limit' };
+      console.log(`[Classifier] Rate limit reached for lead ${leadId}. Skipping auto-reply.`);
+      return { replied: false, reason: 'rate_limit' };
     }
 
     // Detect language
     const lang = this.detectLanguage(message);
-    
+
     // Classify
     const classification = this.classify(message, lang);
-    
+
     // Log the inbound
     await db.createGrowthConversation({
       lead_id: leadId,
@@ -90,13 +94,13 @@ class ReplyClassifier {
       });
     }
 
-    // Safety Guardrail: Human Override after 3 unclear intents
+    // Safety Guardrail: Auto-escalate to hot lead after 3+ unclear intents
     if (classification.intent === 'unclear') {
-        const unclearCount = await db.countUnclearIntents(leadId, 48); // hours
-        if (unclearCount >= 3) {
-            console.log(`[Classifier] 3+ unclear intents detected for ${leadId}. Auto-escalating to hot lead.`);
-            await this.handleHotLead(leadId, businessId, message, lang, fromPhone);
-        }
+      const unclearCount = await db.countUnclearIntents(leadId, 48); // hours
+      if (unclearCount >= 3) {
+        console.log(`[Classifier] 3+ unclear intents detected for ${leadId}. Auto-escalating to hot lead.`);
+        await this.handleHotLead(leadId, businessId, message, lang, fromPhone);
+      }
     }
 
     return result;
@@ -120,11 +124,12 @@ class ReplyClassifier {
   getHandler(intent) {
     const handlers = {
       'not_interested': this.handleOptOut.bind(this),
-      'pricing': this.handlePricing.bind(this),
-      'simulator': this.handleSimulator.bind(this),
-      'hot_lead': this.handleHotLead.bind(this),
-      'objection': this.handleObjection.bind(this),
-      'unclear': this.handleUnclear.bind(this)
+      'pricing':        this.handlePricing.bind(this),
+      'simulator':      this.handleSimulator.bind(this),
+      'trial':          this.handleTrial.bind(this),
+      'hot_lead':       this.handleHotLead.bind(this),
+      'objection':      this.handleObjection.bind(this),
+      'unclear':        this.handleUnclear.bind(this)
     };
     return handlers[intent] || handlers.unclear;
   }
@@ -133,15 +138,13 @@ class ReplyClassifier {
 
   async handleOptOut(leadId, businessId, message, lang, phone) {
     const { sendMessage } = require('../../whatsapp.js');
-    
+
     const responses = {
       en: `No problem at all. You won't receive any more messages from us. If you ever want to explore smart automation for your clinic, just reply START.`,
       ar: `لا مشكلة على الإطلاق. لن تتلقى أي رسائل أخرى. إذا أردت استكشاف الأتمتة الذكية لعيادتك، فقط رد بـ "ابدأ".`
     };
 
     await sendMessage(phone, responses[lang] || responses.en);
-    
-    // Update lead status to opted_out
     await db.updateLeadStatus(leadId, 'opted_out');
 
     return { replied: true, message: responses[lang], escalate: false };
@@ -149,74 +152,162 @@ class ReplyClassifier {
 
   async handlePricing(leadId, businessId, message, lang, phone) {
     const { sendMessage } = require('../../whatsapp.js');
-    
+    const { createCheckoutSession } = require('../../api/stripe-checkout.js');
+
+    const lead = await db.getLeadById(leadId);
+    const checkout = await createCheckoutSession(
+      lead?.company_name || 'Your Clinic',
+      `${phone}@onboarding.qudozen.com`,
+      'awareness',
+      lang
+    );
+
     const responses = {
-      en: `Our AI receptionist starts at 299 SAR/month for solo clinics, and 499 SAR/month for multi-doctor practices (plus a one-time setup fee).\n\nThe system typically pays for itself within the first 2-3 after-hours bookings it captures.\n\nWant to see it in action? Try the live simulator: https://qudozen.com/?clinic=YourClinic`,
-      ar: `يبدأ الاستقبال الذكي من 299 ريال/شهر للعيادات الفردية، و499 ريال/شهر للعيادات متعددة الأطباء (بالإضافة إلى رسوم إعداد لمرة واحدة).\n\nالنظام يغطي تكلفته عادةً من أول حجزين يتم استلامهم بعد الدوام.\n\nتريد تجربته مباشرة؟ جرب المحاكي الحي: https://qudozen.com`
+      en: `*Qudozen Pricing:*\n\n💼 *Awareness Plan* — $80/mo (299 SAR)\n• 200 conversations, booking + reminders\n\n🚀 *System Plan* — $133/mo (499 SAR)\n• Everything + Growth Engine + Dashboard\n• Setup: $186 (699 SAR) one-time\n\nThe system typically pays for itself within the first 2–3 bookings it captures.\n\n✅ Start now:\n${checkout.url}\n\nOr reply *TRIAL* for 7 days free.`,
+      ar: `*أسعار Qudozen:*\n\n💼 *خطة الحضور* — $80/شهر (299 ريال)\n• 200 محادثة، حجز وتذكيرات\n\n🚀 *خطة النظام* — $133/شهر (499 ريال)\n• كل شيء + محرك النمو + لوحة التحكم\n• إعداد: $186 (699 ريال) مرة واحدة\n\nالنظام يغطي تكلفته عادةً من أول حجزين.\n\n✅ ابدأ الآن:\n${checkout.url}\n\nأو رد بـ *تجربة* للوصول المجاني لمدة 7 أيام.`
     };
 
     await sendMessage(phone, responses[lang] || responses.en);
-    return { replied: true, message: responses[lang], escalate: false };
+    return { replied: true, message: responses[lang] || responses.en, escalate: false };
   }
 
+  // ─── STEP 4: In-Chat WhatsApp Simulator (replaces link-based demo) ───
   async handleSimulator(leadId, businessId, message, lang, phone) {
     const { sendMessage } = require('../../whatsapp.js');
-    
-    // Personalize the simulator link if we know the clinic name
-    const lead = await db.getLeadById(leadId);
-    const clinicParam = lead?.company_name ? `?clinic=${encodeURIComponent(lead.company_name)}` : '';
-    
-    const responses = {
-      en: `See exactly how your patients would experience this:\n\nhttps://qudozen.com${clinicParam}\n\nThis is a live demo — try booking an appointment as if you were a patient.`,
-      ar: `شاهد بالضبط كيف سيتفاعل مرضاك مع النظام:\n\nhttps://qudozen.com${clinicParam}\n\nهذا عرض حي — جرب حجز موعد كما لو كنت مريضاً.`
+
+    const demo = {
+      en: [
+        "I'll show you exactly how your patients experience this. *Live demo starting...*",
+        "*Patient:* Hi, I need a dental cleaning",
+        "*Bot:* Welcome! I'd be happy to help. Could you share your name please?",
+        "*Patient:* Sarah",
+        "*Bot:* Thanks Sarah! We offer:\n1. Cleaning (150 SAR)\n2. Whitening (800 SAR)\n3. Fillings (300 SAR)\n4. Implants (5,000 SAR)\n\nWhich would you like?",
+        "*Patient:* 1",
+        "*Bot:* Great choice! Dr. Ahmed is available:\n• Tomorrow 10:00 AM\n• Tomorrow 2:00 PM\n\nWhich works for you?",
+        "*Patient:* 10 AM",
+        "*Bot:* ✅ *Confirmed!*\n\nSarah, your cleaning is booked for:\n📅 Tomorrow, 10:00 AM\n👨‍⚕️ Dr. Ahmed\n💰 150 SAR\n\nYou'll receive a reminder 24 hours before. *That took 8 seconds.*"
+      ],
+      ar: [
+        "سأريك بالضبط كيف سيتفاعل مرضاك. *العرض الحي يبدأ...*",
+        "*المريض:* مرحباً، أحتاج تنظيف أسنان",
+        "*البوت:* أهلاً بك! يسعدني مساعدتك. هل يمكنك مشاركة اسمك؟",
+        "*المريض:* سارة",
+        "*البوت:* شكراً سارة! نقدم:\n1. تنظيف (150 ريال)\n2. تبييض (800 ريال)\n3. حشوات (300 ريال)\n4. زراعة (5,000 ريال)\n\nماذا تفضلين؟",
+        "*المريض:* 1",
+        "*البوت:* خيار ممتاز! د. أحمد متوفر:\n• غداً 10:00 صباحاً\n• غداً 2:00 ظهراً\n\nما الوقت المناسب لك؟",
+        "*المريض:* 10 صباحاً",
+        "*البوت:* ✅ *تم التأكيد!*\n\nسارة، حجزت لك موعد تنظيف:\n📅 غداً، 10:00 صباحاً\n👨‍⚕️ د. أحمد\n💰 150 ريال\n\nستتلقين تذكيراً قبل 24 ساعة. *استغرق ذلك 8 ثوانٍ.*"
+      ]
     };
 
-    await sendMessage(phone, responses[lang] || responses.en);
-    return { replied: true, message: responses[lang], escalate: false };
+    const flow = demo[lang] || demo.en;
+
+    // Send with realistic delays
+    for (let i = 0; i < flow.length; i++) {
+      await new Promise(r => setTimeout(r, i === 0 ? 500 : 1500));
+      await sendMessage(phone, flow[i]);
+    }
+
+    // Close with checkout link
+    const { createCheckoutSession } = require('../../api/stripe-checkout.js');
+    const lead = await db.getLeadById(leadId);
+    const checkout = await createCheckoutSession(
+      lead?.company_name || 'Your Clinic',
+      `${phone}@onboarding.qudozen.com`,
+      'system',
+      lang
+    );
+
+    const close = {
+      en: `*That was a live simulation — not a video.*\n\nYour patients get this exact experience 24/7. No missed calls. No lost bookings.\n\nReady to activate ${lead?.company_name || 'your clinic'}?\n${checkout.url}\n\nOr reply *TRIAL* for 7 days free.`,
+      ar: `*هذا كان عرضاً حياً — ليس فيديو.*\n\nمرضاك يحصلون على هذه التجربة بالضبط على مدار الساعة. لا مكالمات فائتة. لا حجوزات ضائعة.\n\nجاهز لتفعيل ${lead?.company_name || 'عيادتك'}؟\n${checkout.url}\n\nأو رد بـ *تجربة* للوصول المجاني لمدة 7 أيام.`
+    };
+
+    await new Promise(r => setTimeout(r, 2000));
+    await sendMessage(phone, close[lang] || close.en);
+
+    await db.updateLeadStatus(leadId, 'demo_sent', {
+      checkout_url: checkout.url,
+      checkout_sent_at: new Date().toISOString()
+    });
+
+    return { replied: true, message: 'simulation_complete', escalate: false };
   }
 
+  // ─── STEP 3: Hot Lead Handler — Zero Human, Self-Checkout ───
   async handleHotLead(leadId, businessId, message, lang, phone) {
     const { sendMessage } = require('../../whatsapp.js');
-    
-    // Acknowledge the lead immediately
+    const { createCheckoutSession } = require('../../api/stripe-checkout.js');
+
+    const lead = await db.getLeadById(leadId);
+    const email = lead?.email || `${phone}@onboarding.qudozen.com`;
+
+    // Generate checkout immediately — no human in the loop
+    const checkout = await createCheckoutSession(
+      lead?.company_name || 'Your Clinic',
+      email,
+      'system',
+      lang
+    );
+
     const responses = {
-      en: `Great! I'm connecting you with Jake, the founder, who will personally get you set up. He'll be in touch within the next few hours.\n\nIn the meantime, if you want to see the system live: https://qudozen.com`,
-      ar: `ممتاز! سأوصلك بجيك، المؤسس، الذي سيقوم بإعداد نظامك شخصياً. سيتواصل معك خلال الساعات القليلة القادمة.\n\nفي الوقت الحالي، إذا أردت رؤية النظام مباشرة: https://qudozen.com`
+      en: `Perfect! I can get ${lead?.company_name || 'your clinic'} live immediately.\n\n✅ *Personalized Checkout:*\n${checkout.url}\n\n*After payment, you'll receive instantly:*\n• Dashboard login credentials\n• WhatsApp bot activation (10 minutes)\n• 5 high-intent patient leads as welcome gift\n\n*No credit card?* Reply TRIAL for 7-day free access.\n\nQuestions? Reply here — I'm available 24/7.`,
+      ar: `ممتاز! يمكنني تفعيل ${lead?.company_name || 'عيادتك'} فوراً.\n\n✅ *رابط الدفع الشخصي:*\n${checkout.url}\n\n*بعد الدفع، ستتلقى فوراً:*\n• بيانات دخول لوحة التحكم\n• تفعيل بوت الواتساب (10 دقائق)\n• 5 مرضى محتملين كهدية ترحيب\n\n*لا بطاقة ائتمان؟* رد بـ "تجربة" للوصول المجاني لمدة 7 أيام.\n\nلديك أسئلة؟ رد هنا — أنا متاح 24/7.`
     };
 
     await sendMessage(phone, responses[lang] || responses.en);
 
-    // Escalate to Jake
-    const lead = await db.getLeadById(leadId);
-    const escalationMsg = `🔥 HOT LEAD ALERT\nClinic: ${lead?.company_name || 'Unknown'}\nPhone: ${phone}\nIntent: ${lang === 'ar' ? 'مهتم / حار' : 'Hot lead'}\nMessage: ${message}\n\nReply to this thread to take over the conversation.`;
-    
-    await sendMessage(process.env.ADMIN_PHONE || '966500000000', escalationMsg);
+    // Store checkout URL for tracking — no ADMIN_PHONE alert
+    await db.updateLeadStatus(leadId, 'checkout_sent', {
+      checkout_url: checkout.url,
+      checkout_session_id: checkout.session_id,
+      checkout_sent_at: new Date().toISOString()
+    });
 
-    return { replied: true, message: responses[lang], escalate: true };
+    console.log(`[Classifier] ✅ Hot lead ${leadId} sent self-checkout — no human escalation`);
+
+    return { replied: true, message: responses[lang] || responses.en, escalate: false };
+  }
+
+  // ─── TRIAL: Free 7-day activation ───
+  async handleTrial(leadId, businessId, message, lang, phone) {
+    const onboarding = require('../onboarding-state-machine.js');
+    const lead = await db.getLeadById(leadId);
+
+    const result = await onboarding.handleTrialRequest(phone, message, {
+      clinic: lead?.company_name,
+      lang
+    });
+
+    if (result.handled) {
+      await db.updateLeadStatus(leadId, 'trial_started');
+      return { replied: true, message: 'trial_activated', escalate: false };
+    }
+
+    // Fallback: send checkout link
+    return this.handleHotLead(leadId, businessId, message, lang, phone);
   }
 
   async handleObjection(leadId, businessId, message, lang, phone) {
-    // Delegate to existing objection handler from Phase 4
-    // Note: handleObjection in handoff.js might need slight adjustments to match this return type
     try {
-        const { handleObjection } = require('../handoff.js');
-        const response = await handleObjection(leadId, businessId, message, lang, phone);
-        return { replied: true, message: response || 'Objection handled', escalate: false };
+      const { handleObjection } = require('../handoff.js');
+      const response = await handleObjection(leadId, businessId, message, lang, phone);
+      return { replied: true, message: response || 'Objection handled', escalate: false };
     } catch (e) {
-        return this.handleUnclear(leadId, businessId, message, lang, phone);
+      return this.handleUnclear(leadId, businessId, message, lang, phone);
     }
   }
 
   async handleUnclear(leadId, businessId, message, lang, phone) {
     const { sendMessage } = require('../../whatsapp.js');
-    
+
     const responses = {
-      en: `Thanks for your message. To help you best, could you let me know if you'd like to:\n1. See a live demo\n2. Know about pricing\n3. Talk to our founder Jake directly\n\nJust reply with the number or ask your question!`,
-      ar: `شكراً لرسالتك. لمساعدتك بشكل أفضل، هل يمكنك إخباري إذا كنت تريد:\n1. رؤية عرض حي\n2. معرفة الأسعار\n3. التحدث مع جيك مباشرة\n\nفقط رد بالرقم أو اسأل سؤالك!`
+      en: `Thanks for your message. To help you best, could you let me know if you'd like to:\n1. See a live demo\n2. Know about pricing\n3. Activate your system now\n\nJust reply with the number or ask your question!`,
+      ar: `شكراً لرسالتك. لمساعدتك بشكل أفضل، هل يمكنك إخباري إذا كنت تريد:\n1. رؤية عرض حي\n2. معرفة الأسعار\n3. تفعيل نظامك الآن\n\nفقط رد بالرقم أو اسأل سؤالك!`
     };
 
     await sendMessage(phone, responses[lang] || responses.en);
-    return { replied: true, message: responses[lang], escalate: false };
+    return { replied: true, message: responses[lang] || responses.en, escalate: false };
   }
 }
 

@@ -901,7 +901,7 @@
             <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span><span data-i18n="txt_150">Automating FAQs</span></li>
             <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span><span data-i18n="txt_151">Monthly performance report</span></li>
           </ul>
-          <a href="https://wa.me/966570733834" class="w-full border border-[#5EEAD4] text-[#5EEAD4] py-3 rounded-xl font-bold text-center hover:bg-[#5EEAD4]/10 transition block" data-i18n="txt_152">Get started now</a>
+          <button onclick="startCheckout('awareness')" id="cta-awareness" class="w-full border border-[#5EEAD4] text-[#5EEAD4] py-3 rounded-xl font-bold text-center hover:bg-[#5EEAD4]/10 transition block" data-i18n="txt_152">Activate Your System</button>
         </div>
 
         <!-- Tier 2 -->
@@ -921,7 +921,7 @@
             <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span><span data-i18n="txt_162">Post-visit campaigns</span></li>
             <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span><span data-i18n="txt_163">Live admin dashboard</span></li>
           </ul>
-          <a href="https://wa.me/966570733834" class="w-full bg-[#0D9488] text-white py-3 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.5)] block" data-i18n="txt_164">Get the system</a>
+          <button onclick="startCheckout('system')" id="cta-system" class="w-full bg-[#0D9488] text-white py-3 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.5)] block" data-i18n="txt_164">Activate Your System</button>
         </div>
 
         <!-- Tier 3 -->
@@ -939,7 +939,7 @@
             <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span><span data-i18n="txt_172">Dedicated account manager</span></li>
             <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span><span data-i18n="txt_173">Private servers for data</span></li>
           </ul>
-          <a href="https://wa.me/966570733834" class="w-full border border-gold text-gold py-3 rounded-xl font-bold text-center hover:bg-gold/10 transition block" data-i18n="txt_174">Contact to customize your plan</a>
+          <button onclick="startCheckout('system')" id="cta-swarm" class="w-full border border-gold text-gold py-3 rounded-xl font-bold text-center hover:bg-gold/10 transition block" data-i18n="txt_174">Contact to customize your plan</button>
         </div>
       </div>
     </div>
@@ -962,11 +962,13 @@
             <p data-i18n="txt_179">The self-operating system I built is not just about "automated responses". It’s about protecting your establishment from the hidden daily bleed. The infrastructure takes care of responding, booking, and follow-ups — so you can wake up in the morning to see your schedule automatically filled.</p>
             <p data-i18n="txt_180">If you’re ready to stop the bleed in your business, click the button below to message me personally.</p>
           </div>
-          <div class="mt-10">
-            <a href="https://wa.me/96657436016?text=أهلاً%20جيك،%20قرأت%20رسالتك%20وأريد%20تفعيل%20النظام%20لمنشأتي." class="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black hover:bg-gray-200 transition">
-              <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"></path></svg><span data-i18n="txt_181">Talk to Jake personally</span></a>
-            <div class="mt-4 text-sm text-gray-500" data-i18n="txt_182">Email: jake@qudozen.com</div>
-            <div class="mt-1 text-sm text-gray-500" data-i18n="txt_183">WhatsApp: 057436016</div>
+          <div class="mt-10 space-y-4">
+            <button onclick="startCheckout('system')" id="cta-jake" class="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black hover:bg-gray-200 transition">
+              <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span data-i18n="txt_181">Activate Your System</span>
+            </button>
+            <div class="text-sm text-gray-500">Email: jake@qudozen.com</div>
+            <button onclick="requestSupport()" class="text-sm text-gray-400 hover:text-aqua transition underline">Need help first? Request a callback</button>
           </div>
         </div>
       </div>
@@ -983,23 +985,83 @@
       <div class="flex gap-8 text-sm font-medium">
         <a href="#services" class="text-gray-400 hover:text-aqua transition" data-i18n="txt_186">Our services</a>
         <a href="#simulator" class="text-gray-400 hover:text-aqua transition" data-i18n="txt_187">The simulator</a>
-        <a href="https://wa.me/96657436016" class="text-gray-400 hover:text-aqua transition" data-i18n="txt_188">WhatsApp support</a>
+        <button onclick="requestSupport()" class="text-gray-400 hover:text-aqua transition" data-i18n="txt_188">Get Support</button>
         <a href="/growth/ghost-room" class="text-gray-400 hover:text-aqua transition" data-i18n="txt_189">The operations room</a>
       </div>
       <div class="text-gray-600 text-sm" data-i18n="txt_190">© 2026 Qudozen. All rights reserved.</div>
     </div>
   </footer>
 
-  <!-- Floating WhatsApp -->
-  <a href="https://wa.me/96657436016" class="chat-widget" aria-label="تواصل عبر واتساب">
-    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.347-.272.271-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"></path></svg>
-  </a>
+  <!-- Floating Checkout CTA (replaces WhatsApp widget) -->
+  <button onclick="startCheckout('system')" class="chat-widget" aria-label="Activate your system" id="floating-cta" style="background:linear-gradient(135deg,#0D9488,#5EEAD4)">
+    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-white"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+  </button>
 
 <!-- ══════════════════════════════════════════════════ -->
 <!-- SIMULATOR STATE MACHINE                           -->
 <!-- ══════════════════════════════════════════════════ -->
 <script>
 try { gsap.registerPlugin(ScrollTrigger); } catch(e) { console.warn('[GSAP] Not loaded:', e.message); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PHASE 9: Zero-Human Checkout Functions
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function startCheckout(plan = 'system') {
+  const clinic = sessionStorage.getItem('qd_clinic') || 'Your Clinic';
+  const lang   = sessionStorage.getItem('qd_lang')   || 'en';
+
+  // Show loading state on whichever button triggered this
+  const btn = document.activeElement;
+  const originalHTML = btn ? btn.innerHTML : '';
+  if (btn && btn.tagName === 'BUTTON') {
+    btn.innerHTML = lang === 'ar' ? '⏳ جاري التحضير...' : '⏳ Preparing your checkout...';
+    btn.disabled = true;
+  }
+
+  try {
+    const response = await fetch('/api/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clinic_name: clinic, plan, lang })
+    });
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+    window.location.href = data.url;
+
+  } catch (e) {
+    console.error('[Checkout]', e);
+    const msg = lang === 'ar'
+      ? 'حدث خطأ. يرجى المحاولة مرة أخرى.'
+      : 'Something went wrong. Please try again.';
+    alert(msg);
+    if (btn && btn.tagName === 'BUTTON') {
+      btn.innerHTML = originalHTML;
+      btn.disabled  = false;
+    }
+  }
+}
+
+async function requestSupport() {
+  const lang  = sessionStorage.getItem('qd_lang')  || 'en';
+  const phone = sessionStorage.getItem('qd_phone') || null;
+
+  const msg = lang === 'ar'
+    ? 'تم استلام طلبك. سيتواصل البوت معك خلال دقيقتين.'
+    : 'Request received. The bot will contact you within 2 minutes.';
+  alert(msg);
+
+  try {
+    await fetch('/api/support-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, issue: 'support_request' })
+    });
+  } catch (e) {
+    console.error('[Support]', e);
+  }
+}
 
 /* ─── Simulator Architecture: Full Logic Parity (bot.js) ──── */
 const MESSAGES = {
@@ -1604,8 +1666,8 @@ gsap.fromTo('.bento-card', { y:40 }, {
         <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6" data-i18n="txt_192">Main benefits</h4>
         <div id="smBenefits" class="grid md:grid-cols-2 gap-4 mb-8">
         </div>
-        <a href="https://wa.me/966570733834" target="_blank" class="inline-flex items-center justify-center gap-2 w-full bg-white text-black py-4 rounded-xl font-bold hover:bg-gray-200 transition text-lg"><span data-i18n="txt_193">Talk about your project</span><span class="text-xl">↗</span>
-        </a>
+        <button onclick="startCheckout('system')" class="inline-flex items-center justify-center gap-2 w-full bg-white text-black py-4 rounded-xl font-bold hover:bg-gray-200 transition text-lg"><span data-i18n="txt_193">Activate Your System</span><span class="text-xl">↗</span>
+        </button>
       </div>
     </div>
   </div>
@@ -2063,7 +2125,7 @@ window.addEventListener('load', () => {
         if(chat){
           const waDiv=document.createElement('div');
           waDiv.className='bs-bubble-bot mb-1.5';
-          waDiv.innerHTML='<a href="https://wa.me/966570733834?text='+encodeURIComponent(personalization.waMessage)+'" target="_blank" class="text-[#25D366] font-bold text-xs underline">'+(bsData.lang==='ar'?'تحدث مع جيك لتفعيل نظامك ←':'Talk to Jake to activate your system ←')+'</a>';
+          waDiv.innerHTML='<button onclick="startCheckout(\'system\')" class="text-[#5EEAD4] font-bold text-xs underline bg-none border-none cursor-pointer p-0">'+(bsData.lang==='ar'?'فعّل نظامك الآن ←':'Activate your system now ←')+'</button>';
           chat.appendChild(waDiv);
         }
         bsFlow='';
@@ -2292,14 +2354,50 @@ window.addEventListener('load', () => {
     const subEl = document.getElementById('checkmateSub');
     const btnEl = document.getElementById('checkmateBtn');
     
+    // Card Elements
+    const gridEl = document.getElementById('checkmateCardsGrid');
+    const c1Title = document.getElementById('cmCard1Title');
+    const c1B1 = document.getElementById('cmC1B1');
+    const c1B2 = document.getElementById('cmC1B2');
+    const c1B3 = document.getElementById('cmC1B3');
+    const c1Btn = document.getElementById('cmCard1Btn');
+    
+    const c2Title = document.getElementById('cmCard2Title');
+    const c2Desc = document.getElementById('cmCard2Desc');
+    const c2Btn = document.getElementById('cmCard2Btn');
+
     if(bsData.lang === 'ar') {
-      titleEl.textContent = `${clinicName} حصدت ${currentRoiTotal.toLocaleString()} ريال في 3 دقائق`;
-      subEl.textContent = `هذا يمثل تقريباً ${(currentRoiTotal * 4).toLocaleString()} ريال كقيمة أسبوعية إضافية.`;
-      btnEl.innerHTML = `تفعيل نظام ${clinicName} الآن <span>→</span>`;
+      titleEl.innerHTML = `${clinicName} حصدت <span class="text-[#5EEAD4]">${currentRoiTotal.toLocaleString()} ريال</span> في 3 دقائق`;
+      subEl.textContent = `التقدير الأسبوعي: ${(currentRoiTotal * 4).toLocaleString()} ريال`;
+      btnEl.textContent = `تفعيل نظام ${clinicName}`;
+      
+      gridEl.style.direction = 'rtl';
+      gridEl.style.textAlign = 'right';
+      c1Title.textContent = "اكتشف القدرات الكاملة";
+      c1B1.textContent = "7 أنواع من العلاجات، توجيه تلقائي";
+      c1B2.textContent = "حجز، تذكير، وإعادة جدولة 24/7";
+      c1B3.textContent = "عربي + إنجليزي، تبديل فوري";
+      c1Btn.innerHTML = "اقرأ جميع الميزات الـ 12 ←";
+      
+      c2Title.textContent = "النظام المتكامل";
+      c2Desc.textContent = "الاستقبال الذكي هو البداية فقط. محرك Growth Swarm يبحث عن المرضى، ولوحة القيادة تتبع الأرباح. كل شيء يتفعل خلال 10 دقائق.";
+      c2Btn.innerHTML = "استكشف النظام المتكامل ←";
     } else {
-      titleEl.textContent = `${clinicName} captured ${currentRoiTotal.toLocaleString()} SAR in bookings in 3 minutes`;
-      subEl.textContent = `This represents approximately ${(currentRoiTotal * 4).toLocaleString()} SAR in weekly value.`;
-      btnEl.innerHTML = `Activate ${clinicName} OS <span>→</span>`;
+      titleEl.innerHTML = `${clinicName} captured <span class="text-[#5EEAD4]">${currentRoiTotal.toLocaleString()} SAR</span> in 3 minutes`;
+      subEl.textContent = `Weekly estimate: ${(currentRoiTotal * 4).toLocaleString()} SAR`;
+      btnEl.textContent = `Activate ${clinicName} OS`;
+      
+      gridEl.style.direction = 'ltr';
+      gridEl.style.textAlign = 'left';
+      c1Title.textContent = "Discover Full Capabilities";
+      c1B1.textContent = "7 treatment types, auto-routed";
+      c1B2.textContent = "Books, reminds, reschedules 24/7";
+      c1B3.textContent = "Arabic + English, instant switching";
+      c1Btn.innerHTML = "Read All 12 Features →";
+      
+      c2Title.textContent = "The Complete Clinic OS";
+      c2Desc.textContent = "The receptionist is just the start. Growth Swarm finds patients. The Dashboard tracks revenue. Everything activates in 10 minutes.";
+      c2Btn.innerHTML = "Explore the Suite →";
     }
     
     modal.classList.remove('hidden');
@@ -2346,9 +2444,9 @@ window.addEventListener('load', () => {
     }
   }
 
-  // WhatsApp Redirect
+  // Checkout redirect (replaces WhatsApp)
   function goToCheckmateWA() {
-    window.open(`https://wa.me/966570733834?text=${encodeURIComponent(personalization.waMessage)}`, '_blank');
+    startCheckout('system');
   }
 
   // Close modals on Escape
@@ -2363,15 +2461,50 @@ window.addEventListener('load', () => {
 
   <!-- MODALS -->
   <!-- Checkmate Modal -->
-  <div id="checkmateModal" class="hidden fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm items-center justify-center p-4" style="opacity: 0; transition: opacity 0.3s ease;">
-    <div class="glass max-w-lg w-full rounded-3xl p-8 relative border border-aqua/30 text-center" onclick="event.stopPropagation()">
+  <div id="checkmateModal" class="hidden fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm items-center justify-center p-4" style="opacity: 0; transition: opacity 0.3s ease;" onclick="closeCheckmateModal()">
+    <div class="glass max-w-4xl w-full rounded-2xl p-8 relative shadow-2xl" onclick="event.stopPropagation()" style="background:#0F172A; border: 1px solid rgba(148,163,184,0.08);">
       <button onclick="closeCheckmateModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
-      <div class="w-16 h-16 mx-auto bg-teal-900/50 border border-teal-500 rounded-2xl flex items-center justify-center text-3xl mb-6">💰</div>
-      <h2 id="checkmateTitle" class="text-2xl md:text-3xl font-black mb-3 text-white">Clinic captured 5000 SAR</h2>
-      <p id="checkmateSub" class="text-gray-400 mb-8 font-medium">This represents approximately weekly value.</p>
       
-      <button onclick="goToCheckmateWA()" id="checkmateBtn" class="w-full bg-gold text-gray-900 py-4 rounded-xl font-black text-lg mb-4 hover:bg-[#b78a5e] transition shadow-[0_0_20px_rgba(212,165,116,0.3)]">Activate OS</button>
-      <button onclick="openDeepDive()" class="text-aqua font-medium text-sm hover:underline">See Full Feature List</button>
+      <!-- Header: Revenue + Primary CTA -->
+      <div class="text-center mb-8 mt-2">
+        <h2 id="checkmateTitle" class="text-3xl font-bold text-white mb-2">
+          Clinic captured <span class="text-[#5EEAD4]">5000 SAR</span> in 3 minutes
+        </h2>
+        <p id="checkmateSub" class="text-[#94A3B8] font-medium">Weekly estimate: 20,600 SAR</p>
+        <button onclick="goToCheckmateWA()" id="checkmateBtn" class="mt-6 inline-block w-full sm:w-auto px-10 py-3.5 bg-[#0D9488] text-white rounded-xl font-bold hover:bg-[#0F766E] transition shadow-lg text-lg">
+          Activate Clinic OS
+        </button>
+      </div>
+
+      <!-- Two Cards -->
+      <div id="checkmateCardsGrid" class="grid md:grid-cols-2 gap-6 text-left">
+        
+        <!-- Card 1: Full Features -->
+        <div class="rounded-xl bg-[rgba(13,148,136,0.05)] border border-[rgba(13,148,136,0.15)] p-6">
+          <h3 id="cmCard1Title" class="text-xl font-semibold text-white mb-3">Discover Full Capabilities</h3>
+          <ul class="space-y-3 text-[#94A3B8] text-sm mb-5">
+            <li class="flex items-center gap-2"><span class="text-[#5EEAD4]">✓</span> <span id="cmC1B1">7 treatment types, auto-routed</span></li>
+            <li class="flex items-center gap-2"><span class="text-[#5EEAD4]">✓</span> <span id="cmC1B2">Books, reminds, reschedules 24/7</span></li>
+            <li class="flex items-center gap-2"><span class="text-[#5EEAD4]">✓</span> <span id="cmC1B3">Arabic + English, instant switching</span></li>
+          </ul>
+          <button onclick="openDeepDive()" id="cmCard1Btn" class="text-[#5EEAD4] font-medium hover:underline flex items-center gap-1 transition">
+            Read All 12 Features →
+          </button>
+        </div>
+
+        <!-- Card 2: The Suite -->
+        <div class="rounded-xl bg-[rgba(212,165,116,0.05)] border border-[rgba(212,165,116,0.15)] p-6">
+          <h3 id="cmCard2Title" class="text-xl font-semibold text-white mb-3">The Complete Clinic OS</h3>
+          <p id="cmCard2Desc" class="text-[#94A3B8] text-sm mb-5 leading-relaxed">
+            The receptionist is just the start. Growth Swarm finds patients. 
+            The Dashboard tracks revenue. Everything activates in 10 minutes.
+          </p>
+          <a href="#services" onclick="closeCheckmateModal()" id="cmCard2Btn" class="text-[#D4A574] font-medium hover:underline flex items-center gap-1 transition">
+            Explore the Suite →
+          </a>
+        </div>
+        
+      </div>
     </div>
   </div>
 

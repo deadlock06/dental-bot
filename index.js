@@ -35,7 +35,86 @@ const dashboardApi = require('./dashboard-api');
 
 app.use('/api/dashboard', dashboardApi);
 
-// Stripe Webhook must be handled BEFORE express.json() for raw body access
+// ─────────────────────────────────────────────
+// Stripe — checkout creation (public) + webhook
+// ─────────────────────────────────────────────
+const { createCheckoutSession } = require('./api/stripe-checkout.js');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+// POST /api/create-checkout — generates a personalised Stripe Checkout URL
+app.post('/api/create-checkout', express.json(), async (req, res) => {
+  const { clinic_name, email, plan, lang } = req.body;
+  try {
+    const session = await createCheckoutSession(
+      clinic_name || 'Your Clinic',
+      email || `guest@onboarding.qudozen.com`,
+      plan || 'system',
+      lang || 'en'
+    );
+    res.json({ url: session.url, session_id: session.session_id });
+  } catch (e) {
+    console.error('[Stripe] Checkout creation failed:', e);
+    res.status(500).json({ error: 'CHECKOUT_FAILED', message: e.message });
+  }
+});
+
+// POST /api/support-request — creates a bot-handled support ticket
+app.post('/api/support-request', express.json(), async (req, res) => {
+  const { phone, issue } = req.body;
+  try {
+    const growthDb = require('./growth/lib/supabase');
+    await growthDb.from('support_requests').insert({
+      phone: phone || 'unknown',
+      issue: issue || 'general',
+      created_at: new Date().toISOString(),
+      resolved: false
+    });
+    console.log(`[Support] Ticket created for ${phone}: ${issue}`);
+  } catch (e) {
+    console.error('[Support] Ticket creation failed:', e.message);
+  }
+  res.json({ received: true });
+});
+
+// POST /webhook/stripe — Stripe fires this on successful payment
+// Must be raw body BEFORE express.json() middleware
+app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (e) {
+    console.error('[Stripe Webhook] Signature verification failed:', e.message);
+    return res.status(400).send(`Webhook Error: ${e.message}`);
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const { clinic_name, plan, lang } = session.metadata || {};
+    const customerEmail = session.customer_email || session.customer_details?.email;
+
+    console.log(`[Stripe Webhook] ✅ Payment confirmed — ${clinic_name} (${plan})`);
+
+    try {
+      const onboarding = require('./growth/onboarding-state-machine.js');
+      await onboarding.startFromPayment({
+        clinic_name: clinic_name || 'Unknown Clinic',
+        email: customerEmail,
+        plan: plan || 'system',
+        lang: lang || 'en',
+        stripe_customer_id: session.customer,
+        stripe_subscription_id: session.subscription
+      });
+    } catch (e) {
+      console.error('[Stripe Webhook] Onboarding trigger failed:', e.message);
+    }
+  }
+
+  res.json({ received: true });
+});
+
+// Legacy growth webhook placeholder (kept for backward-compat)
 app.post('/growth/stripe-webhook', express.raw({ type: 'application/json' }));
 
 app.use(express.json());

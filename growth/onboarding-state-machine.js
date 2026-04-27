@@ -18,32 +18,60 @@ class OnboardingStateMachine {
     this.states = ONBOARDING_STATES;
   }
 
+  // ─── ENTRY POINT: Called by Stripe webhook after payment ───
+  async startFromPayment({ clinic_name, email, plan, lang, stripe_customer_id, stripe_subscription_id, owner_phone }) {
+    console.log(`[Onboarding] 💳 Payment received — Starting onboarding for ${clinic_name}`);
+
+    // Resolve phone from email if not provided (guest format: phone@onboarding.qudozen.com)
+    let phone = owner_phone;
+    if (!phone && email && email.includes('@onboarding.qudozen.com')) {
+      phone = email.split('@')[0];
+    }
+
+    const existing = phone ? await db.getOnboardingByPhone(phone) : null;
+    if (existing) {
+      console.log(`[Onboarding] Existing record found for ${phone} — resuming`);
+      await this.resumeSequence(existing);
+      return;
+    }
+
+    const onboarding = await db.createOnboarding({
+      clinic_name: clinic_name || 'Your Clinic',
+      owner_name: 'Doctor',
+      owner_phone: phone || 'unknown',
+      current_state: this.states.ACTIVATION_REQUESTED,
+      lang: lang || 'en',
+      plan: plan || 'system',
+      stripe_customer_id,
+      stripe_subscription_id,
+      paid: true
+    });
+
+    await this.runDay0(onboarding);
+  }
+
   // ─── ENTRY POINT: Called when bot detects "Activate my trial" ───
   async handleActivation(phone, message, context) {
     const lower = message.toLowerCase();
-    
-    // Intent detection
+
     const activationKeywords = [
       'activate', 'activation', 'تفعيل', 'فعل', 'ابدأ', 'start trial',
       'جرب', 'تجربة', 'اشتراك', 'subscribe', 'احجز النظام'
     ];
-    
+
     const isActivation = activationKeywords.some(k => lower.includes(k));
     if (!isActivation) return { handled: false };
 
-    // Check if already onboarding
     const existing = await db.getOnboardingByPhone(phone);
     if (existing) {
       await this.resumeSequence(existing);
       return { handled: true };
     }
 
-    // Extract clinic name from context or personalization
     const clinicName = context.clinic || 'Your Clinic';
     const ownerName = context.owner || 'Doctor';
     const lang = context.lang || 'ar';
 
-    // Create onboarding record
     const onboarding = await db.createOnboarding({
       clinic_name: clinicName,
       owner_name: ownerName,
@@ -52,10 +80,42 @@ class OnboardingStateMachine {
       lang
     });
 
-    // Trigger Day 0 sequence immediately
     await this.runDay0(onboarding);
-    
     return { handled: true, onboarding_id: onboarding.id };
+  }
+
+  // ─── TRIAL: No credit card required ───
+  async handleTrialRequest(phone, message, context) {
+    const lower = message.toLowerCase();
+    const trialKeywords = ['trial', 'تجربة', 'تجربه', 'start trial', 'ابدأ التجربة', 'free', 'مجاني'];
+
+    if (!trialKeywords.some(k => lower.includes(k))) {
+      return { handled: false };
+    }
+
+    const clinic = context.clinic || 'Your Clinic';
+    const lang = context.lang || 'en';
+
+    const username = `trial@${clinic.toLowerCase().replace(/\s+/g, '')}.qd`;
+    const password = generatePassword(12);
+
+    const m = this.getMessages(lang);
+    await sendWhatsApp(phone, m.trialWelcome(username, password, clinic));
+
+    // Create trial record (expires in 7 days)
+    try {
+      await db.createTrial({
+        phone,
+        clinic_name: clinic,
+        username,
+        password,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      });
+    } catch (e) {
+      console.error('[Onboarding] Trial creation error:', e.message);
+    }
+
+    return { handled: true };
   }
 
   // ─── DAY 0: Welcome + Calendar Request + Credentials + Lead Gift ───
@@ -70,25 +130,25 @@ class OnboardingStateMachine {
     // 2. Request Google Calendar sync
     await sendWhatsApp(owner_phone, m.calendarRequest(clinic_name));
     await this.logMessage(onboarding.id, 0, 'calendar_request', m.calendarRequest(clinic_name));
-    
-    await db.updateOnboarding(onboarding.id, { 
-      current_state: this.states.CALENDAR_PENDING 
+
+    await db.updateOnboarding(onboarding.id, {
+      current_state: this.states.CALENDAR_PENDING
     });
 
     // 3. Generate dashboard credentials
     const username = `admin@${clinic_name.toLowerCase().replace(/\s+/g, '')}.qd`;
-    const password = generatePassword(12); // 12-char random
-    
+    const password = generatePassword(12);
+
     await db.updateOnboarding(onboarding.id, {
       dashboard_username: username,
       dashboard_password: password
     });
 
-    // 4. Send credentials (delayed 2 minutes so they don't feel spammed)
+    // 4. Send credentials (delayed 2 minutes)
     setTimeout(async () => {
       await sendWhatsApp(owner_phone, m.credentials(username, password));
       await this.logMessage(onboarding.id, 0, 'credentials', m.credentials(username, password));
-      await db.updateOnboarding(onboarding.id, { 
+      await db.updateOnboarding(onboarding.id, {
         dashboard_credentials_sent: true,
         current_state: this.states.CREDENTIALS_SENT
       });
@@ -98,7 +158,7 @@ class OnboardingStateMachine {
     setTimeout(async () => {
       const leads = await this.giftLeads(clinic_name, owner_phone, 5);
       await sendWhatsApp(owner_phone, m.leadGift(leads.length));
-      await db.updateOnboarding(onboarding.id, { 
+      await db.updateOnboarding(onboarding.id, {
         leads_gifted: leads.length,
         current_state: this.states.LIVE
       });
@@ -111,71 +171,61 @@ class OnboardingStateMachine {
   // ─── DAY 1: Calendar follow-up ───
   async runDay1(onboarding) {
     const m = this.getMessages(onboarding.lang);
-    
+
     if (!onboarding.calendar_connected) {
       await sendWhatsApp(onboarding.owner_phone, m.day1FollowUp(onboarding.clinic_name));
       await this.logMessage(onboarding.id, 1, 'followup', m.day1FollowUp(onboarding.clinic_name));
     }
-    
-    await db.updateOnboarding(onboarding.id, { 
-      current_state: this.states.FOLLOWUP_DAY1 
+
+    await db.updateOnboarding(onboarding.id, {
+      current_state: this.states.FOLLOWUP_DAY1
     });
-    
-    // Schedule Day 3
+
     await this.scheduleCron(onboarding.id, 3, 'checkin');
   }
 
   // ─── DAY 3: Check-in ───
   async runDay3(onboarding) {
     const m = this.getMessages(onboarding.lang);
-    
+
     await sendWhatsApp(onboarding.owner_phone, m.day3CheckIn(onboarding.clinic_name));
     await this.logMessage(onboarding.id, 3, 'checkin', m.day3CheckIn(onboarding.clinic_name));
-    
-    await db.updateOnboarding(onboarding.id, { 
-      current_state: this.states.CHECKIN_DAY3 
+
+    await db.updateOnboarding(onboarding.id, {
+      current_state: this.states.CHECKIN_DAY3
     });
-    
-    // Schedule Day 7
+
     await this.scheduleCron(onboarding.id, 7, 'review');
   }
 
-  // ─── DAY 7: Human review call ───
+  // ─── DAY 7: Autonomous bot review — NO human notification ───
   async runDay7(onboarding) {
     const m = this.getMessages(onboarding.lang);
-    
-    // Notify Jake
-    await this.notifyJake(onboarding);
-    
+
+    // Bot handles review, not human
     await sendWhatsApp(onboarding.owner_phone, m.day7Review());
     await this.logMessage(onboarding.id, 7, 'review_call', m.day7Review());
-    
-    await db.updateOnboarding(onboarding.id, { 
-      current_state: this.states.REVIEW_DAY7,
-      jake_notified: true
+
+    await db.updateOnboarding(onboarding.id, {
+      current_state: this.states.REVIEW_DAY7
     });
+
+    // Bot will handle their reply in next inbound:
+    // "good/جيد" → asks for Google review link
+    // "help/مساعدة" → troubleshooting flow
+    // "call/مكالمة" → sends Calendly self-scheduling link
+    // "upgrade/ترقية" → shows advanced features
+    console.log(`[Onboarding] Day 7 autonomous review sent to ${onboarding.owner_phone} (no human alert)`);
   }
 
   // ─── GROWTH SWARM: Gift 5 leads ───
   async giftLeads(clinicName, phone, count) {
-    // Find leads similar to the client's industry/area
-    // For now, return 5 high-confidence leads from the database
     const leads = await db.getRandomHotLeads(count);
-    
     return leads || [];
-  }
-
-  // ─── NOTIFY JAKE ───
-  async notifyJake(onboarding) {
-    const adminPhone = process.env.ADMIN_PHONE;
-    if (!adminPhone) return;
-    const msg = `🔔 ONBOARDING REVIEW NEEDED\nClinic: ${onboarding.clinic_name}\nOwner: ${onboarding.owner_name}\nPhone: ${onboarding.owner_phone}\nStatus: Day 7\nDashboard: ${onboarding.dashboard_username}\nLeads gifted: ${onboarding.leads_gifted}`;
-    await sendWhatsApp(adminPhone, msg);
   }
 
   // ─── CRON SCHEDULER ───
   async scheduleCron(onboardingId, day, type) {
-    // This will be picked up by cron/jobs/onboarding.js
     await db.createCronJob({
       onboarding_id: onboardingId,
       run_at: new Date(Date.now() + day * 24 * 60 * 60 * 1000),
@@ -193,7 +243,9 @@ class OnboardingStateMachine {
         leadGift: (count) => `🎁 Success Gift: I've found ${count} high-intent leads in your area. They're visible in your dashboard under "Growth Swarm".`,
         day1FollowUp: (clinic) => `Hi! Quick check — did you connect ${clinic}'s Google Calendar? Without it, the bot can't lock slots. Reply "done" when ready or "help" for assistance.`,
         day3CheckIn: (clinic) => `How is ${clinic} doing with the new system? Any bookings yet? If something feels off, reply here and I'll fix it.`,
-        day7Review: () => `You've been live for a week! I'd love to schedule a 10-minute call to review your results and optimize the setup. When works best for you this week?`
+        day7Review: () => `🎉 You've been live for a week!\n\nHow is everything working?\n\nReply:\n• *GOOD* — I'll send your Google review link\n• *HELP* — I'll troubleshoot any issue now\n• *CALL* — I'll send you a self-scheduling link\n• *UPGRADE* — I'll show you advanced features`,
+        trialWelcome: (user, pass, clinic) => `🎉 Your 7-day free trial of ${clinic} OS is now LIVE!\n\n🔐 Dashboard Access:\nUsername: ${user}\nPassword: ${pass}\n\nLogin: https://qudozen.com/dashboard\n\nYour bot is active. Patients can message right now.\n\nAfter 7 days, subscribe to keep it running:\nhttps://qudozen.com/#pricing`,
+        trialOffer: (clinic) => `No credit card needed! Start your 7-day free trial of ${clinic} OS now.\n\nReply *START TRIAL* and I'll activate everything instantly.`
       },
       ar: {
         welcome: (owner, clinic) => `أهلاً بك في Qudozen، د. ${owner}! 🎉\n\nنحن نجهز نظام ${clinic}. أحتاج دقيقتين لربط التقويم وإرسال لوحة التحكم.`,
@@ -202,7 +254,9 @@ class OnboardingStateMachine {
         leadGift: (count) => `🎁 هدية النجاح: وجدت ${count} عميل محتمل في منطقتك. تجدهم في لوحة التحكم.`,
         day1FollowUp: (clinic) => `تحقق سريع — هل ربطت تقويم ${clinic}؟ بدونه لا يستطيع البوت حجز المواعيد. رد "تم" أو "مساعدة".`,
         day3CheckIn: (clinic) => `كيف يعمل ${clinic} مع النظام الجديد؟ هل هناك حجوزات؟ إذا واجهتك مشكلة، رد هنا.`,
-        day7Review: () => `مر أسبوع على التشغيل! أود تحديد مكالمة 10 دقائق لمراجعة النتائج. متى يناسبك هذا الأسبوع؟`
+        day7Review: () => `🎉 مر أسبوع على التشغيل!\n\nكيف يعمل كل شيء؟\n\nرد بـ:\n• *جيد* — سأرسل لك رابط تقييم Google\n• *مساعدة* — سأحل أي مشكلة الآن\n• *مكالمة* — سأرسل لك رابط جدولة ذاتية\n• *ترقية* — سأريك الميزات المتقدمة`,
+        trialWelcome: (user, pass, clinic) => `🎉 تجربتك المجانية لمدة 7 أيام من نظام ${clinic} أصبحت نشطة الآن!\n\n🔐 بيانات الدخول:\nالمستخدم: ${user}\nكلمة المرور: ${pass}\n\nالرابط: https://qudozen.com/dashboard\n\nبوتك نشط. المرضى يمكنهم المراسلة الآن.\n\nبعد 7 أيام، اشترك للاستمرار:\nhttps://qudozen.com/#pricing`,
+        trialOffer: (clinic) => `لا حاجة لبطاقة ائتمان! ابدأ تجربتك المجانية لمدة 7 أيام لنظام ${clinic} الآن.\n\nرد بـ *ابدأ التجربة* وسأفعل كل شيء فوراً.`
       }
     };
     return msgs[lang] || msgs.en;
@@ -213,8 +267,10 @@ class OnboardingStateMachine {
   }
 
   async resumeSequence(existing) {
-    // For now, simple acknowledge. Logic to handle pending states can be added.
-    return;
+    // Acknowledge and optionally nudge to the next step
+    const m = this.getMessages(existing.lang || 'en');
+    const state = existing.current_state;
+    console.log(`[Onboarding] Resuming ${existing.clinic_name} at state: ${state}`);
   }
 }
 
