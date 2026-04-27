@@ -884,10 +884,10 @@ function closeModal() {
               </div>
             </div>
 
-            <a href="#?text=أريد%20تفعيل%20لوحة%20تحكمي%20الخاصة" target="_blank"
+            <button onclick="window.qdChat.open('activate')"
                class="mt-6 w-full block bg-gold text-gray-900 py-3.5 rounded-xl font-black text-center hover:shadow-[0_0_20px_rgba(212,165,116,0.3)] transition text-sm">
                تفعيل النظام الخاص بك →
-            </a>
+            </button>
           </div>
 
           <!-- Chat CTA (shown after completion) -->
@@ -899,11 +899,11 @@ function closeModal() {
               <div class="flex-1">
                 <div class="text-sm font-bold text-white mb-1">محاكاتك مكتملة 🎉</div>
                 <p class="text-xs text-gray-400 mb-3 leading-relaxed">هذا بالضبط ما سيحدث في عملك. جاهز لتفعيل نظامك الخاص؟</p>
-                <a href="#?text=أهلاً%20جيك،%20جربت%20المحاكي%20وأريد%20تفعيل%20النظام%20لعيادتي." target="_blank"
+                <button onclick="window.qdChat.open('trial')"
                    class="inline-flex items-center gap-2 bg-teal-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-teal-600 transition">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                   تحدث مع جيك الآن
-                </a>
+                </button>
               </div>
             </div>
           </div>
