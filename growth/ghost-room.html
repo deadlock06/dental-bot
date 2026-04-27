@@ -86,7 +86,7 @@
         <span>▶ ابدأ المحاكاة الحية الآن</span>
         <span class="text-[10px] font-normal text-teal-100 mt-2 tracking-widest opacity-80">(تجربة فعلية كاملة)</span>
       </a>
-      <button onclick="parent.startCheckout ? parent.startCheckout('system') : window.location.href='/#pricing'" class="flex-1 bg-gold text-gray-900 px-8 py-5 rounded-2xl font-black text-lg hover:scale-105 transition duration-300 shadow-[0_0_30px_rgba(212,165,116,0.3)] border border-gold/50 flex flex-col items-center">
+      <button onclick="try { parent.qdChat.toggle(); } catch(e) { window.location.href='/#pricing'; }" class="flex-1 bg-gold text-gray-900 px-8 py-5 rounded-2xl font-black text-lg hover:scale-105 transition duration-300 shadow-[0_0_30px_rgba(212,165,116,0.3)] border border-gold/50 flex flex-col items-center">
         <span>💎 تفعيل النظام فوراً</span>
         <span class="text-[10px] font-normal text-gray-800 mt-2 tracking-widest opacity-80">(بدون بشري)</span>
       </button>
