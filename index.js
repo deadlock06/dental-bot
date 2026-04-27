@@ -136,7 +136,7 @@ app.post('/api/chat', async (req, res) => {
     return res.json({
       reply: isArabic 
         ? 'أنا هنا لمساعدتك! يمكنني:\n• عرض النظام\n• شرح الأسعار\n• تفعيل تجربتك المجانية\n\nماذا تفضل؟'
-        : 'I\\'m here to help! I can:\n• Show you a demo\n• Explain pricing\n• Activate your free trial\n\nWhat would you like?',
+        : 'I\'m here to help! I can:\n• Show you a demo\n• Explain pricing\n• Activate your free trial\n\nWhat would you like?',
       buttons: [
         { text: isArabic ? 'عرض حي' : 'Live Demo', action: 'demo' },
         { text: isArabic ? 'الأسعار' : 'Pricing', action: 'pricing' },
