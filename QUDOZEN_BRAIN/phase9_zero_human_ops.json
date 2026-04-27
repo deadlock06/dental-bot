@@ -1,0 +1,77 @@
+{
+  "step_number": 21,
+  "step_name": "Phase 9: Zero-Human Autonomous Sales & Operations",
+  "timestamp_completed": "2026-04-27T00:30:18Z",
+  "git_commit": "842410a",
+  "files_created": [
+    "api/stripe-checkout.js"
+  ],
+  "files_modified": [
+    "index.js",
+    "growth/swarm/reply-classifier.js",
+    "growth/onboarding-state-machine.js",
+    "public/index.html",
+    "growth/ghost-room.html",
+    ".env (local only — gitignored)"
+  ],
+  "files_deleted": [],
+  "features_added": [
+    "Stripe subscription checkout (USD, monthly) — awareness $80, system $133",
+    "Autonomous payment confirmation webhook (/webhook/stripe)",
+    "In-chat simulator (WhatsApp-native 8-message demo + checkout close)",
+    "Self-checkout from hot lead detection (no human alert)",
+    "Trial activation without credit card (7-day expiry)",
+    "Autonomous Day 7 review (bot asks for feedback — notifyJake removed)",
+    "Bot-handled support ticket system (/api/support-request)",
+    "Bilingual checkout flows (EN/AR)",
+    "Zero WhatsApp number exposure in production code",
+    "Lazy Stripe initialiser (module loads without env var)",
+    "Pricing intent handler now sends Stripe link instead of WA link"
+  ],
+  "ui_upgrades": [
+    "All 6 CTAs in pricing + Jake + footer route to Stripe",
+    "Floating chat widget converted from WA to checkout trigger",
+    "Loading states on all checkout buttons",
+    "Ghost room activate CTA triggers parent.startCheckout()",
+    "Bento simulator post-booking CTA is now a checkout button",
+    "goToCheckmateWA() redirected to startCheckout()"
+  ],
+  "issues_found": [
+    "stripe package initialised at module load — fixed with lazy getStripe()"
+  ],
+  "fixes_applied": [
+    "Removed notifyJake from onboarding-state-machine.js",
+    "Replaced human handoff in reply-classifier with Stripe checkout",
+    "Removed 966570733834 from all production JS and HTML files",
+    "ADMIN_PHONE alert removed from hot lead handler",
+    "Lazy Stripe init prevents crash when dotenv not yet loaded"
+  ],
+  "business_model": {
+    "acquisition": "Automated (Growth Swarm)",
+    "qualification": "AI classifier",
+    "demo": "In-chat WhatsApp simulation (8 messages)",
+    "closing": "Stripe self-checkout (no human)",
+    "onboarding": "7-day autonomous sequence (startFromPayment)",
+    "retention": "Operator dashboard + bot support tickets",
+    "human_touch": "NONE"
+  },
+  "stripe_setup_required": {
+    "STRIPE_SECRET_KEY": "Set in Render dashboard (sk_live_...)",
+    "STRIPE_WEBHOOK_SECRET": "Set in Render dashboard (whsec_...)",
+    "STRIPE_PUBLISHABLE_KEY": "Set in Render dashboard if needed on frontend",
+    "webhook_url": "https://your-render-url.onrender.com/webhook/stripe",
+    "webhook_events": ["checkout.session.completed"]
+  },
+  "verification_checklist": {
+    "1_checkout_creation": "POST /api/create-checkout with test clinic → returns Stripe URL",
+    "2_payment_webhook": "Simulate checkout.session.completed → triggers onboarding",
+    "3_hot_lead": "Send 'I am interested' to growth number → receives checkout link, no human alert",
+    "4_simulator": "Send 'demo' to growth number → 8-message in-chat demo, then checkout",
+    "5_trial": "Send 'TRIAL' to growth number → receives credentials, 7-day expiry",
+    "6_no_jake_number": "Search codebase for 966570733834 in *.js *.html → zero results",
+    "7_day7": "Fast-forward onboarding to Day 7 → bot asks for feedback, no human alert",
+    "8_support": "POST /api/support-request → creates ticket, bot responds",
+    "9_arabic": "Set lang=ar, run full flow → all messages in Arabic",
+    "10_error": "Disconnect Stripe, try checkout → graceful error, retry button"
+  }
+}

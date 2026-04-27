@@ -272,6 +272,21 @@ class OnboardingStateMachine {
     const state = existing.current_state;
     console.log(`[Onboarding] Resuming ${existing.clinic_name} at state: ${state}`);
   }
+  // ─── WEB CHAT: Called when trial is started from the website ───
+  async startFromWebChat({ clinic_name, username, password, trial_id, lang, owner_phone }) {
+    console.log(`[Onboarding] 🌐 Trial started from web chat for ${clinic_name}`);
+    const m = this.getMessages(lang || 'en');
+
+    // If we have a phone number, send the welcome credentials
+    if (owner_phone) {
+      await sendWhatsApp(owner_phone, m.trialWelcome(username, password, clinic_name));
+    }
+    
+    // Log the event if onboarding record exists
+    if (trial_id) {
+      await this.logMessage(trial_id, 0, 'web_trial_start', `Trial activated for ${clinic_name} via web chat.`);
+    }
+  }
 }
 
 module.exports = new OnboardingStateMachine();

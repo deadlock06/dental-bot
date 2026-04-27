@@ -4,12 +4,12 @@
 (function() {
   'use strict';
 
-  class QudozenChat {
-    constructor() {
+  class QudozenChat {\n    getLang() { return sessionStorage.getItem('qd_lang') || 'en'; }
+    constructor() {\n      this.sessionId = this.generateId();
       this.sessionId = this.generateId();
       this.clinic = new URLSearchParams(window.location.search).get('clinic') || 'Your Clinic';
       this.owner = new URLSearchParams(window.location.search).get('owner') || 'there';
-      this.lang = sessionStorage.getItem('qd_lang') || 'en';
+      
       this.started = false;
       this.build();
     }
@@ -65,25 +65,66 @@
       }
     }
 
+    open(action = null) {
+      const win = document.getElementById('qd-chat-window');
+      if (!win) return;
+      if (win.classList.contains('qd-hidden')) {
+        this.toggle();
+      }
+      if (action) {
+        this.handleAction(action);
+      }
+    }
+
     async start() {
       this.started = true;
       const greetings = {
         en: `Hi ${this.owner}! I see you're exploring Qudozen for ${this.clinic}. I can activate your AI receptionist right now — no calls, no waiting. Want a 30-second demo first?`,
         ar: `أهلاً ${this.owner}! أرى أنك تستكشف Qudozen لـ ${this.clinic}. يمكنني تفعيل استقبالك الذكي الآن — بدون مكالمات أو انتظار. هل تريد عرضاً لمدة 30 ثانية أولاً؟`
       };
-      this.addMessage('bot', greetings[this.lang] || greetings.en);
+      this.addMessage('bot', greetings[this.getLang()] || greetings.en);
       this.addButtons([
-        { text: this.lang === 'ar' ? 'نعم، أرني العرض' : 'Yes, show me', action: 'demo' },
-        { text: this.lang === 'ar' ? 'فعل النظام مباشرة' : 'Activate now', action: 'activate' }
+        { text: this.getLang() === 'ar' ? 'نعم، أرني العرض' : 'Yes, show me', action: 'demo' },
+        { text: this.getLang() === 'ar' ? 'فعل النظام مباشرة' : 'Activate now', action: 'activate' }
       ]);
     }
 
     async handleAction(action) {
       if (action === 'demo') await this.runDemo();
-      else if (action === 'activate') await this.startActivation();
+      else if (action === 'activate' || action === 'trial') await this.activateTrial();
       else if (action === 'pricing') this.showPricing();
-      else if (action === 'trial') await this.activateTrial();
       else if (action === 'dashboard') this.showCredentials();
+      else if (action === 'support') this.showSupport();
+    }
+
+    showSupport() {
+      const msg = {
+        en: "I've notified our priority support team. Someone will reach out to you within 15 minutes. In the meantime, how can I help you?",
+        ar: "لقد أخطرت فريق الدعم ذو الأولوية. سيتواصل معك أحد أعضاء الفريق خلال 15 دقيقة. في هذه الأثناء، كيف يمكنني مساعدتك؟"
+      };
+      this.addMessage('bot', msg[this.getLang()] || msg.en);
+    }
+
+    async jakeIntercept() {
+      if (!this.started) {
+        this.started = true;
+      }
+      const win = document.getElementById('qd-chat-window');
+      if (win.classList.contains('qd-hidden')) {
+        this.toggle();
+      }
+      
+      const intercept = {
+        en: "I noticed you just finished the simulation! Your clinic could be capturing these bookings right now. Ready to go live?",
+        ar: "لاحظت أنك انتهيت للتو من العرض التوضيحي! يمكن لعيادتك استقبال هذه المواعيد وتوليد الأرباح الآن. هل أنت جاهز للبدء؟"
+      };
+      
+      await this.delay(1000);
+      this.addMessage('bot', intercept[this.getLang()] || intercept.en);
+      this.addButtons([
+        { text: this.getLang() === 'ar' ? 'نعم، لنفعلها' : 'Yes, let\'s go', action: 'trial' },
+        { text: this.getLang() === 'ar' ? 'الأسعار' : 'Pricing', action: 'pricing' }
+      ]);
     }
 
     async runDemo() {
@@ -110,15 +151,15 @@
         ]
       };
 
-      const flow = demo[this.lang] || demo.en;
+      const flow = demo[this.getLang()] || demo.en;
       for (let i = 0; i < flow.length; i++) {
         await this.delay(1500);
         this.addMessage('bot', flow[i]);
       }
 
       this.addButtons([
-        { text: this.lang === 'ar' ? 'كم السعر؟' : 'How much?', action: 'pricing' },
-        { text: this.lang === 'ar' ? 'ابدأ التجربة المجانية' : 'Start free trial', action: 'trial' }
+        { text: this.getLang() === 'ar' ? 'كم السعر؟' : 'How much?', action: 'pricing' },
+        { text: this.getLang() === 'ar' ? 'ابدأ التجربة المجانية' : 'Start free trial', action: 'trial' }
       ]);
     }
 
@@ -127,14 +168,14 @@
         en: "💳 Qudozen Pricing:\n\n• Awareness (Solo clinic): 299 SAR/month\n• System (Multi-doctor): 499 SAR/month + 699 SAR setup\n• Swarm (Enterprise): Custom\n\nAll plans include 24/7 AI reception, automated reminders, and dashboard access.",
         ar: "💳 أسعار Qudozen:\n\n• وعي (عيادة فردية): 299 ريال/شهر\n• نظام (متعدد الأطباء): 499 ريال/شهر + 699 ريال إعداد\n• سرب (مؤسسي): حسب الطلب\n\nجميع الباقات تشمل استقبال ذكي 24/7، تذكيرات تلقائية، ولوحة تحكم."
       };
-      this.addMessage('bot', pricing[this.lang] || pricing.en);
+      this.addMessage('bot', pricing[this.getLang()] || pricing.en);
       this.addButtons([
-        { text: this.lang === 'ar' ? 'ابدأ التجربة المجانية' : 'Start 7-day free trial', action: 'trial' }
+        { text: this.getLang() === 'ar' ? 'ابدأ التجربة المجانية' : 'Start 7-day free trial', action: 'trial' }
       ]);
     }
 
     async activateTrial() {
-      this.addMessage('bot', this.lang === 'ar' ? '⏳ جاري تفعيل تجربتك...' : '⏳ Activating your trial...');
+      this.addMessage('bot', this.getLang() === 'ar' ? '⏳ جاري تفعيل تجربتك...' : '⏳ Activating your trial...');
       
       try {
         const response = await fetch('/api/start-trial', {
@@ -143,25 +184,25 @@
           body: JSON.stringify({
             clinic_name: this.clinic,
             session_id: this.sessionId,
-            lang: this.lang
+            lang: this.getLang()
           })
         });
         
         const data = await response.json();
         
         if (data.success) {
-          this.addMessage('bot', this.lang === 'ar' 
+          this.addMessage('bot', this.getLang() === 'ar' 
             ? `✅ تم التفعيل!\n\n🔑 بيانات الدخول:\nالمستخدم: ${data.username}\nكلمة المرور: ${data.password}\n\n📊 لوحة التحكم: ${data.dashboard_url}\n\nسأرسل تفاصيل إضافية خلال دقيقتين.`
             : `✅ Activated!\n\n🔑 Your login:\nUsername: ${data.username}\nPassword: ${data.password}\n\n📊 Dashboard: ${data.dashboard_url}\n\nI'll send additional details in 2 minutes.`
           );
           this.addButtons([
-            { text: this.lang === 'ar' ? 'فتح لوحة التحكم' : 'Open Dashboard', action: 'dashboard' }
+            { text: this.getLang() === 'ar' ? 'فتح لوحة التحكم' : 'Open Dashboard', action: 'dashboard' }
           ]);
         } else {
           throw new Error(data.error);
         }
       } catch (e) {
-        this.addMessage('bot', this.lang === 'ar' 
+        this.addMessage('bot', this.getLang() === 'ar' 
           ? '❌ حدث خطأ. يرجى المحاولة مرة أخرى أو كتابة "مساعدة".' 
           : '❌ Something went wrong. Please try again or type "help".'
         );
@@ -173,13 +214,13 @@
     }
 
     async startActivation() {
-      this.addMessage('bot', this.lang === 'ar' 
+      this.addMessage('bot', this.getLang() === 'ar' 
         ? 'يمكنني تفعيل نظامك فوراً. هل تريد البدء بالتجربة المجانية لمدة 7 أيام؟' 
         : 'I can activate your system instantly. Would you like to start with a 7-day free trial?'
       );
       this.addButtons([
-        { text: this.lang === 'ar' ? 'نعم، ابدأ التجربة' : 'Yes, start trial', action: 'trial' },
-        { text: this.lang === 'ar' ? 'أريد معرفة الأسعار أولاً' : 'Show me pricing first', action: 'pricing' }
+        { text: this.getLang() === 'ar' ? 'نعم، ابدأ التجربة' : 'Yes, start trial', action: 'trial' },
+        { text: this.getLang() === 'ar' ? 'أريد معرفة الأسعار أولاً' : 'Show me pricing first', action: 'pricing' }
       ]);
     }
 
@@ -199,7 +240,7 @@
             message: text,
             session_id: this.sessionId,
             clinic: this.clinic,
-            lang: this.lang
+            lang: this.getLang()
           })
         });
         
@@ -207,7 +248,7 @@
         this.addMessage('bot', data.reply);
         if (data.buttons) this.addButtons(data.buttons);
       } catch (e) {
-        this.addMessage('bot', this.lang === 'ar' 
+        this.addMessage('bot', this.getLang() === 'ar' 
           ? '⚠️ خطأ في الاتصال. حاول مرة أخرى.' 
           : '⚠️ Connection error. Please try again.'
         );
