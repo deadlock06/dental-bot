@@ -7,9 +7,5 @@ echo "🚀 Starting build process..."
 echo "📦 Installing root dependencies..."
 npm install
 
-# 2. Build the dashboard
-echo "🖥️ Building dashboard..."
-npm install --prefix dashboard
-npm run build --prefix dashboard
 
 echo "✅ Build complete!"
