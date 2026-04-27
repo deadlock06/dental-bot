@@ -1008,39 +1008,25 @@ try { gsap.registerPlugin(ScrollTrigger); } catch(e) { console.warn('[GSAP] Not 
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function startCheckout(plan = 'system') {
-  const clinic = sessionStorage.getItem('qd_clinic') || 'Your Clinic';
-  const lang   = sessionStorage.getItem('qd_lang')   || 'en';
-
-  // Show loading state on whichever button triggered this
+  // Skipping Stripe temporarily
+  const lang = sessionStorage.getItem('qd_lang') || 'en';
+  const phone = '966570733834'; // Autonomous bot number
+  const msg = lang === 'ar' ? 'أريد تفعيل النظام لمنشأتي' : 'I want to activate the system for my clinic';
+  
   const btn = document.activeElement;
   const originalHTML = btn ? btn.innerHTML : '';
   if (btn && btn.tagName === 'BUTTON') {
-    btn.innerHTML = lang === 'ar' ? '⏳ جاري التحضير...' : '⏳ Preparing your checkout...';
+    btn.innerHTML = lang === 'ar' ? '⏳ جاري التحويل...' : '⏳ Redirecting to Setup...';
     btn.disabled = true;
   }
 
-  try {
-    const response = await fetch('/api/create-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clinic_name: clinic, plan, lang })
-    });
-
-    const data = await response.json();
-    if (data.error) throw new Error(data.error);
-    window.location.href = data.url;
-
-  } catch (e) {
-    console.error('[Checkout]', e);
-    const msg = lang === 'ar'
-      ? 'حدث خطأ. يرجى المحاولة مرة أخرى.'
-      : 'Something went wrong. Please try again.';
-    alert(msg);
+  setTimeout(() => {
+    window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
     if (btn && btn.tagName === 'BUTTON') {
       btn.innerHTML = originalHTML;
-      btn.disabled  = false;
+      btn.disabled = false;
     }
-  }
+  }, 800);
 }
 
 async function requestSupport() {
