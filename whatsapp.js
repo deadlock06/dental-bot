@@ -1,6 +1,16 @@
 const twilio = require('twilio');
 
+// Internal storage for web-based chat responses (Sandbox/Simulator mode)
+const webResponses = new Map();
+
+
 async function sendMessage(to, text) {
+  if (to.startsWith('web_')) {
+    console.log('[WhatsApp] Intercepting web response for:', to);
+    if (!webResponses.has(to)) webResponses.set(to, []);
+    webResponses.get(to).push({ type: 'text', content: text });
+    return;
+  }
   try {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken  = process.env.TWILIO_AUTH_TOKEN;
@@ -20,13 +30,35 @@ async function sendMessage(to, text) {
   }
 }
 
+
 // ─────────────────────────────────────────────
 // Interactive list message (tap-to-select menus)
 // Falls back to plain sendMessage if Twilio rejects it.
 // sections format: [{ title, rows: [{ id, title, description }] }]
 // ─────────────────────────────────────────────
 async function sendInteractiveList(to, header, body, buttonText, sections, fallbackText) {
+  if (to.startsWith('web_')) {
+    console.log('[WhatsApp] Intercepting web interactive list for:', to);
+    if (!webResponses.has(to)) webResponses.set(to, []);
+    
+    // Convert interactive list to structured web buttons
+    const buttons = [];
+    sections.forEach(s => {
+      s.rows.forEach(r => {
+        buttons.push({ id: r.id, text: r.title, description: r.description });
+      });
+    });
+
+    webResponses.get(to).push({ 
+      type: 'interactive', 
+      header, 
+      body, 
+      buttons 
+    });
+    return;
+  }
   console.log('[WhatsApp] Sending interactive menu to:', to);
+
   try {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken  = process.env.TWILIO_AUTH_TOKEN;
@@ -314,6 +346,12 @@ async function sendButtonMessage(to, body, buttons, fallbackText) {
   }
 }
 
+function getWebResponses(to) {
+  const responses = webResponses.get(to) || [];
+  webResponses.delete(to); // clear after reading
+  return responses;
+}
+
 module.exports = {
   sendMessage,
   sendInteractiveList,
@@ -321,5 +359,7 @@ module.exports = {
   sendDoctorMenu,
   sendTreatmentMenu,
   sendTimeSlotMenu,
-  sendButtonMessage
+  sendButtonMessage,
+  getWebResponses
 };
+

@@ -1,5 +1,5 @@
 const { getPatient, insertPatient, savePatient, saveAppointment, getAppointment, updateAppointment, checkDuplicateBooking } = require('./db');
-const { sendMessage, sendMainMenu, sendTreatmentMenu, sendDoctorMenu, sendTimeSlotMenu, sendInteractiveList } = require('./whatsapp');
+const whatsapp = require('./whatsapp');
 const { detectIntent, extractDate, extractTimeSlot } = require('./ai');
 const { withMonitor, validateFlowState, logError } = require('./monitor');
 const { DateTime } = require('luxon');

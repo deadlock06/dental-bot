@@ -102,60 +102,40 @@ app.post('/api/start-trial', async (req, res) => {
   }
 });
 
-// General chat handler
+// General chat handler (Unified Logic)
 app.post('/api/chat', async (req, res) => {
   const { message, session_id, clinic, lang } = req.body;
   
-  if (!message) {
-    return res.status(400).json({ error: 'NO_MESSAGE' });
+  if (!message || !session_id) {
+    return res.status(400).json({ error: 'MISSING_DATA' });
   }
 
-  const lower = message.toLowerCase().trim();
-  const isArabic = lang === 'ar';
+  const phone = `web_${session_id}`;
+  const bot = require('./bot.js');
+  const whatsapp = require('./whatsapp.js');
 
-  // Intent detection
-  if (lower.match(/price|cost|pricing|how much|سعر|تكلفة|بكم|كم/)) {
-    return res.json({
-      reply: isArabic 
-        ? '💳 أسعار Qudozen:\n\n• وعي (فردي): 299 ريال/شهر\n• نظام (متعدد): 499 ريال/شهر + 699 إعداد\n• سرب: حسب الطلب\n\nجميع الباقات تشمل استقبال 24/7 ولوحة تحكم.'
-        : '💳 Qudozen Pricing:\n\n• Awareness (Solo): 299 SAR/month\n• System (Multi-doctor): 499 SAR/month + 699 SAR setup\n• Swarm (Enterprise): Custom\n\nAll plans include 24/7 reception and dashboard.',
-      buttons: [
-        { text: isArabic ? 'ابدأ التجربة' : 'Start Free Trial', action: 'trial' }
-      ]
-    });
+  try {
+    // 1. Process message through production bot logic
+    await bot.handleMessage(phone, message, clinic || {});
+
+    // 2. Fetch the responses that were intercepted by the web-aware whatsapp module
+    const responses = whatsapp.getWebResponses(phone);
+
+    // 3. Return the first response (or all if the frontend supports it)
+    if (responses.length > 0) {
+      const main = responses[0];
+      // Map interactive list to the expected buttons format if needed
+      if (main.type === 'interactive') {
+        main.buttons = main.buttons.map(b => ({ text: b.text, action: b.id }));
+      }
+      res.json(main);
+    } else {
+      res.json({ reply: lang === 'ar' ? 'سأرد عليك قريباً!' : 'I will respond soon!' });
+    }
+  } catch (e) {
+    console.error('Unified Chat Error:', e);
+    res.status(500).json({ error: 'BOT_ERROR', message: e.message });
   }
-
-  if (lower.match(/demo|try|show|see|work|عرض|جرب|أشوف|كيف/)) {
-    return res.json({
-      reply: isArabic ? 'سأبدأ العرض الحي الآن...' : 'Starting live demo now...',
-      action: 'demo'
-    });
-  }
-
-  if (lower.match(/help|support|assist|مساعدة|دعم/)) {
-    return res.json({
-      reply: isArabic 
-        ? 'أنا هنا لمساعدتك! يمكنني:\n• عرض النظام\n• شرح الأسعار\n• تفعيل تجربتك المجانية\n\nماذا تفضل؟'
-        : 'I\'m here to help! I can:\n• Show you a demo\n• Explain pricing\n• Activate your free trial\n\nWhat would you like?',
-      buttons: [
-        { text: isArabic ? 'عرض حي' : 'Live Demo', action: 'demo' },
-        { text: isArabic ? 'الأسعار' : 'Pricing', action: 'pricing' },
-        { text: isArabic ? 'تجربة مجانية' : 'Free Trial', action: 'trial' }
-      ]
-    });
-  }
-
-  // Default response
-  res.json({
-    reply: isArabic 
-      ? 'أفهم. هل تريد عرضاً للنظام، أو معرفة الأسعار، أو تفعيل التجربة المجانية؟'
-      : 'I understand. Would you like a demo, pricing details, or to start your free trial?',
-    buttons: [
-      { text: isArabic ? 'عرض حي' : 'Live Demo', action: 'demo' },
-      { text: isArabic ? 'الأسعار' : 'Pricing', action: 'pricing' },
-      { text: isArabic ? 'تجربة مجانية' : 'Free Trial', action: 'trial' }
-    ]
-  });
 });
 
 // ─────────────────────────────────────────────
