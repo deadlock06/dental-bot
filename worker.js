@@ -159,7 +159,20 @@ cron.schedule('30 5 * * *', async () => {
   }
 });
 
+// 9. Trial Expiration - Daily at Midnight UTC
+cron.schedule('0 0 * * *', async () => {
+  log('Running daily trial expiration check...');
+  try {
+    await axios.post(`${BASE_URL}/api/admin/expire-trials`, {}, {
+      headers: { 'x-admin-key': process.env.ADMIN_KEY }
+    });
+  } catch (e) {
+    console.error('[Worker] Trial expiration error:', e.message);
+  }
+});
+
 log('✅ All schedulers active. Worker process running in background.');
+
 
 // Handle graceful shutdown
 process.on('SIGTERM', () => {

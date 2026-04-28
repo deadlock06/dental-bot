@@ -499,19 +499,38 @@ async function createTrial(data) {
   }
 }
 
-async function logEvent(eventName, sessionId, metadata = {}) {
+async function getTrialById(id) {
   try {
-    await axios.post(`${SUPABASE_URL}/rest/v1/analytics`, {
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/trials?id=eq.${encodeURIComponent(id)}&select=*`,
+      { headers }
+    );
+    return res.data?.[0] || null;
+  } catch (err) {
+    console.error('getTrialById error:', err.message);
+    return null;
+  }
+}
+
+async function logEvent(eventName, sessionId, metadata = {}) {
+
+  try {
+    const payload = {
       event_name: eventName,
       session_id: sessionId,
-      metadata,
+      metadata: {
+        ...metadata,
+        vertical: metadata.vertical || 'saas', // Default to Qudozen SaaS if not specified
+        timestamp: new Date().toISOString()
+      },
       created_at: new Date().toISOString()
-    }, { headers });
+    };
+    await axios.post(`${SUPABASE_URL}/rest/v1/analytics`, payload, { headers });
   } catch (err) {
-    // Silent fail for analytics to not break production flow
     console.error('logEvent error:', err.message);
   }
 }
+
 
 
 module.exports = {
@@ -526,7 +545,7 @@ module.exports = {
   createCronJob, getPendingCronJobs, markCronJobExecuted, getRandomHotLeads,
   verifyDashboardCredentials, getDashboardMetrics, getDashboardFeed, getDashboardCalendar,
   createGrowthConversation, countRecentAutoReplies, countUnclearIntents, getLeadByPhone, updateLeadStatus, getLeadById,
-  createTrial, logEvent
+  createTrial, getTrialById, logEvent
 };
 
 async function createGrowthConversation(data) {

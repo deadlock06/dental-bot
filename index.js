@@ -51,54 +51,73 @@ app.post('/api/start-trial', async (req, res) => {
     });
   }
 
+  let attempts = 0;
+  let trial = null;
+  let finalUsername = null;
+  let plainPassword = generatePassword(12);
+
+  while (attempts < 5 && !trial) {
+    try {
+      // Generate credentials (ensuring uniqueness)
+      const cleanName = clinic_name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      // Use different parts of session_id or random for retries
+      const salt = attempts === 0 ? session_id.substring(session_id.length - 4) : Math.random().toString(36).substring(2, 6);
+      finalUsername = `admin@${cleanName}${salt}.qd`;
+      
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+      // Create trial record in database (Mandatory - No silent failure)
+      trial = await db.createTrial({
+        clinic_name,
+        username: finalUsername,
+        password: hashedPassword, // Store hashed
+        session_id,
+        lang: lang || 'en',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      });
+    } catch (e) {
+      // Check for PostgreSQL unique violation (23505)
+      const isUniqueError = e.response?.data?.code === '23505' || e.message?.includes('23505') || e.response?.data?.message?.includes('duplicate');
+      if (isUniqueError) {
+        attempts++;
+        console.warn(`[Trial] Username collision for ${finalUsername}, retry ${attempts}/5`);
+        continue;
+      }
+      throw e; // Rethrow real errors
+    }
+  }
+
+  if (!trial) throw new Error('COULD_NOT_GENERATE_UNIQUE_USERNAME');
+
   try {
-    // Generate credentials (ensuring uniqueness)
-    const cleanName = clinic_name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const suffix = session_id.substring(session_id.length - 4);
-    const username = `admin@${cleanName}${suffix}.qd`;
-    const plainPassword = generatePassword(12);
-    
-    const bcrypt = require('bcryptjs');
-    const hashedPassword = await bcrypt.hash(plainPassword, 10);
-
-
-    
-    // Create trial record in database (Mandatory - No silent failure)
-    const trial = await db.createTrial({
-      clinic_name,
-      username,
-      password: hashedPassword, // Store hashed
-      session_id,
-      lang: lang || 'en',
-      status: 'active',
-      created_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-    });
-
-    
     const trialId = trial.id;
     await db.logEvent('trial_created', session_id, { clinic_name, trial_id: trialId });
-
 
     // Trigger Day 0 onboarding sequence
     const onboarding = require('./growth/onboarding-state-machine.js');
     await onboarding.startFromWebChat({
       clinic_name,
-      username,
-      password,
+      username: finalUsername,
+      password: plainPassword,
       trial_id: trialId,
       lang: lang || 'en'
     });
 
+    // Sanitized Logging (P1)
+    const logData = { success: true, username: finalUsername, trial_id: trialId, password: '[REDACTED]' };
+    console.log('[Trial] Success:', JSON.stringify(logData));
+
     res.json({
       success: true,
-      username,
+      username: finalUsername,
       password: plainPassword, // Return plain to user
       dashboard_url: 'https://qudozen.com/dashboard',
       trial_id: trialId,
       expires_in: '7 days'
     });
-
 
   } catch (e) {
     console.error('Trial activation failed:', e);
@@ -111,11 +130,41 @@ app.post('/api/start-trial', async (req, res) => {
 });
 
 // Analytics endpoint
-
 app.post('/api/analytics', async (req, res) => {
   const { event, session_id, metadata } = req.body;
   await db.logEvent(event, session_id, metadata);
   res.json({ success: true });
+});
+
+// Admin: Expire trials
+app.post('/api/admin/expire-trials', async (req, res) => {
+  // Simple key check
+  if (req.headers['x-admin-key'] !== process.env.ADMIN_KEY) return res.status(401).send();
+  
+  try {
+    const now = new Date().toISOString();
+    // 1. Find trials that have expired but are still 'active'
+    // This logic is simplified for Supabase REST - ideally done via RPC or server-side loop
+    const { data: expired } = await axios.get(
+      `${process.env.SUPABASE_URL}/rest/v1/trials?status=eq.active&expires_at=lt.${now}&select=id,clinic_name`,
+      { headers: { apikey: process.env.SUPABASE_KEY, Authorization: `Bearer ${process.env.SUPABASE_KEY}` } }
+    );
+
+    if (expired && expired.length > 0) {
+      for (const t of expired) {
+        await axios.patch(
+          `${process.env.SUPABASE_URL}/rest/v1/trials?id=eq.${t.id}`,
+          { status: 'expired' },
+          { headers: { apikey: process.env.SUPABASE_KEY, Authorization: `Bearer ${process.env.SUPABASE_KEY}` } }
+        );
+        await db.logEvent('trial_expired', t.id, { clinic_name: t.clinic_name });
+        console.log(`[Admin] Expired trial for ${t.clinic_name}`);
+      }
+    }
+    res.json({ success: true, count: expired?.length || 0 });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 
@@ -638,7 +687,29 @@ app.get('/dashboard', (req, res) => {
 });
 
 // Serve dashboard static assets
-app.use('/dashboard', requireDashboardAuth, express.static(path.join(__dirname, 'public', 'dashboard')));
+app.use('/dashboard', requireDashboardAuth, async (req, res, next) => {
+  // P2 Hardening: Check trial status on every dashboard request
+  if (req.session.trialId) {
+    const trial = await db.getTrialById(req.session.trialId);
+    if (trial && trial.status === 'expired') {
+      return res.redirect('/dashboard/upgrade');
+    }
+  }
+  next();
+}, express.static(path.join(__dirname, 'public', 'dashboard')));
+
+app.get('/dashboard/upgrade', (req, res) => {
+  res.send(`
+    <html>
+      <body style="background:#0F172A; color:white; font-family:sans-serif; text-align:center; padding-top:100px;">
+        <h1>Your Trial has Expired ⏳</h1>
+        <p>Your AI Receptionist has handled dozens of appointments. Keep it running!</p>
+        <button onclick="window.location.href='https://buy.stripe.com/test_qudozen_sub'" style="background:#0D9488; color:white; padding:15px 30px; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Upgrade to Pro ($99/mo)</button>
+      </body>
+    </html>
+  `);
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
