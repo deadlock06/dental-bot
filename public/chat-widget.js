@@ -4,8 +4,10 @@
 (function() {
   'use strict';
 
-  class QudozenChat {\n    getLang() { return sessionStorage.getItem('qd_lang') || 'en'; }
-    constructor() {\n      this.sessionId = this.generateId();
+  class QudozenChat {
+    getLang() { return sessionStorage.getItem('qd_lang') || 'en'; }
+    
+    constructor() {
       this.sessionId = this.generateId();
       this.clinic = new URLSearchParams(window.location.search).get('clinic') || 'Your Clinic';
       this.owner = new URLSearchParams(window.location.search).get('owner') || 'there';
@@ -98,183 +100,117 @@
     }
 
     showSupport() {
-      const msg = {
-        en: "I've notified our priority support team. Someone will reach out to you within 15 minutes. In the meantime, how can I help you?",
-        ar: "لقد أخطرت فريق الدعم ذو الأولوية. سيتواصل معك أحد أعضاء الفريق خلال 15 دقيقة. في هذه الأثناء، كيف يمكنني مساعدتك؟"
-      };
-      this.addMessage('bot', msg[this.getLang()] || msg.en);
-    }
-
-    async jakeIntercept() {
-      if (!this.started) {
-        this.started = true;
-      }
-      const win = document.getElementById('qd-chat-window');
-      if (win.classList.contains('qd-hidden')) {
-        this.toggle();
-      }
-      
-      const intercept = {
-        en: "I noticed you just finished the simulation! Your clinic could be capturing these bookings right now. Ready to go live?",
-        ar: "لاحظت أنك انتهيت للتو من العرض التوضيحي! يمكن لعيادتك استقبال هذه المواعيد وتوليد الأرباح الآن. هل أنت جاهز للبدء؟"
-      };
-      
-      await this.delay(1000);
-      this.addMessage('bot', intercept[this.getLang()] || intercept.en);
-      this.addButtons([
-        { text: this.getLang() === 'ar' ? 'نعم، لنفعلها' : 'Yes, let\'s go', action: 'trial' },
-        { text: this.getLang() === 'ar' ? 'الأسعار' : 'Pricing', action: 'pricing' }
-      ]);
-    }
-
-    async runDemo() {
-      const demo = {
-        en: [
-          "Great! Let's simulate a patient booking at 2 AM...",
-          "🧑 Patient: Hi, I need a dental cleaning",
-          "🤖 Bot: Welcome! I'm your AI receptionist. Could you share your name?",
-          "🧑 Patient: Ahmed",
-          "🤖 Bot: Thanks Ahmed! Dr. Khalid is available tomorrow at 10 AM or 2 PM. Which works?",
-          "🧑 Patient: 10 AM",
-          "🤖 Bot: ✅ Confirmed! Ahmed, your cleaning is booked for tomorrow 10 AM with Dr. Khalid. You'll receive a reminder 24 hours before.",
-          "That entire conversation took 8 seconds. No human was awake. The clinic captured 150 SAR while sleeping."
-        ],
-        ar: [
-          "ممتاز! لنحاكي حجز مريض في الساعة 2 صباحاً...",
-          "🧑 المريض: مرحباً، أحتاج تنظيف أسنان",
-          "🤖 البوت: أهلاً بك! أنا مساعدة الاستقبال الذكية. هل يمكنك مشاركة اسمك؟",
-          "🧑 المريض: أحمد",
-          "🤖 البوت: شكراً أحمد! د. خالد متوفر غداً الساعة 10 صباحاً أو 2 ظهراً. ما الوقت المناسب لك؟",
-          "🧑 المريض: 10 صباحاً",
-          "🤖 البوت: ✅ تم التأكيد! أحمد، حجزت لك موعد تنظيف غداً الساعة 10 صباحاً مع د. خالد. ستتلقى تذكيراً قبل 24 ساعة.",
-          "استغرق هذا الحوار 8 ثوانٍ. لم يكن أحد مستيقظاً. العيادة حصلت على 150 ريال وهي نائمة."
-        ]
-      };
-
-      const flow = demo[this.getLang()] || demo.en;
-      for (let i = 0; i < flow.length; i++) {
-        await this.delay(1500);
-        this.addMessage('bot', flow[i]);
-      }
-
-      this.addButtons([
-        { text: this.getLang() === 'ar' ? 'كم السعر؟' : 'How much?', action: 'pricing' },
-        { text: this.getLang() === 'ar' ? 'ابدأ التجربة المجانية' : 'Start free trial', action: 'trial' }
-      ]);
+      this.addMessage('bot', this.getLang() === 'ar' 
+        ? 'يرجى تزويدي برقم هاتفك وسيقوم فريقنا بالتواصل معك فوراً.' 
+        : 'Please provide your phone number and our team will contact you immediately.'
+      );
     }
 
     showPricing() {
-      const pricing = {
-        en: "💳 Qudozen Pricing:\n\n• Awareness (Solo clinic): 299 SAR/month\n• System (Multi-doctor): 499 SAR/month + 699 SAR setup\n• Swarm (Enterprise): Custom\n\nAll plans include 24/7 AI reception, automated reminders, and dashboard access.",
-        ar: "💳 أسعار Qudozen:\n\n• وعي (عيادة فردية): 299 ريال/شهر\n• نظام (متعدد الأطباء): 499 ريال/شهر + 699 ريال إعداد\n• سرب (مؤسسي): حسب الطلب\n\nجميع الباقات تشمل استقبال ذكي 24/7، تذكيرات تلقائية، ولوحة تحكم."
-      };
-      this.addMessage('bot', pricing[this.getLang()] || pricing.en);
-      this.addButtons([
-        { text: this.getLang() === 'ar' ? 'ابدأ التجربة المجانية' : 'Start 7-day free trial', action: 'trial' }
-      ]);
+      const msg = this.getLang() === 'ar'
+        ? '💰 أسعار Qudozen:\n\n• وعي (فردي): 299 ريال/شهر\n• نظام (متعدد): 499 ريال/شهر + 699 إعداد\n• سرب: حسب الطلب\n\nجميع الباقات تشمل استقبال 24/7 ولوحة تحكم.'
+        : '💰 Qudozen Pricing:\n\n• Awareness (Solo): 299 SAR/month\n• System (Multi-doctor): 499 SAR/month + 699 SAR setup\n• Swarm (Enterprise): Custom\n\nAll plans include 24/7 reception and dashboard.';
+      this.addMessage('bot', msg);
     }
 
     async activateTrial() {
-      this.addMessage('bot', this.getLang() === 'ar' ? '⏳ جاري تفعيل تجربتك...' : '⏳ Activating your trial...');
-      
+      this.addMessage('bot', this.getLang() === 'ar' ? 'جاري تفعيل نظامك... لحظة واحدة 🚀' : 'Activating your system... one moment 🚀');
       try {
-        const response = await fetch('/api/start-trial', {
+        const res = await fetch('/api/start-trial', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            clinic_name: this.clinic,
+          body: JSON.stringify({ 
+            clinic_name: this.clinic, 
             session_id: this.sessionId,
             lang: this.getLang()
           })
         });
-        
-        const data = await response.json();
-        
+        const data = await res.json();
         if (data.success) {
           this.addMessage('bot', this.getLang() === 'ar' 
-            ? `✅ تم التفعيل!\n\n🔑 بيانات الدخول:\nالمستخدم: ${data.username}\nكلمة المرور: ${data.password}\n\n📊 لوحة التحكم: ${data.dashboard_url}\n\nسأرسل تفاصيل إضافية خلال دقيقتين.`
-            : `✅ Activated!\n\n🔑 Your login:\nUsername: ${data.username}\nPassword: ${data.password}\n\n📊 Dashboard: ${data.dashboard_url}\n\nI'll send additional details in 2 minutes.`
+            ? `✅ تم تفعيل نظامك بنجاح!\n\n• اسم المستخدم: ${data.username}\n• كلمة المرور: ${data.password}\n\nيمكنك الآن الدخول إلى لوحة التحكم الخاصة بك.` 
+            : `✅ System activated successfully!\n\n• Username: ${data.username}\n• Password: ${data.password}\n\nYou can now log in to your dashboard.`
           );
-          this.addButtons([
-            { text: this.getLang() === 'ar' ? 'فتح لوحة التحكم' : 'Open Dashboard', action: 'dashboard' }
-          ]);
-        } else {
-          throw new Error(data.error);
+          this.addButtons([{ text: this.getLang() === 'ar' ? 'اذهب للوحة التحكم' : 'Go to Dashboard', action: 'dashboard' }]);
         }
       } catch (e) {
-        this.addMessage('bot', this.getLang() === 'ar' 
-          ? '❌ حدث خطأ. يرجى المحاولة مرة أخرى أو كتابة "مساعدة".' 
-          : '❌ Something went wrong. Please try again or type "help".'
-        );
+        this.addMessage('bot', 'Error activating system. Please try again.');
       }
     }
 
     showCredentials() {
-      window.open('https://qudozen.com/dashboard', '_blank');
+      window.location.href = '/dashboard';
     }
 
-    async startActivation() {
-      this.addMessage('bot', this.getLang() === 'ar' 
-        ? 'يمكنني تفعيل نظامك فوراً. هل تريد البدء بالتجربة المجانية لمدة 7 أيام؟' 
-        : 'I can activate your system instantly. Would you like to start with a 7-day free trial?'
-      );
-      this.addButtons([
-        { text: this.getLang() === 'ar' ? 'نعم، ابدأ التجربة' : 'Yes, start trial', action: 'trial' },
-        { text: this.getLang() === 'ar' ? 'أريد معرفة الأسعار أولاً' : 'Show me pricing first', action: 'pricing' }
-      ]);
+    async runDemo() {
+      this.addMessage('bot', this.getLang() === 'ar' ? 'رائع! سأقوم بمحاكاة حجز موعد الآن...' : 'Great! I will simulate a booking now...');
+      await this.delay(1500);
+      this.addMessage('bot', this.getLang() === 'ar' ? 'موظف الاستقبال: أهلاً بك! كيف يمكنني مساعدتك؟' : 'Receptionist: Welcome! How can I help you?');
+      await this.delay(1000);
+      this.addMessage('user', this.getLang() === 'ar' ? 'أريد حجز موعد تنظيف' : 'I want to book a cleaning');
+      await this.delay(1000);
+      this.addMessage('bot', this.getLang() === 'ar' ? 'موظف الاستقبال: بالتأكيد. متى تفضل الموعد؟' : 'Receptionist: Sure. When would you like it?');
+      await this.delay(1000);
+      this.addMessage('user', this.getLang() === 'ar' ? 'غداً الساعة 10 صباحاً' : 'Tomorrow at 10 AM');
+      await this.delay(1500);
+      this.addMessage('bot', this.getLang() === 'ar' ? '✅ تم الحجز! هل رأيت السرعة؟ يمكنني فعل هذا لعيادتك الآن.' : '✅ Booked! Did you see the speed? I can do this for your clinic right now.');
+      this.addButtons([{ text: this.getLang() === 'ar' ? 'تفعيل الآن' : 'Activate Now', action: 'activate' }]);
     }
 
     async send() {
       const input = document.getElementById('qd-input');
       const text = input.value.trim();
       if (!text) return;
-      
+
       this.addMessage('user', text);
       input.value = '';
-      
+
       try {
-        const response = await fetch('/api/chat', {
+        const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: text,
+          body: JSON.stringify({ 
+            message: text, 
             session_id: this.sessionId,
             clinic: this.clinic,
             lang: this.getLang()
           })
         });
-        
-        const data = await response.json();
-        this.addMessage('bot', data.reply);
-        if (data.buttons) this.addButtons(data.buttons);
+        const data = await res.json();
+        if (data.reply) {
+          this.addMessage('bot', data.reply);
+        }
+        if (data.buttons) {
+          this.addButtons(data.buttons);
+        }
+        if (data.action) {
+          this.handleAction(data.action);
+        }
       } catch (e) {
-        this.addMessage('bot', this.getLang() === 'ar' 
-          ? '⚠️ خطأ في الاتصال. حاول مرة أخرى.' 
-          : '⚠️ Connection error. Please try again.'
-        );
+        console.error('Chat error:', e);
       }
     }
 
-    addMessage(sender, text) {
-      const msgs = document.getElementById('qd-chat-messages');
-      const div = document.createElement('div');
-      div.className = \`qd-msg qd-\${sender}\`;
-      div.textContent = text;
-      msgs.appendChild(div);
+    addMessage(role, text) {
+      const container = document.getElementById('qd-chat-messages');
+      const msg = document.createElement('div');
+      msg.className = `qd-msg qd-${role}`;
+      msg.innerText = text;
+      container.appendChild(msg);
       this.scrollToBottom();
     }
 
     addButtons(buttons) {
-      const msgs = document.getElementById('qd-chat-messages');
-      const div = document.createElement('div');
-      div.className = 'qd-buttons';
-      buttons.forEach(b => {
-        const btn = document.createElement('button');
-        btn.textContent = b.text;
-        btn.addEventListener('click', () => this.handleAction(b.action));
-        div.appendChild(btn);
+      const container = document.getElementById('qd-chat-messages');
+      const btnGroup = document.createElement('div');
+      btnGroup.className = 'qd-buttons';
+      buttons.forEach(btn => {
+        const b = document.createElement('button');
+        b.innerText = btn.text;
+        b.onclick = () => this.handleAction(btn.action);
+        btnGroup.appendChild(b);
       });
-      msgs.appendChild(div);
+      container.appendChild(btnGroup);
       this.scrollToBottom();
     }
 
@@ -293,7 +229,7 @@
 
     injectStyles() {
       const style = document.createElement('style');
-      style.textContent = \`
+      style.textContent = `
         #qd-chat-root { position: fixed; bottom: 24px; right: 24px; z-index: 9999; font-family: 'Space Grotesk', -apple-system, sans-serif; }
         #qd-chat-window { width: 400px; height: 650px; background: #0F172A; border: 1px solid rgba(148,163,184,0.1); border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); transition: transform 0.3s, opacity 0.3s; }
         #qd-chat-window.qd-hidden { transform: scale(0.95) translateY(20px); opacity: 0; pointer-events: none; }
@@ -322,7 +258,7 @@
         #qd-chat-toggle:hover { transform: scale(1.08); box-shadow: 0 12px 40px rgba(13,148,136,0.4); }
         #qd-chat-toggle svg { width: 28px; height: 28px; }
         @media (max-width: 480px) { #qd-chat-root { bottom: 16px; right: 16px; left: 16px; } #qd-chat-window { width: 100%; height: calc(100vh - 100px); border-radius: 16px; } }
-      \`;
+      `;
       document.head.appendChild(style);
     }
   }
