@@ -884,7 +884,7 @@ function closeModal() {
               </div>
             </div>
 
-            <button onclick="window.qdChat.open('activate')"
+            <button onclick="if(window.qdChat) window.qdChat.open('activate')"
                class="mt-6 w-full block bg-gold text-gray-900 py-3.5 rounded-xl font-black text-center hover:shadow-[0_0_20px_rgba(212,165,116,0.3)] transition text-sm">
                تفعيل النظام الخاص بك →
             </button>
@@ -899,7 +899,7 @@ function closeModal() {
               <div class="flex-1">
                 <div class="text-sm font-bold text-white mb-1">محاكاتك مكتملة 🎉</div>
                 <p class="text-xs text-gray-400 mb-3 leading-relaxed">هذا بالضبط ما سيحدث في عملك. جاهز لتفعيل نظامك الخاص؟</p>
-                <button onclick="window.qdChat.open('trial')"
+                <button onclick="if(window.qdChat) window.qdChat.open('trial')"
                    class="inline-flex items-center gap-2 bg-teal-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-teal-600 transition">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                   تحدث مع جيك الآن
@@ -1019,7 +1019,7 @@ function closeModal() {
             <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span> أتمتة الأسئلة الشائعة</li>
             <li class="flex gap-3 text-sm text-gray-300"><span class="text-[#5EEAD4]">✓</span> تقرير أداء شهري</li>
           </ul>
-          <button onclick="window.qdChat.open('activate')" class="w-full border border-[#5EEAD4] text-[#5EEAD4] py-3 rounded-xl font-bold text-center hover:bg-[#5EEAD4]/10 transition block">ابدأ الآن</button>
+          <button onclick="if(window.qdChat) window.qdChat.open('activate')" class="w-full border border-[#5EEAD4] text-[#5EEAD4] py-3 rounded-xl font-bold text-center hover:bg-[#5EEAD4]/10 transition block">ابدأ الآن</button>
         </div>
 
         <!-- Tier 2 -->
@@ -1039,7 +1039,7 @@ function closeModal() {
             <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span> حملات ما بعد الزيارة</li>
             <li class="flex gap-3 text-sm text-gray-200"><span class="text-teal-400">✓</span> لوحة تحكم إدارية حية</li>
           </ul>
-          <button onclick="window.qdChat.open('activate')" class="w-full bg-[#0D9488] text-white py-3 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.5)] block">احصل على النظام</button>
+          <button onclick="if(window.qdChat) window.qdChat.open('activate')" class="w-full bg-[#0D9488] text-white py-3 rounded-xl font-bold text-center hover:bg-[#0c8077] transition shadow-[0_0_15px_rgba(13,148,136,0.5)] block">احصل على النظام</button>
         </div>
 
         <!-- Tier 3 -->
@@ -1057,7 +1057,7 @@ function closeModal() {
             <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span> مدير حساب مخصص</li>
             <li class="flex gap-3 text-sm text-gray-300"><span class="text-gold">✓</span> خوادم خاصة للبيانات</li>
           </ul>
-          <button onclick="window.qdChat.open('support')" class="w-full border border-gold text-gold py-3 rounded-xl font-bold text-center hover:bg-gold/10 transition block">تواصل لتخصيص خطتك</button>
+          <button onclick="if(window.qdChat) window.qdChat.open('support')" class="w-full border border-gold text-gold py-3 rounded-xl font-bold text-center hover:bg-gold/10 transition block">تواصل لتخصيص خطتك</button>
         </div>
       </div>
     </div>
@@ -1081,7 +1081,7 @@ function closeModal() {
             <p>إذا كنت جاهزاً لوقف النزيف في عملك، اضغط على الزر أدناه لتراسلني شخصياً.</p>
           </div>
           <div class="mt-10">
-            <button onclick="window.qdChat.open('activate')" class="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black hover:bg-gray-200 transition">
+            <button onclick="if(window.qdChat) window.qdChat.open('activate')" class="inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black hover:bg-gray-200 transition">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
               تحدث مع جيك عبر الدردشة
             </button>
@@ -1102,17 +1102,16 @@ function closeModal() {
       <div class="flex gap-8 text-sm font-medium">
         <a href="#services" class="text-gray-400 hover:text-aqua transition">خدماتنا</a>
         <a href="#simulator" class="text-gray-400 hover:text-aqua transition">المحاكي</a>
-        <a href="javascript:void(0)" onclick="window.qdChat.open('support')" class="text-gray-400 hover:text-aqua transition">الدعم المباشر</a>
+        <a href="javascript:void(0)" onclick="if(window.qdChat) window.qdChat.open('support')" class="text-gray-400 hover:text-aqua transition">الدعم المباشر</a>
+
         <a href="/growth/ghost-room" class="text-gray-400 hover:text-aqua transition">غرفة العمليات</a>
       </div>
       <div class="text-gray-600 text-sm">© 2026 Qudozen. جميع الحقوق محفوظة.</div>
     </div>
   </footer>
 
-  <!-- Floating Chat Button -->
-  <button onclick="window.qdChat.open()" class="fixed bottom-6 left-6 z-[999] w-14 h-14 bg-teal-500 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform md:hidden" aria-label="تواصل مع جيك">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-  </button>
+  <!-- Chat Widget (Managed by chat-widget.js) -->
+
 
 <!-- ══════════════════════════════════════════════════ -->
 <!-- SIMULATOR STATE MACHINE                           -->
@@ -1589,7 +1588,7 @@ function showChatRedirect() {
         <div class="text-4xl mb-4">🚀</div>
         <h3 class="text-2xl font-bold text-white mb-2">Ready to evolve? — جاهز للتطور؟</h3>
         <p class="text-gray-400 mb-6">Your facility's autonomous journey starts here. No more missed patients.<br>رحلة منشأتك الذاتية تبدأ من هنا. لا مزيد من الفرص الضائعة.</p>
-        <button onclick="window.qdChat.open('activate')" class="bg-white text-black px-8 py-3 rounded-xl font-bold hover:bg-gray-200 transition shadow-xl">Contact Jake for Activation — تواصل للتفعيل</button>
+        <button onclick="if(window.qdChat) window.qdChat.open('activate')" class="bg-white text-black px-8 py-3 rounded-xl font-bold hover:bg-gray-200 transition shadow-xl">Contact Jake for Activation — تواصل للتفعيل</button>
       </div>
     `;
     wa.classList.remove('hidden');

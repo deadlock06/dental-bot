@@ -13,8 +13,20 @@
       this.owner = new URLSearchParams(window.location.search).get('owner') || 'there';
       
       this.started = false;
+      this.logEvent('widget_initialized');
       this.build();
     }
+
+    async logEvent(event, metadata = {}) {
+      try {
+        await fetch('/api/analytics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event, session_id: this.sessionId, metadata })
+        });
+      } catch (e) {}
+    }
+
 
     build() {
       const container = document.createElement('div');
@@ -61,11 +73,14 @@
 
     toggle() {
       const win = document.getElementById('qd-chat-window');
+      const isOpening = win.classList.contains('qd-hidden');
       win.classList.toggle('qd-hidden');
-      if (!win.classList.contains('qd-hidden') && !this.started) {
-        this.start();
+      if (isOpening) {
+        this.logEvent('widget_opened');
+        if (!this.started) this.start();
       }
     }
+
 
     open(action = null) {
       const win = document.getElementById('qd-chat-window');
@@ -114,7 +129,9 @@
     }
 
     async activateTrial() {
+      this.logEvent('trial_clicked');
       this.addMessage('bot', this.getLang() === 'ar' ? 'جاري تفعيل نظامك... لحظة واحدة 🚀' : 'Activating your system... one moment 🚀');
+
       try {
         const res = await fetch('/api/start-trial', {
           method: 'POST',
@@ -143,7 +160,9 @@
     }
 
     async runDemo() {
+      this.logEvent('demo_started');
       this.addMessage('bot', this.getLang() === 'ar' ? 'رائع! سأقوم بمحاكاة حجز موعد الآن...' : 'Great! I will simulate a booking now...');
+
       await this.delay(1500);
       this.addMessage('bot', this.getLang() === 'ar' ? 'موظف الاستقبال: أهلاً بك! كيف يمكنني مساعدتك؟' : 'Receptionist: Welcome! How can I help you?');
       await this.delay(1000);

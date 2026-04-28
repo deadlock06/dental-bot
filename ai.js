@@ -257,7 +257,18 @@ function keywordFallback(text, currentFlow = null) {
 // ─────────────────────────────────────────────
 async function extractDate(text) {
   console.log(`[AI] extractDate called with: "${text}"`);
+  
+  // 1. High-reliability regex fallback for common Arabic phrases
+  const lower = text.toLowerCase().trim();
+  const today = new Date();
+  
+  if (lower === 'بكرة' || lower === 'بكره' || lower === 'غداً' || lower === 'غدا' || lower === 'tomorrow') {
+    const tmr = new Date(today.setDate(today.getDate() + 1));
+    return tmr.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
   try {
+
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     const { wrapAI } = require('./lib/resilience');
     

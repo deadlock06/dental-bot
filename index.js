@@ -52,26 +52,33 @@ app.post('/api/start-trial', async (req, res) => {
   }
 
   try {
-    // Generate credentials
+    // Generate credentials (ensuring uniqueness)
     const cleanName = clinic_name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const username = `admin@${cleanName}.qd`;
-    const password = generatePassword(12);
+    const suffix = session_id.substring(session_id.length - 4);
+    const username = `admin@${cleanName}${suffix}.qd`;
+    const plainPassword = generatePassword(12);
     
-    // Create trial record in database
-    let trialId = session_id;
-    if (typeof db.createTrial === 'function') {
-      const trial = await db.createTrial({
-        clinic_name,
-        username,
-        password,
-        session_id,
-        lang: lang || 'en',
-        status: 'active',
-        created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      });
-      trialId = trial.id || session_id;
-    }
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+
+    
+    // Create trial record in database (Mandatory - No silent failure)
+    const trial = await db.createTrial({
+      clinic_name,
+      username,
+      password: hashedPassword, // Store hashed
+      session_id,
+      lang: lang || 'en',
+      status: 'active',
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    });
+
+    
+    const trialId = trial.id;
+    await db.logEvent('trial_created', session_id, { clinic_name, trial_id: trialId });
+
 
     // Trigger Day 0 onboarding sequence
     const onboarding = require('./growth/onboarding-state-machine.js');
@@ -86,11 +93,12 @@ app.post('/api/start-trial', async (req, res) => {
     res.json({
       success: true,
       username,
-      password,
+      password: plainPassword, // Return plain to user
       dashboard_url: 'https://qudozen.com/dashboard',
       trial_id: trialId,
       expires_in: '7 days'
     });
+
 
   } catch (e) {
     console.error('Trial activation failed:', e);
@@ -101,6 +109,15 @@ app.post('/api/start-trial', async (req, res) => {
     });
   }
 });
+
+// Analytics endpoint
+
+app.post('/api/analytics', async (req, res) => {
+  const { event, session_id, metadata } = req.body;
+  await db.logEvent(event, session_id, metadata);
+  res.json({ success: true });
+});
+
 
 // General chat handler (Unified Logic)
 app.post('/api/chat', async (req, res) => {
@@ -115,7 +132,13 @@ app.post('/api/chat', async (req, res) => {
   const whatsapp = require('./whatsapp.js');
 
   try {
+    // Analytics: pricing requested
+    if (message.toLowerCase().includes('price') || message.toLowerCase().includes('pricing')) {
+      await db.logEvent('pricing_requested', session_id, { message });
+    }
+
     // 1. Process message through production bot logic (as Qudozen SaaS vertical)
+
     await bot.handleMessage(phone, message, { name: 'Qudozen', vertical: 'saas' });
 
 

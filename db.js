@@ -487,6 +487,33 @@ async function getDashboardCalendar(clinicId) {
   }
 }
 
+async function createTrial(data) {
+  try {
+    const res = await axios.post(`${SUPABASE_URL}/rest/v1/trials`, data, { 
+      headers: { ...headers, Prefer: 'return=representation' } 
+    });
+    return res.data[0];
+  } catch (err) {
+    console.error('createTrial error:', err.response?.data || err.message);
+    throw err;
+  }
+}
+
+async function logEvent(eventName, sessionId, metadata = {}) {
+  try {
+    await axios.post(`${SUPABASE_URL}/rest/v1/analytics`, {
+      event_name: eventName,
+      session_id: sessionId,
+      metadata,
+      created_at: new Date().toISOString()
+    }, { headers });
+  } catch (err) {
+    // Silent fail for analytics to not break production flow
+    console.error('logEvent error:', err.message);
+  }
+}
+
+
 module.exports = {
   getPatient, insertPatient, savePatient, deletePatient,
   getClinic, getClinicById,
@@ -498,7 +525,8 @@ module.exports = {
   getOnboardingByPhone, getOnboardingById, createOnboarding, updateOnboarding, logOnboardingMessage,
   createCronJob, getPendingCronJobs, markCronJobExecuted, getRandomHotLeads,
   verifyDashboardCredentials, getDashboardMetrics, getDashboardFeed, getDashboardCalendar,
-  createGrowthConversation, countRecentAutoReplies, countUnclearIntents, getLeadByPhone, updateLeadStatus, getLeadById
+  createGrowthConversation, countRecentAutoReplies, countUnclearIntents, getLeadByPhone, updateLeadStatus, getLeadById,
+  createTrial, logEvent
 };
 
 async function createGrowthConversation(data) {
@@ -554,9 +582,10 @@ async function getLeadByPhone(phone) {
 }
 
 async function updateLeadStatus(leadId, status) {
+  if (!leadId) return;
   try {
     await axios.patch(
-      `${SUPABASE_URL}/rest/v1/growth_leads_v2?id=eq.${leadId}`,
+      `${SUPABASE_URL}/rest/v1/growth_leads_v2?id=eq.${encodeURIComponent(leadId)}`,
       { status },
       { headers }
     );
@@ -565,10 +594,12 @@ async function updateLeadStatus(leadId, status) {
   }
 }
 
+
 async function getLeadById(leadId) {
+  if (!leadId) return null;
   try {
     const res = await axios.get(
-      `${SUPABASE_URL}/rest/v1/growth_leads_v2?id=eq.${leadId}&select=*`,
+      `${SUPABASE_URL}/rest/v1/growth_leads_v2?id=eq.${encodeURIComponent(leadId)}&select=*`,
       { headers }
     );
     return res.data?.[0] || null;
@@ -577,3 +608,4 @@ async function getLeadById(leadId) {
     return null;
   }
 }
+
