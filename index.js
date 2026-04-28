@@ -115,8 +115,9 @@ app.post('/api/chat', async (req, res) => {
   const whatsapp = require('./whatsapp.js');
 
   try {
-    // 1. Process message through production bot logic
-    await bot.handleMessage(phone, message, clinic || {});
+    // 1. Process message through production bot logic (as Qudozen SaaS vertical)
+    await bot.handleMessage(phone, message, { name: 'Qudozen', vertical: 'saas' });
+
 
     // 2. Fetch the responses that were intercepted by the web-aware whatsapp module
     const responses = whatsapp.getWebResponses(phone);

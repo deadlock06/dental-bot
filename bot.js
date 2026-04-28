@@ -54,49 +54,31 @@ async function sendSmartMenu(phone, ar, cl) {
 }
 
 // Accept either a plain clinic name string or a full clinic object (for feature flags + custom messages)
-function menuEN(clinicOrName) {
-  const name = typeof clinicOrName === 'string' ? clinicOrName : (clinicOrName?.name || 'Our Clinic');
-  const vertical = typeof clinicOrName === 'object' ? clinicOrName?.industry : 'dental';
-  console.log('[Menu] Clinic name:', name, 'Vertical:', vertical);
+// Accept either a plain clinic name string or a full clinic object
+function menuEN(clOrName) {
+  const name = typeof clOrName === 'string' ? clOrName : (clOrName?.name || 'Our Clinic');
+  const vert = typeof clOrName === 'object' ? (clOrName?.vertical || clOrName?.industry) : 'dental';
+  const team = vert === 'dental' ? 'Our Doctors 👨‍⚕️' : 'Our Team 👨‍⚕️';
   
-  const cfg  = typeof clinicOrName === 'object' ? clinicOrName?.config : null;
-  const vEmoji = vertical === 'dental' ? '🦷' : vertical === 'physio' ? '🧘' : '🩺';
+  if (vert === 'saas') {
+    return `Welcome to ${name}! 🚀\nI'm *Jake*, your AI Business Specialist.\n\nHow can I help you today?\n\n1️⃣ Book / Start Trial 📅\n2️⃣ My Appointment 📋\n3️⃣ Reschedule 🔄\n4️⃣ Cancel ❌\n5️⃣ Our services 🚀\n6️⃣ ${team}\n7️⃣ Prices 💳\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩\n\n💡 Tap a number or tell me what you need`;
+  }
   
-  const welcome       = cfg?.messages?.welcome_en       || `Welcome to ${name}! ${vEmoji}✨`;
-  const showReschedule = cfg?.features?.reschedule       !== false;
-  const showCancel     = cfg?.features?.cancel           !== false;
-  
-  const assistantType = vertical === 'dental' ? 'dental assistant' : 'autonomous assistant';
-  const teamLabel    = vertical === 'dental' ? 'Meet Our Doctors 👨‍⚕️' : 'Our Team 👨‍⚕️';
-  
-  let menu = `${welcome}\nI'm *Jake*, your AI ${assistantType}, available 24/7.\nHow can I help you today?\n\n1️⃣ Book appointment\n2️⃣ My appointment\n`;
-  if (showReschedule) menu += `3️⃣ Reschedule\n`;
-  if (showCancel)     menu += `4️⃣ Cancel appointment\n`;
-  menu += `5️⃣ Our services\n6️⃣ ${teamLabel}\n7️⃣ Prices 💰\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩‍⚕️ (type 10)\n\n💡 Tap a number or tell me what you need 😊`;
-  return menu;
+  return `Welcome to ${name}! ✨\nI'm *Jake*, your AI assistant.\n\n1. Book Appointment 📅\n2. My Appointment 📋\n3. Reschedule 🔄\n4. Cancel ❌\n5. Services\n6. ${team}\n7. Prices 💰\n8. Location 📍\n9. Review\n10. Staff\n\n💡 Tap a number to start.`;
 }
 
-function menuAR(clinicOrName) {
-  const name = typeof clinicOrName === 'string' ? clinicOrName : (clinicOrName?.name || 'عيادتنا');
-  const vertical = typeof clinicOrName === 'object' ? clinicOrName?.industry : 'dental';
-  console.log('[Menu] Clinic name:', name, 'Vertical:', vertical);
-  
-  const cfg  = typeof clinicOrName === 'object' ? clinicOrName?.config : null;
-  const vEmoji = vertical === 'dental' ? '🦷' : vertical === 'physio' ? '🧘' : '🩺';
-  
-  const welcome       = cfg?.messages?.welcome_ar       || `أهلاً وسهلاً بك في ${name}! ${vEmoji}✨`;
-  const showReschedule = cfg?.features?.reschedule       !== false;
-  const showCancel     = cfg?.features?.cancel           !== false;
-  
-  const assistantType = vertical === 'dental' ? 'لطب الأسنان' : 'الذكي';
-  const teamLabel    = vertical === 'dental' ? 'تعرف على أطبائنا 👨‍⚕️' : 'تعرف على فريقنا 👨‍⚕️';
-  
-  let menu = `${welcome}\nأنا *جيك*، مساعدك ${assistantType}، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد\n2️⃣ موعدي الحالي\n`;
-  if (showReschedule) menu += `3️⃣ إعادة جدولة\n`;
-  if (showCancel)     menu += `4️⃣ إلغاء الموعد\n`;
-  menu += `5️⃣ خدماتنا\n6️⃣ ${teamLabel}\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️ (اكتب 10)\n\n💡 اضغط رقماً أو أخبرني بما تحتاج 😊`;
-  return menu;
+function menuAR(clOrName) {
+  const name = typeof clOrName === 'string' ? clOrName : (clOrName?.name || 'عيادتنا');
+  const vert = typeof clOrName === 'object' ? (clOrName?.vertical || clOrName?.industry) : 'dental';
+  const team = vert === 'dental' ? 'أطباؤنا 👨‍⚕️' : 'فريقنا 👨‍⚕️';
+
+  if (vert === 'saas') {
+    return `أهلاً بك في ${name}! 🚀\nأنا *جيك*، أخصائي الأعمال الذكي الخاص بك.\n\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز / تفعيل تجربة 📅\n2️⃣ موعدي الحالي 📋\n3️⃣ إعادة جدولة 🔄\n4️⃣ إلغاء الموعد ❌\n5️⃣ خدماتنا 🚀\n6️⃣ ${team}\n7️⃣ الأسعار 💳\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️\n\n💡 اضغط رقماً أو أخبرني بما تحتاج`;
+  }
+
+  return `أهلاً بك في ${name}! ✨\nأنا *جيك*، مساعدك الذكي.\n\n1. حجز موعد 📅\n2. موعدي الحالي 📋\n3. إعادة جدولة 🔄\n4. إلغاء الموعد ❌\n5. خدماتنا\n6. ${team}\n7. الأسعار 💰\n8. الموقع 📍\n9. تقييم العيادة\n10. التحدث مع الفريق\n\n💡 اضغط رقماً للبدء.`;
 }
+
 
 
 // ─────────────────────────────────────────────
@@ -1605,7 +1587,7 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
     }
 
     case 'services':
-      return sendMessage(phone, servicesMsg(ar));
+      return sendMessage(phone, servicesMsg(ar, cl));
 
     case 'doctors':
       return sendMessage(phone, doctorsMsg(ar, cl));
@@ -1744,17 +1726,29 @@ function timeSlotMsg(ar) {
     : 'Choose your preferred time: ⏰\n\n1. 9:00 AM\n2. 10:00 AM\n3. 11:00 AM\n4. 1:00 PM\n5. 2:00 PM\n6. 3:00 PM\n7. 4:00 PM\n8. 5:00 PM\n\n💡 Tap a number to select your time\n0️⃣ Main menu';
 }
 
-function servicesMsg(ar) {
+function servicesMsg(ar, cl) {
+  if (cl.vertical === 'saas') {
+    return ar
+      ? '🚀 خدمات Qudozen:\n\n✨ استقبال ذكي 24/7\n📈 محرك نمو (Growth Swarm)\n🏢 إدارة فروع متعددة\n💳 فوترة وتأمين ذكي\n📱 تطبيق للمرضى\n\n💡 اضغط 1 للتفعيل أو 0 للقائمة'
+      : '🚀 Qudozen Services:\n\n✨ 24/7 Smart Receptionist\n📈 Growth Swarm Engine\n🏢 Multi-branch Management\n💳 Smart Billing & Insurance\n📱 Patient Mobile App\n\n💡 Tap 1 to activate or 0 for menu';
+  }
   return ar
     ? '🦷 خدماتنا:\n\n✨ تنظيف وتلميع الأسنان\n🔧 الحشوات والترميم\n📐 تقويم الأسنان\n⚪ تبييض الأسنان\n🔬 زراعة الأسنان\n❌ خلع الأسنان\n🏥 علاج العصب\n👶 طب أسنان الأطفال\n🦷 القشور والتيجان\n😁 ابتسامة هوليوود\n\n💡 اضغط 1 للحجز أو 0 للقائمة الرئيسية'
     : '🦷 Our Services:\n\n✨ Cleaning & Polishing\n🔧 Fillings & Restorations\n📐 Braces & Orthodontics\n⚪ Teeth Whitening\n🔬 Dental Implants\n❌ Extractions\n🏥 Root Canal Treatment\n👶 Pediatric Dentistry\n🦷 Veneers & Crowns\n😁 Smile Makeover\n\n💡 Tap 1 to book or 0 for main menu';
 }
 
-function pricesMsg(ar) {
+
+function pricesMsg(ar, cl) {
+  if (cl.vertical === 'saas') {
+    return ar
+      ? '💳 أسعار Qudozen:\n\n• وعي (فردي): 299 ريال/شهر\n• نظام (متعدد): 499 ريال/شهر + 699 إعداد\n• سرب: حسب الطلب\n\n💡 اضغط 1 لتفعيل تجربتك المجانية أو 0 للقائمة'
+      : '💳 Qudozen Pricing:\n\n• Awareness (Solo): 299 SAR/month\n• System (Multi-doctor): 499 SAR/month + 699 SAR setup\n• Swarm (Enterprise): Custom\n\n💡 Tap 1 to start free trial or 0 for menu';
+  }
   return ar
     ? '💰 أسعارنا التقريبية:\n\n✨ تنظيف: 150-250 ريال\n🔧 حشوة: 200-400 ريال\n⚪ تبييض: 800-1,500 ريال\n📐 تقويم: 3,000-8,000 ريال\n🔬 زراعة: 3,500-6,000 ريال\n🏥 علاج عصب: 800-1,500 ريال\n🦷 قشرة: 800-1,200 ريال للسن\n\n📌 الأسعار النهائية تُحدد بعد الفحص.\n\n💡 اضغط 1 للحجز أو 0 للقائمة الرئيسية'
     : '💰 Our Approximate Prices:\n\n✨ Cleaning: 150-250 SAR\n🔧 Filling: 200-400 SAR\n⚪ Whitening: 800-1,500 SAR\n📐 Braces: 3,000-8,000 SAR\n🔬 Implant: 3,500-6,000 SAR\n🏥 Root Canal: 800-1,500 SAR\n🦷 Veneer: 800-1,200 SAR per tooth\n\n📌 Final prices confirmed after examination.\n\n💡 Tap 1 to book or 0 for main menu';
 }
+
 
 function locationMsg(ar, cl) {
   return ar
