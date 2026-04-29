@@ -608,18 +608,6 @@ function closeModal() {
     <div id="mobileMenu" class="hidden fixed top-[68px] left-0 right-0 z-[60] bg-[#0B1120] border-b border-white/10 px-6 py-10 flex flex-col gap-6 text-center text-gray-300 text-xl font-bold shadow-2xl">
       <a href="#services" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4">خدماتنا</a>
       <div class="flex flex-wrap justify-center gap-3 px-4 mb-2">
-         <button onclick="scrollToService('reception')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10">الاستقبال</button>
-         <button onclick="scrollToService('growth')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10">النمو</button>
-         <button onclick="scrollToService('realestate')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10">العقارات</button>
-         <button onclick="scrollToService('analytics')" class="text-[10px] px-3 py-1 rounded-full glass border border-white/10">البيانات</button>
-      </div>
-      <a href="#simulator" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4">جرب المحاكي</a>
-      <a href="#pricing" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4">الاستثمار</a>
-      <a href="#jake" onclick="document.getElementById('mobileMenu').classList.add('hidden')" class="hover:text-aqua transition border-b border-white/5 pb-4">رسالة <span translate="no">جيك</span></a>
-      <a href="/growth/ghost-room" class="bg-gold text-gray-900 px-6 py-4 rounded-2xl font-black shadow-lg shadow-gold/20">غرفة العمليات</a>
-    </div>
-
-
   <!-- ══════════════════════════════════════════════════ -->
   <!-- HERO                                              -->
   <!-- ══════════════════════════════════════════════════ -->
@@ -2227,6 +2215,49 @@ window.addEventListener('load', () => {
     {icon:'🎯',text:'السوارم يرسل 12 رسالة مخصصة الآن'},
     {icon:'📍',text:'عيادة جديدة في جدة تفعّل النظام الآن'},
   ];
+  
+  async function loadVerticalConfig() {
+    try {
+      const res = await fetch('/config/verticals/dental.json');
+      const config = await res.json();
+      if (config.fomo) {
+        FOMO_MSGS.length = 0;
+        FOMO_MSGS.push(...config.fomo);
+      }
+      if (config.simulator) {
+        ['ar', 'en'].forEach(lang => {
+          const sim = config.simulator[lang];
+          if (!sim || !BS_MSGS[lang]) return;
+          BS_MSGS[lang].langSelect = sim.langSelect;
+          BS_MSGS[lang].menu = sim.menu;
+          BS_MSGS[lang].prices = sim.prices;
+          BS_MSGS[lang].location = sim.location;
+          BS_MSGS[lang].book.name = sim.book.name;
+          BS_MSGS[lang].book.securing = sim.book.securing;
+          BS_MSGS[lang].book.confirmed = sim.book.confirmed;
+          BS_MSGS[lang].book.phone = (p) => sim.book.phone_label.replace('{phone}', p);
+          BS_MSGS[lang].book.date = (d) => sim.book.date_label.replace('{doctor}', d);
+          BS_MSGS[lang].book.slot = (d) => sim.book.slot_label.replace('{date}', d);
+          BS_MSGS[lang].book.summary = (d) => sim.book.summary
+            .replace('{name}', d.name)
+            .replace('{treatment}', d.treatment)
+            .replace('{date}', d.date)
+            .replace('{slot}', d.slot)
+            .replace('{doctor}', d.doctor);
+          BS_MSGS[lang].reminder = (n, date, slot, treat) => sim.reminder
+            .replace('{name}', n)
+            .replace('{date}', date)
+            .replace('{slot}', slot)
+            .replace('{treatment}', treat);
+        });
+      }
+      console.log('[Config] Vertical dental loaded');
+    } catch (e) {
+      console.warn('[Config] Using hardcoded fallbacks', e.message);
+    }
+  }
+  loadVerticalConfig();
+
   let fomoIdx=0;
   function showFomoItem(){
     const ticker=document.getElementById('fomoTicker');
@@ -2306,38 +2337,39 @@ window.addEventListener('load', () => {
       menu: `أهلاً! 🦷\nأنا *جيك*، مساعدك الذكي.\nكيف أساعدك؟\n\n1️⃣ حجز موعد 📅\n2️⃣ الأسعار 💰\n3️⃣ الموقع 📍`,
       book: { 
         name:"رائع! ما اسمك؟", 
-        phone:(p)=>`رقمك: *${p}*\nصحيح؟\n1️⃣ نعم\n2️⃣ لا`, 
-        treat:"اختر الخدمة:\n1️⃣ تنظيف 🦷\n2️⃣ حشوات\n3️⃣ تقويم 📐\n4️⃣ زراعة 🔬", 
+        phone_label:(p)=>`رقمك: *${p}*\nصحيح؟\n1️⃣ نعم\n2️⃣ لا`, 
+        treat:"اختر الخدمة:\n1️⃣ تنظيف وتلميع 🦷\n2️⃣ حشوات\n3️⃣ تقويم الأسنان 📐\n4️⃣ تبييض الأسنان ⚪\n5️⃣ خلع\n6️⃣ زراعة أسنان 🔬", 
         doc:"الفريق المفضل:\n1️⃣ د. أحمد\n2️⃣ د. سارة\n3️⃣ أي فريق", 
-        date:(d)=>`الوقت المناسب مع ${d}؟\n1️⃣ غداً\n2️⃣ الأربعاء`, 
-        slot:(d)=>`الأوقات المتاحة (${d}):\n1️⃣ 10:00 ص\n2️⃣ 4:00 م`, 
+        date_label:(d)=>`الوقت المناسب مع ${d}؟\n1️⃣ غداً\n2️⃣ الأربعاء`, 
+        slot_label:(d)=>`الأوقات المتاحة (${d}):\n1️⃣ 10:00 ص\n2️⃣ 4:00 م`, 
         securing:"🔒 جاري تأمين موعدك...", 
         confirmed:"✅ *تم الحجز!* 🎉", 
         summary:(d)=>`📋 *تفاصيل موعدك:*\n👤 ${d.name}\n🦷 ${d.treatment}\n📅 ${d.date}\n⏰ ${d.slot}\n👨‍⚕️ ${d.doctor}\n\n📅 مزامنة تقويم: ناجحة ✅\n🔔 تذكيرات مجدولة` 
       },
       reminder:(n,date,slot,treat)=>`🔔 *تذكير تلقائي (24 ساعة)*\nمرحباً ${n}، موعدك غداً:\n📅 ${date} ⏰ ${slot}\n🦷 ${treat}\n\nنراك قريباً! 😊`,
       prices:`💰 *الأسعار التقريبية:*\n• تنظيف: 200 ر\n• حشو: 350 ر\n• تقويم: 3000+ ر\n• زراعة: 4500+ ر`,
-      location:`📍 *الموقع:*\nالخبر، شارع الأمير تركي.\n🗺️ maps.google.com`
+      location:`📍 *Location:*\nCloud-First Operations.\nWe serve businesses worldwide 🌍`
     },
     en: {
       langSelect: `🌐 Hi! I'm Jake.\nChoose language:\n1️⃣ English\n2️⃣ العربية`,
       menu: `Welcome! 🦷\nI'm *Jake*, your AI assistant.\nHow can I help?\n\n1️⃣ Book Appointment 📅\n2️⃣ Prices 💰\n3️⃣ Location 📍`,
       book: { 
         name:"Great! What's your name?", 
-        phone:(p)=>`Your number: *${p}*\nCorrect?\n1️⃣ Yes\n2️⃣ No`, 
-        treat:"Select service:\n1️⃣ Cleaning 🦷\n2️⃣ Fillings\n3️⃣ Braces 📐\n4️⃣ Implants 🔬", 
+        phone_label:(p)=>`Your number: *${p}*\nCorrect?\n1️⃣ Yes\n2️⃣ No`, 
+        treat:"Select service:\n1️⃣ Cleaning & Polishing 🦷\n2️⃣ Fillings\n3️⃣ Braces & Orthodontics 📐\n4️⃣ Teeth Whitening ⚪\n5️⃣ Extraction\n6️⃣ Dental Implants 🔬", 
         doc:"Preferred doctor:\n1️⃣ Dr. Ahmed\n2️⃣ Dr. Sarah\n3️⃣ Any available", 
-        date:(d)=>`When for ${d}?\n1️⃣ Tomorrow\n2️⃣ Wednesday`, 
-        slot:(d)=>`Available slots (${d}):\n1️⃣ 10:00 AM\n2️⃣ 4:00 PM`, 
+        date_label:(d)=>`When for ${d}?\n1️⃣ Tomorrow\n2️⃣ Wednesday`, 
+        slot_label:(d)=>`Available slots (${d}):\n1️⃣ 10:00 AM\n2️⃣ 4:00 PM`, 
         securing:"🔒 Securing your slot...", 
         confirmed:"✅ *Booking Successful!* 🎉", 
         summary:(d)=>`📋 *Your Details:*\n👤 ${d.name}\n🦷 ${d.treatment}\n📅 ${d.date}\n⏰ ${d.slot}\n👨‍⚕️ ${d.doctor}\n\n📅 Calendar sync: ✅\n🔔 Reminders scheduled` 
       },
       reminder:(n,date,slot,treat)=>`🔔 *Auto-Reminder (24h)*\nHi ${n}, your appointment tomorrow:\n📅 ${date} ⏰ ${slot}\n🦷 ${treat}\n\nSee you! 😊`,
       prices:`💰 *Prices:*\n• Cleaning: 200 SAR\n• Fillings: 350 SAR\n• Braces: 3000+ SAR\n• Implants: 4500+ SAR`,
-      location:`📍 *Location:*\nKhobar, Prince Turki St.\n🗺️ maps.google.com`
+      location:`📍 *Location:*\nCloud-First Operations.\nServing businesses worldwide 🌍`
     }
   };
+
 
   const bsGet = () => ({
     chat: document.getElementById('bsChat'),
@@ -2455,8 +2487,16 @@ window.addEventListener('load', () => {
     switch(bsStep){
       case 2:bsStep=3;bsSetProgress(3);await bsAddBot(b.name);bsEnableInput();break;
       case 3:bsData.name=ui;bsStep=4;bsSetProgress(4);bsUpdateDash();await bsAddBot(b.phone(bsData.phone));bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'نعم':'Yes'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'لا':'No'),value:'2'}]);break;
-      case 4:bsStep=5;bsSetProgress(5);await bsAddBot(b.treat);bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'تنظيف':'Cleaning'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'حشوات':'Fillings'),value:'2'},{label:'3️⃣ '+(bsData.lang==='ar'?'تقويم':'Braces'),value:'3'}]);break;
-      case 5:bsData.treatment=ui==='1'?(bsData.lang==='ar'?'تنظيف':'Cleaning'):ui==='2'?(bsData.lang==='ar'?'حشوات':'Fillings'):ui==='3'?(bsData.lang==='ar'?'تقويم':'Braces'):ui;bsStep=7;bsSetProgress(6);bsUpdateDash();await bsAddBot(b.doc);bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'د. أحمد':'Dr. Ahmed'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'د. سارة':'Dr. Sarah'),value:'2'},{label:'3️⃣ '+(bsData.lang==='ar'?'أي فريق':'Any'),value:'3'}]);break;
+      case 4:bsStep=5;bsSetProgress(5);await bsAddBot(b.treat);bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'تنظيف':'Cleaning'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'حشوات':'Fillings'),value:'2'},{label:'3️⃣ '+(bsData.lang==='ar'?'تقويم':'Braces'),value:'3'},{label:'4️⃣ '+(bsData.lang==='ar'?'تبييض':'Whitening'),value:'4'},{label:'5️⃣ '+(bsData.lang==='ar'?'خلع':'Extraction'),value:'5'},{label:'6️⃣ '+(bsData.lang==='ar'?'زراعة':'Implants'),value:'6'}]);break;
+      case 5:
+        if(ui==='1') bsData.treatment=bsData.lang==='ar'?'تنظيف وتلميع':'Cleaning & Polishing';
+        else if(ui==='2') bsData.treatment=bsData.lang==='ar'?'حشوات':'Fillings';
+        else if(ui==='3') bsData.treatment=bsData.lang==='ar'?'تقويم الأسنان':'Braces & Orthodontics';
+        else if(ui==='4') bsData.treatment=bsData.lang==='ar'?'تبييض الأسنان':'Teeth Whitening';
+        else if(ui==='5') bsData.treatment=bsData.lang==='ar'?'خلع':'Extraction';
+        else if(ui==='6') bsData.treatment=bsData.lang==='ar'?'زراعة أسنان':'Dental Implants';
+        else bsData.treatment=ui;
+        bsStep=7;bsSetProgress(6);bsUpdateDash();await bsAddBot(b.doc);bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'د. أحمد':'Dr. Ahmed'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'د. سارة':'Dr. Sarah'),value:'2'},{label:'3️⃣ '+(bsData.lang==='ar'?'أي فريق':'Any'),value:'3'}]);break;
       case 7:bsData.doctor=ui==='1'?(bsData.lang==='ar'?'د. أحمد':'Dr. Ahmed'):ui==='2'?(bsData.lang==='ar'?'د. سارة':'Dr. Sarah'):(bsData.lang==='ar'?'أي فريق متاح':'Any doctor');bsStep=8;bsSetProgress(7);await bsAddBot(b.date(bsData.doctor));bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'غداً':'Tomorrow'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'الأربعاء':'Wednesday'),value:'2'}]);break;
       case 8:bsData.date=ui==='1'?(bsData.lang==='ar'?'غداً':'Tomorrow'):(bsData.lang==='ar'?'الأربعاء':'Wednesday');bsStep=9;bsSetProgress(8);bsUpdateDash();await bsAddBot(b.slot(bsData.date));bsSetChips([{label:'1️⃣ '+(bsData.lang==='ar'?'10:00 ص':'10:00 AM'),value:'1'},{label:'2️⃣ '+(bsData.lang==='ar'?'4:00 م':'4:00 PM'),value:'2'}]);break;
       case 9:

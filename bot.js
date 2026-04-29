@@ -399,16 +399,21 @@ const EXIT_RE = /^(0|menu|main menu|back|go back|start over|قائمة|قائم�
 // Date helpers
 // ─────────────────────────────────────────────
 
-// BUG 2 — resolve "next monday" / bare weekday to actual date
 function getNextWeekday(dayName) {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const target = days.findIndex(d => d.toLowerCase() === dayName.toLowerCase());
   if (target === -1) return null;
-  const today = new Date();
-  let diff = target - today.getDay();
-  if (diff <= 0) diff += 7;
-  const result = new Date(today.getTime() + diff * 86400000);
-  return result.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const timezone = cl?.config?.timezone || cl?.timezone || 'Asia/Riyadh';
+  const now = DateTime.now().setZone(timezone);
+  let diff = target - now.weekday; 
+  // Actually Luxon weekday is 1-7 (Mon-Sun). JS getDay is 0-6 (Sun-Sat).
+  // Let's use JS style for the calculation to keep it simple but based on Riyadh time.
+  const riyadhNow = now.toJSDate();
+  let currentDay = riyadhNow.getDay();
+  let diffDays = target - currentDay;
+  if (diffDays <= 0) diffDays += 7;
+  const result = now.plus({ days: diffDays });
+  return result.toFormat('cccc, LLLL d, yyyy');
 }
 
 // BUG 3 — normalize raw date strings to readable title-case + year
@@ -430,19 +435,20 @@ function calculateRelativeDate(text) {
   const t = text.toLowerCase().trim();
   const cleaned = t.replace(/^(ok|okay|how about|what about|maybe|perhaps|let's try|try)\s+/i, '').trim();
   
-  // Pin to Saudi Arabia (Asia/Riyadh) for all relative calculations
-  const now = DateTime.now().setZone('Asia/Riyadh');
+  // Use clinic timezone or default to UTC for global focus
+  const timezone = cl?.config?.timezone || cl?.timezone || 'Asia/Riyadh';
+  const now = DateTime.now().setZone(timezone);
   const fmt = (d) => d.toFormat('cccc, LLLL d, yyyy'); // matches "Tuesday, April 20, 2026"
 
   if (/^(tomorrow|tmrw|غداً|بكرة|غدا)$/i.test(cleaned))
-    return fmt(new Date(now.getTime() + 86400000));
+    return fmt(now.plus({ days: 1 }));
 
   if (/^(today|اليوم)$/i.test(cleaned))
     return fmt(now);
 
   const afterDaysMatch = cleaned.match(/(?:after|in|بعد|في)\s+(\d+)\s+(?:days?|أيام?|يوم)/i);
   if (afterDaysMatch)
-    return fmt(new Date(now.getTime() + parseInt(afterDaysMatch[1]) * 86400000));
+    return fmt(now.plus({ days: parseInt(afterDaysMatch[1]) }));
 
   // "ok monday" / "next monday" / bare weekday name
   const nextWeekdayMatch = cleaned.match(/next\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i);
@@ -451,15 +457,15 @@ function calculateRelativeDate(text) {
     return getNextWeekday(cleaned);
 
   if (/next week|الأسبوع الجاي|بعد أسبوع/i.test(cleaned))
-    return fmt(new Date(now.getTime() + 7 * 86400000));
+    return fmt(now.plus({ weeks: 1 }));
 
   const weeksMatch = cleaned.match(/in\s+(\d+)\s+weeks?/i);
   if (weeksMatch)
-    return fmt(new Date(now.getTime() + parseInt(weeksMatch[1]) * 7 * 86400000));
+    return fmt(now.plus({ weeks: parseInt(weeksMatch[1]) }));
 
   // ── Direct month-day parser ("April 21", "april 4", "21 April", "may 15") ──
-  const MONTHS = { january:0, february:1, march:2, april:3, may:4, june:5, july:6, august:7, september:8, october:9, november:10, december:11 };
-  const MONTHS_AR = { 'يناير':0, 'فبراير':1, 'مارس':2, 'أبريل':3, 'مايو':4, 'يونيو':5, 'يوليو':6, 'أغسطس':7, 'سبتمبر':8, 'أكتوبر':9, 'نوفمبر':10, 'ديسمبر':11 };
+  const MONTHS = { january:1, february:2, march:3, april:4, may:5, june:6, july:7, august:8, september:9, october:10, november:11, december:12 };
+  const MONTHS_AR = { 'يناير':1, 'فبراير':2, 'مارس':3, 'أبريل':4, 'مايو':5, 'يونيو':6, 'يوليو':7, 'أغسطس':8, 'سبتمبر':9, 'أكتوبر':10, 'نوفمبر':11, 'ديسمبر':12 };
   // English: "April 21" or "21 April"
   const mdMatch = cleaned.match(/^(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})$/i)
                || cleaned.match(/^(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december)$/i);
@@ -469,11 +475,10 @@ function calculateRelativeDate(text) {
     else { monthName = mdMatch[2].toLowerCase(); day = parseInt(mdMatch[1]); }
     const month = MONTHS[monthName];
     if (month !== undefined && day >= 1 && day <= 31) {
-      const year = now.getFullYear();
-      let d = new Date(year, month, day);
-      d.setHours(0, 0, 0, 0);
-      const todayMidnight = new Date(now); todayMidnight.setHours(0, 0, 0, 0);
-      if (d < todayMidnight) d = new Date(year + 1, month, day);
+      const year = now.year;
+      let d = DateTime.fromObject({ year, month, day }, { zone: timezone }).startOf('day');
+      const todayMidnight = now.startOf('day');
+      if (d < todayMidnight) d = d.plus({ years: 1 });
       return fmt(d);
     }
   }
@@ -487,11 +492,10 @@ function calculateRelativeDate(text) {
     else { monthName = mdMatchAR[2]; day = parseInt(mdMatchAR[1]); }
     const month = MONTHS_AR[monthName];
     if (month !== undefined && day >= 1 && day <= 31) {
-      const year = now.getFullYear();
-      let d = new Date(year, month, day);
-      d.setHours(0, 0, 0, 0);
-      const todayMidnight = new Date(now); todayMidnight.setHours(0, 0, 0, 0);
-      if (d < todayMidnight) d = new Date(year + 1, month, day);
+      const year = now.year;
+      let d = DateTime.fromObject({ year, month, day }, { zone: timezone }).startOf('day');
+      const todayMidnight = now.startOf('day');
+      if (d < todayMidnight) d = d.plus({ years: 1 });
       return fmt(d);
     }
   }
@@ -504,21 +508,19 @@ function calculateRelativeDate(text) {
 function getDateISO(parsedDate) {
   if (!parsedDate) return null;
   try {
-    const currentYear = new Date().getFullYear();
-    // Try direct parse — works when year is already present (e.g. "Wednesday, April 3, 2026")
-    const d = new Date(parsedDate);
-    if (!isNaN(d.getTime()) && d.getFullYear() >= currentYear) {
-      return d.toISOString().split('T')[0];
+    const timezone = cl?.config?.timezone || cl?.timezone || 'Asia/Riyadh';
+    const now = DateTime.now().setZone(timezone);
+    const currentYear = now.year;
+    // Try direct parse
+    const d = DateTime.fromFormat(parsedDate, 'cccc, LLLL d, yyyy', { zone: timezone });
+    if (d.isValid && d.year >= currentYear) {
+      return d.toISODate();
     }
-    // Year missing or wrong — append current year and try again
-    const d2 = new Date(parsedDate + ` ${currentYear}`);
-    if (!isNaN(d2.getTime())) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (d2 >= today) return d2.toISOString().split('T')[0];
-      // Date with current year is already past → use next year
-      const d3 = new Date(parsedDate + ` ${currentYear + 1}`);
-      if (!isNaN(d3.getTime())) return d3.toISOString().split('T')[0];
+    // Try fallback
+    const dFallback = new Date(parsedDate);
+    if (!isNaN(dFallback.getTime())) {
+       const luxD = DateTime.fromJSDate(dFallback).setZone(timezone);
+       if (luxD.year >= currentYear) return luxD.toISODate();
     }
     return null;
   } catch (e) {
@@ -538,21 +540,20 @@ function getNextAvailableDays(workingDays, count) {
   const monthsEN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const monthsAR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
   const result = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const checkDate = new Date(today);
-  checkDate.setDate(checkDate.getDate() + 1); // start from tomorrow
+  const timezone = cl?.config?.timezone || cl?.timezone || 'Asia/Riyadh';
+  const now = DateTime.now().setZone(timezone).startOf('day');
+  let checkDate = now.plus({ days: 1 }); // start from tomorrow
   let guard = 0;
   while (result.length < count && guard++ < 60) {
-    const dayName = days[checkDate.getDay()];
+    const dayName = days[checkDate.weekday === 7 ? 0 : checkDate.weekday]; // Luxon 1=Mon, 7=Sun. JS 0=Sun.
     if (workingDays.includes(dayName)) {
       result.push({
-        iso:       checkDate.toISOString().split('T')[0],
-        displayEN: `${dayName}, ${monthsEN[checkDate.getMonth()]} ${checkDate.getDate()}`,
-        displayAR: `${daysAR[checkDate.getDay()]}، ${checkDate.getDate()} ${monthsAR[checkDate.getMonth()]}`
+        iso:       checkDate.toISODate(),
+        displayEN: `${dayName}, ${monthsEN[checkDate.month - 1]} ${checkDate.day}`,
+        displayAR: `${daysAR[checkDate.weekday === 7 ? 0 : checkDate.weekday]}، ${checkDate.day} ${monthsAR[checkDate.month - 1]}`
       });
     }
-    checkDate.setDate(checkDate.getDate() + 1);
+    checkDate = checkDate.plus({ days: 1 });
   }
   return result;
 }
@@ -1101,10 +1102,12 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       const minHours = cl.config?.booking_rules?.min_advance_hours ?? 1;
       const maxDays  = cl.config?.booking_rules?.max_advance_days  ?? 30;
       const slotHHMM = fd.slot_time_key || '09:00';
-      const bookingDT = new Date(`${fd.preferred_date_iso}T${slotHHMM}:00`);
-      const now = new Date();
-      const hoursUntil = (bookingDT - now) / 3600000;
-      const daysUntil  = (bookingDT - now) / 86400000;
+      const timezone = cl?.config?.timezone || cl?.timezone || 'Asia/Riyadh';
+      const bookingDT = DateTime.fromISO(`${fd.preferred_date_iso}T${slotHHMM}:00`, { zone: timezone });
+      const now = DateTime.now().setZone(timezone);
+      const diff = bookingDT.diff(now, ['hours', 'days']).toObject();
+      const hoursUntil = diff.hours + (diff.days || 0) * 24;
+      const daysUntil  = diff.days || (hoursUntil / 24);
 
       if (hoursUntil < minHours) {
         return sendMessage(phone, ar
@@ -1413,9 +1416,10 @@ async function handleRescheduleFlow(phone, rawMsg, extractedValue, lang, ar, ste
 
       setTimeout(async () => {
         try {
+          const emoji = dentalConfig.industry_terms.en.service_emoji || '🦷';
           const msg = reminderAr
-            ? `⏰ *تذكير بموعدك!* 🦷\n\nمرحباً ${fd.name}،\nتم تأكيد موعدك بنجاح:\n📅 ${fd.new_date}\n⏰ ${fd.new_slot}\n🏥 ${cl.name}\n\nنتطلع لرؤيتك! 😊`
-            : `⏰ *Appointment Reminder!* 🦷\n\nHi ${fd.name},\nYour appointment is confirmed:\n📅 ${fd.new_date}\n⏰ ${fd.new_slot}\n🏥 ${cl.name}\n\nWe look forward to seeing you! 😊`;
+            ? `⏰ *تذكير بموعدك!* ${emoji}\n\nمرحباً ${fd.name}،\nتم تأكيد موعدك بنجاح:\n📅 ${fd.new_date}\n⏰ ${fd.new_slot}\n🏥 ${cl.name}\n\nنتطلع لرؤيتك! 😊`
+            : `⏰ *Appointment Reminder!* ${emoji}\n\nHi ${fd.name},\nYour appointment is confirmed:\n📅 ${fd.new_date}\n⏰ ${fd.new_slot}\n🏥 ${cl.name}\n\nWe look forward to seeing you! 😊`;
           await sendMessage(reminderPhone, msg);
           console.log(`[Reminder] ✅ 3-min post-booking reminder sent to: ${reminderPhone} (Reschedule)`);
         } catch (e) {
@@ -1591,9 +1595,11 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
       }
       await savePatient(phone, { ...patient, current_flow: 'my_appointment', flow_step: 1, flow_data: { appointment_id: appt.id } });
       const apptTimeDisplay = ar ? toArabicTime(appt.time_slot) : appt.time_slot;
+      const emoji = dentalConfig.industry_terms.en.service_emoji || '🦷';
+      const treatmentLabel = ar ? (cl.vertical === 'dental' ? 'العلاج' : 'الخدمة') : (cl.vertical === 'dental' ? 'Treatment' : 'Service');
       return sendMessage(phone, ar
-        ? `📋 موعدك القادم:\n\n👤 الاسم: ${appt.name}\n🦷 العلاج: ${appt.treatment}\n📅 التاريخ: ${appt.preferred_date}\n⏰ الوقت: ${apptTimeDisplay}\n🏥 العيادة: ${cl.name}\n📊 الحالة: مؤكد ✅\n\nهل تريد تغيير شيء؟\n1️⃣ إعادة جدولة\n2️⃣ إلغاء الموعد\n3️⃣ العودة للقائمة\n\n💡 اضغط رقماً للمتابعة`
-        : `📋 Your upcoming appointment:\n\n👤 Name: ${appt.name}\n🦷 Treatment: ${appt.treatment}\n📅 Date: ${appt.preferred_date}\n⏰ Time: ${appt.time_slot}\n🏥 Clinic: ${cl.name}\n📊 Status: Confirmed ✅\n\nNeed to change anything?\n1️⃣ Reschedule\n2️⃣ Cancel\n3️⃣ Back to menu\n\n💡 Tap a number to continue`
+        ? `📋 موعدك القادم:\n\n👤 الاسم: ${appt.name}\n${emoji} ${treatmentLabel}: ${appt.treatment}\n📅 التاريخ: ${appt.preferred_date}\n⏰ الوقت: ${apptTimeDisplay}\n🏥 العيادة: ${cl.name}\n📊 الحالة: مؤكد ✅\n\nهل تريد تغيير شيء؟\n1️⃣ إعادة جدولة\n2️⃣ إلغاء الموعد\n3️⃣ العودة للقائمة\n\n💡 اضغط رقماً للمتابعة`
+        : `📋 Your upcoming appointment:\n\n👤 Name: ${appt.name}\n${emoji} ${treatmentLabel}: ${appt.treatment}\n📅 Date: ${appt.preferred_date}\n⏰ Time: ${appt.time_slot}\n🏥 Clinic: ${cl.name}\n📊 Status: Confirmed ✅\n\nNeed to change anything?\n1️⃣ Reschedule\n2️⃣ Cancel\n3️⃣ Back to menu\n\n💡 Tap a number to continue`
       );
     }
 
@@ -1750,17 +1756,24 @@ function toArabicDate(dateStr) {
 }
 
 function bookingSummaryMsg(ar, fd, phone, cl) {
+  const labels = ar ? dentalConfig.labels.ar : dentalConfig.labels.en;
   const doctorDisplay = ar
-    ? ((fd.doctor_name_ar || fd.doctor_name) ? (fd.doctor_name_ar || fd.doctor_name) : 'بدون تفضيل')
-    : (fd.doctor_name || 'No preference');
-  const notes = fd.description || (ar ? 'لا يوجد' : 'None');
-  // fd.time_slot is always English; convert to Arabic for display if needed
+    ? ((fd.doctor_name_ar || fd.doctor_name) ? (fd.doctor_name_ar || fd.doctor_name) : labels.no_preference)
+    : (fd.doctor_name || labels.no_preference);
+  const notes = fd.description || labels.none;
+  
   const displayTime      = ar ? (fd.time_slot_ar || toArabicTime(fd.time_slot)) : fd.time_slot;
   const displayTreatment = ar ? (TREATMENT_MAP_AR[fd.treatment] || fd.treatment) : fd.treatment;
   const displayDate      = ar ? toArabicDate(fd.preferred_date) : fd.preferred_date;
+  const emoji = dentalConfig.industry_terms.en.service_emoji || '🦷';
+  
+  const treatmentLabel = ar 
+    ? (cl.vertical === 'dental' ? labels.treatment : 'الخدمة') 
+    : (cl.vertical === 'dental' ? labels.treatment : 'Service');
+
   return ar
-    ? `✅ *ملخص الحجز*\n\n👤 *الاسم:* ${fd.name}\n📱 *الهاتف:* ${fd.phone || phone}\n🦷 *العلاج:* ${displayTreatment}\n📝 *الملاحظات:* ${notes}\n👨‍⚕️ *الطبيب:* ${doctorDisplay}\n📅 *التاريخ:* ${displayDate}\n⏰ *الوقت:* ${displayTime}\n🏥 *العيادة:* ${cl.name}\n\nهل كل شيء صحيح؟\n1️⃣ نعم، أؤكد الحجز ✅\n2️⃣ لا، أريد تغيير شيء\n\n💡 اضغط 1 للتأكيد أو 2 للعودة`
-    : `✅ *Booking Summary*\n\n👤 *Name:* ${fd.name}\n📱 *Phone:* ${fd.phone || phone}\n🦷 *Treatment:* ${fd.treatment}\n📝 *Notes:* ${notes}\n👨‍⚕️ *Doctor:* ${fd.doctor_name || 'No preference'}\n📅 *Date:* ${fd.preferred_date}\n⏰ *Time:* ${fd.time_slot}\n🏥 *Clinic:* ${cl.name}\n\nDoes everything look correct?\n1️⃣ Yes, confirm booking ✅\n2️⃣ No, make changes\n\n💡 Tap 1 to confirm or 2 to go back`;
+    ? `✅ *${labels.summary_title}*\n\n👤 *${labels.name}:* ${fd.name}\n📱 *${labels.phone}:* ${fd.phone || phone}\n${emoji} *${treatmentLabel}:* ${displayTreatment}\n📝 *${labels.notes}:* ${notes}\n👨‍⚕️ *${labels.doctor}:* ${doctorDisplay}\n📅 *${labels.date}:* ${displayDate}\n⏰ *${labels.time}:* ${displayTime}\n🏥 *${labels.clinic}:* ${cl.name}\n\n${labels.confirm_prompt}\n1️⃣ ${labels.confirm_yes}\n2️⃣ ${labels.confirm_no}\n\n💡 ${labels.confirm_hint}`
+    : `✅ *${labels.summary_title}*\n\n👤 *${labels.name}:* ${fd.name}\n📱 *${labels.phone}:* ${fd.phone || phone}\n${emoji} *${treatmentLabel}:* ${fd.treatment}\n📝 *${labels.notes}:* ${notes}\n👨‍⚕️ *${labels.doctor}:* ${fd.doctor_name || labels.no_preference}\n📅 *${labels.date}:* ${fd.preferred_date}\n⏰ *${labels.time}:* ${fd.time_slot}\n🏥 *${labels.clinic}:* ${cl.name}\n\n${labels.confirm_prompt}\n1️⃣ ${labels.confirm_yes}\n2️⃣ ${labels.confirm_no}\n\n💡 ${labels.confirm_hint}`;
 }
 
 function doctorSelectionMsg(ar, doctors) {
@@ -1801,9 +1814,7 @@ function treatmentMenuMsg(ar) {
 }
 
 function timeSlotMsg(ar) {
-  return ar
-    ? 'اختر الوقت المناسب: ⏰\n\n1. 9:00 صباحاً\n2. 10:00 صباحاً\n3. 11:00 صباحاً\n4. 1:00 مساءً\n5. 2:00 مساءً\n6. 3:00 مساءً\n7. 4:00 مساءً\n8. 5:00 مساءً\n\n💡 اضغط رقماً لاختيار موعدك\n0️⃣ القائمة الرئيسية'
-    : 'Choose your preferred time: ⏰\n\n1. 9:00 AM\n2. 10:00 AM\n3. 11:00 AM\n4. 1:00 PM\n5. 2:00 PM\n6. 3:00 PM\n7. 4:00 PM\n8. 5:00 PM\n\n💡 Tap a number to select your time\n0️⃣ Main menu';
+  return ar ? dentalConfig.time_slots.ar : dentalConfig.time_slots.en;
 }
 
 function servicesMsg(ar, cl) {
@@ -1819,8 +1830,8 @@ function servicesMsg(ar, cl) {
 function pricesMsg(ar, cl) {
   if (cl.vertical === 'saas') {
     return ar
-      ? '💳 أسعار Qudozen:\n\n• وعي (فردي): 299 ريال/شهر\n• نظام (متعدد): 499 ريال/شهر + 699 إعداد\n• سرب: حسب الطلب\n\n💡 اضغط 1 لتفعيل تجربتك المجانية أو 0 للقائمة'
-      : '💳 Qudozen Pricing:\n\n• Awareness (Solo): 299 SAR/month\n• System (Multi-doctor): 499 SAR/month + 699 SAR setup\n• Swarm (Enterprise): Custom\n\n💡 Tap 1 to start free trial or 0 for menu';
+      ? '💳 أسعار Qudozen:\n\n• وعي (فردي): 300 ريال/شهر (~80$)\n• نظام (متعدد): 500 ريال/شهر (~133$)\n• تأسيس: 700 ريال (~186$)\n• سرب: حسب الطلب\n\n💡 اضغط 1 لتفعيل تجربتك المجانية أو 0 للقائمة'
+      : '💳 Qudozen Pricing:\n\n• Awareness (Solo): 300 SAR/month (~80$)\n• System (Multi-doctor): 500 SAR/month (~133$)\n• Setup: 700 SAR (~186$)\n• Swarm (Enterprise): Custom\n\n💡 Tap 1 to start free trial or 0 for menu';
   }
   return ar ? dentalConfig.messages.prices.ar : dentalConfig.messages.prices.en;
 }
@@ -1830,8 +1841,8 @@ function locationMsg(ar, cl) {
   const isSaaS = cl?.vertical === 'saas';
   if (isSaaS) {
     return ar
-      ? `📍 *مقر Qudozen الرئيسي*\n\n*الموقع:*\nالرياض، المملكة العربية السعودية (مبنى الابتكار الرقمي)\n\n🗺️ خرائط Google: https://maps.google.com\n\n*🕐 الدعم الفني:*\nمتاح 24/7 عبر الأنظمة الذكية.\n\n💡 اضغط 1 للتفعيل أو 0 للقائمة الرئيسية`
-      : `📍 *Qudozen Headquarters*\n\n*Location:*\nRiyadh, Saudi Arabia (Digital Innovation Hub)\n\n🗺️ Google Maps: https://maps.google.com\n\n*🕐 Support Hours:*\nAvailable 24/7 via Autonomous Systems.\n\n💡 Tap 1 to activate or 0 for main menu`;
+      ? `📍 *مقر Qudozen الرئيسي*\n\n*الموقع:*\nالعمليات السحابية العالمية (تدار بالكامل بالذكاء الاصطناعي)\n\n🗺️ خرائط Google: https://maps.google.com\n\n*🕐 الدعم الفني:*\nمتاح 24/7 عبر الأنظمة الذكية والدردشة المباشرة.\n\n💡 اضغط 1 للتفعيل أو 0 للقائمة الرئيسية`
+      : `📍 *Qudozen Headquarters*\n\n*Location:*\nGlobal Cloud Operations (Autonomous Architecture)\n\n🗺️ Google Maps: https://maps.google.com\n\n*🕐 Support Hours:*\nAvailable 24/7 via Autonomous Systems and Live Chat.\n\n💡 Tap 1 to activate or 0 for main menu`;
   }
   return ar
     ? `📍 *موقع ${cl.name}*\n\n*العنوان:*\n${cl.location || 'تواصل معنا للعنوان'}\n\n🗺️ خرائط Google: ${cl.maps_link || 'https://maps.google.com'}\n\n*🕐 أوقات العمل:*\n*الأحد – الخميس:* 9:00 صباحاً – 9:00 مساءً\n*الجمعة:* 4:00 مساءً – 9:00 مساءً\n*السبت:* 9:00 صباحاً – 6:00 مساءً\n\n💡 اضغط 1 للحجز أو 0 للقائمة الرئيسية`
