@@ -57,6 +57,20 @@
     "help_examples": {
       "en": "💬 *Or just tell me what you need:*\n- 'I have a toothache' → I'll book you in\n- 'How much for braces?' → I'll show prices\n- 'Where are you?' → I'll share location\n- 'Cancel my appointment' → I'll handle it\n\nType 0 anytime to return to main menu 😊",
       "ar": "💬 *أو أخبرني بما تحتاج:*\n- 'سني يوجعني' ← سأحجز لك موعداً\n- 'كم سعر التقويم؟' ← سأعرض الأسعار\n- 'وين العيادة؟' ← سأشارك الموقع\n- 'أبغى ألغي موعدي' ← سأتولى الأمر\n\nاكتب 0 في أي وقت للعودة للقائمة الرئيسية 😊"
+    },
+    "reminders": {
+      "24h": {
+        "en": "🔔 Appointment Reminder!\nHi {name}, I'm *Jake*. Reminding you of your appointment tomorrow:\n📅 {date} at ⏰ {slot}\n🏥 {clinic}\n🦷 Treatment: {treatment}\n\nSee you then! Reply 'reschedule' if you need to change it 😊",
+        "ar": "🔔 تذكير بالموعد!\nمرحباً {name}، أنا *جيك*، أذكرك بموعدك غداً:\n📅 {date} الساعة ⏰ {slot}\n🏥 {clinic}\n🦷 العلاج: {treatment}\n\nنراك قريباً! إذا أردت إعادة الجدولة، أرسل 'إعادة جدولة' 😊"
+      },
+      "1h": {
+        "en": "⏰ Your appointment is in 1 hour!\n📅 Today at {slot}\n🏥 {clinic}\nWe're looking forward to seeing you! 🦷",
+        "ar": "⏰ موعدك بعد ساعة واحدة!\n📅 اليوم الساعة {slot}\n🏥 {clinic}\nنتطلع لرؤيتك! 🦷"
+      },
+      "follow_up": {
+        "en": "😊 Hi {name}! I'm *Jake*. How was your visit with us?\nWe hope everything went well!\nWe'd love to hear your feedback:\n⭐ {link}\n\nFeel free to message us anytime 🦷",
+        "ar": "😊 مرحباً {name}! أنا *جيك*، كيف كانت زيارتك لنا؟\nنأمل أن كل شيء سار بشكل رائع!\nيسعدنا سماع رأيك:\n⭐ {link}\n\nلا تتردد في مراسلتنا في أي وقت 🦷"
+      }
     }
   },
   "interactive_menus": {

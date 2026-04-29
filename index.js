@@ -7,6 +7,7 @@ const { DateTime } = require('luxon');
 const path    = require('path');
 const session = require('express-session');
 const app     = express();
+const dentalConfig = require('./verticals/dental.json');
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'qudozen_secret_123',
@@ -555,9 +556,14 @@ app.post('/send-reminders', async (req, res) => {
 
       // ── 24h reminder
       if (apptDateISO === tomorrowISO && !appt.reminder_sent_24h) {
-        const msg = ar
-          ? `🔔 تذكير بالموعد!\nمرحباً ${appt.name}، أنا *جيك*، أذكرك بموعدك غداً:\n📅 ${appt.preferred_date} الساعة ⏰ ${appt.time_slot}\n🏥 ${clinicName}\n🦷 العلاج: ${appt.treatment}\n\nنراك قريباً! إذا أردت إعادة الجدولة، أرسل 'إعادة جدولة' 😊`
-          : `🔔 Appointment Reminder!\nHi ${appt.name}, I'm *Jake*. Reminding you of your appointment tomorrow:\n📅 ${appt.preferred_date} at ⏰ ${appt.time_slot}\n🏥 ${clinicName}\n🦷 Treatment: ${appt.treatment}\n\nSee you then! Reply 'reschedule' if you need to change it 😊`;
+        const template = ar ? dentalConfig.messages.reminders['24h'].ar : dentalConfig.messages.reminders['24h'].en;
+        const msg = template
+          .replace('{name}', appt.name)
+          .replace('{date}', appt.preferred_date)
+          .replace('{slot}', appt.time_slot)
+          .replace('{clinic}', clinicName)
+          .replace('{treatment}', appt.treatment);
+          
         await sendMessage(appt.phone, msg);
         await updateAppointment(appt.id, { reminder_sent_24h: true });
         console.log(`[Reminders] 24h sent to ${appt.phone} (${ar ? 'AR' : 'EN'})`);
@@ -576,9 +582,11 @@ app.post('/send-reminders', async (req, res) => {
           slotTime.setHours(h, m, 0, 0);
           const diffMin = (slotTime - now) / 60000;
           if (diffMin >= 30 && diffMin <= 90) {
-            const msg = ar
-              ? `⏰ موعدك بعد ساعة واحدة!\n📅 اليوم الساعة ${appt.time_slot}\n🏥 ${clinicName}\nنتطلع لرؤيتك! 🦷`
-              : `⏰ Your appointment is in 1 hour!\n📅 Today at ${appt.time_slot}\n🏥 ${clinicName}\nWe're looking forward to seeing you! 🦷`;
+            const template = ar ? dentalConfig.messages.reminders['1h'].ar : dentalConfig.messages.reminders['1h'].en;
+            const msg = template
+              .replace('{slot}', appt.time_slot)
+              .replace('{clinic}', clinicName);
+              
             await sendMessage(appt.phone, msg);
             await updateAppointment(appt.id, { reminder_sent_1h: true });
             console.log(`[Reminders] 1h sent to ${appt.phone} (${ar ? 'AR' : 'EN'})`);
