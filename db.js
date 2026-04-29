@@ -633,6 +633,61 @@ async function createGrowthEvent(data) {
   }
 }
 
+async function createTrial(data) {
+  try {
+    const res = await axios.post(`${SUPABASE_URL}/rest/v1/trials`, data, { 
+      headers: { ...headers, Prefer: 'return=representation' } 
+    });
+    return res.data?.[0] || null;
+  } catch (err) {
+    console.error('createTrial error:', err.response?.data || err.message);
+    throw err;
+  }
+}
+
+async function getTrialById(id) {
+  try {
+    const res = await axios.get(`${SUPABASE_URL}/rest/v1/trials?id=eq.${id}&select=*`, { headers });
+    return res.data?.[0] || null;
+  } catch (err) {
+    console.error('getTrialById error:', err.message);
+    return null;
+  }
+}
+
+async function updateTrialStatus(id, status) {
+  try {
+    await axios.patch(`${SUPABASE_URL}/rest/v1/trials?id=eq.${id}`, { status }, { headers });
+  } catch (err) {
+    console.error('updateTrialStatus error:', err.message);
+  }
+}
+
+async function getExpiredTrials() {
+  try {
+    const now = new Date().toISOString();
+    const res = await axios.get(`${SUPABASE_URL}/rest/v1/trials?expires_at=lt.${now}&status=eq.active&select=*`, { headers });
+    return res.data || [];
+  } catch (err) {
+    console.error('getExpiredTrials error:', err.message);
+    return [];
+  }
+}
+
+async function logEvent(event, session_id, metadata = {}) {
+  try {
+    // Standard event logging to gs_events
+    await axios.post(`${SUPABASE_URL}/rest/v1/gs_events`, {
+      event_type: event,
+      session_id,
+      metadata,
+      created_at: new Date().toISOString()
+    }, { headers });
+  } catch (err) {
+    console.error('logEvent error:', err.message);
+  }
+}
+
 async function upsertLead(data) {
   try {
     await axios.post(`${SUPABASE_URL}/rest/v1/gs_leads`, data, { 
