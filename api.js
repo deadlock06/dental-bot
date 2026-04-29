@@ -159,6 +159,14 @@ router.post('/sync-simulation', async (req, res) => {
   }
 });
 
+// POST /api/analytics — Log frontend events
+router.post('/analytics', (req, res) => {
+  const { event, session_id, metadata } = req.body || {};
+  const db = require('./db');
+  db.logEvent(event, session_id, metadata).catch(e => console.error('[Analytics] Background error:', e.message));
+  res.json({ success: true });
+});
+
 router.get('/analytics', async (req, res) => {
   try {
     const { clinic_id, period = '30d' } = req.query;

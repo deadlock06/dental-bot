@@ -34,6 +34,11 @@ app.use('/api', apiRoutes);
 // Expose verticals configs
 app.use('/config/verticals', express.static(path.join(__dirname, 'verticals')));
 
+// Explicit route for dental config (legacy or dynamic fetch)
+app.get('/config/dental', (req, res) => {
+  res.sendFile(path.join(__dirname, 'verticals', 'dental.json'));
+});
+
 const growthRouter = require('./growth/index');
 const { handoffLead } = require('./growth/handoff');
 const growthSupabase = require('./growth/lib/supabase');
@@ -135,12 +140,7 @@ app.post('/api/start-trial', async (req, res) => {
   }
 });
 
-// Analytics endpoint
-app.post('/api/analytics', (req, res) => {
-  // const { event, session_id, metadata } = req.body;
-  // db.logEvent(event, session_id, metadata).catch(e => console.error('logEvent background error:', e.message));
-  res.json({ success: true });
-});
+// Analytics moved to api.js
 
 // Admin: Expire trials
 app.post('/api/admin/expire-trials', async (req, res) => {
