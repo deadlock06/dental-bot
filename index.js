@@ -137,8 +137,8 @@ app.post('/api/start-trial', async (req, res) => {
 
 // Analytics endpoint
 app.post('/api/analytics', (req, res) => {
-  const { event, session_id, metadata } = req.body;
-  db.logEvent(event, session_id, metadata).catch(e => console.error('logEvent background error:', e.message));
+  // const { event, session_id, metadata } = req.body;
+  // db.logEvent(event, session_id, metadata).catch(e => console.error('logEvent background error:', e.message));
   res.json({ success: true });
 });
 
