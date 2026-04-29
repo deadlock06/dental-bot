@@ -2,83 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <script>
-const serviceDB = {
-  "reception": {
-    "icon": "🤖",
-    "ar": {
-      "title": "موظف الاستقبال الذكي",
-      "desc": "نظام استقبال ذكي متكامل عبر الدردشة يدير المرضى من الطلب حتى الحضور.",
-      "flow": ["استلام الطلب وتحليله", "تنسيق الوقت مع التقويم", "تأكيد وحجز الموعد آلياً"],
-      "benefits": ["حجز آلي بنسبة 100%", "تذكيرات تقلل الغياب 80%", "دعم ثنائي اللغة", "مزامنة تقويم جوجل"]
-    },
-    "en": {
-      "title": "Smart Receptionist",
-      "desc": "Autonomous system that manages patients via Smart Chat from initial request to booking.",
-      "flow": ["Inquiry analysis", "Calendar coordination", "Automated confirmation"],
-      "benefits": ["100% Automated booking", "Reduce no-shows by 80%", "Bilingual support", "Google Calendar sync"]
-    }
-  },
-  "growth": {
-    "icon": "🎯",
-    "ar": {
-      "title": "محرك النمو التلقائي",
-      "desc": "وكالة تسويق رقمية في نظام واحد للبحث عن العملاء وبناء الثقة.",
-      "flow": ["استخراج بيانات الجمهور", "إرسال رسائل مخصصة AI", "متابعة العملاء المترددين"],
-      "benefits": ["استهداف جغرافي دقيق", "رسائل AI عالية التحويل", "متابعة آلية ذكية", "تقارير أداء حية"]
-    },
-    "en": {
-      "title": "Automatic Growth Engine",
-      "desc": "A digital marketing agency in one system to find customers and build trust.",
-      "flow": ["Audience data extraction", "Personalized AI outreach", "Automated follow-ups"],
-      "benefits": ["Precise geo-targeting", "High-conversion AI copy", "Smart persistent follow-up", "Live ROI dashboard"]
-    }
-  },
-  "realestate": {
-    "icon": "🏢",
-    "ar": {
-      "title": "المساعد العقاري",
-      "desc": "تأهيل العملاء وجدولة المعاينات وتوزيع الفرص على الوكلاء.",
-      "flow": ["تأهيل ميزانية العميل", "عرض الوحدات المناسبة", "جدولة المعاينة للوكيل"],
-      "benefits": ["تأهيل فوري للمشترين", "فرز الطلبات العقارية", "مزامنة معاينات حية", "تنبيهات مبيعات ساخنة"]
-    },
-    "en": {
-      "title": "Real Estate Assistant",
-      "desc": "Qualifying leads, scheduling viewings, and distributing opportunities to agents.",
-      "flow": ["Budget qualification", "Property matching", "Viewing coordination"],
-      "benefits": ["Instant buyer qualification", "Property requirement filtering", "Live viewing sync", "Hot lead alerts"]
-    }
-  },
-  "web": {
-    "icon": "🌐",
-    "ar": {
-      "title": "أنظمة ويب للتحويل",
-      "desc": "مواقع فائقة السرعة مصممة خصيصاً لجلب العملاء وتحويلهم.",
-      "flow": ["تحليل تجربة المستخدم", "تصميم واجهات جذابة", "تحسين محركات البحث"],
-      "benefits": ["سرعة تحميل فائقة", "تصميم متجاوب بالكامل", "تحويل زوار أعلى", "تحليلات دقيقة"]
-    },
-    "en": {
-      "title": "Web Conversion Systems",
-      "desc": "High-performance websites designed specifically for lead generation.",
-      "flow": ["UX analysis", "Visual design", "SEO optimization"],
-      "benefits": ["Ultra-fast loading", "Full responsiveness", "Higher conversion rate", "Deep analytics"]
-    }
-  },
-  "analytics": {
-    "icon": "📊",
-    "ar": {
-      "title": "البيانات الحية",
-      "desc": "لوحة تحكم ذكية تعرض أداء منشأتك وأرباحك لحظة بلحظة.",
-      "flow": ["ربط مصادر البيانات", "تحليل الأداء المالي", "توقعات النمو بالذكاء الاصطناعي"],
-      "benefits": ["رؤية شاملة للأرباح", "تتبع دقيق للحملات", "تنبيهات الفرص الضائعة", "تقارير تلقائية للمدير"]
-    },
-    "en": {
-      "title": "Live Analytics",
-      "desc": "Smart dashboard displaying your business performance and revenue in real-time.",
-      "flow": ["Data source integration", "Financial performance audit", "AI growth forecasting"],
-      "benefits": ["Full revenue visibility", "Campaign tracking", "Missed opportunity alerts", "Automated management reports"]
-    }
-  }
-};
+
 
 function openModal(id) {
   const d = serviceDB[id];
@@ -2256,7 +2180,7 @@ window.addEventListener('load', () => {
       console.warn('[Config] Using hardcoded fallbacks', e.message);
     }
   }
-  loadVerticalConfig();
+  window.addEventListener('DOMContentLoaded', loadVerticalConfig);
 
   let fomoIdx=0;
   function showFomoItem(){

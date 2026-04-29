@@ -27,6 +27,8 @@ app.use(helmet({
   contentSecurityPolicy: false, // allow external assets/scripts for now
 }));
 const apiRoutes = require('./api');
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 app.use('/api', apiRoutes);
 
 // Expose verticals configs
@@ -305,8 +307,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
 // Legacy growth webhook placeholder (kept for backward-compat)
 app.post('/growth/stripe-webhook', express.raw({ type: 'application/json' }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false })); // Twilio sends URL-encoded bodies
+
 
 app.use('/growth', express.static(path.join(__dirname, 'growth')));
 app.use('/growth', growthRouter);
