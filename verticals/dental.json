@@ -3,12 +3,14 @@
   "industry_terms": {
     "en": {
       "team": "Dental Team",
+      "team_menu": "Our Doctors 👨‍⚕️",
       "general_specialty": "General Dentistry",
       "symptom_reply": "Sounds like you have a dental issue 😊 Let's get you booked — what's your full name?",
       "service_emoji": "🦷"
     },
     "ar": {
       "team": "فريقنا الطبي",
+      "team_menu": "أطباؤنا 👨‍⚕️",
       "general_specialty": "طب أسنان عام",
       "symptom_reply": "يبدو أن عندك ألم 😊 لنبدأ الحجز — ما اسمك الكريم؟"
     }

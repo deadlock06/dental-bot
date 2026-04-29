@@ -62,7 +62,7 @@ async function sendSmartMenu(phone, ar, cl) {
 function menuEN(clOrName) {
   const name = typeof clOrName === 'string' ? clOrName : (clOrName?.name || 'Our Clinic');
   const vert = typeof clOrName === 'object' ? (clOrName?.vertical || clOrName?.industry) : 'dental';
-  const team = vert === 'dental' ? 'Our Doctors 👨‍⚕️' : 'Our Team 👨‍⚕️';
+  const team = vert === 'dental' ? dentalConfig.industry_terms.en.team_menu || 'Our Doctors 👨‍⚕️' : 'Our Team 👨‍⚕️';
   
   if (vert === 'saas') {
     return `Welcome to ${name}! 🚀\nI'm *Jake*, your AI Business Specialist.\n\nHow can I help you today?\n\n1️⃣ Book / Start Trial 📅\n2️⃣ My Appointment 📋\n3️⃣ Reschedule 🔄\n4️⃣ Cancel ❌\n5️⃣ Our services 🚀\n6️⃣ ${team}\n7️⃣ Prices 💳\n8️⃣ Location 📍\n9️⃣ Leave a review ⭐\n🔟 Talk to staff 👩\n\n💡 Tap a number or tell me what you need`;
@@ -74,7 +74,7 @@ function menuEN(clOrName) {
 function menuAR(clOrName) {
   const name = typeof clOrName === 'string' ? clOrName : (clOrName?.name || 'عيادتنا');
   const vert = typeof clOrName === 'object' ? (clOrName?.vertical || clOrName?.industry) : 'dental';
-  const team = vert === 'dental' ? 'أطباؤنا 👨‍⚕️' : 'فريقنا 👨‍⚕️';
+  const team = vert === 'dental' ? dentalConfig.industry_terms.ar.team_menu || 'أطباؤنا 👨‍⚕️' : 'فريقنا 👨‍⚕️';
 
   if (vert === 'saas') {
     return `أهلاً بك في ${name}! 🚀\nأنا *جيك*، أخصائي الأعمال الذكي الخاص بك.\n\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز / تفعيل تجربة 📅\n2️⃣ موعدي الحالي 📋\n3️⃣ إعادة جدولة 🔄\n4️⃣ إلغاء الموعد ❌\n5️⃣ خدماتنا 🚀\n6️⃣ ${team}\n7️⃣ الأسعار 💳\n8️⃣ الموقع 📍\n9️⃣ تقييم العيادة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️\n\n💡 اضغط رقماً أو أخبرني بما تحتاج`;
