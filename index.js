@@ -23,9 +23,9 @@ app.use(session({
 app.use(cookieParser());
 app.use(require('morgan')('dev'));
 
-app.use(helmet({
-  contentSecurityPolicy: false, // allow external assets/scripts for now
-}));
+// app.use(helmet({
+//   contentSecurityPolicy: false, 
+// }));
 const apiRoutes = require('./api');
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -136,9 +136,9 @@ app.post('/api/start-trial', async (req, res) => {
 });
 
 // Analytics endpoint
-app.post('/api/analytics', async (req, res) => {
+app.post('/api/analytics', (req, res) => {
   const { event, session_id, metadata } = req.body;
-  await db.logEvent(event, session_id, metadata);
+  db.logEvent(event, session_id, metadata).catch(e => console.error('logEvent background error:', e.message));
   res.json({ success: true });
 });
 
