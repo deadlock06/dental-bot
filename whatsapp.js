@@ -3,6 +3,8 @@ const twilio = require('twilio');
 // Internal storage for web-based chat responses (Sandbox/Simulator mode)
 const webResponses = new Map();
 
+const dentalConfig = require('./verticals/dental.json');
+
 
 async function sendMessage(to, text) {
   if (to.startsWith('web_')) {
@@ -97,7 +99,7 @@ async function sendInteractiveList(to, header, body, buttonText, sections, fallb
 // ─────────────────────────────────────────────
 function getindustryIcon(industry) {
   const icons = {
-    dental:      '🦷',
+    dental:      dentalConfig.industry_terms.en.service_emoji,
     physio:      '🧘',
     dermatology: '🧴',
     cosmetic:    '✨',
@@ -213,7 +215,7 @@ async function sendDoctorMenu(to, ar, doctors, plainTextFallback, industry = 'de
   });
 
   const teamTitle = {
-    dental:      { ar: 'فريقنا الطبي', en: 'Our Dental Team' },
+    dental:      { ar: dentalConfig.industry_terms.ar.team, en: dentalConfig.industry_terms.en.team },
     physio:      { ar: 'طاقم العلاج الطبيعي', en: 'Our Physio Team' },
     dermatology: { ar: 'أطباؤنا المختصون', en: 'Our Specialists' },
     general:     { ar: 'فريقنا الطبي', en: 'Our Medical Team' }
@@ -248,26 +250,8 @@ async function sendTreatmentMenu(to, ar, plainTextFallback, industry = 'dental',
     // 2. Fallback to industry defaults
     const defaults = {
       dental: ar
-        ? [
-            { id: '1', title: 'تنظيف وتلميع 🦷',       description: 'إزالة الجير والتلميع' },
-            { id: '2', title: 'حشوات',                  description: 'علاج التسوس' },
-            { id: '3', title: 'تقويم الأسنان 📐',       description: 'تقويم وتصحيح الأسنان' },
-            { id: '4', title: 'تبييض الأسنان ⚪',        description: 'تفتيح لون الأسنان' },
-            { id: '5', title: 'خلع',                    description: 'خلع سن' },
-            { id: '6', title: 'زراعة أسنان 🔬',         description: 'زراعة سن جذري' },
-            { id: '7', title: 'علاج العصب 🏥',          description: 'علاج قناة الجذر' },
-            { id: '8', title: 'أخرى / غير متأكد',       description: 'استشارة أو علاج آخر' }
-          ]
-        : [
-            { id: '1', title: 'Cleaning & Polishing 🦷', description: 'Scaling and polishing' },
-            { id: '2', title: 'Fillings',                description: 'Cavity treatment' },
-            { id: '3', title: 'Braces & Orthodontics 📐',description: 'Teeth straightening' },
-            { id: '4', title: 'Teeth Whitening ⚪',      description: 'Brighten your smile' },
-            { id: '5', title: 'Extraction',              description: 'Tooth removal' },
-            { id: '6', title: 'Dental Implants 🔬',     description: 'Permanent tooth replacement' },
-            { id: '7', title: 'Root Canal 🏥',           description: 'Root canal treatment' },
-            { id: '8', title: 'Other / Not sure',        description: 'Consultation or other' }
-          ],
+        ? dentalConfig.interactive_menus.treatments.ar
+        : dentalConfig.interactive_menus.treatments.en,
       physio: ar
         ? [
             { id: '1', title: 'تقييم أولي 📋',           description: 'فحص وتشخيص أولي' },

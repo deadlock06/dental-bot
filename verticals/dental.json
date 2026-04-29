@@ -1,0 +1,84 @@
+{
+  "name": "dental",
+  "industry_terms": {
+    "en": {
+      "team": "Dental Team",
+      "general_specialty": "General Dentistry",
+      "symptom_reply": "Sounds like you have a dental issue 😊 Let's get you booked — what's your full name?",
+      "service_emoji": "🦷"
+    },
+    "ar": {
+      "team": "فريقنا الطبي",
+      "general_specialty": "طب أسنان عام",
+      "symptom_reply": "يبدو أن عندك ألم 😊 لنبدأ الحجز — ما اسمك الكريم؟"
+    }
+  },
+  "treatments": {
+    "en": [
+      "Cleaning & Polishing",
+      "Fillings",
+      "Braces & Orthodontics",
+      "Teeth Whitening",
+      "Extraction",
+      "Dental Implants",
+      "Root Canal",
+      "Other"
+    ],
+    "ar": [
+      "تنظيف وتلميع",
+      "حشوات",
+      "تقويم الأسنان",
+      "تبييض الأسنان",
+      "خلع",
+      "زراعة أسنان",
+      "علاج العصب",
+      "أخرى"
+    ]
+  },
+  "messages": {
+    "treatment_menu": {
+      "en": "What type of treatment do you need?\n\n1. Cleaning & Polishing 🦷\n2. Fillings\n3. Braces & Orthodontics 📐\n4. Teeth Whitening ⚪\n5. Extraction\n6. Dental Implants 🔬\n7. Root Canal 🏥\n8. Other / Not sure\n\n💡 Tap a number to choose\n0️⃣ Main menu",
+      "ar": "ما نوع العلاج الذي تحتاجه؟\n\n1. تنظيف وتلميع 🦷\n2. حشوات\n3. تقويم الأسنان 📐\n4. تبييض الأسنان ⚪\n5. خلع\n6. زراعة أسنان 🔬\n7. علاج العصب 🏥\n8. أخرى / غير متأكد\n\n💡 اضغط رقماً للاختيار\n0️⃣ القائمة الرئيسية"
+    },
+    "services": {
+      "en": "🦷 Our Services:\n\n✨ Cleaning & Polishing\n🔧 Fillings & Restorations\n📐 Braces & Orthodontics\n⚪ Teeth Whitening\n🔬 Dental Implants\n❌ Extractions\n🏥 Root Canal Treatment\n👶 Pediatric Dentistry\n🦷 Veneers & Crowns\n😁 Smile Makeover\n\n💡 Tap 1 to book or 0 for main menu",
+      "ar": "🦷 خدماتنا:\n\n✨ تنظيف وتلميع الأسنان\n🔧 الحشوات والترميم\n📐 تقويم الأسنان\n⚪ تبييض الأسنان\n🔬 زراعة الأسنان\n❌ خلع الأسنان\n🏥 علاج العصب\n👶 طب أسنان الأطفال\n🦷 القشور والتيجان\n😁 ابتسامة هوليوود\n\n💡 اضغط 1 للحجز أو 0 للقائمة الرئيسية"
+    },
+    "prices": {
+      "en": "💰 Our Approximate Prices:\n\n✨ Cleaning: 150-250 SAR\n🔧 Filling: 200-400 SAR\n⚪ Whitening: 800-1,500 SAR\n📐 Braces: 3,000-8,000 SAR\n🔬 Implant: 3,500-6,000 SAR\n🏥 Root Canal: 800-1,500 SAR\n🦷 Veneer: 800-1,200 SAR per tooth\n\n📌 Final prices confirmed after examination.\n\n💡 Tap 1 to book or 0 for main menu",
+      "ar": "💰 أسعارنا التقريبية:\n\n✨ تنظيف: 150-250 ريال\n🔧 حشوة: 200-400 ريال\n⚪ تبييض: 800-1,500 ريال\n📐 تقويم: 3,000-8,000 ريال\n🔬 زراعة: 3,500-6,000 ريال\n🏥 علاج عصب: 800-1,500 ريال\n🦷 قشرة: 800-1,200 ريال للسن\n\n📌 الأسعار النهائية تُحدد بعد الفحص.\n\n💡 اضغط 1 للحجز أو 0 للقائمة الرئيسية"
+    },
+    "doctors_menu_title": {
+      "en": "👨‍⚕️ Our Dental Team:\n\n",
+      "ar": "👨‍⚕️ فريقنا الطبي:\n\n"
+    },
+    "help_examples": {
+      "en": "💬 *Or just tell me what you need:*\n- 'I have a toothache' → I'll book you in\n- 'How much for braces?' → I'll show prices\n- 'Where are you?' → I'll share location\n- 'Cancel my appointment' → I'll handle it\n\nType 0 anytime to return to main menu 😊",
+      "ar": "💬 *أو أخبرني بما تحتاج:*\n- 'سني يوجعني' ← سأحجز لك موعداً\n- 'كم سعر التقويم؟' ← سأعرض الأسعار\n- 'وين العيادة؟' ← سأشارك الموقع\n- 'أبغى ألغي موعدي' ← سأتولى الأمر\n\nاكتب 0 في أي وقت للعودة للقائمة الرئيسية 😊"
+    }
+  },
+  "interactive_menus": {
+    "treatments": {
+      "en": [
+        { "id": "1", "title": "Cleaning & Polishing 🦷", "description": "Scaling and polishing" },
+        { "id": "2", "title": "Fillings", "description": "Cavity treatment" },
+        { "id": "3", "title": "Braces & Orthodontics 📐", "description": "Teeth straightening" },
+        { "id": "4", "title": "Teeth Whitening ⚪", "description": "Brighten your smile" },
+        { "id": "5", "title": "Extraction", "description": "Tooth removal" },
+        { "id": "6", "title": "Dental Implants 🔬", "description": "Permanent tooth replacement" },
+        { "id": "7", "title": "Root Canal 🏥", "description": "Root canal treatment" },
+        { "id": "8", "title": "Other / Not sure", "description": "Consultation or other" }
+      ],
+      "ar": [
+        { "id": "1", "title": "تنظيف وتلميع 🦷", "description": "إزالة الجير والتلميع" },
+        { "id": "2", "title": "حشوات", "description": "علاج التسوس" },
+        { "id": "3", "title": "تقويم الأسنان 📐", "description": "تقويم وتصحيح الأسنان" },
+        { "id": "4", "title": "تبييض الأسنان ⚪", "description": "تفتيح لون الأسنان" },
+        { "id": "5", "title": "خلع", "description": "خلع سن" },
+        { "id": "6", "title": "زراعة أسنان 🔬", "description": "زراعة سن جذري" },
+        { "id": "7", "title": "علاج العصب 🏥", "description": "علاج قناة الجذر" },
+        { "id": "8", "title": "أخرى / غير متأكد", "description": "استشارة أو علاج آخر" }
+      ]
+    }
+  }
+}

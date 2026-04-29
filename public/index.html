@@ -1119,6 +1119,16 @@ function closeModal() {
 <script>
 try { gsap.registerPlugin(ScrollTrigger); } catch(e) { console.warn('[GSAP] Not loaded:', e.message); }
 
+let dentalConfig = {};
+try {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', '/config/verticals/dental.json', false);
+  xhr.send(null);
+  dentalConfig = JSON.parse(xhr.responseText);
+} catch (e) {
+  console.error('[Config] Failed to load dental config', e);
+}
+
 /* ─── Simulator Architecture: Full Logic Parity (bot.js) ──── */
 const MESSAGES = {
   ar: {
@@ -1130,7 +1140,7 @@ const MESSAGES = {
       name: "رائع! لنبدأ الحجز 😊\nما اسمك الكريم؟\n\n💡 اكتب اسمك وأرسل\n0️⃣ القائمة الرئيسية",
       phone: (p) => `شكراً! 😊\nرقمك المسجل هو: *${p}*\nهل هذا صحيح؟\n\n1️⃣ نعم، هذا صحيح\n2️⃣ لا، أريد رقماً آخر\n\n💡 اضغط 1 للتأكيد أو 2 للتغيير\n0️⃣ القائمة الرئيسية`,
       phoneReq: "من فضلك أدخل رقم هاتفك:\n\n💡 اكتب رقم هاتفك وأرسل",
-      treatment: "اختر نوع الخدمة: 🦷\n\n1️⃣ تنظيف وتلميع 🦷\n2️⃣ حشوات\n3️⃣ تقويم الأسنان 📐\n4️⃣ تبييض الأسنان ⚪\n5️⃣ خلع\n6️⃣ زراعة أسنان 🔬\n7️⃣ علاج العصب 🏥\n8️⃣ أخرى / غير متأكد\n\n💡 اضغط رقماً أو اختر من القائمة",
+      treatment: dentalConfig.messages?.treatment_menu?.ar || "اختر نوع الخدمة: 🦷\n\n1️⃣ تنظيف وتلميع 🦷\n2️⃣ حشوات\n3️⃣ تقويم الأسنان 📐\n4️⃣ تبييض الأسنان ⚪\n5️⃣ خلع\n6️⃣ زراعة أسنان 🔬\n7️⃣ علاج العصب 🏥\n8️⃣ أخرى / غير متأكد\n\n💡 اضغط رقماً أو اختر من القائمة",
       notes: "هل لديك ملاحظات أو وصف للحالة؟ (اختياري)\n\n💡 اكتب ملاحظتك أو أرسل *0* للتخطي\n0️⃣ تخطي الخطوة",
       doctor: "اختر الفريق المفضل: 👨‍⚕️\n\n1️⃣ د. أحمد (أخصائي زراعة)\n2️⃣ د. سارة (أخصائية تقويم)\n3️⃣ أي فريق متاح\n\n💡 اضغط رقماً للاختيار",
       date: (doc) => `متى تفضل موعدك ${doc}؟ 📅\n\n1️⃣ غداً (الثلاثاء)\n2️⃣ الأربعاء\n3️⃣ الخميس\n4️⃣ الأسبوع القادم\n\n💡 اضغط رقماً أو اكتب أي تاريخ مثل "بكرة"`,
@@ -1159,8 +1169,8 @@ const MESSAGES = {
     },
 
     // Info Messages
-    prices: "💰 *قائمة الأسعار التقريبية:*\n• تنظيف: 200 ريال\n• حشو: 350 ريال\n• تقويم: يبدأ من 3000 ريال\n• زراعة: يبدأ من 4500 ريال\n\n💡 هذه الأسعار أولية وتخضع للفحص.",
-    services: "🦷 *خدمات المنشأة:*\n• زراعة الأسنان المتقدمة\n• تقويم الأسنان الشفاف والعادي\n• طب أسنان الأطفال\n• تبييض الأسنان بالليزر",
+    prices: dentalConfig.messages?.prices?.ar || "💰 *قائمة الأسعار التقريبية:*\n• تنظيف: 200 ريال\n• حشو: 350 ريال\n• تقويم: يبدأ من 3000 ريال\n• زراعة: يبدأ من 4500 ريال\n\n💡 هذه الأسعار أولية وتخضع للفحص.",
+    services: dentalConfig.messages?.services?.ar || "🦷 *خدمات المنشأة:*\n• زراعة الأسنان المتقدمة\n• تقويم الأسنان الشفاف والعادي\n• طب أسنان الأطفال\n• تبييض الأسنان بالليزر",
     location: "📍 *موقع المنشأة:*\nيقع مجمعنا في قلب الخبر، شارع الأمير تركي.\n\n🗺️ رابط خرائط جوجل:\nhttps://maps.google.com/?q=Qudozen+Clinic\n\n💡 يمكنك دائماً طلب الموقع وسأرسله لك فوراً!",
     reviews: "⭐ *آراء عملائنا:*\n• 'تعامل راقي جداً ونظام دقيق' - خالد\n• 'أفضل منشأة تعاملت معها في الشرقية' - سارة\n\n🔗 يمكنك قراءة المزيد أو وضع تقييمك هنا:\nhttps://g.page/qudozen/review",
     staff: "👩‍⚕️ جاري تحويلك للتحدث مع الفريق...\nيرجى الانتظار لحظة.",
@@ -1177,7 +1187,7 @@ const MESSAGES = {
       name: "Great! Let's book your appointment 😊\nWhat's your full name?\n\n💡 Type your name and send\n0️⃣ Main menu",
       phone: (p) => `Thanks! 😊\nYour registered number is: *${p}*\nIs this correct?\n\n1️⃣ Yes, that's correct\n2️⃣ No, use a different number\n\n💡 Tap 1 to confirm or 2 to change\n0️⃣ Main menu`,
       phoneReq: "Please enter your phone number:\n\n💡 Type your phone number and send",
-      treatment: "Select service type: 🦷\n\n1️⃣ Cleaning & Polishing 🦷\n2️⃣ Fillings\n3️⃣ Braces & Orthodontics 📐\n4️⃣ Teeth Whitening ⚪\n5️⃣ Extraction\n6️⃣ Dental Implants 🔬\n7️⃣ Root Canal 🏥\n8️⃣ Other / Not sure\n\n💡 Tap a number or pick from the list",
+      treatment: dentalConfig.messages?.treatment_menu?.en || "Select service type: 🦷\n\n1️⃣ Cleaning & Polishing 🦷\n2️⃣ Fillings\n3️⃣ Braces & Orthodontics 📐\n4️⃣ Teeth Whitening ⚪\n5️⃣ Extraction\n6️⃣ Dental Implants 🔬\n7️⃣ Root Canal 🏥\n8️⃣ Other / Not sure\n\n💡 Tap a number or pick from the list",
       notes: "Any notes or description of your issue? (optional)\n\n💡 Type your note or send *0* to skip\n0️⃣ Skip step",
       doctor: "Select your preferred doctor: 👨‍⚕️\n\n1️⃣ Dr. Ahmed (Implants)\n2️⃣ Dr. Sarah (Braces)\n3️⃣ Any available doctor\n\n💡 Tap a number to select",
       date: (doc) => `When would you like your appointment with ${doc}? 📅\n\n1️⃣ Tomorrow (Tuesday)\n2️⃣ Wednesday\n3️⃣ Thursday\n4️⃣ Next week\n\n💡 Tap a number or type a date like "tomorrow"`,
@@ -1205,8 +1215,8 @@ const MESSAGES = {
       success: "✅ Appointment cancelled. We hope to see you soon!"
     },
 
-    prices: "💰 *Estimated Price List:*\n• Cleaning: 200 SAR\n• Fillings: 350 SAR\n• Braces: from 3000 SAR\n• Implants: from 4500 SAR\n\n💡 Final price depends on clinical exam.",
-    services: "🦷 *Our Services:*\n• Dental Implants\n• Clear Aligners\n• Pediatric Dentistry\n• Laser Whitening",
+    prices: dentalConfig.messages?.prices?.en || "💰 *Estimated Price List:*\n• Cleaning: 200 SAR\n• Fillings: 350 SAR\n• Braces: from 3000 SAR\n• Implants: from 4500 SAR\n\n💡 Final price depends on clinical exam.",
+    services: dentalConfig.messages?.services?.en || "🦷 *Our Services:*\n• Dental Implants\n• Clear Aligners\n• Pediatric Dentistry\n• Laser Whitening",
     location: "📍 *Our Location:*\nWe are located in the heart of Khobar, Prince Turki St.\n\n🗺️ Google Maps Link:\nhttps://maps.google.com/?q=Qudozen+Clinic\n\n💡 You can always ask for the location and I'll send it!",
     reviews: "⭐ *Patient Reviews:*\n• 'Amazing experience and very professional' - Khalid\n• 'Best clinic in the Eastern Province' - Sarah\n\n🔗 Read more or leave a review here:\nhttps://g.page/qudozen/review",
     staff: "👩‍⚕️ Connecting you to our team...\nPlease hold for a moment.",
@@ -1966,7 +1976,7 @@ window.addEventListener('load', () => {
         if(chat){
           const waDiv=document.createElement('div');
           waDiv.className='bs-bubble-bot mb-1.5';
-          waDiv.innerHTML='<a href="#?text='+encodeURIComponent('أهلاً جيك، جربت المحاكي وأريد تفعيل النظام.')+'" target="_blank" class="text-[#25D366] font-bold text-xs underline">تحدث مع جيك لتفعيل نظامك ←</a>';
+          waDiv.innerHTML=`<a href="#pricing" onclick="setTimeout(()=>window.qdChat.open('activate'), 1000)" class="bg-[#5EEAD4] text-black px-4 py-2 rounded-xl font-bold text-[10px] inline-block shadow-lg shadow-aqua/20 mt-2">تفعيل نظام ${bsData.name || 'عيادتك'} الآن ←</a>`;
           chat.appendChild(waDiv);
         }
         bsFlow='';
@@ -2124,5 +2134,21 @@ window.addEventListener('load', () => {
     </div>
   </div>
   <script src="chat-widget.js"></script>
+  <script>
+    // ── Simulator Focus Handler ──
+    window.addEventListener('load', () => {
+      if (window.location.hash === '#simulator' || window.location.hash === '#reception-simulator') {
+        const target = document.getElementById('reception-simulator');
+        if (target) {
+          setTimeout(() => {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            target.style.transition = 'box-shadow 0.8s, border-color 0.8s';
+            target.style.boxShadow = '0 0 50px rgba(94,234,212,0.4)';
+            target.style.borderColor = '#5EEAD4';
+          }, 500);
+        }
+      }
+    });
+  </script>
 </body>
 </html>

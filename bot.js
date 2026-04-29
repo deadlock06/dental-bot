@@ -1,8 +1,12 @@
 const { getPatient, insertPatient, savePatient, saveAppointment, getAppointment, updateAppointment, checkDuplicateBooking } = require('./db');
+const db = require('./db');
+const onboarding = require('./growth/onboarding-state-machine.js');
 const whatsapp = require('./whatsapp');
 const { detectIntent, extractDate, extractTimeSlot } = require('./ai');
 const { withMonitor, validateFlowState, logError } = require('./monitor');
 const { DateTime } = require('luxon');
+
+const dentalConfig = require('./verticals/dental.json');
 
 let calendarLib = null;
 try {
@@ -85,13 +89,13 @@ function menuAR(clOrName) {
 // Main entry point
 // ─────────────────────────────────────────────
 async function handleMessage(phone, text, clinic) {
-  const onboarding = require('./growth/onboarding-state-machine.js');
   // ── Processing lock — skip duplicate/retry messages ──
   if (processingLocks.get(phone)) {
     console.log(`[Bot] ⏳ Skipping duplicate message from ${phone} (lock active)`);
     return;
   }
   processingLocks.set(phone, true);
+
 
   try {
     const msg = text.trim();
@@ -105,13 +109,37 @@ async function handleMessage(phone, text, clinic) {
       );
     }
     
-    // 1. Check for onboarding intent FIRST
+    // 1. Check for onboarding record and handle ongoing sequence
+    const existingOnboarding = await db.getOnboardingByPhone(phone);
+    if (existingOnboarding && existingOnboarding.current_state !== onboarding.states.LIVE) {
+      const resp = await onboarding.handleResponse(phone, msg, existingOnboarding);
+      if (resp.handled) {
+        return; // Onboarding sequence handled the reply
+      }
+    }
+
     const activation = await onboarding.handleActivation(phone, msg, clinic || {});
     if (activation.handled) {
-      return; // Stop here. Onboarding state machine took over.
+      return; // Stop here. New onboarding started.
     }
+
     
-    // ... rest of logic
+    // 2. Check for Growth Lead reply (Two-Step Outreach)
+    const lead = await db.getLeadByPhone(phone);
+    if (lead && (lead.status === 'messaged' || lead.status === 'scouted')) {
+      const positiveIntent = /yes|sure|send|link|ok|نعم|ارسل|موافق|رابط|تفضل|ايوه/i.test(msg);
+      if (positiveIntent) {
+        await db.updateLeadStatus(lead.id, 'interested'); // BUG FIX: was passing phone, must pass lead.id
+        const url = `https://qudozen.com/#simulator?clinic=${encodeURIComponent(lead.business_name || lead.name)}&lead=${lead.id}`;
+        await sendMessage(phone, (lead.lang === 'ar' || lead.country === 'SA')
+          ? `تفضل، هذا هو رابط المحاكاة الخاص بعيادتك:\n${url}\n\nأخبرني رأيك بعد تجربته!`
+          : `Great! Here is the simulation link for your clinic:\n${url}\n\nLet me know what you think after trying it!`
+        );
+        return;
+      }
+    }
+
+    // 3. Default logic
 
   const cl = clinic || {
     name: 'Our Clinic',
@@ -574,8 +602,8 @@ async function getClinicDoctors(cl) {
         name_ar:          s.doctor_name,
         degree:           '',
         degree_ar:        '',
-        specialization:   daysShort ? `${daysShort}, ${startFmt}–${endFmt}` : 'General Dentistry',
-        specialization_ar: daysArStr ? `${daysArStr}، ${startFmt}–${endFmt}` : 'طب أسنان عام',
+        specialization:   daysShort ? `${daysShort}, ${startFmt}–${endFmt}` : dentalConfig.industry_terms.en.general_specialty,
+        specialization_ar: daysArStr ? `${daysArStr}، ${startFmt}–${endFmt}` : dentalConfig.industry_terms.ar.general_specialty,
         available:        `${startFmt}–${endFmt}`,
         available_ar:     `${startFmt}–${endFmt}`
       };
@@ -592,25 +620,25 @@ async function getClinicDoctors(cl) {
 function mapTreatment(input) {
   const s = String(input).trim().toLowerCase();
   if (/^[1-8]$/.test(s)) {
-    return ['Cleaning & Polishing', 'Fillings', 'Braces & Orthodontics', 'Teeth Whitening', 'Extraction', 'Dental Implants', 'Root Canal', 'Other'][parseInt(s) - 1];
+    return dentalConfig.treatments.en[parseInt(s) - 1];
   }
-  if (/clean|polish|تنظيف|تلميع|جرم/i.test(s))       return 'Cleaning & Polishing';
-  if (/fill|cavity|حشو|تسوس/i.test(s))               return 'Fillings';
-  if (/brace|orthodon|تقويم/i.test(s))               return 'Braces & Orthodontics';
-  if (/whiten|bleach|تبييض/i.test(s))                return 'Teeth Whitening';
-  if (/extract|pull|remov.*tooth|خلع|قلع/i.test(s))  return 'Extraction';
-  if (/implant|زراعة/i.test(s))                      return 'Dental Implants';
-  if (/root canal|nerve|عصب|جذر/i.test(s))           return 'Root Canal';
-  if (/cleaning & polishing|fillings|braces & orthodontics|teeth whitening|extraction|dental implants|root canal|^other$/i.test(s)) return input; // already clean
+  if (/clean|polish|تنظيف|تلميع|جرم/i.test(s))       return dentalConfig.treatments.en[0];
+  if (/fill|cavity|حشو|تسوس/i.test(s))               return dentalConfig.treatments.en[1];
+  if (/brace|orthodon|تقويم/i.test(s))               return dentalConfig.treatments.en[2];
+  if (/whiten|bleach|تبييض/i.test(s))                return dentalConfig.treatments.en[3];
+  if (/extract|pull|remov.*tooth|خلع|قلع/i.test(s))  return dentalConfig.treatments.en[4];
+  if (/implant|زراعة/i.test(s))                      return dentalConfig.treatments.en[5];
+  if (/root canal|nerve|عصب|جذر/i.test(s))           return dentalConfig.treatments.en[6];
+  if (new RegExp(`^(${dentalConfig.treatments.en.join('|').toLowerCase()}|^other)$`, 'i').test(s)) return input; // already clean
   // Arabic menu labels → English
-  if (/تنظيف وتلميع/i.test(s))    return 'Cleaning & Polishing';
-  if (/حشوات/i.test(s))           return 'Fillings';
-  if (/تقويم الأسنان/i.test(s))   return 'Braces & Orthodontics';
-  if (/تبييض الأسنان/i.test(s))   return 'Teeth Whitening';
-  if (/خلع/i.test(s))             return 'Extraction';
-  if (/زراعة أسنان/i.test(s))     return 'Dental Implants';
-  if (/علاج العصب/i.test(s))      return 'Root Canal';
-  if (/أخرى/i.test(s))            return 'Other';
+  if (/تنظيف وتلميع/i.test(s))    return dentalConfig.treatments.en[0];
+  if (/حشوات/i.test(s))           return dentalConfig.treatments.en[1];
+  if (/تقويم الأسنان/i.test(s))   return dentalConfig.treatments.en[2];
+  if (/تبييض الأسنان/i.test(s))   return dentalConfig.treatments.en[3];
+  if (/خلع/i.test(s))             return dentalConfig.treatments.en[4];
+  if (/زراعة أسنان/i.test(s))     return dentalConfig.treatments.en[5];
+  if (/علاج العصب/i.test(s))      return dentalConfig.treatments.en[6];
+  if (/أخرى/i.test(s))            return dentalConfig.treatments.en[7];
   // Unknown free text
   return `Other: ${String(input).trim()}`;
 }
@@ -660,8 +688,8 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
     // Reject: symptom/pain words entered instead of a name
     if (/يوجع|ألم|وجع|pain|hurt|ache|toothache|cavity|tooth/i.test(rawName)) {
       return sendMessage(phone, ar
-        ? 'يبدو أن عندك ألم 😊 لنبدأ الحجز — ما اسمك الكريم؟'
-        : "Sounds like you have a dental issue 😊 Let's get you booked — what's your full name?"
+        ? dentalConfig.industry_terms.ar.symptom_reply
+        : dentalConfig.industry_terms.en.symptom_reply
       );
     }
     // Reject: too short or a number
@@ -1520,13 +1548,37 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
       return sendMessage(phone, ar ? menuAR(cl) : menuEN(cl));
 
     case 'booking':
+      if (cl.vertical === 'saas') {
+        // BUG FIX: await the result and return it properly — was silently ignoring the response
+        const trialResult = await onboarding.handleTrialRequest(phone, 'trial', { clinic: cl.name, lang: lang });
+        if (trialResult && trialResult.handled) return;
+        // Fallback if trial handler didn't fire
+        return sendMessage(phone, ar
+          ? 'اكتب "تفعيل" لبدء التجربة المجانية أو اضغط 0 للقائمة الرئيسية.'
+          : 'Type "activate" to start your free trial or press 0 for the main menu.'
+        );
+      }
       await savePatient(phone, { ...patient, current_flow: 'booking', flow_step: 1, flow_data: {} });
       return sendMessage(phone, ar
         ? 'رائع! لنبدأ الحجز 😊\nما اسمك الكريم؟\n\n0️⃣ القائمة الرئيسية'
         : "Great! Let's book your appointment 😊\nWhat's your full name?\n\n0️⃣ Main menu"
       );
 
+
     case 'my_appointment': {
+      if (cl.vertical === 'saas') {
+        const existingOnboarding = await db.getOnboardingByPhone(phone);
+        if (existingOnboarding) {
+          return sendMessage(phone, ar
+            ? `📋 حالة حسابك:\n🏢 المنشأة: ${existingOnboarding.clinic_name}\n📊 الحالة: ${existingOnboarding.current_state}\n\n💡 اكتب *help* للمساعدة في الإعداد.`
+            : `📋 Your Account Status:\n🏢 Clinic: ${existingOnboarding.clinic_name}\n📊 Status: ${existingOnboarding.current_state}\n\n💡 Type *help* for setup assistance.`
+          );
+        }
+        return sendMessage(phone, ar
+          ? 'ليس لديك اشتراك نشط حالياً. اضغط 1 لبدء التجربة المجانية.'
+          : "You don't have an active subscription. Tap 1 to start your free trial."
+        );
+      }
       const appt = await getAppointment(phone);
       if (!appt) {
         return sendMessage(phone, ar
@@ -1542,7 +1594,14 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
       );
     }
 
+
     case 'reschedule': {
+      if (cl.vertical === 'saas') {
+        return sendMessage(phone, ar
+          ? 'لإعادة جدولة مكالمة الدعم أو العرض التجريبي، يرجى التواصل مع فريق المبيعات مباشرة.'
+          : 'To reschedule a support call or demo, please contact our sales team directly.'
+        );
+      }
       // Phase 4: feature flag
       if (cl.config?.features?.reschedule === false) {
         return sendMessage(phone, ar
@@ -1550,6 +1609,7 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
           : 'Rescheduling is not available right now. Please contact our staff.'
         );
       }
+
       const appt = await getAppointment(phone);
       if (!appt) {
         return sendMessage(phone, ar
@@ -1593,7 +1653,8 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
       return sendMessage(phone, doctorsMsg(ar, cl));
 
     case 'prices':
-      return sendMessage(phone, pricesMsg(ar));
+      return sendMessage(phone, pricesMsg(ar, cl));
+
 
     case 'location':
       return sendMessage(phone, locationMsg(ar, cl));
@@ -1620,38 +1681,49 @@ async function routeIntent(phone, intent, lang, ar, rawMsg, patient, cl) {
 // ─────────────────────────────────────────────
 
 function helpMsgEN(cl) {
+  const isSaaS = cl?.vertical === 'saas';
   const showReschedule = cl?.config?.features?.reschedule !== false;
   const showCancel     = cl?.config?.features?.cancel     !== false;
+  
+  if (isSaaS) {
+    let msg = `Here's how I can help you with Qudozen 🚀\n\n📱 *Just type a number:*\n1. Start Free Trial 📅\n2. My Account Status 📋\n3. Subscription Management 🔄\n4. Cancel Trial ❌\n5. Our AI Modules 🚀\n6. Meet the Team 👨‍⚕️\n7. Pricing Plans 💳\n8. Official Address 📍\n9. Leave a review ⭐\n10. Talk to Sales/Support 👩\n\n`;
+    msg += `💬 *Or just tell me what you need:*\n- 'How to start?' → I'll guide you to activation\n- 'Pricing?' → I'll show BaaS/SaaS tiers\n- 'Integration?' → I'll explain HIS/API links\n\nType 0 anytime to return to main menu 😊`;
+    return msg;
+  }
+
   let msg = `Here's how I can help you 😊\n\n📱 *Just type a number:*\n1. Book a new appointment\n2. View your current appointment\n`;
   if (showReschedule) msg += `3. Reschedule your appointment\n`;
   if (showCancel)     msg += `4. Cancel your appointment\n`;
   msg += `5. See our services\n6. Meet our doctors\n7. View prices\n8. Get our location\n9. Leave a review\n10. Talk to our staff\n\n`;
-  msg += `💬 *Or just tell me what you need:*\n- 'I have a toothache' → I'll book you in\n- 'How much for braces?' → I'll show prices\n- 'Where are you?' → I'll share location\n- 'Cancel my appointment' → I'll handle it\n\nType 0 anytime to return to main menu 😊`;
+  msg += dentalConfig.messages.help_examples.en;
   return msg;
 }
 
 function helpMsgAR(cl) {
+  const isSaaS = cl?.vertical === 'saas';
   const showReschedule = cl?.config?.features?.reschedule !== false;
   const showCancel     = cl?.config?.features?.cancel     !== false;
+
+  if (isSaaS) {
+    let msg = `إليك كيف يمكنني مساعدتك في Qudozen 🚀\n\n📱 *اكتب رقماً فقط:*\n1. بدء تجربة مجانية 📅\n2. حالة حسابي 📋\n3. إدارة الاشتراك 🔄\n4. إلغاء التجربة ❌\n5. موديولات الذكاء الاصطناعي 🚀\n6. تعرف على فريقنا 👨‍⚕️\n7. خطط الأسعار 💳\n8. عنواننا الرسمي 📍\n9. تقييم النظام ⭐\n10. التحدث مع المبيعات/الدعم 👩\n\n`;
+    msg += `💬 *أو أخبرني بما تحتاج:*\n- 'كيف أبدأ؟' ← سأوجهك للتفعيل\n- 'الأسعار؟' ← سأعرض باقاتنا\n- 'الربط؟' ← سأشرح خيارات الـ API\n\nاكتب 0 في أي وقت للعودة للقائمة الرئيسية 😊`;
+    return msg;
+  }
+
   let msg = `إليك كيف يمكنني مساعدتك 😊\n\n📱 *اكتب رقماً فقط:*\n1. حجز موعد جديد\n2. عرض موعدك الحالي\n`;
   if (showReschedule) msg += `3. إعادة جدولة الموعد\n`;
   if (showCancel)     msg += `4. إلغاء الموعد\n`;
   msg += `5. خدماتنا\n6. تعرف على أطبائنا\n7. الأسعار\n8. موقعنا\n9. تقييم العيادة\n10. التحدث مع الفريق\n\n`;
-  msg += `💬 *أو أخبرني بما تحتاج:*\n- 'سني يوجعني' ← سأحجز لك موعداً\n- 'كم سعر التقويم؟' ← سأعرض الأسعار\n- 'وين العيادة؟' ← سأشارك الموقع\n- 'أبغى ألغي موعدي' ← سأتولى الأمر\n\nاكتب 0 في أي وقت للعودة للقائمة الرئيسية 😊`;
+  msg += dentalConfig.messages.help_examples.ar;
   return msg;
 }
 
+
 // Arabic treatment name lookup (BUG 5)
-const TREATMENT_MAP_AR = {
-  'Cleaning & Polishing': 'تنظيف وتلميع',
-  'Fillings':             'حشوات',
-  'Braces & Orthodontics':'تقويم الأسنان',
-  'Teeth Whitening':      'تبييض الأسنان',
-  'Extraction':           'خلع',
-  'Dental Implants':      'زراعة أسنان',
-  'Root Canal':           'علاج العصب',
-  'Other':                'أخرى'
-};
+const TREATMENT_MAP_AR = {};
+dentalConfig.treatments.en.forEach((en, i) => {
+  TREATMENT_MAP_AR[en] = dentalConfig.treatments.ar[i];
+});
 
 // Convert any "H:MM AM/PM" time string to Arabic "H:MM صباحاً/مساءً"
 function toArabicTime(timeStr) {
@@ -1694,11 +1766,17 @@ function doctorSelectionMsg(ar, doctors) {
     : `${i + 1}. Dr. ${doc.name}\n🎓 Degree: ${doc.degree}\n⭐ Specialization: ${doc.specialization}\n📅 Available: ${doc.available}`
   );
   return ar
-    ? `👨‍⚕️ فريقنا الطبي:\n\n${lines.join('\n\n')}\n\n💡 اضغط رقماً للحجز مع طبيب محدد أو اضغط *0* للمتابعة بدون تحديد`
-    : `👨‍⚕️ Our Dental Team:\n\n${lines.join('\n\n')}\n\n💡 Tap a number to book with a specific doctor, or press *0* to skip`;
+    ? `${dentalConfig.messages.doctors_menu_title.ar}${lines.join('\n\n')}\n\n💡 اضغط رقماً للحجز مع طبيب محدد أو اضغط *0* للمتابعة بدون تحديد`
+    : `${dentalConfig.messages.doctors_menu_title.en}${lines.join('\n\n')}\n\n💡 Tap a number to book with a specific doctor, or press *0* to skip`;
 }
 
 function doctorsMsg(ar, cl) {
+  const isSaaS = cl?.vertical === 'saas';
+  if (isSaaS) {
+    return ar
+      ? '👨‍⚕️ فريق Qudozen:\n\nفريقنا مكون من خبراء في الذكاء الاصطناعي وهندسة الأعمال.\n\n1️⃣ تفعيل التجربة الآن\n0️⃣ القائمة الرئيسية'
+      : '👨‍⚕️ Qudozen Team:\n\nOur team consists of experts in AI, Cloud Infrastructure, and Business Engineering.\n\n1️⃣ Start Trial Now\n0️⃣ Main Menu';
+  }
   const doctors = cl.doctors || [];
   if (!doctors.length) {
     return ar
@@ -1710,14 +1788,13 @@ function doctorsMsg(ar, cl) {
     : `${i + 1}. Dr. ${doc.name}\n🎓 Degree: ${doc.degree}\n⭐ Specialization: ${doc.specialization}\n📅 Available: ${doc.available}`
   );
   return ar
-    ? `👨‍⚕️ فريقنا الطبي:\n\n${lines.join('\n\n')}\n\n💡 اضغط رقماً للحجز مع طبيب محدد أو اضغط 0 للقائمة الرئيسية`
-    : `👨‍⚕️ Our Dental Team:\n\n${lines.join('\n\n')}\n\n💡 Tap a number to book or 0 for main menu`;
+    ? `${dentalConfig.messages.doctors_menu_title.ar}${lines.join('\n\n')}\n\n💡 اضغط رقماً للحجز مع طبيب محدد أو اضغط 0 للقائمة الرئيسية`
+    : `${dentalConfig.messages.doctors_menu_title.en}${lines.join('\n\n')}\n\n💡 Tap a number to book or 0 for main menu`;
 }
 
+
 function treatmentMenuMsg(ar) {
-  return ar
-    ? 'ما نوع العلاج الذي تحتاجه؟\n\n1. تنظيف وتلميع 🦷\n2. حشوات\n3. تقويم الأسنان 📐\n4. تبييض الأسنان ⚪\n5. خلع\n6. زراعة أسنان 🔬\n7. علاج العصب 🏥\n8. أخرى / غير متأكد\n\n💡 اضغط رقماً للاختيار\n0️⃣ القائمة الرئيسية'
-    : 'What type of treatment do you need?\n\n1. Cleaning & Polishing 🦷\n2. Fillings\n3. Braces & Orthodontics 📐\n4. Teeth Whitening ⚪\n5. Extraction\n6. Dental Implants 🔬\n7. Root Canal 🏥\n8. Other / Not sure\n\n💡 Tap a number to choose\n0️⃣ Main menu';
+  return ar ? dentalConfig.messages.treatment_menu.ar : dentalConfig.messages.treatment_menu.en;
 }
 
 function timeSlotMsg(ar) {
@@ -1732,9 +1809,7 @@ function servicesMsg(ar, cl) {
       ? '🚀 خدمات Qudozen:\n\n✨ استقبال ذكي 24/7\n📈 محرك نمو (Growth Swarm)\n🏢 إدارة فروع متعددة\n💳 فوترة وتأمين ذكي\n📱 تطبيق للمرضى\n\n💡 اضغط 1 للتفعيل أو 0 للقائمة'
       : '🚀 Qudozen Services:\n\n✨ 24/7 Smart Receptionist\n📈 Growth Swarm Engine\n🏢 Multi-branch Management\n💳 Smart Billing & Insurance\n📱 Patient Mobile App\n\n💡 Tap 1 to activate or 0 for menu';
   }
-  return ar
-    ? '🦷 خدماتنا:\n\n✨ تنظيف وتلميع الأسنان\n🔧 الحشوات والترميم\n📐 تقويم الأسنان\n⚪ تبييض الأسنان\n🔬 زراعة الأسنان\n❌ خلع الأسنان\n🏥 علاج العصب\n👶 طب أسنان الأطفال\n🦷 القشور والتيجان\n😁 ابتسامة هوليوود\n\n💡 اضغط 1 للحجز أو 0 للقائمة الرئيسية'
-    : '🦷 Our Services:\n\n✨ Cleaning & Polishing\n🔧 Fillings & Restorations\n📐 Braces & Orthodontics\n⚪ Teeth Whitening\n🔬 Dental Implants\n❌ Extractions\n🏥 Root Canal Treatment\n👶 Pediatric Dentistry\n🦷 Veneers & Crowns\n😁 Smile Makeover\n\n💡 Tap 1 to book or 0 for main menu';
+  return ar ? dentalConfig.messages.services.ar : dentalConfig.messages.services.en;
 }
 
 
@@ -1744,17 +1819,22 @@ function pricesMsg(ar, cl) {
       ? '💳 أسعار Qudozen:\n\n• وعي (فردي): 299 ريال/شهر\n• نظام (متعدد): 499 ريال/شهر + 699 إعداد\n• سرب: حسب الطلب\n\n💡 اضغط 1 لتفعيل تجربتك المجانية أو 0 للقائمة'
       : '💳 Qudozen Pricing:\n\n• Awareness (Solo): 299 SAR/month\n• System (Multi-doctor): 499 SAR/month + 699 SAR setup\n• Swarm (Enterprise): Custom\n\n💡 Tap 1 to start free trial or 0 for menu';
   }
-  return ar
-    ? '💰 أسعارنا التقريبية:\n\n✨ تنظيف: 150-250 ريال\n🔧 حشوة: 200-400 ريال\n⚪ تبييض: 800-1,500 ريال\n📐 تقويم: 3,000-8,000 ريال\n🔬 زراعة: 3,500-6,000 ريال\n🏥 علاج عصب: 800-1,500 ريال\n🦷 قشرة: 800-1,200 ريال للسن\n\n📌 الأسعار النهائية تُحدد بعد الفحص.\n\n💡 اضغط 1 للحجز أو 0 للقائمة الرئيسية'
-    : '💰 Our Approximate Prices:\n\n✨ Cleaning: 150-250 SAR\n🔧 Filling: 200-400 SAR\n⚪ Whitening: 800-1,500 SAR\n📐 Braces: 3,000-8,000 SAR\n🔬 Implant: 3,500-6,000 SAR\n🏥 Root Canal: 800-1,500 SAR\n🦷 Veneer: 800-1,200 SAR per tooth\n\n📌 Final prices confirmed after examination.\n\n💡 Tap 1 to book or 0 for main menu';
+  return ar ? dentalConfig.messages.prices.ar : dentalConfig.messages.prices.en;
 }
 
 
 function locationMsg(ar, cl) {
+  const isSaaS = cl?.vertical === 'saas';
+  if (isSaaS) {
+    return ar
+      ? `📍 *مقر Qudozen الرئيسي*\n\n*الموقع:*\nالرياض، المملكة العربية السعودية (مبنى الابتكار الرقمي)\n\n🗺️ خرائط Google: https://maps.google.com\n\n*🕐 الدعم الفني:*\nمتاح 24/7 عبر الأنظمة الذكية.\n\n💡 اضغط 1 للتفعيل أو 0 للقائمة الرئيسية`
+      : `📍 *Qudozen Headquarters*\n\n*Location:*\nRiyadh, Saudi Arabia (Digital Innovation Hub)\n\n🗺️ Google Maps: https://maps.google.com\n\n*🕐 Support Hours:*\nAvailable 24/7 via Autonomous Systems.\n\n💡 Tap 1 to activate or 0 for main menu`;
+  }
   return ar
     ? `📍 *موقع ${cl.name}*\n\n*العنوان:*\n${cl.location || 'تواصل معنا للعنوان'}\n\n🗺️ خرائط Google: ${cl.maps_link || 'https://maps.google.com'}\n\n*🕐 أوقات العمل:*\n*الأحد – الخميس:* 9:00 صباحاً – 9:00 مساءً\n*الجمعة:* 4:00 مساءً – 9:00 مساءً\n*السبت:* 9:00 صباحاً – 6:00 مساءً\n\n💡 اضغط 1 للحجز أو 0 للقائمة الرئيسية`
     : `📍 *${cl.name} Location*\n\n*Address:*\n${cl.location || 'Contact us for our address.'}\n\n🗺️ Google Maps: ${cl.maps_link || 'https://maps.google.com'}\n\n*🕐 Working Hours:*\n*Sun–Thu:* 9:00 AM – 9:00 PM\n*Fri:* 4:00 PM – 9:00 PM\n*Sat:* 9:00 AM – 6:00 PM\n\n💡 Tap 1 to book or 0 for main menu`;
 }
+
 
 function reviewMsg(ar, cl) {
   return ar

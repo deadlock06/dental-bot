@@ -28,6 +28,9 @@ app.use(helmet({
 const apiRoutes = require('./api');
 app.use('/api', apiRoutes);
 
+// Expose verticals configs
+app.use('/config/verticals', express.static(path.join(__dirname, 'verticals')));
+
 const growthRouter = require('./growth/index');
 const { handoffLead } = require('./growth/handoff');
 const growthSupabase = require('./growth/lib/supabase');
@@ -194,22 +197,25 @@ app.post('/api/chat', async (req, res) => {
     // 2. Fetch the responses that were intercepted by the web-aware whatsapp module
     const responses = whatsapp.getWebResponses(phone);
 
-    // 3. Return the first response (or all if the frontend supports it)
+    // 3. Return ALL intercepted messages
     if (responses.length > 0) {
-      const main = responses[0];
-      // Map interactive list to the expected buttons format if needed
-      if (main.type === 'interactive') {
-        main.buttons = main.buttons.map(b => ({ text: b.text, action: b.id }));
-      }
-      res.json(main);
+      const formatted = responses.map(m => {
+        if (m.type === 'interactive' && m.buttons) {
+          return { ...m, buttons: m.buttons.map(b => ({ text: b.text, action: b.id })) };
+        }
+        return m;
+      });
+      res.json({ messages: formatted });
     } else {
-      res.json({ reply: lang === 'ar' ? 'سأرد عليك قريباً!' : 'I will respond soon!' });
+      res.json({ messages: [{ type: 'text', content: lang === 'ar' ? 'سأرد عليك قريباً!' : 'I will respond soon!' }] });
     }
+
   } catch (e) {
     console.error('Unified Chat Error:', e);
     res.status(500).json({ error: 'BOT_ERROR', message: e.message });
   }
 });
+
 
 // ─────────────────────────────────────────────
 // Stripe — checkout creation (public) + webhook
@@ -281,6 +287,7 @@ app.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (re
       await onboarding.startFromPayment({
         clinic_name: clinic_name || 'Unknown Clinic',
         email: customerEmail,
+        owner_phone: session.customer_details?.phone?.replace('+', ''),
         plan: plan || 'system',
         lang: lang || 'en',
         stripe_customer_id: session.customer,
@@ -670,9 +677,20 @@ app.post('/cleanup-slots', async (req, res) => {
 // Admin Dashboard (Vanilla HTML/JS)
 // ─────────────────────────────────────────────
 // Middleware for static files
-function requireDashboardAuth(req, res, next) {
-  if (!req.session.clinicId && !req.path.includes('login')) {
+async function requireDashboardAuth(req, res, next) {
+  // Allow login and upgrade page access
+  if (req.path.includes('login') || req.path.includes('upgrade')) return next();
+
+  if (!req.session.clinicId) {
     return res.redirect('/dashboard/login');
+  }
+
+  // P2 Hardening: Check trial status
+  if (req.session.trialId) {
+    const trial = await db.getTrialById(req.session.trialId);
+    if (trial && trial.status === 'expired') {
+      return res.redirect('/dashboard/upgrade');
+    }
   }
   next();
 }
@@ -681,22 +699,14 @@ app.get('/dashboard/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard', 'login.html'));
 });
 
-app.get('/dashboard', (req, res) => {
-  if (!req.session.clinicId) return res.redirect('/dashboard/login');
+
+app.get('/dashboard', requireDashboardAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard', 'index.html'));
 });
 
 // Serve dashboard static assets
-app.use('/dashboard', requireDashboardAuth, async (req, res, next) => {
-  // P2 Hardening: Check trial status on every dashboard request
-  if (req.session.trialId) {
-    const trial = await db.getTrialById(req.session.trialId);
-    if (trial && trial.status === 'expired') {
-      return res.redirect('/dashboard/upgrade');
-    }
-  }
-  next();
-}, express.static(path.join(__dirname, 'public', 'dashboard')));
+app.use('/dashboard', requireDashboardAuth, express.static(path.join(__dirname, 'public', 'dashboard')));
+
 
 app.get('/dashboard/upgrade', (req, res) => {
   res.send(`
