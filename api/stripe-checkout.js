@@ -41,12 +41,14 @@ async function createCheckoutSession(clinicName, ownerEmail, plan = 'system', la
       },
       quantity: 1
     }],
+    phone_number_collection: { enabled: true },
     mode: 'subscription',
     success_url: `https://qudozen.com/onboarding?session_id={CHECKOUT_SESSION_ID}&clinic=${encodeURIComponent(clinicName)}&plan=${plan}`,
     cancel_url: `https://qudozen.com/?clinic=${encodeURIComponent(clinicName)}&status=cancelled`,
     customer_email: ownerEmail,
     metadata: { clinic_name: clinicName, plan, lang }
   });
+
 
   return { url: session.url, session_id: session.id };
 }

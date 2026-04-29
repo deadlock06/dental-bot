@@ -84,6 +84,33 @@ class OnboardingStateMachine {
     return { handled: true, onboarding_id: onboarding.id };
   }
 
+  // ─── RESPONSE HANDLER: Processes replies to onboarding steps ───
+  async handleResponse(phone, message, existing) {
+    const lang = existing.lang || 'ar';
+    const m = this.getMessages(lang);
+    const msg = message.trim();
+
+    // 1. Handle Help Request
+    if (/help|مساعدة|كيف|بمساعدة/i.test(msg)) {
+      await sendWhatsApp(phone, m.calendarHelp);
+      return { handled: true };
+    }
+
+    // 2. Handle Calendar ID submission (Simple regex for email/ID format)
+    if (existing.current_state === ONBOARDING_STATES.CALENDAR_PENDING && (msg.includes('@') || msg.length > 20)) {
+      await db.updateOnboarding(existing.id, {
+        calendar_id: msg,
+        calendar_connected: true,
+        current_state: ONBOARDING_STATES.LIVE
+      });
+      await sendWhatsApp(phone, m.setupComplete(existing.clinic_name));
+      return { handled: true };
+    }
+
+    return { handled: false };
+  }
+
+
   // ─── TRIAL: No credit card required ───
   async handleTrialRequest(phone, message, context) {
     const lower = message.toLowerCase();
@@ -245,7 +272,9 @@ class OnboardingStateMachine {
         day3CheckIn: (clinic) => `How is ${clinic} doing with the new system? Any bookings yet? If something feels off, reply here and I'll fix it.`,
         day7Review: () => `🎉 You've been live for a week!\n\nHow is everything working?\n\nReply:\n• *GOOD* — I'll send your Google review link\n• *HELP* — I'll troubleshoot any issue now\n• *CALL* — I'll send you a self-scheduling link\n• *UPGRADE* — I'll show you advanced features`,
         trialWelcome: (user, pass, clinic) => `🎉 Your 7-day free trial of ${clinic} OS is now LIVE!\n\n🔐 Dashboard Access:\nUsername: ${user}\nPassword: ${pass}\n\nLogin: https://qudozen.com/dashboard\n\nYour bot is active. Patients can message right now.\n\nAfter 7 days, subscribe to keep it running:\nhttps://qudozen.com/#pricing`,
-        trialOffer: (clinic) => `No credit card needed! Start your 7-day free trial of ${clinic} OS now.\n\nReply *START TRIAL* and I'll activate everything instantly.`
+        trialOffer: (clinic) => `No credit card needed! Start your 7-day free trial of ${clinic} OS now.\n\nReply *START TRIAL* and I'll activate everything instantly.`,
+        calendarHelp: `To connect your calendar:\n1. Open Google Calendar on Desktop\n2. Go to Settings > Integrate Calendar\n3. Copy the "Calendar ID" (usually your email or a long string)\n4. Paste it here!`,
+        setupComplete: (clinic) => `✅ Perfect! ${clinic} is now fully connected to your Google Calendar.\n\nI will now start locking appointments and handling your patients autonomously. 🚀`
       },
       ar: {
         welcome: (owner, clinic) => `أهلاً بك في Qudozen، د. ${owner}! 🎉\n\nنحن نجهز نظام ${clinic}. أحتاج دقيقتين لربط التقويم وإرسال لوحة التحكم.`,
@@ -256,8 +285,11 @@ class OnboardingStateMachine {
         day3CheckIn: (clinic) => `كيف يعمل ${clinic} مع النظام الجديد؟ هل هناك حجوزات؟ إذا واجهتك مشكلة، رد هنا.`,
         day7Review: () => `🎉 مر أسبوع على التشغيل!\n\nكيف يعمل كل شيء؟\n\nرد بـ:\n• *جيد* — سأرسل لك رابط تقييم Google\n• *مساعدة* — سأحل أي مشكلة الآن\n• *مكالمة* — سأرسل لك رابط جدولة ذاتية\n• *ترقية* — سأريك الميزات المتقدمة`,
         trialWelcome: (user, pass, clinic) => `🎉 تجربتك المجانية لمدة 7 أيام من نظام ${clinic} أصبحت نشطة الآن!\n\n🔐 بيانات الدخول:\nالمستخدم: ${user}\nكلمة المرور: ${pass}\n\nالرابط: https://qudozen.com/dashboard\n\nبوتك نشط. المرضى يمكنهم المراسلة الآن.\n\nبعد 7 أيام، اشترك للاستمرار:\nhttps://qudozen.com/#pricing`,
-        trialOffer: (clinic) => `لا حاجة لبطاقة ائتمان! ابدأ تجربتك المجانية لمدة 7 أيام لنظام ${clinic} الآن.\n\nرد بـ *ابدأ التجربة* وسأفعل كل شيء فوراً.`
+        trialOffer: (clinic) => `لا حاجة لبطاقة ائتمان! ابدأ تجربتك المجانية لمدة 7 أيام لنظام ${clinic} الآن.\n\nرد بـ *ابدأ التجربة* وسأفعل كل شيء فوراً.`,
+        calendarHelp: `لربط تقويمك:\n1. افتح تقويم Google من الكمبيوتر\n2. الإعدادات > دمج التقويم\n3. انسخ "معرف التقويم" (غالباً بريدك الإلكتروني)\n4. الصقه هنا!`,
+        setupComplete: (clinic) => `✅ ممتاز! تم ربط ${clinic} بنجاح مع تقويم Google الخاص بك.\n\nسأبدأ الآن في حجز المواعيد وإدارة مرضاك بشكل آلي تماماً. 🚀`
       }
+
     };
     return msgs[lang] || msgs.en;
   }
@@ -289,4 +321,7 @@ class OnboardingStateMachine {
   }
 }
 
-module.exports = new OnboardingStateMachine();
+const machine = new OnboardingStateMachine();
+module.exports = machine;
+module.exports.ONBOARDING_STATES = ONBOARDING_STATES;
+

@@ -61,12 +61,13 @@ async function processBatch(leads) {
     const canSend = await checkRateLimits(lead.id);
     if (!canSend) continue;
 
-    const url = getGhostRoomUrl(lead);
     const lang = detectLanguage(lead);
     
     let msg = lang === 'ar'
-      ? `مرحباً دكتور ${lead.name || ''}، مرضى ${lead.company_name || 'العيادة'} يذهبون للمنافسين. اكتشف كم تخسر:`
-      : `Hi Dr. ${lead.name || ''}, patients at ${lead.company_name || 'your clinic'} are going to competitors. See what you're losing:`;
+      ? `مرحباً دكتور ${lead.name || ''}، لقد بنيت محاكاة ذكية لمكتب استقبال عيادة ${lead.company_name || 'العيادة'}. هل تود أن أرسل لك رابط التجربة؟`
+      : `Hi Dr. ${lead.name || ''}, I've built a digital twin for your front desk at ${lead.company_name || 'your clinic'}. Would you like me to send you the link to try the simulation?`;
+
+
       
     // Apply guardrails handles constraints
     msg = applyGuardrails(msg);

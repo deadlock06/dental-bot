@@ -1,110 +1,432 @@
-# The Ultimate Dental Bot & Qudozen Master Architecture Export
-
-This document contains the complete context, system architectures, and critical logic maps for the **Entire Dental Bot System** alongside its associated marketing engine (**Qudozen Growth Swarm**).
-
-**Instruction for Kimi:** You are receiving the exact, finalized state of the complete application. This is a complex, transactional Node.js application containing an autonomous WhatsApp receptionist integrated with Google Calendar, Supabase, and dynamic Twilio communications. Use this document deeply before writing any new code.
+# 🏗️ QUDOZEN — COMPLETE SYSTEM ARCHITECTURE
+> **Version:** 3.3-HARDENED | **Last Updated:** 2026-04-29 | **Author:** Antigravity
+> For any LLM, agent, or developer. Read this before touching any file.
 
 ---
 
-## 📂 1. Master File Tree
+## 🧠 WHAT THIS SYSTEM IS
 
-```text
-📁 Root Directory
-├── index.js                  (Main Express Entry, Twilio Webhook, Cron Jobs)
-├── bot.js                    (Core Controller: WhatsApp State Machine, AI Rules, Routing)
-├── db.js                     (Supabase ORM: Models for Patients, Appointments, Clinics)
-├── slots.js                  (Atomic Slot Lock Mechanism for concurrency control)
-├── monitor.js                (System telemetry, health checking, state-rollback tools)
-├── calendar.js               (Google Calendar API Integration)
-├── audio.js / ai.js          (Whisper audio transcription / OpenAI intent parsing)
-├── whatsapp.js               (Twilio messaging abstractions)
-├── schema.sql                (Master Database Schema)
-│
-├── 📁 public/                (Qudozen Master Sales Funnel UI)
-│   └── index.html            
-│
-├── 📁 growth/                (The Qudozen "Growth Swarm" Engine)
-│   ├── index.js              (Express Router for /growth)
-│   ├── brain.js              (AI Lead Processing, Ghost Room mapping)
-│   ├── handoff.js            (Intent detection & human routing)
-│   ├── sender.js             (Follow-up Drip Campaigns)
-│   └── ghost-room.html       (Interactive Landing Page for clinics)
-│
-└── 📁 dashboard/             (React Admin Panel for Clinic Management)
-    └── src/
-        ├── App.tsx
-        ├── pages/            (Dashboard, Clinics, Doctors, Leads, Appointments)
-        └── components/
+**Qudozen** is an AI automation company selling **Autonomous WhatsApp Receptionists** to dental clinics in Saudi Arabia. It is also a self-selling SaaS platform — it finds its own customers, demos itself, collects payment, and onboards them with zero human involvement.
+
+**The system serves TWO distinct user types, separated by the `clinic.vertical` field:**
+- `vertical: 'dental'` → **Patients** talking to their clinic's WhatsApp bot (booking appointments)
+- `vertical: 'saas'` → **Clinic Owners** being sold the system (Jake persona, trial activation)
+
+**Infrastructure:**
+```
+Domain:    qudozen.com
+Runtime:   Node.js >= 20 on Render (auto-deploy from GitHub)
+Database:  Supabase (Postgres via Axios REST — NOT the Supabase SDK in core modules)
+Messaging: Twilio WhatsApp Business API
+AI:        OpenAI GPT-4o-mini (intent detection, date parsing, message generation)
+Payments:  Stripe (subscriptions + mandatory phone collection at checkout)
 ```
 
 ---
 
-## 🤖 2. The Dental Bot Architecture (`bot.js`)
+## 🗺️ THE FIVE LAYERS
 
-The `bot.js` file is the brain of the receptionist. It operates as a state machine tied to the patient's phone number.
+```
+LAYER 1: BRAND / MARKETING (public/index.html)
+  qudozen.com — Marketing site, Live Simulator, Pricing, FOMO Ticker
+  Chat Widget (chat-widget.js) — Jake persona, trial activation CTA
 
-### State Machine Flow (`flow_data`)
-When a user initiates the booking intention (`intent === 'booking'`), they are routed into an 8-step flow. The state is saved in the `patients` table under `flow_step` and `flow_data`.
+LAYER 2: GROWTH SWARM (growth/ folder)
+  Scouts find clinic owners → score them → Jake sends Two-Step msg
+  → Owner clicks → Sees simulator → Starts trial → Pays via Stripe
 
-1. **Step 1:** Ask for Patient Name.
-2. **Step 2:** Ask for Treatment Type (Cleaning, Fillings, Braces, etc.).
-3. **Step 3:** Ask for Appointment Description/Notes (or voice note).
-4. **Step 4:** Ask to Select a Doctor (shows available doctors from the DB).
-5. **Step 5:** Display the selected doctor (Transition step).
-6. **Step 6:** Ask for Preferred Date (`extractDate` AI parser).
-7. **Step 7:** Display Available Time Slots. 
-   - *Logic:* Fetches `doctor_slots` from `slots.js`. If none exist, falls back to fixed schedule.
-   - *Logic:* Validates limits (e.g., cannot book within 1 hr or beyond 30 days).
-   - *Logic:* Validates duplicates (`checkDuplicateBooking`).
-8. **Step 8:** Confirmation Phase.
-   - Requires patient to explicitly confirm (1/Yes).
-   - **Critical Path:** Calls `bookSlot` atomic lock → saves appointment to DB → pushes event to Google Calendar (`calendar.js`) → fires WhatsApp confirmation.
+LAYER 3: ONBOARDING STATE MACHINE (growth/onboarding-state-machine.js)
+  Stripe fires webhook → Machine takes over → Sends credentials via
+  WhatsApp → Collects Calendar ID → Marks clinic as LIVE
 
-### Universal Commands (Interrupts)
-*   **Reschedule/Cancel:** The bot checks `cl.config.features` limits, extracts the existing appointment, and drops the user into a dedicated 3-step Reschedule or Cancel flow.
-*   **Language Switching:** Typing "English" or "عربي" resets the flow and flips `patient.language`. **Saudi Arabic (RTL)** is the default design language for all outputs.
+LAYER 4: DENTAL BOT CORE (bot.js)
+  THE PRODUCT. AI receptionist that books, reschedules, cancels,
+  reminds, and follows up with real patients. Multi-tenant.
 
----
+LAYER 5: OPERATOR DASHBOARD (public/dashboard/)
+  Clinic owner sees bookings, revenue, growth leads in real-time.
 
-## 🔗 3. Sub-Systems & Database Mechanisms
-
-### A. Atomic Locking (`slots.js`)
-*   **Problem:** Two users clicking "4:00 PM" at the exact same millisecond.
-*   **Solution:** `slots.js` bypasses `bot.js` memory and makes raw Supabase RPC calls. It uses a `UPDATE ... WHERE status = 'available' RETURNING *` loop to guarantee sequence exclusivity. If the slot is taken, the bot throws the user back to Step 7.
-
-### B. The Cron Hub (`index.js`)
-The `index.js` server uses `node-cron` for asynchronous task execution:
-1.  **30-Min Reminders:** Scans `appointments` for `preferred_date_iso` matching tomorrow (`reminder_sent_24h`) and today within 1 hour (`reminder_sent_1h`).
-2.  **Follow-ups:** Daily checks for yesterday's completed appointments to ask for Google Reviews.
-3.  **No-Show Watcher:** Checks if a confirmed appointment has passed by 2 hours. If yes, marks as NO-SHOW and automatically releases the locked slot logic.
-
-### C. The Webhook Processor (`index.js` route)
-*   Receives `POST /webhook` from Twilio.
-*   Parses images/audio payloads (`NumMedia > 0`). If Audio, routes to Whisper API before passing text to `bot.js`.
-*   Passes data to `monitor.js` processing locks to prevent double-firings from Twilio retry loops.
+All layers share: index.js (server) + Supabase (database)
+```
 
 ---
 
-## 🗄️ 4. Core Database Schema (Supabase)
+## 📁 COMPLETE FILE MAP
 
-*   **`clinics`**: 
-    - `id`, `name`, `whatsapp_number`, `staff_phone`, `plan` (basic/pro), `config` (JSON map of disabled features like cancel/reschedule bounds), `google_calendar_id`.
-*   **`doctors`**: 
-    - `id`, `clinic_id`, `name`, `name_ar`, `specialty`, `specialty_ar`, `is_active`.
-*   **`patients`**: 
-    - `phone` (Primary Key), `language` (ar/en), `current_flow` (booking/reschedule/cancel), `flow_step` (int), `flow_data` (JSON of booking draft).
-*   **`doctor_slots`**: 
-    - `id`, `clinic_id`, `doctor_id`, `slot_date` (ISO), `slot_time`, `status` (available/booked), `patient_phone`.
-*   **`appointments`**: 
-    - `id`, `clinic_id`, `phone`, `name`, `doctor_name`, `treatment`, `preferred_date_iso`, `time_slot`, `status` (confirmed/cancelled/no-show/completed), `calendar_event_id`, flags for reminders.
+### Root Files
+
+| File | Role | Key Exports |
+|------|------|-------------|
+| `index.js` | Express server, ALL route mounting, ALL cron jobs, Stripe webhook | App entry point |
+| `bot.js` | Core WhatsApp state machine — THE PRODUCT | `handleMessage(phone, text, clinic)` |
+| `db.js` | Supabase data access layer (Axios REST, NOT Supabase SDK) | See DATABASE section |
+| `ai.js` | OpenAI GPT-4o-mini integration | `detectIntent()`, `extractDate()`, `extractTimeSlot()` |
+| `whatsapp.js` | Twilio WhatsApp message abstraction | `sendMessage()`, `sendInteractiveList()`, `sendButtons()` |
+| `slots.js` | Atomic slot locking via Postgres UPDATE...RETURNING | `bookSlot()`, `releaseSlot()`, `getSlots()` |
+| `calendar.js` | Google Calendar API integration | `createCalendarEvent()`, `updateCalendarEvent()` |
+| `audio.js` | OpenAI Whisper transcription for voice notes | `transcribeAudio(mediaUrl)` |
+| `monitor.js` | System health, error logging, self-healing | `healthCheck()`, `withMonitor()`, `logError()` |
+| `api.js` | REST API routes for dashboard (mounted at /api) | 10+ dashboard endpoints |
+| `schema.sql` | Master Postgres schema — run in Supabase SQL Editor | Defines all tables |
+| `dashboard-api.js` | Mounted at /api/dashboard | Dashboard metrics |
 
 ---
 
-## 🚀 5. Development Constraints for Kimi
+### `growth/` — The Autonomous Sales Engine
 
-If you modify anything on this architecture, follow these rules or the system will break:
+| File | Role |
+|------|------|
+| `growth/index.js` | Express Router for all /growth/* routes. JWT auth middleware. 25+ endpoints. |
+| `growth/onboarding-state-machine.js` | THE SALES CLOSER + ACTIVATOR. Manages lifecycle from payment → credentials → calendar → LIVE. |
+| `growth/brain.js` | AI message generation. `generateMessage(lead)` via GPT-4o-mini PAS formula. `applyGuardrails(msg)` strips links/emojis, enforces 320 char limit, adds -Jake signature. `detectLanguage(lead)` defaults to Arabic. |
+| `growth/sender.js` | Batch outreach engine. Two-Step safety: hook message (no link), detects positive reply in bot.js, fires simulator link. Rate: 50/day system, 3/day per lead. |
+| `growth/nurture.js` | Drip campaign engine. Hot/Warm cadence. |
+| `growth/handoff.js` | Converts a GS lead who expressed interest into a bot patient record. |
+| `growth/compliance.js` | Business hours guard (10am-5pm Riyadh, no Fridays). `detectStopCommand()` for opt-out. |
+| `growth/activation.js` | `provisionClinic()` — creates clinic record, assigns WhatsApp number |
+| `growth/ghost-room.html` | Revenue loss simulator landing page at /growth/ghost-room |
 
-1. **Never alter `patient` flow resets arbitrarily:** When an appointment finishes (Step 8) or fails, the patient must be completely wiped from the memory flow (`await savePatient(phone, { ...patient, current_flow: null, flow_step: 0, flow_data: {} });`) so they can trigger the main menu again.
-2. **Never send English text unprompted:** The target market is Saudi Arabia. If a string is hardcoded, it must have an explicit Arabic (`? ar : en`) fallback logic based on `patient.language`.
-3. **Handle ISO Dates Religiously:** In the database, `preferred_date` is a human-readable display string. You **must** rely on `preferred_date_iso` formatting (`YYYY-MM-DD`) for Cron logic, slot lookups, and Calendar bindings.
-4. **Don't touch the atomic lock logic:** `slots.js` is perfectly scoped using Postgres-level guarantees. Do not write alternative locking mechanisms inside `bot.js`.
+#### `growth/scouts/` — Lead Discovery Layer
+
+| File | Role |
+|------|------|
+| `orchestrator.js` | Runs all scouts → deduplicates → scores → inserts → optional auto-send |
+| `indeed.js` | Scrapes Indeed.sa RSS for "dental receptionist" job postings |
+| `jobPortals.js` | Scrapes Bayt.com + Naukrigulf + Indeed Arabic RSS |
+| `googlePlaces.js` | Google Places API → finds clinics in Saudi cities |
+| `owner-finder.js` | Extracts owner's WhatsApp from clinic social profiles |
+| `classifyPhone.js` | Saudi personal vs. business phone detection |
+| `confidenceScore.js` | Score 0-100 based on ownership evidence |
+
+#### `growth/lib/` — Intelligence Layer
+
+| File | Role |
+|------|------|
+| `smartParser.js` | Extracts name/phone/city/pain from raw pasted text |
+| `autoVerify.js` | Full verification pipeline → returns {decision: 'MESSAGE'|'REVIEW'|'DROP'} |
+| `dedup.js` | Checks lead against DB to prevent re-contacting |
+| `whatsappProvider.js` | Multi-provider WhatsApp send (Twilio routing) |
+| `supabase.js` | Supabase SDK client (ONLY used inside growth/ — db.js uses Axios) |
+| `phone.js` | Phone normalization (strips +, country code handling) |
+
+---
+
+### `public/` — Frontend Assets
+
+| File | Role |
+|------|------|
+| `public/index.html` | Complete Arabic marketing site. Hero, Three-Layer Architecture, Services Bento Grid, Live Simulator (embedded WhatsApp demo), Pricing, FOMO ticker, Jake letter, Chat Widget. Simulator is at #reception-simulator. Auto-scrolls and glows on #simulator anchor. |
+| `public/chat-widget.js` | Self-contained embedded chat. Jake persona. `handleAction('activate'|'demo'|'pricing'|'support'|'dashboard')`. Mobile-responsive (edge-to-edge < 480px). Multi-message array rendering with 600ms delay between messages. |
+| `public/dashboard/` | Vanilla HTML/CSS/JS operator dashboard. Auth via express-session. |
+
+---
+
+### `api/` — Stripe Integration
+
+| File | Role |
+|------|------|
+| `api/stripe-checkout.js` | Creates Stripe checkout sessions. `phone_number_collection: {enabled: true}` (MANDATORY). Plans: Awareness (80 USD), System (133 USD). |
+
+---
+
+## 🤖 BOT.JS — COMPLETE MESSAGE ROUTING LOGIC (EXACT ORDER)
+
+Every inbound WhatsApp message goes through `handleMessage(phone, text, clinic)`:
+
+```
+IMPORTS (module top-level — NOT inside handleMessage):
+  const db = require('./db');                           ← CRITICAL: must be here
+  const onboarding = require('./growth/onboarding-state-machine.js');  ← CRITICAL
+
+STEP 1 [LOCK]
+  processingLocks.get(phone) → skip if duplicate Twilio retry
+
+STEP 2 [MEDIA]
+  If message === '[Media/Unsupported]' → reject with explanation → RETURN
+
+STEP 3 [ONBOARDING INTERCEPT]
+  const existing = await db.getOnboardingByPhone(phone)
+  If found AND existing.current_state !== 'live':
+    const resp = await onboarding.handleResponse(phone, msg, existing)
+    If resp.handled → RETURN (do not process further)
+
+STEP 4 [ACTIVATION DETECT]
+  const activation = await onboarding.handleActivation(phone, msg, clinic || {})
+  If activation.handled → RETURN
+
+STEP 5 [GROWTH LEAD TWO-STEP]
+  const lead = await db.getLeadByPhone(phone)
+  If lead AND (status === 'messaged' OR 'scouted'):
+    If positive reply regex matches:
+      await db.updateLeadStatus(lead.id, 'interested')  ← lead.id NOT phone
+      sendMessage(phone, simulator URL)
+      RETURN
+
+STEP 6 [NEW PATIENT]
+  const patient = await getPatient(phone)
+  If no patient → insertPatient() → sendMessage(LANG_SELECT) → RETURN
+
+STEP 7 [STALE FLOW]
+  If patient.updated_at > 30 min → reset flow to null
+
+STEP 8 [LANGUAGE GATE]
+  If patient.language not in ['ar', 'en'] → prompt 1/2
+
+STEP 9 [LANGUAGE SWITCH]
+  "english" / "عربي" → switch language + show menu
+
+STEP 10 [AI INTENT]
+  Skips AI for free-text steps (name=1, notes=6, date=4, custom_phone=21)
+  detectIntent(msg, flow, step) → GPT-4o-mini
+
+STEP 11 [FLOW ROUTING]
+  Active flow → handleBookingFlow() | handleRescheduleFlow() | handleCancelFlow()
+  No active flow → routeIntent(phone, intent, lang, ar, rawMsg, patient, cl)
+```
+
+### routeIntent() — Vertical-Aware Switch
+
+```
+case 'booking':
+  SaaS  → const r = await onboarding.handleTrialRequest(...)
+           if (r.handled) return;
+           else → send "type activate" prompt
+  Dental → start booking flow (step 1)
+
+case 'my_appointment':
+  SaaS  → db.getOnboardingByPhone() → show setup status
+  Dental → getAppointment() → show booking details
+
+case 'prices':
+  SaaS  → 299/499 SAR tiers
+  Dental → dental procedure prices
+
+case 'doctors':
+  SaaS  → "AI + Cloud team" description
+  Dental → show doctors list
+
+case 'reschedule':
+  SaaS  → "Contact sales team"
+  Dental → reschedule flow
+
+All other cases (location, services, reviews, human, etc.) → dental logic only
+```
+
+---
+
+## 🔄 ONBOARDING STATE MACHINE LIFECYCLE
+
+```
+States:
+  activation_requested → calendar_pending → credentials_sent → live
+  → followup_day1 → checkin_day3 → review_day7 → completed
+
+Entry Point 1: startFromPayment()
+  Called by: Stripe webhook (checkout.session.completed)
+  Input: {clinic_name, email, plan, owner_phone, stripe_customer_id}
+  Note: owner_phone comes from session.customer_details.phone (Stripe mandatory collection)
+
+Entry Point 2: handleActivation(phone, msg, context)
+  Called by: bot.js STEP 4
+  Triggers on: 'activate', 'تفعيل', 'start trial', 'subscribe', etc.
+
+Entry Point 3: handleTrialRequest(phone, msg, context)
+  Called by: routeIntent() case 'booking' when vertical === 'saas'
+  CRITICAL: Must be awaited. Returns {handled: true/false}. Check result.
+  On success: generates trial@{clinic}.qd credentials → sends WhatsApp → creates trials record
+
+Entry Point 4: handleResponse(phone, msg, existing)
+  Called by: bot.js STEP 3 (for users IN an onboarding sequence)
+  Handles:
+    - /help/مساعدة/ → send calendar instructions
+    - state === 'calendar_pending' AND (msg includes '@' OR length > 20)
+      → updateOnboarding({calendar_id, calendar_connected:true, current_state:'live'})
+      → send setupComplete confirmation
+
+Day 0 Sequence:
+  1. sendWhatsApp(welcome message)
+  2. sendWhatsApp(calendar connection request)
+  3. sendWhatsApp(dashboard credentials — bcrypt hashed in DB)
+  4. giftLeads() — 5 hot leads from gs_leads
+  5. scheduleCron(id, 1, 'followup') — Day 1 follow-up
+```
+
+---
+
+## 📡 TWO-STEP OUTREACH PIPELINE
+
+```
+DISCOVERY (orchestrator.js — cron every 6h):
+  indeed.js + jobPortals.js + googlePlaces.js → dedup → insert growth_leads_v2
+
+STEP 1 — HOOK (sender.processBatch — cron daily 10am):
+  Message: "Hi Dr. X, I built a digital twin for [Clinic]'s front desk.
+            Would you like me to send you the link to try the simulation?"
+  Rules: No links. Max 320 chars. 10am-5pm Riyadh only. 50/day cap. -Jake signature.
+
+STEP 2 — DELIVER (bot.js STEP 5):
+  Trigger: lead.status in ['messaged','scouted'] + positive reply regex
+  Action: db.updateLeadStatus(lead.id, 'interested')  ← MUST be lead.id
+  Send: https://qudozen.com/#simulator?clinic={name}&lead={id}
+
+WEBSITE LANDING (index.html):
+  hash === '#simulator' or '#reception-simulator'
+  → scrollIntoView(#reception-simulator)
+  → boxShadow glow animation
+
+POST-SIMULATION CTA:
+  Simulation complete → button "Activate [Clinic] OS Now ←"
+  → href="#pricing" + setTimeout(window.qdChat.open('activate'), 1000)
+  → handleAction('activate') → activateTrial() → POST /api/start-trial
+  → Creates trial → sends WhatsApp credentials → clinic is LIVE
+```
+
+---
+
+## 🗄️ DATABASE — KEY TABLES
+
+### `patients` (bot conversation state)
+```sql
+phone         TEXT PRIMARY KEY   -- WhatsApp number
+language      TEXT               -- 'ar' | 'en' | null (null = not chosen yet)
+current_flow  TEXT               -- 'booking' | 'reschedule' | 'cancel' | null
+flow_step     INT DEFAULT 0
+flow_data     JSONB DEFAULT '{}'  -- Draft: {name, treatment, date, slot, doctor, etc.}
+updated_at    TIMESTAMPTZ
+```
+
+### `clinics` (multi-tenant config)
+```sql
+id               UUID PRIMARY KEY
+whatsapp_number  TEXT UNIQUE     -- Maps Twilio number → clinic
+name / name_ar   TEXT
+vertical         TEXT DEFAULT 'dental'   -- 'dental' | 'saas' — CONTROLS ALL PERSONA LOGIC
+plan             TEXT                    -- 'basic' | 'pro'
+config           JSONB                   -- {features: {reschedule, cancel, google_calendar}}
+doctors          JSONB                   -- Inline fallback doctor data
+```
+
+### `appointments`
+```sql
+preferred_date      TEXT    -- Human display string (DO NOT USE for logic)
+preferred_date_iso  DATE    -- YYYY-MM-DD (USE THIS for all cron/slot/calendar logic)
+status              TEXT    -- 'confirmed'|'cancelled'|'no-show'|'completed'
+reminder_sent_24h   BOOLEAN
+reminder_sent_1h    BOOLEAN
+follow_up_sent      BOOLEAN
+```
+
+### `doctor_slots` (atomic availability)
+```sql
+status      TEXT    -- 'available' | 'booked'
+available   INT     -- Decremented by bookSlot() atomically
+booked      INT     -- Incremented by bookSlot() atomically
+```
+
+### `growth_leads_v2` (outreach pipeline)
+```sql
+status  TEXT  -- 'new'|'scouted'|'messaged'|'interested'|'converted'|'opted_out'
+```
+Note: `getLeadByPhone()` queries this table. `updateLeadStatus(id, status)` patches by `id` NOT phone.
+
+### `onboarding_states` (activation lifecycle)
+```sql
+owner_phone     TEXT            -- The clinic owner's WhatsApp
+current_state   TEXT            -- activation_requested → live → completed
+calendar_id     TEXT            -- Submitted by owner during onboarding
+calendar_connected BOOLEAN
+dashboard_username TEXT
+dashboard_password TEXT         -- bcrypt hashed
+```
+
+### `trials` (free trial records)
+```sql
+username    TEXT    -- trial@{clinic}.qd
+password    TEXT    -- Plain text (hashed version stored in onboarding_states)
+expires_at  TIMESTAMPTZ  -- 7 days from creation
+```
+
+---
+
+## 🌐 ALL ROUTES (Complete)
+
+### Core (index.js)
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/` | Serve public/index.html |
+| GET | `/health` | System health JSON |
+| POST | `/webhook` | Twilio → bot.handleMessage() |
+| POST | `/webhook/status` | Twilio delivery → message_logs |
+| POST | `/webhook/stripe` | Stripe checkout.session.completed → onboarding.startFromPayment() |
+| POST | `/api/chat` | Web widget → returns `{messages: []}` array |
+| POST | `/api/start-trial` | Web widget trial creation |
+| POST | `/send-reminders` | Appointment reminders (cron target) |
+| POST | `/cleanup-slots` | Release past slots (cron target) |
+
+### Dashboard API (/api)
+| Method | Path | Returns |
+|--------|------|---------|
+| POST | `/api/auth/login` | JWT token |
+| GET | `/api/dashboard/stats` | Revenue, bookings, no-shows |
+| GET | `/api/appointments` | Filtered appointment list |
+| GET | `/api/patients` | Patient list |
+| GET | `/api/leads` | Growth leads |
+| GET | `/api/doctors` | Doctor schedules |
+
+### Growth Swarm (/growth)
+| Method | Path | Auth | Purpose |
+|--------|------|------|---------|
+| GET | `/growth/dashboard` | JWT | HTML lead management dashboard |
+| GET | `/growth/ghost-room` | None | Revenue loss simulator |
+| POST | `/growth/add-and-fire` | None | Paste raw data → auto parse/send |
+| POST | `/growth/send-batch` | JWT | Send to top N leads |
+| POST | `/growth/scout/run` | JWT | Run all scouts |
+| POST | `/growth/approve/:id` | JWT | Manually approve + send |
+| GET | `/growth/login` | None | Login HTML + JWT issue |
+
+---
+
+## ⏰ CRON SCHEDULE
+
+| Schedule | Job |
+|----------|-----|
+| Every 30 min | Appointment reminders (24h + 1h) |
+| Every hour | Release past booked slots |
+| Every 10 min | System health check + auto-heal |
+| Daily 9 AM Riyadh | Growth follow-up drip |
+| Every 6 hours | Indeed + job portal scout |
+| Weekly Sunday 7 AM Riyadh | Google Places scout |
+| Daily 10 AM Riyadh | Auto-batch send (top leads) |
+| Daily 8:30 AM Riyadh | Morning brief WhatsApp to admin |
+
+---
+
+## ⚠️ CRITICAL RULES
+
+1. **`db` imported at module top in bot.js** (`const db = require('./db')`) — NOT inside handleMessage
+2. **`onboarding` imported at module top in bot.js** — same reason
+3. **`updateLeadStatus(lead.id, status)`** — NOT `(phone, status)` — filters by id column
+4. **`handleTrialRequest()` must be awaited + result checked** — returns {handled: bool}
+5. **NEVER reset patient flow without** `{current_flow: null, flow_step: 0, flow_data: {}}`
+6. **Arabic is default** — ALL strings need `ar ? arabicText : englishText` branching
+7. **Use `preferred_date_iso`** (YYYY-MM-DD) for ALL logic — NOT `preferred_date`
+8. **NEVER rewrite atomic slot locking** — `slots.js` Postgres UPDATE...WHERE...RETURNING is the only safe pattern
+9. **`clinics.vertical` controls ALL persona** — check before every message template
+10. **`/api/chat` returns `{messages: []}` array** — frontend renders with 600ms delay per message
+
+---
+
+## 🐛 KNOWN ISSUES
+
+| Issue | Severity | Status |
+|-------|----------|--------|
+| Dashboard build not automated on Render | High | Open |
+| No-show detection uses UTC not Riyadh TZ | Medium | Open |
+| `db.js` uses Axios REST, `growth/` uses Supabase SDK | Low | Inconsistency |
+| `bot.js` is 110KB monolith — needs module refactoring | Medium | Backlog |
+| Cron jobs self-call localhost (may fail if PORT changes) | Low | Open |
+
+---
+
+*Generated by Antigravity — 2026-04-29*
+*Reflects session hardening: db import fix, lead.id fix, handleTrialRequest await, mobile CSS, simulator CTA, Two-Step outreach, vertical routing, onboarding machine.*

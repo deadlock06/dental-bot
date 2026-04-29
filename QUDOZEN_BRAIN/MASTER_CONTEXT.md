@@ -1,6 +1,6 @@
 # 📋 MASTER CONTEXT — Qudozen Complete System Map
 > For any LLM or agent. Read this to understand every file, every function, every connection.
-> Version: 2.0 | Last Updated: 2026-04-23
+> Version: 3.3-HARDENED | Last Updated: 2026-04-29
 
 ---
 
@@ -8,36 +8,38 @@
 
 **Qudozen** is an AI automation company selling autonomous WhatsApp receptionists to dental clinics in Saudi Arabia. The entire system — brand, sales engine, product, and admin dashboard — lives in one Node.js repo deployed on Render.
 
-**Domain:** qudozen.com  
-**Repo:** deadlock06/dental-bot (GitHub)  
-**Deployed at:** Render free tier, auto-deploy on push to `main`  
-**Runtime:** Node.js ≥ 20  
-**Database:** Supabase (Postgres)  
-**Messaging:** Twilio WhatsApp API  
-**AI:** OpenAI GPT-4o-mini  
+**Domain:** qudozen.com
+**Repo:** deadlock06/dental-bot (GitHub)
+**Deployed at:** Render free tier, auto-deploy on push to `main`
+**Runtime:** Node.js >= 20
+**Database:** Supabase (Postgres)
+**Messaging:** Twilio WhatsApp API
+**AI:** OpenAI GPT-4o-mini
+**Payments:** Stripe
 
 ---
 
-## 🗺️ THE FOUR LAYERS
+## 🗺️ THE FIVE LAYERS
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  LAYER 1: QUDOZEN BRAND (public/index.html + ghost-room.html)   │
-│  The marketing face. Patients and clinic owners land here first. │
-├─────────────────────────────────────────────────────────────────┤
-│  LAYER 2: ANTIGRAVITY / GROWTH SWARM (growth/ folder)           │
-│  The autonomous sales engine. Finds clinics, qualifies, cold     │
-│  messages them, collects Stripe payments, auto-activates.        │
-├─────────────────────────────────────────────────────────────────┤
-│  LAYER 3: DENTAL BOT CORE (bot.js + supporting modules)         │
-│  The actual product. AI WhatsApp receptionist that books,        │
-│  reschedules, cancels, reminds, and follows up with patients.    │
-├─────────────────────────────────────────────────────────────────┤
-├─────────────────────────────────────────────────────────────────┤
-│  LAYER 4: OPERATOR COMMAND CENTER (public/dashboard/)           │
-│  ROI Dashboard for clinic owners. Appointments, Feed, Metrics.   │
-└─────────────────────────────────────────────────────────────────┘
-All four layers share: index.js (server) + Supabase (database)
+LAYER 1: BRAND (public/index.html)
+  Marketing site, Live Simulator (#reception-simulator), Pricing, FOMO ticker.
+  Chat Widget (chat-widget.js) — Jake persona, trial activation.
+
+LAYER 2: GROWTH SWARM (growth/)
+  Scouts → Score leads → Two-Step outreach → Simulator demo → Payment.
+
+LAYER 3: ONBOARDING (growth/onboarding-state-machine.js)
+  Stripe webhook → Credentials → Calendar → LIVE.
+
+LAYER 4: DENTAL BOT (bot.js)
+  THE PRODUCT. Books, reschedules, cancels, reminds, follows up.
+  Multi-tenant, multi-lingual (AR/EN), multi-vertical (dental/saas).
+
+LAYER 5: DASHBOARD (public/dashboard/)
+  Clinic owner command center. Bookings, revenue, leads.
+
+All layers: index.js (server) + Supabase (database) + db.js (ORM)
 ```
 
 ---
@@ -46,482 +48,335 @@ All four layers share: index.js (server) + Supabase (database)
 
 ### Root Files
 
-| File | Size | Role | Exports / Key Functions |
-|---|---|---|---|
-| `index.js` | 24KB | **Express server + all route mounting + all cron jobs** | Mounts: /api, /growth, /dashboard, /, /webhook, /send-reminders, /cleanup-slots, /health |
-| `bot.js` | 103KB | **Core WhatsApp state machine — THE PRODUCT** | `handleMessage(phone, text, clinic)` |
-| `ai.js` | 20KB | **OpenAI GPT-4o-mini integration** | `detectIntent()`, `extractDate()`, `extractTimeSlot()`, `parseDateToISO()` |
-| `db.js` | 10KB | **Supabase data access layer (raw Axios REST)** | `getPatient`, `insertPatient`, `savePatient`, `deletePatient`, `getClinic`, `getClinicById`, `saveAppointment`, `getAppointment`, `updateAppointment`, `checkDuplicateBooking`, `getAppointmentCountsForDate`, `getAppointmentsDueTomorrow`, `getAppointmentsDueInOneHour`, `getAppointmentsDueFollowUp`, `getDoctorsByClinic` |
-| `api.js` | 7.7KB | **REST API routes for React dashboard** | Routes: POST /auth/login, GET /dashboard/stats, GET /appointments, GET /patients, GET /leads, GET /doctors, POST /sync-simulation, POST /ghost-dwell, GET /analytics |
-| `whatsapp.js` | 15KB | **Twilio WhatsApp message sender** | `sendMessage()`, `sendInteractiveList()`, `sendButtons()`, `sendTemplate()` |
-| `slots.js` | 11KB | **Atomic slot locking (Postgres-level concurrency)** | `getSlots()`, `lockSlot()`, `releaseSlot()`, `releaseSlotByPatient()`, `bookSlot()` |
-| `calendar.js` | 6.1KB | **Google Calendar API integration + date utils** | `createCalendarEvent()`, `updateCalendarEvent()`, `deleteCalendarEvent()` |
-| `audio.js` | 5.3KB | **OpenAI Whisper voice transcription** | `transcribeAudio(mediaUrl)` — downloads from Twilio, sends to Whisper |
-| `monitor.js` | 12KB | **Self-healing health monitoring system** | `healthCheck()`, `runPeriodicCheck()`, `withMonitor()`, `logError()`, `validateFlowState()`, `alertStaffIfCritical()` |
-| `growth_conversations` | 4.2KB | **Phase 7: Autonomous reply history** | Intent logs, auto-reply status |
-| `schema.sql` | 6.6KB | **Supabase Postgres schema** | Tables: patients, clinics, appointments, doctor_schedules, doctor_slots, growth_leads_v2, growth_conversations, onboarding_states |
-| `render.yaml` | 197B | **Render deployment config** | buildCommand: npm install, startCommand: node index.js ⚠️ Does NOT build dashboard |
-| `package.json` | 785B | **Root dependencies** | express, helmet, twilio, openai, @supabase/supabase-js, axios, cheerio, luxon, node-cron, googleapis, stripe |
+| File | Size | Role | Key Exports |
+|------|------|------|-------------|
+| `index.js` | 31KB | Express server + all routes + all crons + Stripe webhook | Entry point |
+| `bot.js` | 110KB | Core WhatsApp state machine — THE PRODUCT | `handleMessage(phone, text, clinic)` |
+| `ai.js` | 20KB | OpenAI GPT-4o-mini | `detectIntent()`, `extractDate()`, `extractTimeSlot()` |
+| `db.js` | 20KB | Supabase data layer (Axios REST) | See DATABASE FUNCTIONS section |
+| `api.js` | 7.7KB | REST API for dashboard | Mounted at /api |
+| `whatsapp.js` | 15KB | Twilio messaging | `sendMessage()`, `sendInteractiveList()`, `sendButtons()` |
+| `slots.js` | 11KB | Atomic slot locking | `bookSlot()`, `releaseSlot()`, `getSlots()` |
+| `calendar.js` | 6.1KB | Google Calendar | `createCalendarEvent()`, `updateCalendarEvent()` |
+| `audio.js` | 5.3KB | Whisper transcription | `transcribeAudio(mediaUrl)` |
+| `monitor.js` | 12KB | Health monitoring | `healthCheck()`, `withMonitor()`, `logError()` |
+| `dashboard-api.js` | - | Dashboard metrics API | Mounted at /api/dashboard |
+| `schema.sql` | 14KB | Master Postgres schema | Run in Supabase SQL Editor |
 
----
-
-### `growth/` — The Antigravity / Growth Swarm Engine
-
-| File | Size | Role | Key Functions |
-|---|---|---|---|
-| `growth/swarm/reply-classifier.js` | 8.2KB | **Phase 7: Autonomous Intent Classifier** | `classify()`, `processInbound()` — handles sales replies |
-| `growth/index.js` | 29KB | **Express router: all /growth/* endpoints + Growth HTML dashboard** | 20+ routes (see below) |
-| `growth/state-machine.js` | 3.5KB | **LLM Intent Classifier & Core Router** | Intercepts all inbound Growth Swarm replies |
-| `growth/conversation.js` | 4.2KB | **"Jake" Persona & Objection Handling** | Uses "Illusion Architecture" GPT-4o-mini prompts |
-| `growth/nurture.js` | 5.1KB | **Automated Nurture Sequence Engine** | Cron-based drip campaigns tied to `gs_sequences` |
-| `growth/handoff.js` | 2.4KB | **Converts GS lead reply → bot patient** | `handoffLead(lead, message)` — notifies admin, creates patient record |
-| `growth/brain.js` | 3.9KB | **Legacy initial cold outreach generator** | Mostly superseded by sequence engine |
-| `growth/sender.js` | 2.9KB | **Legacy follow-up engine** | Now hooks into Nurture engine |
-| `growth/finder.js` | 2KB | **Legacy lead finder utility** | Deprecated, kept for compat |
-| `growth/ghost-room.html` | 6.9KB | **Revenue loss simulator landing page** | Animated counter + Stripe CTA. URL: /growth/ghost-room?clinic=X&city=Y |
-
-#### `growth/lib/` — Intelligence Layer
-
-| File | Role | Key Function |
-|---|---|---|
-| `smartParser.js` | Extract name/phone/city/pain from raw pasted text | `parseRawInput(rawText)` |
-| `autoVerify.js` | Full verification pipeline: parse→website→phone→score→decide | `autoVerify(parsed, supabase)` → returns `{decision: 'MESSAGE'|'REVIEW'|'DROP', confidenceScore, ...}` |
-| `dedup.js` | Check if lead already exists | `checkDuplicate(supabase, phone, name, city)` |
-| `classifyPhone.js` | Saudi personal vs. business phone detection | `classifyPhone(phone)` |
-| `confidenceScore.js` | Score 0–100 based on owner evidence | `calculateScore(signals)` |
-| `findWebsite.js` | Google/Bing search for clinic website + owner name | `findWebsite(businessName, city)` |
-| `whatsappProvider.js` | Multi-provider WhatsApp send (Twilio / 360dialog routing) | `sendWhatsApp(phone, message, options)` |
-
-#### `growth/scouts/` — Lead Sourcing Layer
-
-| File | Role | Key Function |
-|---|---|---|
-| `orchestrator.js` | Runs all scouts, deduplicates, inserts to DB | `runAllScouts(supabase, {scouts, autoSend, cities})` |
-| `indeed.js` | Scrapes Indeed.sa for dental receptionist job postings | `runIndeedScout(supabase)` |
-| `jobPortals.js` | Scrapes Bayt, Naukri Gulf, other Arab job portals | `runJobPortalsScout(supabase)` |
-| `googlePlaces.js` | Google Places API: finds dental clinics in Saudi cities | `runGooglePlacesScout(supabase, cities)` |
-| `smartParser.js` | Scout-level text parser | `parseScoutListing(raw)` |
-| `classifyPhone.js` | Scout-level phone classifier | wrapper |
-| `confidenceScore.js` | Scout-level scorer | wrapper |
-
----
-
-### `public/dashboard/` — Operator Command Center (Vanilla)
-
-**Stack:** Vanilla HTML + CSS + JS  
-**Auth:** Session-based (`express-session`) + httpOnly cookies  
-**Served at:** `/dashboard/*` (Protected)  
+### `growth/` Files
 
 | File | Role |
-|---|---|
-| `login.html` | Branded midnight/teal login interface |
-| `index.html` | Main dashboard layout (Scoreboard, Feed, Calendar) |
-| `app.js` | Data fetching & DOM rendering |
-| `style.css` | Premium midnight theme styling |
+|------|------|
+| `growth/index.js` | Express router for /growth/*. JWT auth. 25+ endpoints. HTML dashboard. |
+| `growth/onboarding-state-machine.js` | Activation lifecycle. Exported as singleton `machine`. States: activation_requested → live. |
+| `growth/brain.js` | `generateMessage(lead)` via GPT-4o-mini PAS. `applyGuardrails(msg)` — strips links/emojis, 320 char max, adds -Jake signature. `detectLanguage(lead)` — defaults Arabic. |
+| `growth/sender.js` | `processBatch(leads)` — Two-Step outreach. Rate limited. |
+| `growth/compliance.js` | `isWithinBusinessHours()` — 10am-5pm Riyadh, no Fridays. `detectStopCommand()`. |
+| `growth/nurture.js` | Hot/Warm drip cadence. |
+| `growth/handoff.js` | `handoffLead(lead, msg)` — converts lead to bot patient. |
+| `growth/activation.js` | `provisionClinic()` — creates clinic record. |
+| `growth/scouts/orchestrator.js` | `runAllScouts(supabase, {scouts, autoSend})` — runs all scouts, deduplicates, inserts. |
+| `growth/scouts/indeed.js` | Indeed.sa RSS for dental receptionist postings. |
+| `growth/scouts/jobPortals.js` | Bayt + Naukrigulf + Indeed Arabic RSS. |
+| `growth/scouts/googlePlaces.js` | Google Places API for Saudi dental clinics. |
+| `growth/scouts/owner-finder.js` | Finds owner WhatsApp from social profiles. |
+| `growth/lib/whatsappProvider.js` | `sendWhatsApp(phone, msg)` — Twilio routing. |
+| `growth/lib/supabase.js` | Supabase SDK client (ONLY inside growth/ — db.js uses Axios). |
+| `growth/lib/phone.js` | `normalizePhone(phone)` — central phone normalization. |
+| `growth/lib/autoVerify.js` | Full verification: parse → website → phone → score → decision. |
+
+### `public/` Files
+
+| File | Role |
+|------|------|
+| `public/index.html` | Complete marketing site. `#reception-simulator` = interactive bot demo card. Simulator focus script: auto-scrolls + glows on `#simulator` hash. Post-simulation CTA: button opens pricing + chat widget. |
+| `public/chat-widget.js` | Jake chat widget. Class `QudozenChat`. `open(action)` → `handleAction(action)`. `activateTrial()` → POST /api/start-trial. `runDemo()` → demo conversation. `addMessage(type, content)`. Mobile CSS: edge-to-edge on < 480px. |
+
+### `api/` Files
+
+| File | Role |
+|------|------|
+| `api/stripe-checkout.js` | Creates Stripe sessions. `phone_number_collection: {enabled: true}` (MANDATORY). Plans: Awareness (80 USD), System (133 USD). |
+| `api/index.js` | API router. Mounts stripe-checkout and other API routes. |
 
 ---
 
-### `public/` — Qudozen Landing Page
+## 🗄️ DATABASE FUNCTIONS (db.js exports)
 
-| File | Size | Role |
-|---|---|---|
-| `public/index.html` | 84KB | **Complete marketing site:** hero section, live simulator (embedded WhatsApp conversation demo), pricing tiers, Ghost Room link, contact chat widget, Arabic/English toggle. Served at `/` |
+```javascript
+// Patients
+getPatient(phone)
+insertPatient(phone)
+savePatient(phone, data)
+deletePatient(phone)
 
----
+// Clinics
+getClinic(whatsappNumber)
+getClinicById(id)
 
-### `scratch/` — Maintenance Scripts (Not Deployed)
+// Appointments
+saveAppointment(data)
+getAppointment(phone)
+updateAppointment(id, fields)
+checkDuplicateBooking(phone, date)
+getAppointmentCountsForDate(clinicId, doctorId, date)
+getAppointmentsDueTomorrow()
+getAppointmentsDueInOneHour()
+getAppointmentsDueFollowUp()
 
-| File | Purpose |
-|---|---|
-| `CLAUDE_MEGA_CONTEXT.md` | Previous AI session context dump |
-| `full_health_check.js` | Comprehensive DB + Twilio + bot health check |
-| `check_tables.js` | Lists all Supabase tables |
-| `check_twilio.js` | Tests Twilio credentials |
-| `rescue_bot.js` | Emergency patient state reset |
-| `check_load.js` | Module load test |
-| `dump_bot.js` | Dumps bot state to console |
+// Doctors
+getDoctorsByClinic(clinicId)
 
----
+// Onboarding
+getOnboardingByPhone(phone)
+getOnboardingById(id)
+createOnboarding(data)
+updateOnboarding(id, fields)     ← Patches onboarding_states by UUID
+logOnboardingMessage(id, day, type, content)
 
-## 🗄️ DATABASE SCHEMA (Supabase Postgres)
+// Scheduling
+createCronJob(data)
+getPendingCronJobs()
+markCronJobExecuted(id)
 
-### `patients` — Bot conversation state per user
-```sql
-phone         TEXT PRIMARY KEY    -- WhatsApp number (no +)
-language      TEXT                -- 'ar' | 'en' | null
-current_flow  TEXT                -- 'booking' | 'reschedule' | 'cancel' | null
-flow_step     INT DEFAULT 0       -- Which step in the flow (0-8 for booking)
-flow_data     JSONB DEFAULT '{}'  -- Draft booking data (name, treatment, date, slot, doctor)
-updated_at    TIMESTAMPTZ
-```
+// Growth Leads
+getLeadByPhone(phone)            ← Queries growth_leads_v2 by phone
+updateLeadStatus(leadId, status) ← Patches by id (UUID), NOT phone
+getLeadById(leadId)
+getRandomHotLeads(count)
 
-### `clinics` — Multi-tenant clinic config
-```sql
-id               UUID PRIMARY KEY
-whatsapp_number  TEXT UNIQUE        -- Maps Twilio number → clinic
-name             TEXT
-name_ar          TEXT
-location         TEXT
-maps_link        TEXT
-review_link      TEXT
-staff_phone      TEXT               -- Gets WhatsApp alerts from monitor
-plan             TEXT               -- 'basic' | 'pro'
-vertical         TEXT DEFAULT 'dental'
-services         JSONB DEFAULT '[]'
-config           JSONB DEFAULT '{}'  -- Features: reschedule, cancel, staff_notifications, google_calendar
-                                    -- booking_rules: min_advance_hours, max_advance_days
-doctors          JSONB DEFAULT '[]'  -- Inline doctor data (fallback if doctor_schedules empty)
-created_at       TIMESTAMPTZ
-```
+// Dashboard
+verifyDashboardCredentials(username, password)
+getDashboardMetrics(clinicId)
+getDashboardFeed(clinicId)
+getDashboardCalendar(clinicId)
 
-### `appointments` — All bookings
-```sql
-id                  UUID PRIMARY KEY
-phone               TEXT               -- Patient phone
-clinic_id           UUID → clinics(id)
-name                TEXT
-treatment           TEXT
-description         TEXT
-preferred_date      TEXT               -- Human-readable display ("Monday April 21, 2026")
-preferred_date_iso  DATE               -- YYYY-MM-DD ← USE THIS for all logic
-time_slot           TEXT               -- "10:00 AM"
-doctor_id           TEXT
-doctor_name         TEXT
-status              TEXT               -- 'confirmed'|'pending'|'cancelled'|'completed'|'no-show'
-reminder_sent_24h   BOOLEAN
-reminder_sent_1h    BOOLEAN
-follow_up_sent      BOOLEAN
-created_at          TIMESTAMPTZ
-```
-
-### `doctor_schedules` — Doctor working configuration
-```sql
-id               UUID PRIMARY KEY
-clinic_id        UUID → clinics(id)
-doctor_id        TEXT UNIQUE (per clinic)
-doctor_name      TEXT
-specialization   TEXT
-specialization_ar TEXT
-is_active        BOOLEAN
-working_days     JSONB  -- ["Sunday","Monday","Tuesday"]
-time_slots       JSONB  -- ["9:00 AM","10:00 AM","11:00 AM"]
-```
-
-### `doctor_slots` — Atomic slot availability (real-time booking lock)
-```sql
-id             UUID PRIMARY KEY
-clinic_id      UUID → clinics(id)
-doctor_id      TEXT
-slot_date      DATE
-slot_time      TEXT
-capacity       INT DEFAULT 1
-available      INT DEFAULT 1
-booked         INT DEFAULT 0
-status         TEXT  -- 'available' | 'booked'
-patient_phone  TEXT
-appointment_id UUID
-```
-
-### `growth_leads_v2` — Legacy Outreach Pipeline (Deprecated)
-```sql
-phone                TEXT UNIQUE     -- Saudi mobile
--- (Legacy columns removed for brevity in context. Replaced by gs_leads)
-```
-
-### `gs_leads` — Growth Swarm 3.0 Core Pipeline
-```sql
-id                 UUID PRIMARY KEY
-campaign_id        UUID
-company_name       TEXT NOT NULL
-owner_name         TEXT
-phone              TEXT
-fit_score          INT DEFAULT 0
-pain_score         INT DEFAULT 0
-timing_score       INT DEFAULT 0
-reachability_score INT DEFAULT 0
-total_score        INT DEFAULT 0
-pain_signals       JSONB DEFAULT '[]'
-status             TEXT -- 'new' | 'contacted' | 'messaged' | 'bumped_1' | 'engaged' | 'handed_off' | 'opted_out'
-```
-
-### `gs_conversations` — Growth Swarm 3.0 Chat History
-```sql
-id                 UUID PRIMARY KEY
-lead_id            UUID
-direction          TEXT -- 'inbound' | 'outbound'
-message_text       TEXT
-ai_generated       BOOLEAN
-```
-
-### `gs_sequences` — Growth Swarm 3.0 Automated Drips
-```sql
-id                 UUID PRIMARY KEY
-lead_id            UUID
-current_step       INT
-is_paused          BOOLEAN
-next_trigger_at    TIMESTAMPTZ
-```
-
-### `gs_feedback` — AI Learning Loop
-```sql
-id                 UUID PRIMARY KEY
-lead_id            UUID
-feedback_type      TEXT -- 'opt_out' | 'handoff' | 'objection'
-ai_output          TEXT
-rating             INT
-```
-
-### `message_logs` — Twilio delivery tracking
-```sql
-message_sid    TEXT UNIQUE
-to_phone       TEXT
-status         TEXT  -- 'sent'|'delivered'|'failed'|'read'
-error_code     TEXT
-error_message  TEXT
+// Misc
+createGrowthConversation(data)
+countRecentAutoReplies(leadId, hours)
+countUnclearIntents(leadId, hours)
+createTrial(data)                ← Inserts to 'trials' table
+getTrialById(id)
+logEvent(eventName, sessionId, metadata)
 ```
 
 ---
 
-## 🌐 ALL ROUTES (Complete)
+## 🤖 BOT.JS EXACT MESSAGE ROUTING ORDER
 
-### Core Routes (index.js)
-| Method | Path | Handler | Auth |
-|---|---|---|---|
-| GET | `/` | Sends `public/index.html` | None |
-| GET | `/health` | `monitor.healthCheck()` JSON | None |
-| GET | `/webhook` | Returns 200 (Twilio verify) | None |
-| POST | `/webhook` | `bot.handleMessage()` | Twilio sig |
-| POST | `/webhook/status` | Logs delivery status to `message_logs` | None |
-| POST | `/send-reminders` | Reminder engine (24h, 1h, follow-up, no-show) | None |
-| POST | `/cleanup-slots` | Releases past booked slots | None |
-| GET/POST | `/public/*` | Static files from `public/` | None |
+```
+1. LOCK: processingLocks.get(phone) → skip duplicate Twilio retry
+2. MEDIA: if '[Media/Unsupported]' → reject → RETURN
+3. ONBOARDING INTERCEPT:
+     db.getOnboardingByPhone(phone)
+     if found AND state !== 'live':
+       onboarding.handleResponse(phone, msg, existing)
+       if resp.handled → RETURN
+4. ACTIVATION DETECT:
+     onboarding.handleActivation(phone, msg, clinic||{})
+     if handled → RETURN
+5. GROWTH LEAD TWO-STEP:
+     db.getLeadByPhone(phone)
+     if lead AND status in ['messaged','scouted']:
+       if positive regex match (yes/نعم/send/رابط/etc.):
+         db.updateLeadStatus(lead.id, 'interested')  ← lead.id NOT phone
+         sendMessage(simulator URL)
+         RETURN
+6. NEW PATIENT: getPatient → if null → insertPatient → LANG_SELECT → RETURN
+7. STALE FLOW: if updated_at > 30 min → reset flow
+8. LANGUAGE GATE: if language not set → prompt 1/2
+9. LANGUAGE SWITCH: "english"/"عربي" → switch + menu
+10. FREE TEXT CHECK: skip AI for name/notes/date steps
+11. AI INTENT: detectIntent() → GPT-4o-mini
+12. FLOW ROUTING:
+    Active flow → handleBookingFlow() | handleRescheduleFlow() | handleCancelFlow()
+    No flow → routeIntent()
+```
 
-### Dashboard API Routes (api.js → mounted at /api)
-| Method | Path | Returns |
-|---|---|---|
-| POST | `/api/auth/login` | `{token, user}` |
-| GET | `/api/dashboard/stats` | `{appointments_today, pending, revenue, no_show_rate, new_patients}` |
-| GET | `/api/appointments` | Array of appointments (filterable by clinic_id, status, date) |
-| GET | `/api/patients` | Array of patients |
-| GET | `/api/leads` | `{leads[], total}` (filterable by status, min_score) |
-| GET | `/api/doctors` | Array of doctor_schedules |
-| POST | `/api/sync-simulation` | Stores ghost room simulation data to growth_leads_v2 |
-| POST | `/api/ghost-dwell` | Tracks ghost room dwell time, fires admin WhatsApp if >60s |
-| GET | `/api/analytics` | Empty (stub) |
+### routeIntent() Vertical Logic
 
-### Growth Swarm Routes (growth/index.js → mounted at /growth)
+```
+case 'booking':
+  SaaS:  r = await onboarding.handleTrialRequest(...)  ← MUST await + check r.handled
+  Dental: start booking flow step 1
+
+case 'my_appointment':
+  SaaS:  db.getOnboardingByPhone() → show current_state
+  Dental: getAppointment() → show booking
+
+case 'prices':
+  SaaS:  299/499 SAR tiers
+  Dental: dental procedure prices
+
+case 'doctors':
+  SaaS:  AI + Cloud team description
+  Dental: doctors list
+
+case 'reschedule':
+  SaaS:  "Contact sales"
+  Dental: reschedule flow
+```
+
+---
+
+## 🔄 ONBOARDING STATE MACHINE
+
+```
+States: activation_requested → calendar_pending → credentials_sent → live
+      → followup_day1 → checkin_day3 → review_day7 → completed
+
+4 Entry Points:
+  1. startFromPayment({clinic_name, email, plan, owner_phone, stripe_customer_id})
+     ← Called by Stripe webhook
+  2. handleActivation(phone, msg, context)
+     ← Called by bot.js step 4
+  3. handleTrialRequest(phone, msg, context)
+     ← Called by routeIntent case 'booking' (SaaS)
+     ← Returns {handled: bool} — MUST be awaited and checked
+  4. handleResponse(phone, msg, existing)
+     ← Called by bot.js step 3 for users in active onboarding
+     ← Handles Calendar ID submission + help requests
+
+handleResponse Logic:
+  /help/ → send calendarHelp
+  state === 'calendar_pending' AND (msg has '@' OR length > 20)
+    → updateOnboarding({calendar_id, calendar_connected:true, current_state:'live'})
+    → sendWhatsApp(setupComplete)
+
+Day 0 Sequence (runDay0):
+  1. sendWhatsApp(welcome)
+  2. sendWhatsApp(calendarRequest)
+  3. sendWhatsApp(credentials)  ← dashboard_username + dashboard_password
+  4. giftLeads() → 5 hot leads
+  5. scheduleCron(id, 1, 'followup')
+```
+
+---
+
+## 📡 TWO-STEP OUTREACH PIPELINE
+
+```
+DISCOVERY (cron every 6h):
+  scouts → growth_leads_v2 (deduped, scored)
+
+STEP 1 HOOK (cron daily 10am, sender.processBatch):
+  "Hi Dr. X, I built a digital twin for [Clinic]. Want the link?" (no URL)
+  Rule: applyGuardrails() adds -Jake signature, strips links, enforces 320 chars
+  Rate: 50/day system, 3/day per lead, 10am-5pm Riyadh only
+
+STEP 2 DELIVER (bot.js step 5, when lead replies):
+  positive regex → db.updateLeadStatus(lead.id, 'interested')
+  Send: https://qudozen.com/#simulator?clinic={name}&lead={id}
+
+WEBSITE LANDING:
+  index.html scroll/glow handler on #simulator hash
+
+POST-SIMULATION:
+  "Activate [Clinic] OS Now" button
+  → #pricing + window.qdChat.open('activate')
+  → handleAction('activate') → activateTrial()
+  → POST /api/start-trial → credentials → LIVE
+```
+
+---
+
+## 🌐 ALL ROUTES
+
+### Core (index.js)
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | / | public/index.html |
+| GET | /health | System health JSON |
+| POST | /webhook | Twilio → bot.handleMessage() |
+| POST | /webhook/status | Delivery status → message_logs |
+| POST | /webhook/stripe | Stripe → onboarding.startFromPayment() |
+| POST | /api/chat | Web widget → {messages:[]} array |
+| POST | /api/start-trial | Create trial + send credentials |
+| POST | /send-reminders | Cron: 24h + 1h reminders |
+| POST | /cleanup-slots | Cron: release past slots |
+
+### Dashboard API (/api)
+| POST | /api/auth/login | JWT |
+| GET | /api/dashboard/stats | Revenue/bookings |
+| GET | /api/appointments | Appointment list |
+| GET | /api/patients | Patient list |
+| GET | /api/leads | Growth leads |
+| GET | /api/doctors | Doctor schedules |
+
+### Growth Swarm (/growth)
 | Method | Path | Auth | Purpose |
-|---|---|---|---|
-| GET | `/growth/dashboard` | Basic Auth | HTML lead management dashboard |
-| GET | `/growth/ghost-room` | None | Revenue loss simulator |
-| GET | `/growth/room` | None | Alias for ghost-room |
-| POST | `/growth/leads` | None | Insert lead |
-| GET | `/growth/leads` | None | Get all leads |
-| POST | `/growth/send` | None | Send message to one lead by id |
-| POST | `/growth/bump` | None | Run follow-ups |
-| POST | `/growth/handoff` | None | Trigger handoff for a lead |
-| GET | `/growth/stats` | None | Lead stats summary |
-| POST | `/growth/add-and-fire` | None | **Zero-friction: paste raw data → auto parse/verify/send** |
-| POST | `/growth/send-batch` | Basic Auth | Send to top N qualified leads |
-| POST | `/growth/send-followups` | None | Daily follow-up drip (called by cron) |
-| POST | `/growth/scout/run` | Basic Auth | Run all scouts |
-| POST | `/growth/scout/indeed` | Basic Auth | Indeed + job portals only |
-| POST | `/growth/scout/places` | Basic Auth | Google Places only |
-| GET | `/growth/scout/status` | Basic Auth | Last scout report |
-| POST | `/growth/approve/:id` | Basic Auth | Manually approve + send to lead |
-| POST | `/growth/stripe-webhook` | Stripe sig | Payment success → auto-activate |
-
-### Dashboard SPA (served by express.static)
-| Path | Serves |
-|---|---|
-| `/dashboard/*` | `dashboard/dist/index.html` (React SPA catch-all) |
+|--------|------|------|---------|
+| GET | /growth/dashboard | JWT | HTML command center |
+| GET | /growth/ghost-room | None | Revenue loss simulator |
+| POST | /growth/add-and-fire | None | Paste raw → parse/send |
+| POST | /growth/send-batch | JWT | Send to top N leads |
+| POST | /growth/scout/run | JWT | Run all scouts |
+| POST | /growth/approve/:id | JWT | Manually approve lead |
+| GET | /growth/login | None | Login page + JWT |
 
 ---
 
-## ⏰ CRON JOB SCHEDULE
+## ⏰ CRON SCHEDULE
 
-| Schedule | Job | Code Location |
-|---|---|---|
-| Every 30 min | Send appointment reminders (24h + 1h) | index.js:371 → POST /send-reminders |
-| Every hour | Release past booked slots | index.js:381 → POST /cleanup-slots |
-| Every 10 min | System health check + auto-heal | index.js:391 → monitor.runPeriodicCheck() |
-| Daily 9 AM SAR (6 AM UTC) | Growth follow-up drip | index.js:406 → POST /growth/send-followups |
-| Every 6 hours | Indeed + job portal scout | index.js:416 → runAllScouts(['indeed','job_portals']) |
-| Weekly Sunday 7 AM SAR | Google Places scout | index.js:430 → runAllScouts(['google_places']) |
-| Daily 10 AM SAR (7 AM UTC) | Auto-batch send to leads | index.js:444 → processBatch(10) |
-| Daily 8:30 AM SAR (5:30 AM UTC) | Morning brief WhatsApp to admin | index.js:459 → sendMessage(adminPhone, brief) |
-
----
-
-## 🤖 BOT.JS FLOW STATE MACHINE
-
-### Booking Flow (8 Steps)
-```
-Step 0: Detect language (Arabic/English) — patient sends first message
-Step 1: Ask for patient NAME
-Step 2: Ask for TREATMENT TYPE (Cleaning, Fillings, Braces, Implant, etc.)
-Step 3: Ask for DESCRIPTION / additional notes (voice note accepted)
-Step 4: Show DOCTOR LIST → patient picks by number
-Step 5: Confirm selected doctor (transition step)
-Step 6: Ask for PREFERRED DATE (AI date parser via extractDate())
-Step 7: Show AVAILABLE TIME SLOTS → patient picks number
-        Logic: getSlots() from doctor_slots table
-               Fallback: fixed schedule from doctor_schedules
-               Validation: no booking within 1hr, no booking >30 days out
-               Duplicate check: checkDuplicateBooking()
-Step 8: CONFIRMATION
-        Patient types 1/Yes/نعم
-        → lockSlot() atomic lock in Postgres
-        → saveAppointment() to appointments table
-        → createCalendarEvent() via calendar.js (if enabled)
-        → sendMessage() confirmation to patient
-        → setTimeout 1min → sendMessage() to clinic staff
-        → Reset patient flow to null
-```
-
-### Reschedule Flow (3 Steps)
-```
-Step 0: Find existing confirmed appointment
-Step 1: Get new preferred date → show available slots
-Step 2: Confirm new slot → releaseSlot(old) → lockSlot(new) → update appointment
-```
-
-### Cancel Flow (2 Steps)
-```
-Step 0: Find appointment → show details → ask to confirm
-Step 1: Confirm cancel → releaseSlot() → updateAppointment(cancelled)
-```
-
-### Intent Routing (pre-flow)
-```
-detectIntent() → GPT-4o-mini function calling
-Fast-paths: pure numbers during flow = continue_flow (no AI call)
-            yes/no/arabic confirm = continue_flow (no AI call)
-Intents: booking, prices, location, doctors, services, my_appointment,
-         reschedule, cancel, human, reviews, greeting, help, change_language,
-         continue_flow, unknown
-Fallback: keywordFallback() (regex — no API cost)
-```
+| Schedule | Job |
+|----------|-----|
+| Every 30 min | Appointment reminders |
+| Every hour | Release past slots |
+| Every 10 min | Health check |
+| Daily 9 AM Riyadh | Growth follow-up drip |
+| Every 6 hours | Indeed + job portal scout |
+| Weekly Sunday 7 AM Riyadh | Google Places scout |
+| Daily 10 AM Riyadh | Auto-batch outreach |
+| Daily 8:30 AM Riyadh | Morning brief to admin |
 
 ---
 
-## 💰 BUSINESS MODEL & PRICING
+## ⚠️ CRITICAL RULES
 
-| Tier | Price | What's Included |
-|---|---|---|
-| Basic | SAR 299/month | AI receptionist, booking, reminders |
-| Pro | SAR 499/month + SAR 699 setup | Everything + Google Calendar, Google Reviews, custom config |
-| Growth Swarm | Custom | Full outreach engine for clinic owners |
-
-**Payment:** Stripe (checkout.session.completed webhook → /growth/stripe-webhook → handoff.js → auto-activate)
-
----
-
-## 🔑 ENVIRONMENT VARIABLES
-
-```bash
-# Core
-SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_KEY=eyJ...
-OPENAI_KEY=sk-...              # Note: OPENAI_KEY not OPENAI_API_KEY
-
-# Twilio
-TWILIO_ACCOUNT_SID=AC...
-TWILIO_AUTH_TOKEN=...
-TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
-WHATSAPP_PHONE_ID=whatsapp:+14155238886  # Same as above
-
-# Admin
-ADMIN_USER=admin
-ADMIN_PASS=your_secure_password
-ADMIN_PHONE=966570733834       # No + prefix, gets morning briefs
-
-# Optional
-GOOGLE_PLACES_API_KEY=...      # For Places scout
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-NODE_ENV=production
-PORT=3000                      # Render auto-injects
-```
-
----
-
-## ⚠️ CRITICAL RULES (Never Break These)
-
-1. **NEVER reset patient flow arbitrarily** — always explicitly set: `current_flow: null, flow_step: 0, flow_data: {}`
-2. **NEVER send English text unprompted** — always check `patient.language` ('ar' is default for Saudi)
-3. **ALWAYS use `preferred_date_iso` (YYYY-MM-DD)** for cron, slot, calendar logic — not `preferred_date` (display string)
-4. **NEVER rewrite atomic slot locking** — `slots.js` uses Postgres UPDATE...WHERE status='available' RETURNING *. This is the only safe pattern.
-5. **NEVER expose Supabase keys in frontend** — dashboard uses /api/* proxy, never direct Supabase from React
-6. **`dashboard/dist/` must be pre-built** — Render only runs `npm install`, not the Vite build
+1. `const db = require('./db')` — at TOP of bot.js, NOT inside handleMessage()
+2. `const onboarding = require('./growth/onboarding-state-machine.js')` — same
+3. `db.updateLeadStatus(lead.id, status)` — NOT `(phone, status)`. Filters by id.
+4. `handleTrialRequest()` MUST be awaited + `if(r.handled) return`
+5. NEVER reset patient flow without `{current_flow: null, flow_step: 0, flow_data: {}}`
+6. ALL strings need `ar ? arabicText : englishText` — Arabic is default
+7. Use `preferred_date_iso` (YYYY-MM-DD) for ALL logic — NOT `preferred_date`
+8. NEVER rewrite atomic slot locking in slots.js
+9. `clinics.vertical` controls persona — check before every template
+10. `/api/chat` returns `{messages:[]}` array — rendered with 600ms delay
 
 ---
 
 ## 🐛 KNOWN ISSUES
 
-| Issue | Severity | Location | Status |
-|---|---|---|---|
-| Dashboard build NOT automated on Render | High | render.yaml | Open |
-| No-show detection uses UTC not Saudi TZ | Medium | index.js:295 | Open |
-| `growth_leads_v2` has duplicate `last_contacted_at` column | Low | schema.sql:123,131 | Open |
-| `db.js` uses Axios REST, `growth/` uses Supabase SDK — inconsistency | Low | db.js vs growth/ | Open |
-| Cron jobs self-call localhost which may fail if PORT changes | Low | index.js cron section | Open |
-| Basic auth on /growth/dashboard is HTTP Basic (no JWT) | Medium | growth/index.js | Open |
-| `bot.js` is 103KB monolith — needs refactoring into modules | Medium | bot.js | Backlog |
-| `/api/analytics` returns empty `{}` — not implemented | Low | api.js:161 | Backlog |
+| Issue | Severity | Status |
+|-------|----------|--------|
+| Dashboard build not automated on Render | High | Open |
+| No-show detection uses UTC not Riyadh TZ | Medium | Open |
+| db.js uses Axios, growth/ uses Supabase SDK | Low | Inconsistency |
+| bot.js is 110KB monolith | Medium | Backlog |
+| Cron self-calls localhost | Low | Open |
 
 ---
 
-## 🔗 CONNECTION MAP (Who Calls Who)
+## 📝 SESSION CHANGELOG (2026-04-29)
 
-```
-HTTP Request
-    │
-index.js (Express)
-    ├── /api/* → api.js → Supabase REST (Axios)
-    ├── /growth/* → growth/index.js
-    │       ├── brain.js → OpenAI GPT-4o-mini
-    │       ├── sender.js → sendFollowUps()
-    │       ├── handoff.js → db.js (insertPatient)
-    │       ├── lib/autoVerify.js
-    │       │       ├── lib/findWebsite.js → Google/Bing scrape
-    │       │       ├── lib/classifyPhone.js
-    │       │       └── lib/confidenceScore.js
-    │       ├── lib/whatsappProvider.js → Twilio REST
-    │       └── scouts/orchestrator.js
-    │               ├── scouts/indeed.js → indeed.sa scrape
-    │               ├── scouts/jobPortals.js → Bayt/Naukri scrape
-    │               └── scouts/googlePlaces.js → Google Places API
-    ├── /dashboard/* → dashboard/dist/ (static files)
-    ├── / → public/index.html (static)
-    ├── /webhook (POST) → bot.js:handleMessage()
-    │       ├── ai.js:detectIntent() → OpenAI GPT-4o-mini
-    │       ├── ai.js:extractDate() → OpenAI GPT-4o-mini
-    │       ├── ai.js:extractTimeSlot() → OpenAI GPT-4o-mini
-    │       ├── db.js → Supabase REST (Axios)
-    │       ├── slots.js → Supabase REST (Axios) [atomic]
-    │       ├── calendar.js → Google Calendar API
-    │       ├── whatsapp.js → Twilio REST
-    │       ├── audio.js → OpenAI Whisper API
-    │       └── monitor.js → logError(), validateFlowState()
-    └── Cron Jobs (node-cron)
-            ├── → POST /send-reminders (self-call)
-            ├── → POST /cleanup-slots (self-call)
-            ├── → monitor.runPeriodicCheck() → whatsapp.js (if alert)
-            ├── → POST /growth/send-followups (self-call)
-            ├── → scouts/orchestrator.runAllScouts()
-            └── → growth/sender.processBatch()
-```
+### Bugs Fixed (Critical)
+1. `bot.js` — Added missing `const db = require('./db')` import
+2. `bot.js` — Fixed `updateLeadStatus(phone)` → `updateLeadStatus(lead.id)`
+3. `bot.js` — Added `await` + result check for `handleTrialRequest()`
+4. `bot.js` — Moved `require(onboarding)` to module top (performance)
 
----
+### Features Added
+5. Two-Step Outreach — Hook message (no link) → positive reply → simulator URL
+6. Simulator Focus — Auto-scroll + glow on #simulator hash landing
+7. Post-Simulation CTA — "Activate Now" button → pricing scroll + chat widget open
+8. Mobile CSS — Edge-to-edge chat widget on < 480px screens
+9. Vertical Routing — Dental vs SaaS persona isolation across all intents
+10. Phone Collection — Stripe checkout.session phone capture for onboarding
 
-*Auto-generated by Antigravity AI — 2026-04-23*
-*Next update: after next session*
+### Architecture Decoupling (Multi-Vertical Pivot)
+11. Configuration Extraction — Extracted all dental-specific hardcoded strings, treatment menus, and emojis from core logic to `verticals/dental.json`.
+12. Synchronous Simulator Sync — Integrated frontend `index.html` Simulator with `dental.json` dynamically via sync XHR.
+13. Universal Handlers — Refactored `whatsapp.js` and `bot.js` routing logic to dynamically read from the `dentalConfig` object.
 
-## [2026-04-25] Universe-Level Audit & Hardening Complete
-- Supabase Singleton connection pooling implemented across all modules.
-- Dead legacy code (conversation-engine.js, nurture-engine.js) removed.
-- Auto-Batch cron crashes fixed (CRITICAL-5, CRITICAL-6).
-- Dashboard Split-Brain fixed (enriched V2 legacy view with GS3.0 states).
-- Phone Normalization centralized (lib/phone.js).
-System is structurally optimized and safe for high-volume automated outreach.
+*Auto-generated by Antigravity AI — 2026-04-29*

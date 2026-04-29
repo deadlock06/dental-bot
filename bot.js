@@ -1258,8 +1258,9 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       if (cl.staff_phone && cl.config?.features?.staff_notifications !== false) {
         const staffTime = fd.time_slot;
         const doctorLine = fd.doctor_name ? `\n👨‍⚕️ Doctor: ${fd.doctor_name}` : '';
+        const vIcon = dentalConfig.industry_terms.en.service_emoji;
         await sendMessage(cl.staff_phone,
-          `🦷 New Booking Alert!\n━━━━━━━━━━━━━━\n👤 Patient: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n🔧 Treatment: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}${doctorLine}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${staffTime}\n━━━━━━━━━━━━━━\nBooked via WhatsApp AI ✅`
+          `${vIcon} New Booking Alert!\n━━━━━━━━━━━━━━\n👤 Patient: ${fd.name}\n📱 Phone: ${fd.phone || phone}\n⭐ Service: ${fd.treatment}\n📝 Notes: ${fd.description || 'None'}${doctorLine}\n📅 Date: ${fd.preferred_date}\n⏰ Time: ${staffTime}\n━━━━━━━━━━━━━━\nBooked via WhatsApp AI ✅`
         );
       }
       console.log('[TRACE] Step 8 Execution: point D - Setting up Reminder');
@@ -1278,9 +1279,10 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
 
       setTimeout(async () => {
         try {
+          const vIcon = dentalConfig.industry_terms.en.service_emoji;
           const msg = reminderAr
-            ? `⏰ *تذكير بموعدك!* 🦷\n\nمرحباً ${reminderName}،\nتم تأكيد موعدك بنجاح:\n📅 ${reminderDate}\n⏰ ${reminderTime}\n🏥 ${reminderClinic}\n\nنتطلع لرؤيتك! 😊`
-            : `⏰ *Appointment Reminder!* 🦷\n\nHi ${reminderName},\nYour appointment is confirmed:\n📅 ${reminderDate}\n⏰ ${reminderTime}\n🏥 ${reminderClinic}\n\nWe look forward to seeing you! 😊`;
+            ? `⏰ *تذكير بموعدك!* ${vIcon}\n\nمرحباً ${reminderName}،\nتم تأكيد موعدك بنجاح:\n📅 ${reminderDate}\n⏰ ${reminderTime}\n🏥 ${reminderClinic}\n\nنتطلع لرؤيتك! 😊`
+            : `⏰ *Appointment Reminder!* ${vIcon}\n\nHi ${reminderName},\nYour appointment is confirmed:\n📅 ${reminderDate}\n⏰ ${reminderTime}\n🏥 ${reminderClinic}\n\nWe look forward to seeing you! 😊`;
           await sendMessage(reminderPhone, msg);
           console.log(`[Reminder] ✅ 3-min post-booking reminder sent to: ${reminderPhone}`);
         } catch (e) {
@@ -1299,9 +1301,10 @@ async function handleBookingFlow(phone, rawMsg, extractedValue, lang, ar, step, 
       // FIX: Send confirmation FIRST, then clear patient state.
       // This guarantees the patient always receives their confirmation message.
       // If sendMessage throws, the patient remains in step 8 and can retry.
+      const vIcon = dentalConfig.industry_terms.en.service_emoji;
       await sendMessage(phone, ar
-        ? `🎉 *تم تأكيد موعدك!*\n\n📅 ${confirmDate}\n⏰ ${confirmTime}\n🏥 ${cl.name}\n🦷 ${confirmTreatment}${doctorConfirmLine}\n\nفي الاستخدام الحقيقي، أنا أتولى كل هذا بنسبة 100%.\n\n⚡ اشترك الآن بـ 299 ريال/الشهر أو تحدث مع جيك للأسئلة.\n\n💡 اكتب *help* في أي وقت لرؤية خياراتك\n0️⃣ القائمة الرئيسية`
-        : `🎉 *Appointment Confirmed!*\n\n📅 ${fd.preferred_date}\n⏰ ${fd.time_slot}\n🏥 ${cl.name}\n🦷 ${fd.treatment}${doctorConfirmLine}\n\nIn real use, I handle 100% of this.\n\n⚡ Activate for 299 SAR/month or Chat with Jake for questions.\n\n💡 Type *help* anytime to see your options\n0️⃣ Main menu`
+        ? `🎉 *تم تأكيد موعدك!*\n\n📅 ${confirmDate}\n⏰ ${confirmTime}\n🏥 ${cl.name}\n${vIcon} ${confirmTreatment}${doctorConfirmLine}\n\nفي الاستخدام الحقيقي، أنا أتولى كل هذا بنسبة 100%.\n\n⚡ اشترك الآن بـ 299 ريال/الشهر أو تحدث مع جيك للأسئلة.\n\n💡 اكتب *help* في أي وقت لرؤية خياراتك\n0️⃣ القائمة الرئيسية`
+        : `🎉 *Appointment Confirmed!*\n\n📅 ${fd.preferred_date}\n⏰ ${fd.time_slot}\n🏥 ${cl.name}\n${vIcon} ${fd.treatment}${doctorConfirmLine}\n\nIn real use, I handle 100% of this.\n\n⚡ Activate for 299 SAR/month or Chat with Jake for questions.\n\n💡 Type *help* anytime to see your options\n0️⃣ Main menu`
       );
 
       // Now safe to clear flow — confirmation is already delivered

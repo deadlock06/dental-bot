@@ -196,12 +196,18 @@
           })
         });
         const data = await res.json();
-        if (data.reply) {
-          this.addMessage('bot', data.reply);
+        const messages = data.messages || (data.reply ? [{ type: 'text', content: data.reply }] : []);
+        
+        for (const msg of messages) {
+          if (msg.type === 'text' || msg.reply) {
+            this.addMessage('bot', msg.content || msg.reply);
+          } else if (msg.type === 'interactive') {
+            this.addMessage('bot', msg.body);
+            if (msg.buttons) this.addButtons(msg.buttons);
+          }
+          if (messages.length > 1) await this.delay(600);
         }
-        if (data.buttons) {
-          this.addButtons(data.buttons);
-        }
+
         if (data.action) {
           this.handleAction(data.action);
         }
@@ -276,7 +282,21 @@
         #qd-chat-toggle { width: 60px; height: 60px; border-radius: 50%; background: #0D9488; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 30px rgba(13,148,136,0.3); transition: transform 0.2s, box-shadow 0.2s; }
         #qd-chat-toggle:hover { transform: scale(1.08); box-shadow: 0 12px 40px rgba(13,148,136,0.4); }
         #qd-chat-toggle svg { width: 28px; height: 28px; }
-        @media (max-width: 480px) { #qd-chat-root { bottom: 16px; right: 16px; left: 16px; } #qd-chat-window { width: 100%; height: calc(100vh - 100px); border-radius: 16px; } }
+        @media (max-width: 480px) { 
+          #qd-chat-root { bottom: 12px; right: 12px; left: 12px; } 
+          #qd-chat-window { 
+            width: auto; 
+            height: calc(90vh - 20px); 
+            max-height: 600px;
+            position: fixed;
+            bottom: 80px;
+            left: 12px;
+            right: 12px;
+            border-radius: 24px;
+          } 
+          #qd-chat-toggle { width: 54px; height: 54px; }
+        }
+
       `;
       document.head.appendChild(style);
     }
