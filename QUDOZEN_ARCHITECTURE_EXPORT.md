@@ -6,7 +6,7 @@
 
 ## 🧠 WHAT THIS SYSTEM IS
 
-**Qudozen** is an AI automation company selling **Autonomous WhatsApp Receptionists** to dental clinics in Saudi Arabia. It is also a self-selling SaaS platform — it finds its own customers, demos itself, collects payment, and onboards them with zero human involvement.
+**Qudozen** is a global AI automation company selling **Autonomous WhatsApp Receptionists** to service-based businesses worldwide. It is also a self-selling SaaS platform — it finds its own customers, demos itself, collects payment, and onboards them with zero human involvement.
 
 **The system serves TWO distinct user types, separated by the `clinic.vertical` field:**
 - `vertical: 'dental'` → **Patients** talking to their clinic's WhatsApp bot (booking appointments)
@@ -82,7 +82,7 @@ All layers share: index.js (server) + Supabase (database)
 | `growth/sender.js` | Batch outreach engine. Two-Step safety: hook message (no link), detects positive reply in bot.js, fires simulator link. Rate: 50/day system, 3/day per lead. |
 | `growth/nurture.js` | Drip campaign engine. Hot/Warm cadence. |
 | `growth/handoff.js` | Converts a GS lead who expressed interest into a bot patient record. |
-| `growth/compliance.js` | Business hours guard (10am-5pm Riyadh, no Fridays). `detectStopCommand()` for opt-out. |
+| `growth/compliance.js` | Global outreach safety guard. Enforces safe UTC window for messaging. `detectStopCommand()` for opt-out. |
 | `growth/activation.js` | `provisionClinic()` — creates clinic record, assigns WhatsApp number |
 | `growth/ghost-room.html` | Revenue loss simulator landing page at /growth/ghost-room |
 
@@ -93,7 +93,7 @@ All layers share: index.js (server) + Supabase (database)
 | `orchestrator.js` | Runs all scouts → deduplicates → scores → inserts → optional auto-send |
 | `indeed.js` | Scrapes Indeed.sa RSS for "dental receptionist" job postings |
 | `jobPortals.js` | Scrapes Bayt.com + Naukrigulf + Indeed Arabic RSS |
-| `googlePlaces.js` | Google Places API → finds clinics in Saudi cities |
+| `googlePlaces.js` | Google Places API → finds businesses in global cities |
 | `owner-finder.js` | Extracts owner's WhatsApp from clinic social profiles |
 | `classifyPhone.js` | Saudi personal vs. business phone detection |
 | `confidenceScore.js` | Score 0-100 based on ownership evidence |
@@ -115,7 +115,7 @@ All layers share: index.js (server) + Supabase (database)
 
 | File | Role |
 |------|------|
-| `public/index.html` | Complete Arabic marketing site. Hero, Three-Layer Architecture, Services Bento Grid, Live Simulator (embedded WhatsApp demo), Pricing, FOMO ticker, Jake letter, Chat Widget. Simulator is at #reception-simulator. Auto-scrolls and glows on #simulator anchor. |
+| `public/index.html` | Complete Bilingual (AR/EN) marketing site. Hero, Three-Layer Architecture, Services Bento Grid, Live Simulator (embedded WhatsApp demo), Pricing, FOMO ticker, Jake letter, Chat Widget. Simulator is at #reception-simulator. Auto-scrolls and glows on #simulator anchor. |
 | `public/chat-widget.js` | Self-contained embedded chat. Jake persona. `handleAction('activate'|'demo'|'pricing'|'support'|'dashboard')`. Mobile-responsive (edge-to-edge < 480px). Multi-message array rendering with 600ms delay between messages. |
 | `public/dashboard/` | Vanilla HTML/CSS/JS operator dashboard. Auth via express-session. |
 

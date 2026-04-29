@@ -646,7 +646,7 @@ app.post('/send-reminders', async (req, res) => {
 app.post('/cleanup-slots', async (req, res) => {
   res.sendStatus(200);
   try {
-    const todayISO = new Date().toISOString().split('T')[0];
+    const todayISO = DateTime.now().setZone('Asia/Riyadh').toISODate();
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_KEY = process.env.SUPABASE_KEY;
     // Release all booked slots from dates BEFORE today — they will never be needed again

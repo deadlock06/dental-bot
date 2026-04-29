@@ -533,6 +533,116 @@ async function logEvent(eventName, sessionId, metadata = {}) {
 
 
 
+async function updateTrialStatus(id, status) {
+  try {
+    await axios.patch(`${SUPABASE_URL}/rest/v1/trials?id=eq.${id}`, { status }, { headers });
+  } catch (err) {
+    console.error('updateTrialStatus error:', err.message);
+  }
+}
+
+async function getExpiredTrials() {
+  try {
+    const now = new Date().toISOString();
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/trials?status=eq.active&expires_at=lte.${now}&select=*`,
+      { headers }
+    );
+    return res.data || [];
+  } catch (err) {
+    console.error('getExpiredTrials error:', err.message);
+    return [];
+  }
+}
+
+async function getAppointmentsDueTomorrow() {
+  try {
+    const tomorrow = DateTime.now().setZone('Asia/Riyadh').plus({ days: 1 }).toISODate();
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/appointments?preferred_date_iso=eq.${tomorrow}&reminder_sent_24h=eq.false&status=eq.confirmed&select=*`,
+      { headers }
+    );
+    return res.data || [];
+  } catch (err) {
+    console.error('getAppointmentsDueTomorrow error:', err.message);
+    return [];
+  }
+}
+
+async function getAppointmentsDueInOneHour() {
+  try {
+    const now = DateTime.now().setZone('Asia/Riyadh');
+    const todayISO = now.toISODate();
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/appointments?preferred_date_iso=eq.${todayISO}&reminder_sent_1h=eq.false&status=eq.confirmed&select=*`,
+      { headers }
+    );
+    // Filtering by time slot in JS since PG REST is limited for this specific case
+    return (res.data || []).filter(appt => {
+      const slot = appt.time_slot;
+      const match = slot.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (!match) return false;
+      let h = parseInt(match[1]);
+      const m = parseInt(match[2]);
+      const ampm = match[3].toUpperCase();
+      if (ampm === 'PM' && h !== 12) h += 12;
+      if (ampm === 'AM' && h === 12) h = 0;
+      const apptTime = now.set({ hour: h, minute: m, second: 0, millisecond: 0 });
+      const diff = apptTime.diff(now, 'minutes').minutes;
+      return diff > 0 && diff <= 65; // roughly 1 hour
+    });
+  } catch (err) {
+    console.error('getAppointmentsDueInOneHour error:', err.message);
+    return [];
+  }
+}
+
+async function countOutboundMessagesToday(leadId) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/gs_conversations?lead_id=eq.${leadId}&direction=eq.outbound&sent_at=gte.${today}&select=count`,
+      { headers: { ...headers, Prefer: 'count=exact' } }
+    );
+    return parseInt(res.headers['content-range']?.split('/')?.[1] || '0');
+  } catch (err) {
+    console.error('countOutboundMessagesToday error:', err.message);
+    return 0;
+  }
+}
+
+async function countSystemOutboundToday() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const res = await axios.get(
+      `${SUPABASE_URL}/rest/v1/gs_conversations?direction=eq.outbound&sent_at=gte.${today}&select=count`,
+      { headers: { ...headers, Prefer: 'count=exact' } }
+    );
+    return parseInt(res.headers['content-range']?.split('/')?.[1] || '0');
+  } catch (err) {
+    console.error('countSystemOutboundToday error:', err.message);
+    return 0;
+  }
+}
+
+async function createGrowthEvent(data) {
+  try {
+    await axios.post(`${SUPABASE_URL}/rest/v1/gs_events`, data, { headers });
+  } catch (err) {
+    console.error('createGrowthEvent error:', err.message);
+  }
+}
+
+async function upsertLead(data) {
+  try {
+    await axios.post(`${SUPABASE_URL}/rest/v1/gs_leads`, data, { 
+      headers: { ...headers, Prefer: 'resolution=merge-duplicates' } 
+    });
+  } catch (err) {
+    console.error('upsertLead error:', err.message);
+  }
+}
+
 module.exports = {
   getPatient, insertPatient, savePatient, deletePatient,
   getClinic, getClinicById,
@@ -545,7 +655,8 @@ module.exports = {
   createCronJob, getPendingCronJobs, markCronJobExecuted, getRandomHotLeads,
   verifyDashboardCredentials, getDashboardMetrics, getDashboardFeed, getDashboardCalendar,
   createGrowthConversation, countRecentAutoReplies, countUnclearIntents, getLeadByPhone, updateLeadStatus, getLeadById,
-  createTrial, getTrialById, logEvent
+  createTrial, getTrialById, updateTrialStatus, getExpiredTrials, logEvent,
+  countOutboundMessagesToday, countSystemOutboundToday, createGrowthEvent, upsertLead
 };
 
 async function createGrowthConversation(data) {

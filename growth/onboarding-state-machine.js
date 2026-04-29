@@ -62,15 +62,15 @@ class OnboardingStateMachine {
     const isActivation = activationKeywords.some(k => lower.includes(k));
     if (!isActivation) return { handled: false };
 
+    return await this.activateTrial(phone, clinicName, ownerName, lang);
+  }
+
+  async activateTrial(phone, clinicName, ownerName, lang = 'en') {
     const existing = await db.getOnboardingByPhone(phone);
     if (existing) {
       await this.resumeSequence(existing);
       return { handled: true };
     }
-
-    const clinicName = context.clinic || 'Your Clinic';
-    const ownerName = context.owner || 'Doctor';
-    const lang = context.lang || 'ar';
 
     const onboarding = await db.createOnboarding({
       clinic_name: clinicName,
@@ -100,10 +100,11 @@ class OnboardingStateMachine {
     if (existing.current_state === ONBOARDING_STATES.CALENDAR_PENDING && (msg.includes('@') || msg.length > 20)) {
       await db.updateOnboarding(existing.id, {
         calendar_id: msg,
-        calendar_connected: true,
-        current_state: ONBOARDING_STATES.LIVE
+        calendar_connected: true
       });
-      await sendWhatsApp(phone, m.setupComplete(existing.clinic_name));
+      
+      // Do not jump to LIVE yet. LIVE is reached after credentials and lead gift.
+      await sendWhatsApp(phone, m.calendarConnected);
       return { handled: true };
     }
 
@@ -162,14 +163,17 @@ class OnboardingStateMachine {
       current_state: this.states.CALENDAR_PENDING
     });
 
-    // 3. Generate dashboard credentials
-    const username = `admin@${clinic_name.toLowerCase().replace(/\s+/g, '')}.qd`;
-    const password = generatePassword(12);
-
-    await db.updateOnboarding(onboarding.id, {
-      dashboard_username: username,
-      dashboard_password: password
-    });
+    // 3. Generate and hash dashboard credentials
+    const { hashPassword } = require('../utils/encrypt.js');
+    // 3. Prepare credentials if not already done
+    const username = onboarding.dashboard_username || `admin@${clinic_name.toLowerCase().replace(/\s+/g, '')}.qd`;
+    const password = rawPassword || generatePassword(12);
+    if (!onboarding.dashboard_password) {
+      await db.updateOnboarding(onboarding.id, {
+        dashboard_username: username,
+        dashboard_password: await hashPassword(password)
+      });
+    }
 
     // 4. Send credentials (delayed 2 minutes)
     setTimeout(async () => {
@@ -225,11 +229,10 @@ class OnboardingStateMachine {
     await this.scheduleCron(onboarding.id, 7, 'review');
   }
 
-  // ─── DAY 7: Autonomous bot review — NO human notification ───
+  // ─── DAY 7: Autonomous bot review ───
   async runDay7(onboarding) {
     const m = this.getMessages(onboarding.lang);
 
-    // Bot handles review, not human
     await sendWhatsApp(onboarding.owner_phone, m.day7Review());
     await this.logMessage(onboarding.id, 7, 'review_call', m.day7Review());
 
@@ -237,21 +240,14 @@ class OnboardingStateMachine {
       current_state: this.states.REVIEW_DAY7
     });
 
-    // Bot will handle their reply in next inbound:
-    // "good/جيد" → asks for Google review link
-    // "help/مساعدة" → troubleshooting flow
-    // "call/مكالمة" → sends Calendly self-scheduling link
-    // "upgrade/ترقية" → shows advanced features
-    console.log(`[Onboarding] Day 7 autonomous review sent to ${onboarding.owner_phone} (no human alert)`);
+    console.log(`[Onboarding] Day 7 autonomous review sent to ${onboarding.owner_phone}`);
   }
 
-  // ─── GROWTH SWARM: Gift 5 leads ───
   async giftLeads(clinicName, phone, count) {
     const leads = await db.getRandomHotLeads(count);
     return leads || [];
   }
 
-  // ─── CRON SCHEDULER ───
   async scheduleCron(onboardingId, day, type) {
     await db.createCronJob({
       onboarding_id: onboardingId,
@@ -260,7 +256,6 @@ class OnboardingStateMachine {
     });
   }
 
-  // ─── MESSAGE TEMPLATES ───
   getMessages(lang) {
     const msgs = {
       en: {
@@ -272,9 +267,8 @@ class OnboardingStateMachine {
         day3CheckIn: (clinic) => `How is ${clinic} doing with the new system? Any bookings yet? If something feels off, reply here and I'll fix it.`,
         day7Review: () => `🎉 You've been live for a week!\n\nHow is everything working?\n\nReply:\n• *GOOD* — I'll send your Google review link\n• *HELP* — I'll troubleshoot any issue now\n• *CALL* — I'll send you a self-scheduling link\n• *UPGRADE* — I'll show you advanced features`,
         trialWelcome: (user, pass, clinic) => `🎉 Your 7-day free trial of ${clinic} OS is now LIVE!\n\n🔐 Dashboard Access:\nUsername: ${user}\nPassword: ${pass}\n\nLogin: https://qudozen.com/dashboard\n\nYour bot is active. Patients can message right now.\n\nAfter 7 days, subscribe to keep it running:\nhttps://qudozen.com/#pricing`,
-        trialOffer: (clinic) => `No credit card needed! Start your 7-day free trial of ${clinic} OS now.\n\nReply *START TRIAL* and I'll activate everything instantly.`,
         calendarHelp: `To connect your calendar:\n1. Open Google Calendar on Desktop\n2. Go to Settings > Integrate Calendar\n3. Copy the "Calendar ID" (usually your email or a long string)\n4. Paste it here!`,
-        setupComplete: (clinic) => `✅ Perfect! ${clinic} is now fully connected to your Google Calendar.\n\nI will now start locking appointments and handling your patients autonomously. 🚀`
+        calendarConnected: `✅ Perfect! Your Google Calendar is now fully connected. I will now start locking appointments and handling your patients autonomously. 🚀`
       },
       ar: {
         welcome: (owner, clinic) => `أهلاً بك في Qudozen، د. ${owner}! 🎉\n\nنحن نجهز نظام ${clinic}. أحتاج دقيقتين لربط التقويم وإرسال لوحة التحكم.`,
@@ -285,11 +279,9 @@ class OnboardingStateMachine {
         day3CheckIn: (clinic) => `كيف يعمل ${clinic} مع النظام الجديد؟ هل هناك حجوزات؟ إذا واجهتك مشكلة، رد هنا.`,
         day7Review: () => `🎉 مر أسبوع على التشغيل!\n\nكيف يعمل كل شيء؟\n\nرد بـ:\n• *جيد* — سأرسل لك رابط تقييم Google\n• *مساعدة* — سأحل أي مشكلة الآن\n• *مكالمة* — سأرسل لك رابط جدولة ذاتية\n• *ترقية* — سأريك الميزات المتقدمة`,
         trialWelcome: (user, pass, clinic) => `🎉 تجربتك المجانية لمدة 7 أيام من نظام ${clinic} أصبحت نشطة الآن!\n\n🔐 بيانات الدخول:\nالمستخدم: ${user}\nكلمة المرور: ${pass}\n\nالرابط: https://qudozen.com/dashboard\n\nبوتك نشط. المرضى يمكنهم المراسلة الآن.\n\nبعد 7 أيام، اشترك للاستمرار:\nhttps://qudozen.com/#pricing`,
-        trialOffer: (clinic) => `لا حاجة لبطاقة ائتمان! ابدأ تجربتك المجانية لمدة 7 أيام لنظام ${clinic} الآن.\n\nرد بـ *ابدأ التجربة* وسأفعل كل شيء فوراً.`,
         calendarHelp: `لربط تقويمك:\n1. افتح تقويم Google من الكمبيوتر\n2. الإعدادات > دمج التقويم\n3. انسخ "معرف التقويم" (غالباً بريدك الإلكتروني)\n4. الصقه هنا!`,
-        setupComplete: (clinic) => `✅ ممتاز! تم ربط ${clinic} بنجاح مع تقويم Google الخاص بك.\n\nسأبدأ الآن في حجز المواعيد وإدارة مرضاك بشكل آلي تماماً. 🚀`
+        calendarConnected: `✅ ممتاز! تم ربط تقويم Google بنجاح. سأبدأ الآن في حجز المواعيد وإدارة مرضاك بشكل آلي تماماً. 🚀`
       }
-
     };
     return msgs[lang] || msgs.en;
   }
@@ -299,22 +291,17 @@ class OnboardingStateMachine {
   }
 
   async resumeSequence(existing) {
-    // Acknowledge and optionally nudge to the next step
     const m = this.getMessages(existing.lang || 'en');
     const state = existing.current_state;
     console.log(`[Onboarding] Resuming ${existing.clinic_name} at state: ${state}`);
   }
-  // ─── WEB CHAT: Called when trial is started from the website ───
+
   async startFromWebChat({ clinic_name, username, password, trial_id, lang, owner_phone }) {
     console.log(`[Onboarding] 🌐 Trial started from web chat for ${clinic_name}`);
     const m = this.getMessages(lang || 'en');
-
-    // If we have a phone number, send the welcome credentials
     if (owner_phone) {
       await sendWhatsApp(owner_phone, m.trialWelcome(username, password, clinic_name));
     }
-    
-    // Log the event if onboarding record exists
     if (trial_id) {
       await this.logMessage(trial_id, 0, 'web_trial_start', `Trial activated for ${clinic_name} via web chat.`);
     }

@@ -15,9 +15,10 @@ const log = (msg) => console.log(`[${new Date().toISOString()}] [Worker] ${msg}`
 cron.schedule('*/30 * * * *', async () => {
   log('Triggering 30-min reminder check...');
   try {
-    await axios.post(`${BASE_URL}/send-reminders`);
+    const sendReminders = require('./cron/jobs/reminders');
+    await sendReminders();
   } catch (e) {
-    console.error('[Worker] Reminder trigger error:', e.message);
+    console.error('[Worker] Reminder error:', e.message);
   }
 });
 
@@ -25,9 +26,10 @@ cron.schedule('*/30 * * * *', async () => {
 cron.schedule('0 * * * *', async () => {
   log('Triggering hourly slot cleanup...');
   try {
-    await axios.post(`${BASE_URL}/cleanup-slots`);
+    const cleanupSlots = require('./cron/jobs/slots-cleanup');
+    await cleanupSlots();
   } catch (e) {
-    console.error('[Worker] Cleanup trigger error:', e.message);
+    console.error('[Worker] Cleanup error:', e.message);
   }
 });
 
@@ -163,9 +165,12 @@ cron.schedule('30 5 * * *', async () => {
 cron.schedule('0 0 * * *', async () => {
   log('Running daily trial expiration check...');
   try {
-    await axios.post(`${BASE_URL}/api/admin/expire-trials`, {}, {
-      headers: { 'x-admin-key': process.env.ADMIN_KEY }
-    });
+     const db = require('./db');
+     const trials = await db.getExpiredTrials(); // I need to implement this in db.js
+     for (const trial of trials) {
+       await db.updateTrialStatus(trial.id, 'expired');
+       log(`Trial ${trial.id} for ${trial.clinic_name} expired.`);
+     }
   } catch (e) {
     console.error('[Worker] Trial expiration error:', e.message);
   }

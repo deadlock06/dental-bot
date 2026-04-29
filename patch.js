@@ -138,7 +138,7 @@ const bentoSimLogic = `
   const BS_MSGS = {
     ar: {
       langSelect: \`🌐 أهلاً! أنا جيك.\\nاختر لغتك:\\n1️⃣ English\\n2️⃣ العربية\`,
-      menu: \`أهلاً! 🦷\\nأنا *جيك*، مساعدك الذكي.\\nكيف أساعدك؟\\n\\n1️⃣ حجز موعد 📅\\n2️⃣ الأسعار 💰\\n3️⃣ الموقع 📍\`,
+      menu: \`Welcome! 🤖\\nI'm *Jake*, your AI Business Operating System.\\nHow can I help you today?\\n\\n1️⃣ Book Appointment 📅\\n2️⃣ Pricing 💰\\n3️⃣ Location 📍\`,
       book: { 
         name:"رائع! ما اسمك؟", 
         phone:(p)=>\`رقمك: *\${p}*\\nصحيح؟\\n1️⃣ نعم\\n2️⃣ لا\`, 
@@ -151,8 +151,8 @@ const bentoSimLogic = `
         summary:(d)=>\`📋 *تفاصيل موعدك:*\\n👤 \${d.name}\\n🦷 \${d.treatment}\\n📅 \${d.date}\\n⏰ \${d.slot}\\n👨‍⚕️ \${d.doctor}\\n\\n📅 مزامنة تقويم: ناجحة ✅\\n🔔 تذكيرات مجدولة\` 
       },
       reminder:(n,date,slot,treat)=>\`🔔 *تذكير تلقائي (24 ساعة)*\\nمرحباً \${n}، موعدك غداً:\\n📅 \${date} ⏰ \${slot}\\n🦷 \${treat}\\n\\nنراك قريباً! 😊\`,
-      prices:\`💰 *الأسعار التقريبية:*\\n• تنظيف: 200 ر\\n• حشو: 350 ر\\n• تقويم: 3000+ ر\\n• زراعة: 4500+ ر\`,
-      location:\`📍 *الموقع:*\\nالخبر، شارع الأمير تركي.\\n🗺️ maps.google.com\`
+      prices:\`💰 *Prices:*\n• Standard Plan: 80 USD / 299 SAR\n• System Plan: 133 USD / 499 SAR\n• Swarm: Custom\`,
+      location:\`📍 *Location:*\nCloud-First Operations.\nWe serve businesses worldwide 🌍\`
     },
     en: {
       langSelect: \`🌐 Hi! I'm Jake.\\nChoose language:\\n1️⃣ English\\n2️⃣ العربية\`,

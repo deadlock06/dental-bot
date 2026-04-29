@@ -3,15 +3,18 @@ const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 function isWithinBusinessHours() {
-  const now = DateTime.now().setZone('Asia/Riyadh');
+  // For worldwide outreach, we use a conservative 'Safe Global Window'
+  // Or ideally, this should detect the lead's timezone.
+  // For now, we use UTC 7 AM to 3 PM (which covers morning/afternoon in most of EMEA)
+  const now = DateTime.now().setZone('UTC');
   const hour = now.hour;
-  const day = now.weekday; // 1 = Mon, 7 = Sun
+  const day = now.weekday; 
+
+  // Avoid weekends globally
+  if (day === 6 || day === 7) return false;
   
-  // Saudi business hours typically Sunday - Thursday, 9 AM to 6 PM
-  // Some clinics work Saturday. We'll stick to safe hours: 10 AM to 5 PM
-  if (day === 5) return false; // Friday off
-  
-  if (hour >= 10 && hour <= 17) {
+  // Safe window: 7 AM UTC to 4 PM UTC
+  if (hour >= 7 && hour <= 16) {
     return true;
   }
   

@@ -1,6 +1,7 @@
 // slots.js — Doctor-specific dynamic slot generation and availability
 
 const axios = require('axios');
+const { DateTime } = require('luxon');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
@@ -79,16 +80,19 @@ async function getDoctorSchedule(clinicId, doctorId) {
 function toDateISO(dateStr) {
   if (!dateStr) return null;
   try {
-    const d = new Date(dateStr);
-    if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+    const d = DateTime.fromISO(dateStr, { zone: 'Asia/Riyadh' });
+    if (d.isValid) return d.toISODate();
+    // Fallback for other formats
+    const d2 = new Date(dateStr);
+    if (!isNaN(d2.getTime())) return DateTime.fromJSDate(d2).setZone('Asia/Riyadh').toISODate();
   } catch (e) { /* ignore */ }
   return null;
 }
 
 // Get English day name from ISO date string (uses noon UTC to avoid timezone edge cases)
 function getDayName(isoDate) {
-  const d = new Date(isoDate + 'T12:00:00Z');
-  return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getUTCDay()];
+  const d = DateTime.fromISO(isoDate, { zone: 'Asia/Riyadh' });
+  return d.isValid ? d.toFormat('cccc') : null;
 }
 
 // ─────────────────────────────────────────────
@@ -164,6 +168,7 @@ async function generateSlotsForDate(clinicId, doctorId, isoDate) {
 
 async function getAvailableSlots(clinicId, doctorId, isoDate) {
   try {
+    const now = DateTime.now().setZone('Asia/Riyadh');
     await generateSlotsForDate(clinicId, doctorId, isoDate);
 
     const res = await axios.get(
@@ -178,7 +183,16 @@ async function getAvailableSlots(clinicId, doctorId, isoDate) {
     const elasticSlots = [];
     const ELASTIC_CAPACITY_MAX = 2; // Allow up to 2 overlapping patients per slot
 
+    const isToday = isoDate === now.toISODate();
+    const currentMinutes = now.hour * 60 + now.minute;
+
     for (const slot of allSlots) {
+      // Filter out past slots if it's today
+      if (isToday) {
+        const slotMinutes = parseTime(slot.slot_time);
+        if (slotMinutes <= currentMinutes + 15) continue; // 15 min buffer
+      }
+
       const activeDbCount = dbCounts[slot.slot_time] || 0;
       const memHoldCount  = getActiveHoldsCount(clinicId, doctorId, isoDate, slot.slot_time);
       const totalCapacityUsed = activeDbCount + memHoldCount;

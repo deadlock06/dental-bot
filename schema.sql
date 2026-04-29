@@ -111,13 +111,6 @@ CREATE TABLE IF NOT EXISTS growth_leads_v2 (
   confidence_score      INT DEFAULT 0,
   is_owner_verified     BOOLEAN DEFAULT false,
 
-  -- Pain / Timing
-  pain_signal           TEXT,
-  pain_details          TEXT,
-  timing_score          INT DEFAULT 0,
-  posted_at             TIMESTAMPTZ,
-
-  -- Outreach
   status                TEXT DEFAULT 'pending',
   last_message_sent     TEXT,
   last_contacted_at     TIMESTAMPTZ,
@@ -334,7 +327,7 @@ CREATE TABLE IF NOT EXISTS onboarding_states (
   calendar_id TEXT,
   dashboard_credentials_sent BOOLEAN DEFAULT false,
   dashboard_username TEXT,
-  dashboard_password TEXT,
+  dashboard_password TEXT, -- bcrypt hashed
   leads_gifted INT DEFAULT 0,
   
   -- Sequence tracking

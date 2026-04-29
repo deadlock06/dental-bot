@@ -2,19 +2,20 @@ require('dotenv').config();
 const OpenAI = require('openai');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
-const ARABIC_CITIES = ['جازان','مكة','المدينة','أبها','تبوك','نجران','Jazan','Mecca','Medina','Abha','Tabuk','Najran', 'Riyadh', 'Jeddah', 'الرياض', 'جدة'];
 const ARABIC_REGEX = /[\u0600-\u06FF]/;
-
 const BANNED_WORDS = ['buy', 'discount', 'offer', 'guarantee', 'cheap', 'click', 'link', 'subscribe', 'promotion', 'free trial'];
 
 function detectLanguage(lead) {
   const city = lead.city || '';
   const name = lead.company_name || lead.business_name || '';
+  const country = lead.country || '';
   
-  if (ARABIC_CITIES.some(c => city.toLowerCase().includes(c.toLowerCase()))) return 'ar';
-  if (name.startsWith('Al ') || name.startsWith('Al-') || ARABIC_REGEX.test(name)) return 'ar';
+  // Arabic detection
+  const arPatterns = ['saudi', 'uae', 'emirates', 'egypt', 'kuwait', 'qatar', 'oman', 'bahrain', 'jordan', 'lebanon', 'مصر', 'السعودية'];
+  if (arPatterns.some(p => country.toLowerCase().includes(p) || city.toLowerCase().includes(p))) return 'ar';
+  if (ARABIC_REGEX.test(name) || ARABIC_REGEX.test(city)) return 'ar';
   
-  return 'ar'; // Default Saudi market
+  return 'en'; // Global default
 }
 
 function getGhostRoomUrl(lead) {
@@ -80,13 +81,11 @@ function applyGuardrails(message) {
 async function generateHyperPersonalizedMessage(lead) {
   try {
     const lang = detectLanguage(lead);
+    const isAr = lang === 'ar';
+    const company = lead.company_name || lead.business_name || (isAr ? 'عيادتك' : 'your clinic');
+    const owner = lead.owner_name || lead.name || (isAr ? 'دكتور' : 'Doctor');
     
-    // Extract intelligence
-    const company = lead.company_name || lead.business_name || (lang === 'ar' ? 'عيادتك' : 'your clinic');
-    const owner = lead.owner_name || lead.name || 'دكتور';
-    
-    // Determine target pain point template
-    let painType = 'no_booking_system'; // default
+    let painType = 'no_booking_system';
     if (lead.is_hiring && lead.hiring_roles && lead.hiring_roles.some(r => /receptionist|front desk/i.test(r))) {
       painType = 'hiring_receptionist';
     } else if (lead.google_rating && lead.google_rating < 4.0) {
@@ -98,14 +97,17 @@ async function generateHyperPersonalizedMessage(lead) {
       if (days > 60) painType = 'inactive_social';
     }
 
-    const systemPrompt = `You are Jake, an AI growth consultant for Qudozen. You are writing a cold WhatsApp outreach message to a clinic owner.
-Use the PAS (Problem, Agitate, Solution) formula.
+    const city = lead.city || '';
+    const systemPrompt = `You are Jake, an AI Business Architect. Write a short, professional WhatsApp message to ${owner} at ${company} in ${city}.
+Language: ${lang === 'ar' ? 'Arabic (professional/modern)' : 'English (concise/Silicon Valley style)'}.
+Tone: Professional, intriguing, zero-fluff.
+Goal: Mention a specific operational pain point and ask if they want to see a 1-minute demo of a self-operating solution.
+Context: ${painType}.
+Constraint: Under 250 characters. No emojis. No links. Must end with a single question.
 
 LEAD INTELLIGENCE:
 - Clinic: ${company}
 - Owner: ${owner}
-- Target Pain Point: ${painType}
-
 PAIN TEMPLATE GUIDANCE:
 - hiring_receptionist: Notice they are hiring. Agitate that human receptionists miss after-hours calls.
 - low_google_rating: Notice the rating. Agitate that new patients are choosing competitors.

@@ -1,9 +1,7 @@
-const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 
 /**
  * Generates a random password of specified length.
- * @param {number} length 
- * @returns {string}
  */
 function generatePassword(length = 12) {
   const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
@@ -14,6 +12,23 @@ function generatePassword(length = 12) {
   return retVal;
 }
 
+/**
+ * Hashes a password using bcrypt.
+ */
+async function hashPassword(password) {
+  const salt = await bcrypt.genSalt(10);
+  return await bcrypt.hash(password, salt);
+}
+
+/**
+ * Compares a plaintext password with a hash.
+ */
+async function comparePassword(password, hash) {
+  return await bcrypt.compare(password, hash);
+}
+
 module.exports = {
-  generatePassword
+  generatePassword,
+  hashPassword,
+  comparePassword
 };
