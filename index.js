@@ -315,6 +315,12 @@ app.use('/growth', growthRouter);
 // Global error handlers — prevent crashes
 process.on('uncaughtException',  (err) => console.error('[CRASH] uncaughtException:', err));
 process.on('unhandledRejection', (err) => console.error('[CRASH] unhandledRejection:', err));
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('[Global Error]', err);
+  res.status(500).json({ error: 'INTERNAL_SERVER_ERROR', message: err.message });
+});
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log(`[Boot] 🦷 Dental Bot starting — ${new Date().toISOString()}`);
 console.log('[Boot] Fixes: slot-409, NL-atomic-lock, save-rollback, no-show, cleanup-cron');
