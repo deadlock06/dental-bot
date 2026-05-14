@@ -1159,40 +1159,7 @@ try {
 
 const MESSAGES = {
   ar: {
-    langSelect: `🌐 أهلاً! أنا جيك، مساعدك الذكي.\nاختر لغتك:\n1️⃣ English\n2️⃣ العربية\n\n💡 اضغط 1 للإنجليزية، 2 للعربية`,
-    menu: `أهلاً بك! 🦷\nأنا *جيك*، مساعدك في المنشأة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد جديد 📅\n2️⃣ الأسعار 💰\n3️⃣ الموقع 📍`,
-    book: {
-      name: `رائع! لنبدأ حجز موعدك.\nما هو اسمك الكريم؟`,
-      phone: (p) => `رقمك المسجل لدينا هو: *${p}*\nهل تريد الاستمرار بهذا الرقم؟\n\n1️⃣ نعم، أكمل الحجز\n2️⃣ لا، استخدم رقم آخر`,
-      treat: `اختر الخدمة المطلوبة:\n1️⃣ تنظيف وتلميع 🦷\n2️⃣ حشوات تجميلية\n3️⃣ تقويم أسنان 📐\n4️⃣ زراعة أسنان 🔬`,
-      doc: `اختر الفريق الطبي المفضل:\n1️⃣ د. أحمد (أخصائي)\n2️⃣ د. سارة (استشارية)\n3️⃣ أي فريق متاح الآن`,
-      date: (d) => `الوقت المتاح مع ${d}:\n1️⃣ غداً\n2️⃣ الأربعاء القادم\n3️⃣ اختر تاريخ آخر`,
-      slot: (d) => `الأوقات المتاحة ليوم (${d}):\n1️⃣ 10:00 صباحاً\n2️⃣ 04:00 مساءً`,
-      securing: `🔒 جاري تأمين موعدك في النظام...\nيرجى الانتظار ثانية.`,
-      confirmed: `✅ *تم تأكيد موعدك بنجاح!* 🎉`,
-      summary: (d) => `📋 *تفاصيل الحجز:*\n👤 الاسم: ${d.name}\n🦷 الخدمة: ${d.treatment}\n📅 التاريخ: ${d.date}\n⏰ الوقت: ${d.slot}\n👨‍⚕️ الفريق: ${d.doctor}\n\n📅 تمت المزامنة مع التقويم ✅\n🔔 سيتم إرسال تذكير قبل 24 ساعة.`
-    }
-  },
-  en: {
-    langSelect: `🌐 Welcome! I am Jake, your autonomous assistant.\nPlease choose your language / اختر لغتك:\n1️⃣ English\n2️⃣ العربية\n\n💡 Tap 1 for English, 2 for Arabic`,
-    menu: `Welcome! 🦷\nI'm *Jake*, your facility assistant.\nHow can I help you today?\n\n1️⃣ Book Appointment 📅\n2️⃣ Prices 💰\n3️⃣ Location 📍`,
-    book: {
-      name: `Great! Let's start your booking.\nWhat is your full name?`,
-      phone: (p) => `Your registered number is: *${p}*\nWould you like to use this number?\n\n1️⃣ Yes, continue\n2️⃣ No, use another`,
-      treat: `Select required service:\n1️⃣ Cleaning & Polish 🦷\n2️⃣ Aesthetic Fillings\n3️⃣ Braces 📐\n4️⃣ Dental Implants 🔬`,
-      doc: `Choose preferred team:\n1️⃣ Dr. Ahmed (Specialist)\n2️⃣ Dr. Sarah (Consultant)\n3️⃣ Any available team`,
-      date: (d) => `Available dates with ${d}:\n1️⃣ Tomorrow\n2️⃣ Next Wednesday\n3️⃣ Pick another date`,
-      slot: (d) => `Available slots for (${d}):\n1️⃣ 10:00 AM\n2️⃣ 04:00 PM`,
-      securing: `🔒 Securing your slot in the system...\nPlease wait a moment.`,
-      confirmed: `✅ *Appointment Confirmed!* 🎉`,
-      summary: (d) => `📋 *Booking Details:*\n👤 Name: ${d.name}\n🦷 Service: ${d.treatment}\n📅 Date: ${d.date}\n⏰ Time: ${d.slot}\n👨‍⚕️ Team: ${d.doctor}\n\n📅 Calendar synced ✅\n🔔 Reminder will be sent 24h before.`
-    }
-  }
-};
-
-// Old MESSAGES was replaced
-  ar: {
-    langSelect: "🌐 Welcome! I am Jake, your autonomous assistant.\nPlease choose your language / اختر لغتك:\n1️⃣ English\n2️⃣ العربية\n\n💡 Tap 1 for English, 2 for Arabic",
+    langSelect: "🌐 أهلاً! أنا جيك، مساعدك الذكي.\nاختر لغتك:\n1️⃣ English\n2️⃣ العربية\n\n💡 اضغط 1 للإنجليزية، 2 للعربية",
     menu: "أهلاً وسهلاً بك في عيادتنا! 🦷✨\nأنا *جيك*، مساعدك الطبي الذكي، متاح على مدار الساعة.\nكيف يمكنني مساعدتك اليوم؟\n\n1️⃣ حجز موعد 📅\n2️⃣ موعدي الحالي 📋\n3️⃣ إعادة جدولة 🔄\n4️⃣ إلغاء الموعد ❌\n5️⃣ خدماتنا 🦷\n6️⃣ أطباؤنا 👨‍⚕️\n7️⃣ الأسعار 💰\n8️⃣ الموقع 📍\n9️⃣ تقييم المنشأة ⭐\n🔟 التحدث مع الفريق 👩‍⚕️\n\n💡 اضغط رقماً أو أخبرني بما تحتاج 😊",
     
     // Booking Flow
